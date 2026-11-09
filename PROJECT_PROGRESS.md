@@ -9,12 +9,12 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 | Phase | Scope | Progress | Basis |
 |---|---|---:|---|
 | P0 | Foundation and original resources (5 tasks) | 36% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
-| P1 | Reconstructed client/gameplay (10 tasks) | 32% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel are implemented; original map data, real animation and server combat remain unimplemented. |
-| P2 | Game systems (10 tasks) | 29% | Character/inventory/equipment, skill progression, quest progression, local world hunting and merchant purchases now share wallet/inventory state. All content remains client-side demo data. |
+| P1 | Reconstructed client/gameplay (10 tasks) | 34% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel and zone-specific NPC quest interactions are implemented; original map data, real animation and server combat remain unimplemented. |
+| P2 | Game systems (10 tasks) | 33% | Character/inventory/equipment, skill progression, quest progression, local world hunting, merchant purchases, guild contribution and mailbox rewards now share wallet/inventory state; local friends/party and guild systems are present. All content remains client-side demo data. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 0% | Not started. |
 
-**Overall estimate: about 20%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 21%** (weighted average of the 41 roadmap items).
 
 ## P0 — Foundation detail
 
@@ -125,3 +125,12 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Inventory capacity is checked at pickup time. If the bag is full, the item remains on the ground; changing zones clears that zone's transient drops.
 - Friends panel supports adding a local friend and inviting online demo friends. Party panel supports a five-member local party, simulated invitations, accept/decline, member removal and leaving the party.
 - These are client-only simulations. No server-backed friend directory, online status, party invitation, synchronized combat or persistence exists.
+
+
+## P1/P2 — NPC exploration, guild and mailbox client slice
+
+- Added separate quest objectives for speaking with the Bamboo Forest hunter and Black Stone Cave guardian. Interactions now record their respective objective progress and refresh the quest badge.
+- Added a local guild catalog and membership state: browse demo guilds, submit a join request (automatically accepted in this offline prototype), inspect guild/member contribution summaries, contribute 500/2,000 Xu and leave a guild.
+- Guild contributions spend currency from the shared character wallet; failed contributions restore the funds if the guild action cannot be completed.
+- Added a mailbox with sample system/NPC messages, read/unread state, an unread counter on the mail shortcut and a claimable sample currency attachment that updates the shared wallet.
+- Guild, NPC dialogue, quest content, mail and membership are client-side illustrative data. No server-backed guild service, remote mail, chat delivery, or multiplayer state exists.
