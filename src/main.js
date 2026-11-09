@@ -509,7 +509,16 @@ document.querySelector('#window-content').addEventListener('click',event=>{
     document.querySelector('#window-content').innerHTML=renderShopPanel();
     return;
   }
-  const guildJoin=event.target.closest('[data-guild-join]')?.dataset.guildJoin;\n  if(guildJoin){const result=guildState.apply(guildJoin);if(result.ok){const joined=guildState.join(guildJoin);toast(joined.message);}else toast(result.message);document.querySelector('#window-content').innerHTML=renderGuildPanel();return;}\n  const guildDonate=event.target.closest('[data-guild-donate]')?.dataset.guildDonate;\n  if(guildDonate){const cost=Number(guildDonate);const paid=characterState.spendCurrency(cost);if(!paid.ok){toast('Không đủ Xu để cống hiến.');return;}const result=guildState.donate(cost);if(!result.ok)characterState.addCurrency(cost);toast(result.message);updateCharacterHud();document.querySelector('#window-content').innerHTML=renderGuildPanel();return;}\n  if(event.target.closest('[data-guild-leave]')){const result=guildState.leave();toast(result.message);document.querySelector('#window-content').innerHTML=renderGuildPanel();return;}\n  const mailRead=event.target.closest('[data-mail-read]')?.dataset.mailRead;\n  if(mailRead){mailState.read(mailRead);document.querySelector('#window-content').innerHTML=renderMailPanel();return;}\n  const mailClaim=event.target.closest('[data-mail-claim]')?.dataset.mailClaim;\n  if(mailClaim){const result=mailState.claim(mailClaim);if(result.ok){for(const attachment of result.attachments){if(attachment.type==='currency')characterState.addCurrency(attachment.amount);else if(attachment.type==='item')characterState.addItem(attachment.itemId,attachment.quantity);}}toast(result.message);updateCharacterHud();document.querySelector('#window-content').innerHTML=renderMailPanel();return;}\n  const accept=event.target.closest('[data-quest-accept]')?.dataset.questAccept;
+  const guildJoin=event.target.closest('[data-guild-join]')?.dataset.guildJoin;
+  if(guildJoin){const result=guildState.apply(guildJoin);if(result.ok){const joined=guildState.join(guildJoin);toast(joined.message);}else toast(result.message);document.querySelector('#window-content').innerHTML=renderGuildPanel();return;}
+  const guildDonate=event.target.closest('[data-guild-donate]')?.dataset.guildDonate;
+  if(guildDonate){const cost=Number(guildDonate);const paid=characterState.spendCurrency(cost);if(!paid.ok){toast('Không đủ Xu để cống hiến.');return;}const result=guildState.donate(cost);if(!result.ok)characterState.addCurrency(cost);toast(result.message);updateCharacterHud();document.querySelector('#window-content').innerHTML=renderGuildPanel();return;}
+  if(event.target.closest('[data-guild-leave]')){const result=guildState.leave();toast(result.message);document.querySelector('#window-content').innerHTML=renderGuildPanel();return;}
+  const mailRead=event.target.closest('[data-mail-read]')?.dataset.mailRead;
+  if(mailRead){mailState.read(mailRead);document.querySelector('#window-content').innerHTML=renderMailPanel();return;}
+  const mailClaim=event.target.closest('[data-mail-claim]')?.dataset.mailClaim;
+  if(mailClaim){const result=mailState.claim(mailClaim);if(result.ok){for(const attachment of result.attachments){if(attachment.type==='currency')characterState.addCurrency(attachment.amount);else if(attachment.type==='item')characterState.addItem(attachment.itemId,attachment.quantity);}}toast(result.message);updateCharacterHud();document.querySelector('#window-content').innerHTML=renderMailPanel();return;}
+  const accept=event.target.closest('[data-quest-accept]')?.dataset.questAccept;
   if(accept){const result=questState.accept(accept);toast(result.message);document.querySelector('#window-content').innerHTML=renderQuestPanel();return;}
   const claim=event.target.closest('[data-quest-claim]')?.dataset.questClaim;
   if(claim){claimQuestReward(claim);return;}
@@ -585,6 +594,9 @@ window.addEventListener('kpah:npc-interact',event=>{
     questState.record('talk','elder');
     updateQuestBadge();
   }
+  if(npc==='Thợ săn')questState.record('talk','hunter');
+  if(npc==='Người canh hang')questState.record('talk','guardian');
+  updateQuestBadge();
   document.querySelector('#window-title').textContent=npc;
   document.querySelector('#window-content').innerHTML='<div class="npc-dialog"><p>'+escapeHtml(data.description)+'</p><div class="npc-actions">'+data.buttons.map(([label,action])=>'<button class="gold-button" data-npc-action="'+action+'">'+label+'</button>').join('')+'</div></div>';
   document.querySelector('#game-window').classList.add('open');
