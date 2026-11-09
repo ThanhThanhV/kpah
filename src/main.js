@@ -9,6 +9,7 @@ import { createWorldEntityState } from './world-entities.js';
 import { createShopState } from './shop-state.js';
 import { createWorldMapState } from './world-map.js';
 import { createGroundDropState } from './ground-drop-state.js';
+import { createSocialState } from './social-state.js';
 
 const app = document.querySelector('#app');
 app.innerHTML = `
@@ -90,11 +91,12 @@ const worldMapState=createWorldMapState();
 const worldEntityState=createWorldEntityState(Math.random,'village');
 const shopState=createShopState(characterState);
 const groundDropState=createGroundDropState();
+const socialState=createSocialState();
 
 function openWindow(key){
   const p=panelData[key]||panelData.help;
   document.querySelector('#window-title').textContent=p.title;
-  const html=['character','inventory','equipment'].includes(key)?renderCharacterPanel(key):key==='skills'?renderSkillPanel():key==='quests'?renderQuestPanel():key==='shop'?renderShopPanel():key==='map'?renderWorldMapPanel():p.html;
+  const html=['character','inventory','equipment'].includes(key)?renderCharacterPanel(key):key==='skills'?renderSkillPanel():key==='quests'?renderQuestPanel():key==='shop'?renderShopPanel():key==='map'?renderWorldMapPanel():key==='friends'?renderFriendsPanel():key==='party'?renderPartyPanel():p.html;
   document.querySelector('#window-content').innerHTML=html;
   document.querySelector('#game-window').classList.add('open');
   document.querySelector('#modal-backdrop').classList.add('show');
@@ -202,6 +204,21 @@ function renderWorldMapPanel(){
     <p class="panel-hint">Các khu vực và điều kiện di chuyển hiện là dữ liệu client minh họa. Cấp nhân vật hiện tại: ${level}.</p>`;
 }
 
+function renderFriendsPanel(){
+  const data=socialState.snapshot();
+  return `<div class="social-add"><input id="friend-name" maxlength="20" placeholder="Tên nhân vật cần kết bạn"><button type="button" data-friend-add>Thêm bạn</button></div>
+    <div class="friend-list-live">${data.friends.map(friend=>`<article class="friend-card-live"><span class="nearby-avatar ${friend.status==='online'?'blue':'green'}">${escapeHtml(friend.name.slice(0,1))}</span><div><b>${escapeHtml(friend.name)}</b><small>Cấp ${friend.level} · ${escapeHtml(friend.profession)} · ${friend.status==='online'?'Trực tuyến':'Ngoại tuyến'}</small></div><button type="button" data-friend-invite="${friend.id}" ${friend.status!=='online'?'disabled':''}>Mời tổ đội</button></article>`).join('')}</div>
+    <p class="panel-hint">Danh sách và thao tác hiện lưu trong phiên client. Trạng thái trực tuyến là dữ liệu mô phỏng.</p>`;
+}
+function renderPartyPanel(){
+  const data=socialState.snapshot();
+  const members=data.party?.members||[];
+  const pending=data.invitations.filter(item=>item.status==='pending');
+  return `<div class="party-summary"><b>${members.length}/5 thành viên</b><span>${data.party?'Đội trưởng: Kiếm Khách':'Chưa có tổ đội'}</span></div>
+    ${data.party?`<div class="party-member-list">${members.map(member=>`<article class="party-member"><span class="nearby-avatar blue">${escapeHtml(member.name.slice(0,1))}</span><div><b>${escapeHtml(member.name)}</b><small>Cấp ${member.level} · ${escapeHtml(member.profession)} · ${member.role==='leader'?'Đội trưởng':'Thành viên'}</small></div>${member.id!=='player'?'<button type="button" data-party-remove="'+member.id+'">Mời rời đội</button>':''}</article>`).join('')}</div><button type="button" class="gold-button" data-party-leave>Rời tổ đội</button>`:'<div class="empty-state"><span>♙</span><b>Bạn chưa tham gia tổ đội</b><p>Mời bạn bè trực tuyến để lập tổ đội tối đa 5 người.</p><button type="button" class="gold-button" data-party-create>Tạo tổ đội</button></div>'}
+    ${pending.length?`<h3>Lời mời đang chờ</h3>${pending.map(item=>`<div class="party-invite"><b>${escapeHtml(item.name)}</b><button type="button" data-party-accept="${item.id}">Chấp nhận</button><button type="button" data-party-decline="${item.id}">Từ chối</button></div>`).join('')}:''}
+    <p class="panel-hint">Tổ đội là mô phỏng client offline; chưa có đồng bộ thành viên hoặc chia sẻ chiến đấu qua mạng.</p>`;
+}
 function renderShopPanel(){
   const data=shopState.snapshot();
   const items=data.items.map(item=>`<article class="shop-item-live">
