@@ -8,7 +8,7 @@ app.innerHTML = `
   <main class="shell">
     <header class="topbar">
       <div class="brand"><span class="brand-mark">K</span><div><b>KHÍ PHÁCH ANH HÙNG</b><small>PHIÊN BẢN TÁI HIỆN WEB</small></div></div>
-      <div class="server"><i></i><span>Máy chủ: <b>Long Kiếm</b></span><span class="online">Đang kết nối</span></div>
+      <div class="server"><i class="offline-dot"></i><span>Máy chủ: <b>Long Kiếm</b></span><span class="offline">Demo offline</span></div>
       <div class="top-actions"><button data-window="settings" title="Cài đặt">⚙</button><button data-window="help" title="Trợ giúp">?</button><button class="exit" id="logout">Thoát</button></div>
     </header>
     <section class="game-layout">
@@ -32,7 +32,7 @@ app.innerHTML = `
       <section class="world-column">
         <div class="world-toolbar"><div class="location"><span>◈</span><b>Làng Sói Trắng</b><small>· Khu vực an toàn</small></div><div class="world-tools"><button data-window="map">Bản đồ</button><button data-window="ranking">Xếp hạng</button><button data-window="events">Sự kiện</button></div></div>
         <div class="world-frame"><div id="world"></div><div class="scene-vignette"></div><div class="zone-title"><b>LÀNG SÓI TRẮNG</b><small>Vùng đất khởi nguyên</small></div><div class="world-coords">X: 124 · Y: 087</div><div class="world-hint">Kéo để di chuyển · Chạm mục tiêu để tương tác</div><div class="npc-tag merchant">Thương nhân</div><div class="npc-tag elder">Trưởng làng</div></div>
-        <div class="world-bottom"><div class="chat"><div class="chat-tabs"><button class="selected">Thế giới</button><button>Bang hội</button><button>Riêng</button><button>Hệ thống</button></div><div class="chat-lines" id="chat-lines"><p><b class="system">[Hệ thống]</b> Chào mừng đến với Khí Phách Anh Hùng!</p><p><b class="world-chat">[Thế giới]</b> <strong>Kiếm Khách</strong>: Có ai đi săn Sói không?</p><p><b class="world-chat">[Thế giới]</b> <strong>PhongVân</strong>: Làng đông vui quá.</p></div><form id="chat-form"><select aria-label="Kênh chat"><option>Thế giới</option><option>Bang hội</option><option>Riêng</option></select><input id="chat-input" placeholder="Nhập nội dung trò chuyện..." maxlength="120"><button>Gửi</button></form></div><div class="quick-panel"><div class="quick-title">THAO TÁC NHANH</div><div class="quick-grid"><button data-window="inventory"><span>▣</span>Túi đồ</button><button data-window="skills"><span>✦</span>Kỹ năng</button><button data-window="quests"><span>⚑</span>Nhiệm vụ</button><button data-window="map"><span>⌖</span>Bản đồ</button></div></div></div>
+        <div class="world-bottom"><div class="chat"><div class="chat-tabs"><button class="selected" data-chat-channel="world">Thế giới</button><button data-chat-channel="guild">Bang hội</button><button data-chat-channel="private">Riêng</button><button data-chat-channel="system">Hệ thống</button></div><div class="chat-lines" id="chat-lines"><p data-channel="system"><b class="system">[Hệ thống]</b> Chào mừng đến với Khí Phách Anh Hùng!</p><p data-channel="world"><b class="world-chat">[Thế giới]</b> <strong>Kiếm Khách</strong>: Có ai đi săn Sói không?</p><p data-channel="world"><b class="world-chat">[Thế giới]</b> <strong>PhongVân</strong>: Làng đông vui quá.</p></div><form id="chat-form"><select id="chat-channel-select" aria-label="Kênh chat"><option value="world">Thế giới</option><option value="guild">Bang hội</option><option value="private">Riêng</option><option value="system">Hệ thống</option></select><input id="chat-input" placeholder="Nhập nội dung trò chuyện..." maxlength="120"><button type="submit">Gửi</button></form></div><div class="quick-panel"><div class="quick-title">THAO TÁC NHANH</div><div class="quick-grid"><button data-window="inventory"><span>▣</span>Túi đồ</button><button data-window="skills"><span>✦</span>Kỹ năng</button><button data-window="quests"><span>⚑</span>Nhiệm vụ</button><button data-window="map"><span>⌖</span>Bản đồ</button></div></div></div>
       </section>
       <aside class="right-rail">
         <div class="rail-heading">THÔNG TIN KHU VỰC <button data-window="map">⌖</button></div>
@@ -82,7 +82,40 @@ document.querySelectorAll('[data-window]').forEach(b=>b.addEventListener('click'
 document.querySelector('#window-close').addEventListener('click',closeWindow);
 document.querySelector('#modal-backdrop').addEventListener('click',closeWindow);
 document.querySelector('#logout').addEventListener('click',()=>window.dispatchEvent(new Event('kpah:logout')));
-document.querySelector('#chat-form').addEventListener('submit',e=>{e.preventDefault();const i=document.querySelector('#chat-input');if(!i.value.trim())return;const p=document.createElement('p');p.innerHTML='<b class="world-chat">[Thế giới]</b> <strong>Kiếm Khách</strong>: '+escapeHtml(i.value);document.querySelector('#chat-lines').append(p);i.value='';document.querySelector('#chat-lines').scrollTop=9999;});
+const chatChannelSelect=document.querySelector('#chat-channel-select');
+const chatLines=document.querySelector('#chat-lines');
+const chatChannelNames={world:'Thế giới',guild:'Bang hội',private:'Riêng',system:'Hệ thống'};
+function selectChatChannel(channel){
+  chatChannelSelect.value=channel;
+  document.querySelectorAll('.chat-tabs [data-chat-channel]').forEach(button=>button.classList.toggle('selected',button.dataset.chatChannel===channel));
+  chatLines.querySelectorAll('[data-channel]').forEach(line=>{line.hidden=line.dataset.channel!==channel;});
+  const readOnly=channel==='system';
+  document.querySelector('#chat-input').disabled=readOnly;
+  document.querySelector('#chat-input').placeholder=readOnly?'Kênh hệ thống chỉ để xem...':channel==='private'?'Nhập tin nhắn riêng...':'Nhập nội dung trò chuyện...';
+  document.querySelector('#chat-form button').disabled=readOnly;
+  chatLines.scrollTop=chatLines.scrollHeight;
+}
+document.querySelectorAll('.chat-tabs [data-chat-channel]').forEach(button=>button.addEventListener('click',()=>selectChatChannel(button.dataset.chatChannel)));
+chatChannelSelect.addEventListener('change',()=>selectChatChannel(chatChannelSelect.value));
+document.querySelector('#chat-form').addEventListener('submit',e=>{
+  e.preventDefault();
+  const input=document.querySelector('#chat-input');
+  const message=input.value.trim();
+  const channel=chatChannelSelect.value;
+  if(!message||channel==='system')return;
+  const line=document.createElement('p');
+  line.dataset.channel=channel;
+  const label=document.createElement('b');
+  label.className=channel==='world'?'world-chat':'system';
+  label.textContent='['+chatChannelNames[channel]+']';
+  const author=document.createElement('strong');
+  author.textContent=activeCharacterName;
+  line.append(label,document.createTextNode(' '),author,document.createTextNode(': '+message));
+  chatLines.append(line);
+  input.value='';
+  selectChatChannel(channel);
+});
+selectChatChannel('world');
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 let toastTimer;function toast(t){const el=document.querySelector('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2300);}
 document.querySelectorAll('.slot').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.slot').forEach(x=>x.classList.remove('active'));b.classList.add('active');toast('Đã chọn: '+b.dataset.skill);}));
