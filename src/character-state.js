@@ -165,6 +165,13 @@ export function createCharacterState() {
     return {restored,hp:state.hp};
   }
 
+  function restoreMp(amount) {
+    const {maxMp} = limits();
+    const restored = Math.min(Math.max(0,Math.floor(Number(amount)||0)),maxMp-state.mp);
+    state.mp += restored;
+    return {restored,mp:state.mp};
+  }
+
   function addExperience(amount) {
     const gained=Math.max(0,Math.floor(Number(amount)||0));
     state.experience+=gained;
@@ -249,6 +256,7 @@ export function createCharacterState() {
     spendMp,
     receiveDamage,
     restoreHp,
+    restoreMp,
     addExperience,
     addCurrency,
     spendCurrency,
