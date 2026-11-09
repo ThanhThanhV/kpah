@@ -43,8 +43,8 @@ export function createCharacterState() {
     hp: 1250,
     mp: 680,
     inventoryCapacity: 30,
-    inventory: clone(INITIAL_ITEMS),
-    equipment: {head:null,body:null,weapon:null,gloves:null,boots:null,ring:null,necklace:null,charm:null}
+    inventory: clone(INITIAL_ITEMS.filter(item => !['starter-sword','cloth-hat','cloth-armor'].includes(item.id))),
+    equipment: {head:'cloth-hat',body:'cloth-armor',weapon:'starter-sword',gloves:null,boots:null,ring:null,necklace:null,charm:null}
   };
 
   function findItem(id) {
