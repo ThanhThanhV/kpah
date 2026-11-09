@@ -73,3 +73,10 @@ Detailed traces:
 3. Decode the font data records and map sprite sheets, tile sets, and UI panels to screen classes.
 4. Replace the mock server/login/character flow and then the mock world HUD incrementally using verified dimensions and assets.
 5. Record every inferred mapping with the class/method or resource evidence that supports it.
+
+
+## Current reverse-engineering blocker
+
+The current repository notes establish the `mj` world draw path at a high level, but do not contain a verified bytecode-level map decoder trace or original map payload. The Web runtime must therefore keep its map adapter data-driven and must not label procedural geometry as recovered KPAH terrain. To advance this area, inspect the original `mj` method bodies and the classes it calls for map loading, tile lookup, camera offsets, and collision; record exact field/method references and sample map bytes before implementing a KPAH-specific decoder.
+
+The sprite-sheet inspector now rejects row/column grids that do not divide the source image into equal integer-sized frames. This improves manual asset analysis only; frame order, animation timing, and entity-to-sheet assignments still require evidence from the original client.
