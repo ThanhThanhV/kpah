@@ -12,11 +12,6 @@ export function setWorldEntityDepth(entity, groundOffset = 0) {
 }
 
 /**
- * Register an animation from an explicitly verified sprite-sheet frame list.
- * Frame order, frame rate and repeat behavior must come from source evidence;
- * this helper intentionally does not infer animation layouts.
- */
-/**
  * Load a source-selected sprite sheet at runtime.
  * Frame geometry must be measured from the chosen asset; this helper does not
  * guess frame size, order, animation names or timing.
@@ -71,6 +66,11 @@ export function loadSpriteSheetTexture(scene, definition) {
   });
 }
 
+/**
+ * Register an animation from an explicitly verified sprite-sheet frame list.
+ * Frame order, frame rate and repeat behavior must come from source evidence;
+ * this helper intentionally does not infer animation layouts.
+ */
 export function registerSpriteAnimation(scene, definition) {
   const { key, textureKey, frames, frameRate = 8, repeat = -1 } = definition || {};
   if (!scene?.anims || !scene?.textures) {
