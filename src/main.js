@@ -159,7 +159,6 @@ function renderCharacterPanel(key){
   if(key==='equipment'){
     const slots=data.equipmentSlots.map(([id,label,icon])=>{
       const itemId=data.equipment[id];
-      const item=itemId&&data.inventory.find(entry=>entry.id===itemId);
       const equipped=itemId?({ 'starter-sword':'Kiếm tân thủ','cloth-hat':'Mũ vải','cloth-armor':'Áo vải','bronze-ring':'Nhẫn đồng'}[itemId]||'Trang bị'):'Chưa trang bị';
       return `<div class="equip-cell ${itemId?'filled':''}"><span>${icon}</span><small>${label}</small><b>${equipped}</b>${itemId?`<button type="button" data-unequip="${id}">Tháo</button>`:''}</div>`;
     }).join('');
