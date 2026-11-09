@@ -8,13 +8,13 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 | Phase | Scope | Progress | Basis |
 |---|---|---:|---|
-| P0 | Foundation and original resources (5 tasks) | 30% | .sh/.wp/.wps extraction and manifest are implemented; initial inventory is documented; sprite animation, original tilemap and original camera/render are not done. |
+| P0 | Foundation and original resources (5 tasks) | 32% | .sh/.wp/.wps extraction and manifest are implemented; initial inventory is documented; sprite animation, original tilemap and original camera/render are not done. |
 | P1 | Reconstructed client/gameplay (10 tasks) | 24% | Demo server/login/character flow exists; profession preview images are now wired; world, movement and NPCs remain mostly mock; combat and real animation are not implemented. |
 | P2 | Game systems (10 tasks) | 5% | UI panels/placeholders exist, but inventory, equipment, skills, quests, chat, party and guild are not backed by game logic. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 0% | Not started. |
 
-**Overall estimate: about 11%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 12%** (weighted average of the 41 roadmap items).
 
 ## P0 — Foundation detail
 
@@ -22,7 +22,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 |---|---|---:|
 | 1. Extract .sh, .wp, .wps | Implemented in extractor | 100% |
 | 2. Classify images/resources | Initial pack inventory; detailed sprite mapping pending | 35% |
-| 3. Sprite/animation engine | Not implemented | 0% |
+| 3. Sprite/animation engine | Manual frame inspector exists; runtime character animation engine/mapping not implemented | 10% |
 | 4. Original tilemap engine | Not implemented | 0% |
 | 5. Original camera/render pipeline | Phaser scene and basic camera bounds only; currently mock world | 15% |
 
@@ -30,6 +30,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 - Added Resource Viewer for PNG assets listed in archive-manifest.json.
 - Added original profession preview gallery in character creation, sourced from five .wps packs:
+- Added a configurable sprite-sheet inspector: choose any decoded PNG, set rows/columns/FPS, step through frames or play a preview. This is an analysis tool, not yet the in-game animation system.
   - Kiếm Khách → kiem
   - Chiến Binh → daidao
   - Pháp Sư → phapsu
