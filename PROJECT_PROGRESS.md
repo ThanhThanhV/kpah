@@ -10,11 +10,11 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 |---|---|---:|---|
 | P0 | Foundation and original resources (5 tasks) | 36% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
 | P1 | Reconstructed client/gameplay (10 tasks) | 25% | Demo server/login/character flow and profession previews exist; player movement works in the mock scene and NPCs now have clickable dialogue/actions; original world, combat and real animation remain unimplemented. |
-| P2 | Game systems (10 tasks) | 6% | Inventory category filtering and local chat-channel interactions are implemented in the client; other systems remain placeholders and nothing is server-backed. |
+| P2 | Game systems (10 tasks) | 12% | Character attributes/potential allocation, equipment slots, inventory filters, equipping/unequipping and consumable use now share one local state model; remaining systems are placeholders and nothing is server-backed. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 0% | Not started. |
 
-**Overall estimate: about 12.6%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 14.0%** (weighted average of the 41 roadmap items).
 
 ## P0 — Foundation detail
 
@@ -45,7 +45,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Synced the mock-world coordinate readout and minimap player marker to the player's current scene position.
 - Added 1–5 keyboard shortcuts for selecting action-bar slots, while ignoring editable fields and the login overlay; clarified the world touch hint to match tap-to-move behavior.
 - Added client-side chat channel selection/filtering for World, Guild, Private and System; System is read-only and sent messages use the selected channel and current character name. Messages remain local to the browser.
-- Added working inventory filters for equipment, consumables, materials and quest items. Item categories are provisional demo data, not reconstructed server inventory.
+- Replaced the disconnected character, inventory and equipment mock panels with a shared client-side state flow. Character stats and potential allocation affect derived HP/MP, equipment changes apply/remove bonuses, consumables update vitals and quantities, and the profile HUD reflects the same state. This is a local UI/gameplay slice only; persistence and server authority are not implemented.
+- Added a coherent local character progression slice: shared character attributes and potential points, equipment slots with gear bonuses, inventory category filtering, equip/unequip flows, consumable use with HP/MP restoration, and live HUD bars. Seed items and values remain demo data, not recovered server records or authoritative KPAH balance.
 - Hardened press-and-hold movement controls for touch and mouse: pointer capture keeps the hold gesture stable, and pointer release/cancel, lost capture, tab hiding or window blur stops repeated movement. This remains local mock-scene movement.
 - Added a temporary pulsing destination marker for tap-to-move. The marker follows the clamped walk destination, disappears when the character arrives, and is cleared when directional-pad movement takes over; it is a navigation cue in the demo scene, not an original-game asset.
   - Kiếm Khách → kiem
@@ -55,6 +56,14 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
   - Cung Thủ → cung
 - Corrected the character-creation navigation callback (showStep → existing step function).
 - Documented that these are static profession previews; gender/hair composition and animation mapping are not yet verified.
+
+## P2 — Character/inventory slice
+
+- Character profile shows level, experience, HP/MP, four attributes and available potential points.
+- Potential points can be allocated to strength, stamina, agility or spirit; stamina/spirit affect derived HP/MP limits.
+- Starting weapon, hat and armor occupy equipment slots and contribute attribute bonuses.
+- Inventory supports category filters, equipping compatible gear, unequipping gear and using HP/MP consumables.
+- The profile HUD and all three panels read the same in-memory character state. Values and item catalog are illustrative demo data only.
 
 ## Validation limitations
 
