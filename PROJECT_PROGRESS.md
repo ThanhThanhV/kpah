@@ -38,6 +38,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Added a shared Phaser world runtime for camera follow, bounded entity movement, Y-based depth sorting and a tile-layer adapter that requires verified tile IDs.
 - Routed pointer, keyboard and directional-pad movement through the shared runtime; the player name label now follows the moving entity.
 - Made the offline server state explicit instead of displaying a false connected status.
+- Adjusted mobile safe-area spacing for notched phones and compressed the action bar on very narrow screens to reduce horizontal overflow.
 - Added client-side chat channel selection/filtering for World, Guild, Private and System; System is read-only and sent messages use the selected channel and current character name. Messages remain local to the browser.
 - Added working inventory filters for equipment, consumables, materials and quest items. Item categories are provisional demo data, not reconstructed server inventory.
   - Kiếm Khách → kiem
