@@ -87,3 +87,23 @@ The `ls` static initializer contains five character lines, each with male and fe
 
 The screen also defines six hair options: `Đầu đinh`, `Tóc búi`, `Tóc cột cao`, `Tóc chéo`, `Tóc xù`, and `Tóc ngang vai`. The gender array is `Nam` and `Nữ`. These are exact option values in the class's static initializer; the display font may render accents differently under `javap` on a non-UTF-8 console.
 
+
+
+## Character list screen: `lj`
+
+`lj` is the character-selection screen shown after the server returns the account's character records:
+
+- Its heading is `Chọn nhân vật:`.
+- It stores the returned `ca[]` character array and renders up to three character previews in the visible row.
+- The selected entry shows its character name and level, with additional status text when applicable.
+- Available actions are `Chọn`, `Tạo mới`, `Xóa` (or `Khôi phục` for a recoverable entry), and `Thoát`.
+- `Tạo mới` invokes `ls.a().b()`, opening the character-creation screen.
+- `Chọn` sends the selected character identifier through `jy.i(id, 1)`, copies its appearance data into the shared player object `mj.t`, and starts the `li` loading/transition state.
+- `Thoát` closes the socket and returns to the login screen.
+
+This distinguishes the two screens: `lj` selects an existing character; `ls` creates/configures a new character.
+
+## Loading transition: `li`
+
+After choosing a character, `li.b()` activates a short transition state. Its renderer clears the screen to black, animates a small particle/trail field, and draws a 24 × 24 frame from a sprite resource. It periodically sends a small position/status request through `jy.b(int,int,int)` while the transition is active. Treat it as a loading/entry transition, not as the world screen.
+
