@@ -6,6 +6,7 @@ import { createCharacterState } from './character-state.js';
 import { createSkillCombatState } from './skill-combat.js';
 import { createQuestState } from './quest-state.js';
 import { createWorldEntityState } from './world-entities.js';
+import { createShopState } from './shop-state.js';
 
 const app = document.querySelector('#app');
 app.innerHTML = `
@@ -84,11 +85,12 @@ const characterState=createCharacterState();
 const skillCombat=createSkillCombatState();
 const questState=createQuestState();
 const worldEntityState=createWorldEntityState();
+const shopState=createShopState(characterState);
 
 function openWindow(key){
   const p=panelData[key]||panelData.help;
   document.querySelector('#window-title').textContent=p.title;
-  const html=['character','inventory','equipment'].includes(key)?renderCharacterPanel(key):key==='skills'?renderSkillPanel():key==='quests'?renderQuestPanel():p.html;
+  const html=['character','inventory','equipment'].includes(key)?renderCharacterPanel(key):key==='skills'?renderSkillPanel():key==='quests'?renderQuestPanel():key==='shop'?renderShopPanel():p.html;
   document.querySelector('#window-content').innerHTML=html;
   document.querySelector('#game-window').classList.add('open');
   document.querySelector('#modal-backdrop').classList.add('show');
@@ -175,6 +177,18 @@ function renderCharacterPanel(key){
   return `<div class="inventory-toolbar"><div class="inventory-capacity"><b>${data.inventory.length} / ${data.inventoryCapacity}</b><span>Ô hành trang đang sử dụng</span></div><div class="inventory-currency"><span>Xu <b>125.600</b></span><span>Lượng <b>320</b></span></div></div><div class="tabs inventory-tabs">${categories.map(([id,label],i)=>`<button type="button" class="${i===0?'chosen':''}" data-inventory-filter="${id}">${label}</button>`).join('')}</div><div class="inventory-grid inventory-grid-live">${items||'<div class="inventory-empty">Hành trang trống</div>'}</div><p class="panel-hint">Vật phẩm và thao tác hiện được mô phỏng ở client; chưa đồng bộ máy chủ.</p>`;
 }
 
+
+function renderShopPanel(){
+  const data=shopState.snapshot();
+  const items=data.items.map(item=>`<article class="shop-item-live">
+    <span class="shop-item-icon">${item.icon}</span>
+    <div class="shop-item-copy"><b>${escapeHtml(item.name)}</b><small>${escapeHtml(item.description)}</small></div>
+    <div class="shop-item-buy"><small>${item.price.toLocaleString('vi-VN')} Xu</small><button type="button" data-shop-buy="${item.id}">Mua ×1</button></div>
+  </article>`).join('');
+  return `<div class="shop-wallet">Số dư hiện tại <b>${data.currency.toLocaleString('vi-VN')} Xu</b></div>
+    <div class="shop-list-live">${items}</div>
+    <p class="panel-hint">Cửa hàng offline dùng dữ liệu minh họa. Giao dịch chỉ thay đổi Xu và hành trang trên trình duyệt này.</p>`;
+}
 
 function renderQuestPanel(){
   const data=questState.snapshot();
@@ -424,6 +438,14 @@ document.querySelector('#window-content').addEventListener('change',event=>{
   toast(result.message);updateActionBar();document.querySelector('#window-content').innerHTML=renderSkillPanel();
 });
 document.querySelector('#window-content').addEventListener('click',event=>{
+  const purchase=event.target.closest('[data-shop-buy]')?.dataset.shopBuy;
+  if(purchase){
+    const result=shopState.buy(purchase,1);
+    toast(result.message);
+    updateCharacterHud();
+    document.querySelector('#window-content').innerHTML=renderShopPanel();
+    return;
+  }
   const accept=event.target.closest('[data-quest-accept]')?.dataset.questAccept;
   if(accept){const result=questState.accept(accept);toast(result.message);document.querySelector('#window-content').innerHTML=renderQuestPanel();return;}
   const claim=event.target.closest('[data-quest-claim]')?.dataset.questClaim;
