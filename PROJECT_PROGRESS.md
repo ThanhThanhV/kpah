@@ -9,12 +9,12 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 | Phase | Scope | Progress | Basis |
 |---|---|---:|---|
 | P0 | Foundation and original resources (5 tasks) | 36% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
-| P1 | Reconstructed client/gameplay (10 tasks) | 29% | Demo server/login/character flow, profession previews, player movement, NPC interactions and selectable in-world monsters are implemented locally; original world data, real animation and server combat remain unimplemented. |
+| P1 | Reconstructed client/gameplay (10 tasks) | 32% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel are implemented; original map data, real animation and server combat remain unimplemented. |
 | P2 | Game systems (10 tasks) | 25% | Character/inventory/equipment, skill progression, quest progression, local world hunting and merchant purchases now share wallet/inventory state. All content remains client-side demo data. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 0% | Not started. |
 
-**Overall estimate: about 18%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 19%** (weighted average of the 41 roadmap items).
 
 ## P0 — Foundation detail
 
@@ -79,6 +79,14 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Slot five uses an HP consumable from the same inventory state used by the character panel.
 - This is a client-side vertical slice with illustrative skill names, values and formulas. It is not a verified recreation of KPAH skill data, balance, effects, PvE rules or server authority.
 
+## P1 — Multi-zone world and travel
+
+- Added three connected client-side zones: Làng Sói Trắng, Rừng Trúc and Hang Đá Đen. Each zone has its own palette/environment treatment, entry/exit coordinates, NPC list, monster spawn points, recommended level and travel connections.
+- Added a world map panel that shows current area, connected destinations and level requirements. Travel validates the current zone connection and character level.
+- Added a gate marker to each zone; activating it opens the map. Successful travel redraws the zone, updates the location HUD/minimap label, repositions the player at the destination entrance and loads that zone's NPC/monster set.
+- Pending approach-to-monster timers are cancelled on zone change to prevent a queued attack from executing in a different area.
+- All map layouts, names, connections, spawn points and level gates are placeholders until original map resources and collision data are traced.
+
 ## P1/P2 — World hunting gameplay slice
 
 - Added five local monster spawn entities: four ordinary wolves and one stronger pack leader, each with its own level, HP, defense, attack damage, EXP, drop chances and respawn delay.
@@ -103,7 +111,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Validation limitations
 
-- Ran JavaScript syntax parsing and state-level smoke checks for quest acceptance, NPC objective progress, monster-kill progress, reward claiming, experience/currency grants and inventory item rewards. These checks do not replace browser interaction testing or a production build. The new world-entity/combat integration has not yet been browser-tested.
+- Ran JavaScript syntax parsing and state-level smoke checks for quest acceptance, NPC objective progress, monster-kill progress, reward claiming, experience/currency grants and inventory item rewards. These checks do not replace browser interaction testing or a production build. The world-entity/combat and multi-zone travel integrations have not yet been browser-tested or run through a production build.
 
 - Ran JavaScript syntax parsing for `main.js`, `skill-combat.js` and `character-state.js`, plus state-level smoke checks for locked-skill rejection, learning, slot assignment, damage, MP spending, enemy retaliation, cooldown blocking and potion recovery. These checks do not replace a browser/UI test or a full Vite production build.
 
