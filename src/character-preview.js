@@ -42,7 +42,7 @@ export async function mountCharacterPreview(root, classSelect) {
     const packSuffix = '/wpsplash/' + pack + '.wps';
     const images = entries
       .filter(item => item.packType === '.wps' && String(item.archive || '').endsWith(packSuffix) &&
-        /\.png$/i.test(item.path || '') && item.output)
+        /\.png$/i.test(item.path || '') && assetUrl(item.output))
       .sort((a,b) => a.path.localeCompare(b.path));
 
     if (!images.length) {
