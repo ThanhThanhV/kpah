@@ -137,9 +137,25 @@ export function createSkillCombatState() {
     return {ok:true,target:clone(state.target)};
   }
 
+  function syncTarget(target) {
+    if (!target || !Number.isFinite(target.maxHp) || target.maxHp <= 0) return {ok:false,message:'Mục tiêu không hợp lệ.'};
+    state.target = {
+      ...state.target,
+      id:String(target.id||state.target.id),
+      name:String(target.name||state.target.name),
+      level:Math.max(1,Math.floor(Number(target.level)||1)),
+      maxHp:Math.floor(target.maxHp),
+      hp:Math.max(0,Math.min(Math.floor(target.maxHp),Math.floor(Number(target.hp)||0))),
+      defense:Math.max(0,Math.floor(Number(target.defense)||0)),
+      damage:Math.max(0,Math.floor(Number(target.damage)||0))
+    };
+    state.battleActive = state.target.hp > 0;
+    return {ok:true,target:clone(state.target)};
+  }
+
   function resetTarget() {
     return startBattle();
   }
 
-  return {snapshot,learnOrUpgrade,assignSkill,unassignSkill,useSlot,startBattle,setTarget,resetTarget};
+  return {snapshot,learnOrUpgrade,assignSkill,unassignSkill,useSlot,startBattle,setTarget,syncTarget,resetTarget};
 }
