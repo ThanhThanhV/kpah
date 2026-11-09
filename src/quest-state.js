@@ -91,5 +91,20 @@ export function createQuestState() {
     return {ok:true,message:'Đã nhận thưởng: '+quest.title+'.',reward:clone(quest.reward)};
   }
 
-  return {snapshot,accept,record,claim};
+  function restore(saved) {
+    if (!saved || typeof saved !== 'object' || !Array.isArray(saved.quests)) return false;
+    for (const candidate of saved.quests) {
+      const quest = quests[candidate?.id];
+      if (!quest) continue;
+      if (['available','active','completed','claimed'].includes(candidate.status)) quest.status = candidate.status;
+      quest.progress = Math.min(quest.objective.required, Math.max(0, Math.floor(Number(candidate.progress) || 0)));
+      if (quest.status === 'completed' || quest.status === 'claimed') quest.progress = quest.objective.required;
+      if (quest.status === 'available') quest.progress = 0;
+      if (quest.status === 'active' && quest.progress >= quest.objective.required) quest.status = 'completed';
+    }
+    if (Array.isArray(saved.log)) log.splice(0, log.length, ...saved.log.filter(entry => typeof entry === 'string').slice(0,8));
+    return true;
+  }
+
+  return {snapshot,restore,accept,record,claim};
 }
