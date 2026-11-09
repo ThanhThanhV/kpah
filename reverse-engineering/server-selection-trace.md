@@ -54,3 +54,12 @@ The addresses above are literal defaults embedded in the supplied JAR, not a cla
 - The `Thoát` action notifies the MIDlet to exit.
 
 This establishes a concrete screen transition: **server selector (`uj`) → login (`ro`)**. The login worker later opens the selected server endpoint through `km.b()`.
+
+
+## Initial screen order
+
+The startup worker `kv.run()` explicitly invokes `uj.a()` and then `uj.b()` after resource/UI initialization. Since `uj.b()` calls the base `tj.b()`, it sets the server selector as `km.q`, the active screen. Therefore the confirmed initial flow is:
+
+**Canvas startup → server selector (`uj`) → choose server (`um`) → login screen (`ro`).**
+
+This corrects the order used by the old mock login overlay, which started with credentials and selected a server afterward.
