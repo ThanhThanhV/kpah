@@ -606,8 +606,6 @@ class WorldScene extends Phaser.Scene {
   constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];}
   create(){
     this.drawZone(worldMapState.snapshot().current);
-    // Ambient flowers and rocks
-    for(let i=0;i<45;i++){const x=(i*173+47)%950,y=(i*97+35)%500;if(y<280&&x>280&&x<700)continue;g.fillStyle(i%3===0?0xd9c16d:0x8eb66a,0.8);g.fillCircle(x,y,1.7);}
     this.playerSprite=this.add.container(this.player.x,this.player.y);const shadow=this.add.ellipse(0,19,28,9,0x111510,0.35);const cape=this.add.triangle(0,2,0,-2,-17,20,13,20,0x9b3f32);const body=this.add.rectangle(0,0,17,25,0xd5d0b9).setStrokeStyle(2,0x42372b);const head=this.add.circle(0,-17,8,0xe0b88d).setStrokeStyle(2,0x42372b);const hair=this.add.triangle(0,-23,-8,-16,0,-31,9,-15,0x29232a);const sword=this.add.rectangle(13,-3,4,27,0xd6d8d1).setAngle(25).setStrokeStyle(1,0x514d48);this.playerSprite.add([shadow,cape,body,head,hair,sword]);setWorldEntityDepth(this.playerSprite);
     this.playerLabel=this.add.text(480,282,'Kiếm Khách',{fontFamily:'Arial',fontSize:'12px',color:'#fff3c6',stroke:'#34251d',strokeThickness:3}).setOrigin(.5).setDepth(999);
     this.destinationMarker=this.add.circle(0,0,12,0xf4d58c,0.18)
@@ -619,8 +617,6 @@ class WorldScene extends Phaser.Scene {
     this.configureCamera();
     this.coordsLabel=document.querySelector('.world-coords');
     this.mapPlayerMarker=document.querySelector('.map-player');
-    this.add.text(370,291,'Trưởng làng',{fontFamily:'Arial',fontSize:'11px',color:'#ffe6a8',stroke:'#30251a',strokeThickness:3}).setOrigin(.5);
-    this.add.text(715,286,'Thương nhân',{fontFamily:'Arial',fontSize:'11px',color:'#ffe6a8',stroke:'#30251a',strokeThickness:3}).setOrigin(.5);
     this.input.on('pointerdown',p=>this.movePlayerTo(p.worldX,p.worldY,450,true));
     this.scale.on('resize',()=>this.cameras.main.setSize(this.scale.width,this.scale.height));
   }
@@ -654,6 +650,11 @@ class WorldScene extends Phaser.Scene {
       for(let i=0;i<13;i++){const x=35+(i*79)%900,y=90+(i*91)%230;g.fillStyle(i%2?0x55535b:0x69616a,0.95);g.fillPoints([new Phaser.Geom.Point(x-28,y+18),new Phaser.Geom.Point(x-12,y-22-(i%3)*8),new Phaser.Geom.Point(x+18,y-28),new Phaser.Geom.Point(x+35,y+18)],true);}
       g.fillStyle(0x16191e,0.7);g.fillEllipse(480,145,330,100);
       g.fillStyle(0x9b6749,0.35);g.fillEllipse(480,145,250,55);
+    }
+    for(let i=0;i<45;i++){
+      const x=(i*173+47)%950,y=(i*97+35)%500;
+      if(y<280&&x>280&&x<700)continue;
+      g.fillStyle(i%3===0?0xd9c16d:0x8eb66a,0.8);g.fillCircle(x,y,1.7);
     }
     this.zoneObjects.push(g);
     for(const npc of zone.npcs){
