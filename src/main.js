@@ -32,7 +32,7 @@ app.innerHTML = `
           <button data-window="guild"><span>⚑</span>Bang hội</button>
           <button data-window="resources"><span>▧</span>Tài nguyên gốc</button>
         </nav>
-        <div class="mini-status"><div><span>Xu</span><b>125.600</b></div><div><span>Lượng</span><b>320</b></div><div><span>Danh vọng</span><b>48</b></div></div>
+        <div class="mini-status"><div><span>Xu</span><b>${data.currency.toLocaleString('vi-VN')}</b></div><div><span>Lượng</span><b>320</b></div><div><span>Danh vọng</span><b>48</b></div></div>
       </aside>
       <section class="world-column">
         <div class="world-toolbar"><div class="location"><span>◈</span><b>Làng Sói Trắng</b><small>· Khu vực an toàn</small></div><div class="world-tools"><button data-window="map">Bản đồ</button><button data-window="ranking">Xếp hạng</button><button data-window="events">Sự kiện</button></div></div>
