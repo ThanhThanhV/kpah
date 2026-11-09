@@ -454,6 +454,14 @@ function updateCharacterHud(){
   const level=document.querySelector('.avatar-frame .level');
   if(level)level.textContent=String(data.level);
 }
+function updateMailBadge(){
+ const button=document.querySelector('[data-window="mail"]');
+ if(!button)return;
+ const unread=mailState.snapshot().unread;
+ let badge=button.querySelector('.mail-nav-count');
+ if(unread){if(!badge){badge=document.createElement('em');badge.className='mail-nav-count';button.appendChild(badge);}badge.textContent=String(unread);}
+ else if(badge)badge.remove();
+}
 function updateQuestBadge(){
   const button=document.querySelector('[data-window="quests"]');
   if(!button)return;
@@ -467,6 +475,7 @@ function updateQuestBadge(){
 updateCharacterHud();
 updateActionBar();
 updateQuestBadge();
+updateMailBadge();
 
 let toastTimer;function toast(t){const el=document.querySelector('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2300);}
 function selectActionSlot(button){
@@ -515,9 +524,9 @@ document.querySelector('#window-content').addEventListener('click',event=>{
   if(guildDonate){const cost=Number(guildDonate);const paid=characterState.spendCurrency(cost);if(!paid.ok){toast('Không đủ Xu để cống hiến.');return;}const result=guildState.donate(cost);if(!result.ok)characterState.addCurrency(cost);toast(result.message);updateCharacterHud();document.querySelector('#window-content').innerHTML=renderGuildPanel();return;}
   if(event.target.closest('[data-guild-leave]')){const result=guildState.leave();toast(result.message);document.querySelector('#window-content').innerHTML=renderGuildPanel();return;}
   const mailRead=event.target.closest('[data-mail-read]')?.dataset.mailRead;
-  if(mailRead){mailState.read(mailRead);document.querySelector('#window-content').innerHTML=renderMailPanel();return;}
+  if(mailRead){mailState.read(mailRead);updateMailBadge();document.querySelector('#window-content').innerHTML=renderMailPanel();return;}
   const mailClaim=event.target.closest('[data-mail-claim]')?.dataset.mailClaim;
-  if(mailClaim){const result=mailState.claim(mailClaim);if(result.ok){for(const attachment of result.attachments){if(attachment.type==='currency')characterState.addCurrency(attachment.amount);else if(attachment.type==='item')characterState.addItem(attachment.itemId,attachment.quantity);}}toast(result.message);updateCharacterHud();document.querySelector('#window-content').innerHTML=renderMailPanel();return;}
+  if(mailClaim){const result=mailState.claim(mailClaim);updateMailBadge();if(result.ok){for(const attachment of result.attachments){if(attachment.type==='currency')characterState.addCurrency(attachment.amount);else if(attachment.type==='item')characterState.addItem(attachment.itemId,attachment.quantity);}}toast(result.message);updateCharacterHud();document.querySelector('#window-content').innerHTML=renderMailPanel();return;}
   const accept=event.target.closest('[data-quest-accept]')?.dataset.questAccept;
   if(accept){const result=questState.accept(accept);toast(result.message);document.querySelector('#window-content').innerHTML=renderQuestPanel();return;}
   const claim=event.target.closest('[data-quest-claim]')?.dataset.questClaim;
