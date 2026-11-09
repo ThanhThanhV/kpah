@@ -24,7 +24,7 @@ SH_XOR_KEY = b"NguyenVanMinh"
 def safe_target(root: Path, name: str) -> Path:
     # JAR entry names use POSIX separators. Reject Windows separators and drive
     # prefixes as well, so the same archive is safe on every host platform.
-    if not name or "\\x00" in name or "\\\\" in name:
+    if not name or "\x00" in name or "\\" in name:
         raise ValueError(f"Unsafe archive path: {name!r}")
     relative = PurePosixPath(name)
     if (relative.is_absolute() or ".." in relative.parts or not relative.parts
