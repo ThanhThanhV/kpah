@@ -106,3 +106,62 @@
   .inventory-currency{gap:6px;flex-direction:column}
   .character-subnav button{font-size:9px;padding:8px 5px}
 }
+
+
+/* Skill progression and client training combat */
+.skill-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;margin-bottom:10px;background:linear-gradient(110deg,#3a2d2b,#24202a);border:1px solid #725638}
+.skill-header>div{display:grid;gap:4px}
+.skill-header b{font-size:12px;color:#e9d3a3}
+.skill-header strong{color:#f3bd63;font-size:16px}
+.skill-header small{font-size:9px;color:#b8aa98}
+.skill-mode{font-size:8px;letter-spacing:1px;color:#e2b875;border:1px solid #82603b;padding:5px 7px;white-space:nowrap}
+.training-battle{padding:12px;margin-bottom:14px;background:linear-gradient(145deg,#28232a,#1c1a20);border:1px solid #66503a}
+.training-target{display:flex;align-items:center;gap:13px}
+.training-monster{width:65px;height:65px;flex:none;display:grid;place-items:center;font-size:42px;color:#e2b77c;background:radial-gradient(circle,#59402e,#282129 70%);border:1px solid #947044}
+.training-target-info{flex:1;min-width:0;display:grid;gap:5px}
+.training-target-info>b{font-size:12px;color:#f0d7a6}
+.training-target-info>small{font-size:9px;color:#b5a58d}
+.training-hp{height:9px;background:#120f14;border:1px solid #60463a}
+.training-hp i{height:100%;display:block;background:linear-gradient(90deg,#a33c37,#e8795e);transition:width .2s}
+.training-controls{display:flex;justify-content:space-between;align-items:center;margin:10px 0 7px;font-size:9px;color:#c1ae8f}
+.training-controls button{padding:6px 10px;background:#57412e;border:1px solid #987348;color:#f0d49b;font-size:9px}
+.training-log{max-height:82px;overflow:auto;padding:6px 9px;background:#151319;border:1px solid #40342f}
+.training-log p{margin:2px 0;font-size:9px;line-height:1.5;color:#c6b89f}
+.training-log p:first-child{color:#f0d28e}
+.skill-section-title{margin:13px 0 7px;padding-bottom:6px;border-bottom:1px solid #5b4733;color:#d9b979;font-size:9px;font-weight:700;letter-spacing:1.2px}
+.skill-list-live{gap:7px}
+.skill-card{position:relative;display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px;background:#28232a;border:1px solid #574735}
+.skill-card.locked{opacity:.76;background:#211e24}
+.skill-icon{width:40px;height:40px;display:grid;place-items:center;background:#47372f;border:1px solid #8a6945;color:#e7c27d;font-size:21px}
+.skill-card-main{min-width:0}
+.skill-card-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.skill-card-title b{font-size:11px;color:#f0d6a4}
+.skill-card-title span{font-size:8px;color:#d0a967}
+.skill-card-main>p{margin:4px 0;font-size:9px;line-height:1.5;color:#b9aa98}
+.skill-card-main>small{font-size:8px;color:#8fa9c3}
+.skill-assign{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:8px;color:#bba98f}
+.skill-assign select{max-width:100px;padding:3px 5px;background:#17151a;border:1px solid #5e4b38;color:#e7d4b0;font-size:8px}
+.skill-card-actions button{max-width:116px;padding:7px 8px;background:#59432f;border:1px solid #997344;color:#f2d59b;font-size:8px}
+.skill-card-actions button:disabled{opacity:.4;cursor:not-allowed}
+.skill-max{font-size:8px;color:#9bc18d}
+.skill-cooldown{position:absolute;top:5px;right:7px;font-style:normal;font-size:8px;color:#e59a79}
+.action-slots .slot.on-cooldown{filter:saturate(.45);opacity:.7}
+.action-slots .slot.on-cooldown em::after{content:' · hồi';color:#e59a79}
+.combat-feedback{position:absolute;z-index:12;left:50%;top:48%;font-weight:800;font-size:20px;pointer-events:none;text-shadow:0 2px 4px #000;animation:combat-float .9s ease-out forwards}
+.combat-feedback.damage{color:#ffe1a1}
+.combat-feedback.healing{color:#8be0a0}
+@keyframes combat-float{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}20%{opacity:1}100%{opacity:0;transform:translate(-50%,-65px) scale(1.15)}}
+@media(max-width:700px){
+  .skill-header{padding:8px;gap:6px}
+  .skill-header b{font-size:10px}
+  .skill-header small{font-size:8px}
+  .training-battle{padding:8px}
+  .training-monster{width:48px;height:48px;font-size:32px}
+  .skill-card{grid-template-columns:32px minmax(0,1fr);gap:7px;padding:8px}
+  .skill-icon{width:31px;height:31px;font-size:17px}
+  .skill-card-actions{grid-column:2;justify-self:start}
+  .skill-card-actions button{max-width:none;padding:6px 8px}
+  .skill-card-title b{font-size:10px}
+  .skill-card-main>p{font-size:8px}
+  .training-log{max-height:65px}
+}
