@@ -668,6 +668,7 @@ window.addEventListener('kpah:monster-select',event=>{
   const result=worldEntityState.select(id);
   if(!result.ok){toast(result.message);return;}
   syncCombatTarget(result.monster);
+  game.scene.getScene('world')?.syncMonsterViews();
   renderWorldTarget();
   toast('Đã chọn '+result.monster.name+'. Tiếp cận mục tiêu và sử dụng kỹ năng.');
 });
@@ -889,6 +890,7 @@ class WorldScene extends Phaser.Scene {
     const c=this.add.container(monster.x,monster.y);
     const elite=monster.id==='pack-leader';
     const color=elite?0x8c4c46:0x777d55;
+    const targetRing=this.add.ellipse(0,13,48,21,0xf1c96b,.08).setStrokeStyle(2,0xf1c96b,.9).setVisible(false);
     const shadow=this.add.ellipse(0,13,30,8,0x10130f,.4);
     const body=this.add.ellipse(0,0,elite?31:25,18,color).setStrokeStyle(2,0x30291f);
     const head=this.add.circle(elite?13:10,-8,elite?9:7,0xa99a72).setStrokeStyle(2,0x30291f);
@@ -897,7 +899,7 @@ class WorldScene extends Phaser.Scene {
     const label=this.add.text(0,-42,monster.name+' · Lv.'+monster.level,{fontFamily:'Arial',fontSize:elite?'11px':'10px',color:elite?'#ffd18b':'#f2e8c9',stroke:'#241e19',strokeThickness:3}).setOrigin(.5);
     const bar=this.add.rectangle(0,-31,34,4,0x241b19).setOrigin(.5);
     const fill=this.add.rectangle(-16,-31,30,2,0xb94d3e).setOrigin(0,.5);
-    c.add([shadow,body,head,ear,eye,label,bar,fill]);
+    c.add([targetRing,shadow,body,head,ear,eye,label,bar,fill]);
     c.setDepth(monster.y);
     c.setSize(42,54).setInteractive(new Phaser.Geom.Rectangle(-22,-27,44,54),Phaser.Geom.Rectangle.Contains);
     c.on('pointerdown',(pointer,localX,localY,event)=>{
@@ -905,6 +907,7 @@ class WorldScene extends Phaser.Scene {
       window.dispatchEvent(new CustomEvent('kpah:monster-select',{detail:{id:monster.id}}));
     });
     c.setData('hpFill',fill);
+    c.setData('targetRing',targetRing);
     return c;
   }
   syncGroundDrops(){
@@ -922,7 +925,8 @@ class WorldScene extends Phaser.Scene {
     const expiredDrops=groundDropState.update();
     if(expiredDrops)this.syncGroundDrops();
     const revived=worldEntityState.update();
-    const states=worldEntityState.snapshot().monsters;
+    const worldState=worldEntityState.snapshot();
+    const states=worldState.monsters;
     for(const entry of this.monsterViews){
       const state=states.find(item=>item.id===entry.id);
       if(!state)continue;
@@ -930,6 +934,8 @@ class WorldScene extends Phaser.Scene {
       entry.view.setDepth(state.y);
       const fill=entry.view.getData('hpFill');
       if(fill)fill.width=Math.max(0,30*state.hp/state.maxHp);
+      const ring=entry.view.getData('targetRing');
+      if(ring)ring.setVisible(state.alive&&state.id===worldState.selectedId);
     }
     if(revived.length){
       const selected=worldEntityState.snapshot().selected;
