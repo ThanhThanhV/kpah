@@ -32,7 +32,7 @@ app.innerHTML = `
           <button data-window="guild"><span>⚑</span>Bang hội</button>
           <button data-window="resources"><span>▧</span>Tài nguyên gốc</button>
         </nav>
-        <div class="mini-status"><div><span>Xu</span><b>${data.currency.toLocaleString('vi-VN')}</b></div><div><span>Lượng</span><b>320</b></div><div><span>Danh vọng</span><b>48</b></div></div>
+        <div class="mini-status"><div><span>Xu</span><b>125.600</b></div><div><span>Lượng</span><b>320</b></div><div><span>Danh vọng</span><b>48</b></div></div>
       </aside>
       <section class="world-column">
         <div class="world-toolbar"><div class="location"><span>◈</span><b>Làng Sói Trắng</b><small>· Khu vực an toàn</small></div><div class="world-tools"><button data-window="map">Bản đồ</button><button data-window="ranking">Xếp hạng</button><button data-window="events">Sự kiện</button></div></div>
@@ -174,7 +174,7 @@ function renderCharacterPanel(key){
   }
   const categories=[['all','Tất cả'],['equipment','Trang bị'],['consumable','Tiêu hao'],['material','Nguyên liệu'],['quest','Nhiệm vụ']];
   const items=data.inventory.map(item=>`<article class="inventory-item" data-item-category="${item.category}"><div class="inventory-item-icon">${item.icon}</div><b>${escapeHtml(item.name)}</b><small>${item.category==='equipment'?'Trang bị':item.category==='consumable'?'Vật phẩm tiêu hao':item.category==='material'?'Nguyên liệu':'Nhiệm vụ'}</small><em>×${item.quantity}</em><button type="button" data-item-action="${item.category==='equipment'?'equip':item.category==='consumable'?'use':'info'}" data-item-id="${item.id}" ${item.category==='material'||item.category==='quest'?'disabled':''}>${item.category==='equipment'?'Trang bị':item.category==='consumable'?'Sử dụng':'Chi tiết'}</button></article>`).join('');
-  return `<div class="inventory-toolbar"><div class="inventory-capacity"><b>${data.inventory.length} / ${data.inventoryCapacity}</b><span>Ô hành trang đang sử dụng</span></div><div class="inventory-currency"><span>Xu <b>125.600</b></span><span>Lượng <b>320</b></span></div></div><div class="tabs inventory-tabs">${categories.map(([id,label],i)=>`<button type="button" class="${i===0?'chosen':''}" data-inventory-filter="${id}">${label}</button>`).join('')}</div><div class="inventory-grid inventory-grid-live">${items||'<div class="inventory-empty">Hành trang trống</div>'}</div><p class="panel-hint">Vật phẩm và thao tác hiện được mô phỏng ở client; chưa đồng bộ máy chủ.</p>`;
+  return `<div class="inventory-toolbar"><div class="inventory-capacity"><b>${data.inventory.length} / ${data.inventoryCapacity}</b><span>Ô hành trang đang sử dụng</span></div><div class="inventory-currency"><span>Xu <b>${data.currency.toLocaleString('vi-VN')}</b></span><span>Lượng <b>320</b></span></div></div><div class="tabs inventory-tabs">${categories.map(([id,label],i)=>`<button type="button" class="${i===0?'chosen':''}" data-inventory-filter="${id}">${label}</button>`).join('')}</div><div class="inventory-grid inventory-grid-live">${items||'<div class="inventory-empty">Hành trang trống</div>'}</div><p class="panel-hint">Vật phẩm và thao tác hiện được mô phỏng ở client; chưa đồng bộ máy chủ.</p>`;
 }
 
 
