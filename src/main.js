@@ -131,6 +131,7 @@ function selectChatChannel(channel){
   document.querySelectorAll('.chat-tabs [data-chat-channel]').forEach(button=>button.classList.toggle('selected',button.dataset.chatChannel===channel));
   chatLines.querySelectorAll('[data-channel]').forEach(line=>{line.hidden=line.dataset.channel!==channel;});
   const readOnly=channel==='system';
+  document.querySelector('#chat-recipient').hidden=channel!=='private';
   document.querySelector('#chat-input').disabled=readOnly;
   document.querySelector('#chat-input').placeholder=readOnly?'Kênh hệ thống chỉ để xem...':channel==='private'?'Nhập tin nhắn riêng...':'Nhập nội dung trò chuyện...';
   document.querySelector('#chat-form button').disabled=readOnly;
@@ -144,6 +145,8 @@ document.querySelector('#chat-form').addEventListener('submit',e=>{
   const message=input.value.trim();
   const channel=chatChannelSelect.value;
   if(!message||channel==='system')return;
+  if(channel==='guild'&&!guildState.snapshot().guild){toast('Bạn cần gia nhập bang hội để trò chuyện tại kênh này.');return;}
+  const recipient=channel==='private'?document.querySelector('#chat-recipient').selectedOptions[0]?.textContent:'';
   const line=document.createElement('p');
   line.dataset.channel=channel;
   const label=document.createElement('b');
