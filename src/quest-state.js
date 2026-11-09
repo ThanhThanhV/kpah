@@ -8,6 +8,7 @@ const QUEST_CATALOG = [
   },
   {
     id:'wolf-patrol',
+    prerequisite:'meet-elder',prerequisiteLabel:'Hoàn thành và nhận thưởng nhiệm vụ của trưởng làng',
     title:'Dọn dẹp bầy sói',
     description:'Đánh bại sói luyện tập để giúp dân làng giữ an toàn khu vực.',
     objective:{type:'kill',target:'training-wolf',label:'Đánh bại Sói luyện tập',required:3},
@@ -15,6 +16,7 @@ const QUEST_CATALOG = [
   },
   {
     id:'meet-hunter',
+    prerequisite:'wolf-patrol',prerequisiteLabel:'Hoàn thành và nhận thưởng nhiệm vụ dọn dẹp bầy sói',
     title:'Lời nhắn của thợ săn',
     description:'Tìm thợ săn tại Rừng Trúc để nhận lời khuyên về bầy thú.',
     objective:{type:'talk',target:'hunter',label:'Nói chuyện với thợ săn',required:1},
@@ -22,6 +24,7 @@ const QUEST_CATALOG = [
   },
   {
     id:'meet-guardian',
+    prerequisite:'meet-hunter',prerequisiteLabel:'Hoàn thành và nhận thưởng nhiệm vụ của thợ săn',
     title:'Cánh cổng Hang Đá Đen',
     description:'Gặp người canh hang để tìm hiểu lối vào khu vực nguy hiểm.',
     objective:{type:'talk',target:'guardian',label:'Nói chuyện với người canh hang',required:1},
@@ -29,9 +32,10 @@ const QUEST_CATALOG = [
   },
   {
     id:'village-supply',
+    prerequisite:'meet-guardian',prerequisiteLabel:'Hoàn thành và nhận thưởng nhiệm vụ tại Hang Đá Đen',
     title:'Chuẩn bị hành trang',
     description:'Hoàn thành một nhiệm vụ trong làng và nhận phần thưởng.',
-    objective:{type:'claim',target:'any',label:'Nhận phần thưởng nhiệm vụ',required:1},
+    objective:{type:'talk',target:'elder',label:'Quay lại gặp trưởng làng',required:1},
     reward:{experience:180,currency:120,items:[{id:'upgrade-stone',quantity:2}]}
   }
 ];
@@ -49,12 +53,20 @@ export function createQuestState() {
     log.splice(8);
   }
 
+  function canAccept(id){
+    const quest=quests[id];
+    if(!quest||quest.status!=='available')return false;
+    return !quest.prerequisite||quests[quest.prerequisite]?.status==='claimed';
+  }
+
   function snapshot(){
+    const questList=Object.values(quests).map(quest=>({...clone(quest),canAccept:canAccept(quest.id),unlockHint:quest.prerequisite&&quests[quest.prerequisite]?.status!=='claimed'?quest.prerequisiteLabel:null}));
     return {
-      quests:clone(Object.values(quests)),
+      quests:questList,
       log:[...log],
       counts:{
         active:Object.values(quests).filter(q=>q.status==='active').length,
+        available:Object.values(quests).filter(q=>canAccept(q.id)).length,
         completed:Object.values(quests).filter(q=>q.status==='completed').length,
         claimed:Object.values(quests).filter(q=>q.status==='claimed').length
       }
@@ -64,6 +76,7 @@ export function createQuestState() {
   function accept(id){
     const quest=quests[id];
     if(!quest||quest.status!=='available')return {ok:false,message:'Nhiệm vụ này hiện không thể nhận.'};
+    if(!canAccept(id))return {ok:false,message:'Chưa mở khóa nhiệm vụ. '+quest.prerequisiteLabel+'.'};
     quest.status='active';
     addLog('Đã nhận nhiệm vụ: '+quest.title+'.');
     return {ok:true,message:'Đã nhận: '+quest.title+'.'};
@@ -106,5 +119,5 @@ export function createQuestState() {
     return true;
   }
 
-  return {snapshot,restore,accept,record,claim};
+  return {snapshot,restore,canAccept,accept,record,claim};
 }
