@@ -242,6 +242,8 @@ function executeActionSlot(slot){
   characterState.spendMp(result.mpCost);
   if(result.healing)characterState.restoreHp(result.healing);
   if(result.enemyDamage)characterState.receiveDamage(result.enemyDamage);
+  const afterAction=characterState.snapshot();
+  if(afterAction.hp<=0)toast('Nhân vật đã gục. Hãy dùng bình HP trong hành trang.');
   showCombatFeedback(result);
   updateCharacterHud();
   updateActionBar();
