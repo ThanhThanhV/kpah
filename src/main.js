@@ -5,6 +5,7 @@ import { configureWorldCamera, moveWorldEntity, setWorldEntityDepth } from './wo
 import { createCharacterState } from './character-state.js';
 import { createSkillCombatState } from './skill-combat.js';
 import { createQuestState } from './quest-state.js';
+import { createWorldEntityState } from './world-entities.js';
 
 const app = document.querySelector('#app');
 app.innerHTML = `
@@ -34,7 +35,7 @@ app.innerHTML = `
       </aside>
       <section class="world-column">
         <div class="world-toolbar"><div class="location"><span>◈</span><b>Làng Sói Trắng</b><small>· Khu vực an toàn</small></div><div class="world-tools"><button data-window="map">Bản đồ</button><button data-window="ranking">Xếp hạng</button><button data-window="events">Sự kiện</button></div></div>
-        <div class="world-frame"><div id="world"></div><div class="scene-vignette"></div><div class="zone-title"><b>LÀNG SÓI TRẮNG</b><small>Vùng đất khởi nguyên</small></div><div class="world-coords">X: 124 · Y: 087</div><div class="world-hint">Chạm điểm đến để di chuyển · Chạm NPC để tương tác</div><div class="npc-tag merchant">Thương nhân</div><div class="npc-tag elder">Trưởng làng</div></div>
+        <div class="world-frame"><div id="world"></div><div class="scene-vignette"></div><div class="zone-title"><b>LÀNG SÓI TRẮNG</b><small>Vùng đất khởi nguyên</small></div><div class="world-coords">X: 124 · Y: 087</div><div class="world-hint">Chạm điểm đến để di chuyển · Chạm NPC để tương tác</div><div class="npc-tag merchant">Thương nhân</div><div class="npc-tag elder">Trưởng làng</div><div class="world-target" id="world-target" hidden><div class="world-target-heading"><b id="world-target-name">Sói hoang</b><small id="world-target-level">Cấp 18</small></div><div class="world-target-health"><i id="world-target-health-fill"></i></div><small id="world-target-hp">620 / 620 HP</small></div></div>
         <div class="world-bottom"><div class="chat"><div class="chat-tabs"><button class="selected" data-chat-channel="world">Thế giới</button><button data-chat-channel="guild">Bang hội</button><button data-chat-channel="private">Riêng</button><button data-chat-channel="system">Hệ thống</button></div><div class="chat-lines" id="chat-lines"><p data-channel="system"><b class="system">[Hệ thống]</b> Chào mừng đến với Khí Phách Anh Hùng!</p><p data-channel="world"><b class="world-chat">[Thế giới]</b> <strong>Kiếm Khách</strong>: Có ai đi săn Sói không?</p><p data-channel="world"><b class="world-chat">[Thế giới]</b> <strong>PhongVân</strong>: Làng đông vui quá.</p></div><form id="chat-form"><select id="chat-channel-select" aria-label="Kênh chat"><option value="world">Thế giới</option><option value="guild">Bang hội</option><option value="private">Riêng</option><option value="system">Hệ thống</option></select><input id="chat-input" placeholder="Nhập nội dung trò chuyện..." maxlength="120"><button type="submit">Gửi</button></form></div><div class="quick-panel"><div class="quick-title">THAO TÁC NHANH</div><div class="quick-grid"><button data-window="inventory"><span>▣</span>Túi đồ</button><button data-window="skills"><span>✦</span>Kỹ năng</button><button data-window="quests"><span>⚑</span>Nhiệm vụ</button><button data-window="map"><span>⌖</span>Bản đồ</button></div></div></div>
       </section>
       <aside class="right-rail">
@@ -82,6 +83,7 @@ let activeCharacterName='Kiếm Khách',activeCharacterClass='Kiếm khách';
 const characterState=createCharacterState();
 const skillCombat=createSkillCombatState();
 const questState=createQuestState();
+const worldEntityState=createWorldEntityState();
 
 function openWindow(key){
   const p=panelData[key]||panelData.help;
@@ -255,6 +257,17 @@ function renderSkillPanel(){
     <div class="skill-section-title">KỸ NĂNG CHỦ ĐỘNG</div><div class="skill-list skill-list-live">${cards(active)}</div>
     <div class="skill-section-title">KỸ NĂNG BỊ ĐỘNG</div><div class="skill-list skill-list-live">${cards(passive)}</div>`;
 }
+function renderWorldTarget(){
+  const target=worldEntityState.snapshot().selected;
+  const panel=document.querySelector('#world-target');
+  if(!panel)return;
+  if(!target){panel.hidden=true;return;}
+  panel.hidden=false;
+  document.querySelector('#world-target-name').textContent=target.name;
+  document.querySelector('#world-target-level').textContent='Cấp '+target.level;
+  document.querySelector('#world-target-hp').textContent=target.hp.toLocaleString('vi-VN')+' / '+target.maxHp.toLocaleString('vi-VN')+' HP';
+  document.querySelector('#world-target-health-fill').style.width=(target.hp/target.maxHp*100)+'%';
+}
 function updateActionBar(){
   const data=skillCombat.snapshot();
   const icons={basic:'⚔','sword-wave':'✧',heal:'✚','combo-slash':'⚔','blade-storm':'✹'};
@@ -287,23 +300,43 @@ function executeActionSlot(slot){
     const result=characterState.useItem(item.id);
     toast(result.message);updateCharacterHud();refreshCharacterPanel();return;
   }
+  const target=worldEntityState.snapshot().selected;
+  if(!target){toast('Hiện không có quái vật sống trong khu vực. Hãy chờ chúng hồi sinh.');return;}
+  skillCombat.setTarget(target);
   const character=characterState.snapshot();
   const result=skillCombat.useSlot(slot,character);
   if(!result.ok){toast(result.message);return;}
   characterState.spendMp(result.mpCost);
   if(result.healing)characterState.restoreHp(result.healing);
-  if(result.enemyDamage)characterState.receiveDamage(result.enemyDamage);
-  if(result.defeated){
-    questState.record('kill','training-wolf');
-    const gained=characterState.addExperience(25);
-    if(gained.levelsGained)toast('Lên cấp '+gained.level+'!');
-    updateQuestBadge();
+  const worldHit=worldEntityState.damage(target.id,result.damage);
+  if(worldHit.ok){
+    result.targetHp=worldHit.monster.hp;
+    result.targetMaxHp=worldHit.monster.maxHp;
+    result.defeated=worldHit.defeated;
+    result.enemyDamage=worldHit.defeated?0:target.damage;
+    if(worldHit.defeated){
+      if(target.id==='training-wolf')questState.record('kill','training-wolf');
+      const gained=characterState.addExperience(worldHit.experience);
+      const collected=[];
+      for(const drop of worldHit.drops){
+        const added=characterState.addItem(drop.itemId,drop.quantity);
+        if(added.ok)collected.push(drop.quantity+' × '+added.item.name);
+      }
+      updateQuestBadge();
+      result.message+=' · nhận '+worldHit.experience+' EXP'+(collected.length?' · rơi '+collected.join(', '):'');
+      if(gained.levelsGained)toast('Lên cấp '+gained.level+'!');
+      const nextTarget=worldEntityState.snapshot().selected;
+      if(nextTarget)skillCombat.setTarget(nextTarget);
+    }else{
+      characterState.receiveDamage(result.enemyDamage);
+    }
   }
   const afterAction=characterState.snapshot();
   if(afterAction.hp<=0)toast('Nhân vật đã gục. Hãy dùng bình HP trong hành trang.');
   showCombatFeedback(result);
   updateCharacterHud();
   updateActionBar();
+  renderWorldTarget();
   const panel=document.querySelector('#window-title').textContent;
   if(panel==='Kỹ năng')document.querySelector('#window-content').innerHTML=renderSkillPanel();
   toast(result.message+(result.enemyDamage?' · nhận '+result.enemyDamage+' sát thương':''));
@@ -411,6 +444,14 @@ document.querySelector('#window-content').addEventListener('click',event=>{
     });
   }
 });
+window.addEventListener('kpah:monster-select',event=>{
+  const id=event.detail?.id;
+  const result=worldEntityState.select(id);
+  if(!result.ok){toast(result.message);return;}
+  skillCombat.setTarget(result.monster);
+  renderWorldTarget();
+  toast('Đã chọn '+result.monster.name+'. Tiếp cận mục tiêu và sử dụng kỹ năng.');
+});
 window.addEventListener('kpah:npc-interact',event=>{
   const npc=event.detail?.name;
   const actions={
@@ -488,7 +529,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];}
   create(){
     const g=this.add.graphics();g.fillGradientStyle(0x344c39,0x344c39,0x243b31,0x243b31,1);g.fillRect(0,0,960,560);
     for(let y=0;y<560;y+=42){for(let x=0;x<960;x+=42){const shade=((x*13+y*7)%5);g.fillStyle(shade===0?0x456044:shade===1?0x3b563e:0x38533b,0.45);g.fillRect(x+((y/42)%2)*20,y,40,38);}}
@@ -498,6 +539,7 @@ class WorldScene extends Phaser.Scene {
     this.drawTree(g,110,170,1.2);this.drawTree(g,220,100,0.9);this.drawTree(g,820,155,1.35);this.drawTree(g,720,95,0.9);this.drawTree(g,900,390,1);
     this.drawHouse(g,330,185,1.05,0x9a5542);this.drawHouse(g,650,180,0.9,0x6f7f91);this.drawHouse(g,505,100,0.75,0x9a804f);
     this.drawNpc(370,325,0xf0c16b,'Trưởng làng');this.drawNpc(715,320,0x7ec3c8,'Thương nhân');
+    this.createMonsterViews();
     // Ambient flowers and rocks
     for(let i=0;i<45;i++){const x=(i*173+47)%950,y=(i*97+35)%500;if(y<280&&x>280&&x<700)continue;g.fillStyle(i%3===0?0xd9c16d:0x8eb66a,0.8);g.fillCircle(x,y,1.7);}
     this.playerSprite=this.add.container(this.player.x,this.player.y);const shadow=this.add.ellipse(0,19,28,9,0x111510,0.35);const cape=this.add.triangle(0,2,0,-2,-17,20,13,20,0x9b3f32);const body=this.add.rectangle(0,0,17,25,0xd5d0b9).setStrokeStyle(2,0x42372b);const head=this.add.circle(0,-17,8,0xe0b88d).setStrokeStyle(2,0x42372b);const hair=this.add.triangle(0,-23,-8,-16,0,-31,9,-15,0x29232a);const sword=this.add.rectangle(13,-3,4,27,0xd6d8d1).setAngle(25).setStrokeStyle(1,0x514d48);this.playerSprite.add([shadow,cape,body,head,hair,sword]);setWorldEntityDepth(this.playerSprite);
@@ -515,6 +557,51 @@ class WorldScene extends Phaser.Scene {
     this.add.text(715,286,'Thương nhân',{fontFamily:'Arial',fontSize:'11px',color:'#ffe6a8',stroke:'#30251a',strokeThickness:3}).setOrigin(.5);
     this.input.on('pointerdown',p=>this.movePlayerTo(p.worldX,p.worldY,450,true));
     this.scale.on('resize',()=>this.cameras.main.setSize(this.scale.width,this.scale.height));
+  }
+  createMonsterViews(){
+    for(const monster of worldEntityState.snapshot().monsters){
+      const view=this.drawMonster(monster);
+      this.monsterViews.push({id:monster.id,view,monster});
+    }
+    renderWorldTarget();
+  }
+  drawMonster(monster){
+    const c=this.add.container(monster.x,monster.y);
+    const elite=monster.id==='pack-leader';
+    const color=elite?0x8c4c46:0x777d55;
+    const shadow=this.add.ellipse(0,13,30,8,0x10130f,.4);
+    const body=this.add.ellipse(0,0,elite?31:25,18,color).setStrokeStyle(2,0x30291f);
+    const head=this.add.circle(elite?13:10,-8,elite?9:7,0xa99a72).setStrokeStyle(2,0x30291f);
+    const ear=this.add.triangle(elite?17:13,-16,-5,4,0,-8,5,4,0x55463a);
+    const eye=this.add.circle(elite?16:13,-9,1.5,0xf4d18a);
+    const label=this.add.text(0,-42,monster.name+' · Lv.'+monster.level,{fontFamily:'Arial',fontSize:elite?'11px':'10px',color:elite?'#ffd18b':'#f2e8c9',stroke:'#241e19',strokeThickness:3}).setOrigin(.5);
+    const bar=this.add.rectangle(0,-31,34,4,0x241b19).setOrigin(.5);
+    const fill=this.add.rectangle(-16,-31,30,2,0xb94d3e).setOrigin(0,.5);
+    c.add([shadow,body,head,ear,eye,label,bar,fill]);
+    c.setDepth(monster.y);
+    c.setSize(42,54).setInteractive(new Phaser.Geom.Rectangle(-22,-27,44,54),Phaser.Geom.Rectangle.Contains);
+    c.on('pointerdown',(pointer,localX,localY,event)=>{
+      event?.stopPropagation();
+      window.dispatchEvent(new CustomEvent('kpah:monster-select',{detail:{id:monster.id}}));
+    });
+    c.setData('hpFill',fill);
+    return c;
+  }
+  syncMonsterViews(){
+    const revived=worldEntityState.update();
+    const states=worldEntityState.snapshot().monsters;
+    for(const entry of this.monsterViews){
+      const state=states.find(item=>item.id===entry.id);
+      if(!state)continue;
+      entry.view.setVisible(state.alive);
+      entry.view.setDepth(state.y);
+      const fill=entry.view.getData('hpFill');
+      if(fill)fill.width=Math.max(0,30*state.hp/state.maxHp);
+    }
+    if(revived.length){
+      const selected=worldEntityState.snapshot().selected;
+      if(selected){skillCombat.setTarget(selected);renderWorldTarget();}
+    }
   }
   configureCamera(){
     configureWorldCamera(this,this.playerSprite,this.worldBounds,{
@@ -550,6 +637,7 @@ class WorldScene extends Phaser.Scene {
     });
   }
   update(){
+    this.syncMonsterViews();
     if(!this.playerSprite)return;
     const {x,y}=this.playerSprite;
     if(this.playerLabel){
