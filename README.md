@@ -104,3 +104,12 @@ The zone names, layouts, connections, NPC placement, monster spawn points and le
 Monster drop rolls now create visible ground-loot entities at the defeat location instead of inserting items directly into the bag. Loot expires after a local lifetime, can be clicked or collected with the E key when nearby, and is added to the shared inventory only after a capacity check. If the bag is full, the item remains available on the ground. Zone changes clear local ground loot. The drop lifetime, placement and pickup radius are demo rules.
 
 Friends and party panels now use a shared local social state. The client can add a friend by name, invite online demo friends, create a party by inviting the first online friend, accept/decline simulated invitations, remove members and leave the party. Party size is capped at five. These are offline UI/state simulations only; there is no real player directory, network invitation, chat delivery or synchronized party combat.
+
+
+## NPC exploration, guild and mailbox client slice
+
+The hunter in Bamboo Forest and the cave guardian now advance separate zone-exploration quest objectives when interacted with. The quest journal includes these NPC objectives alongside the village elder objective. This is local quest progression; it does not recreate verified original NPC dialogue scripts.
+
+The guild panel now supports browsing a small demo guild catalog, submitting a local join request (auto-accepted in this offline prototype), viewing guild/member contribution summaries, contributing Xu and leaving the guild. Contributions deduct currency from the shared character wallet. Guild membership and ranks are local illustrative state only.
+
+The mailbox now displays sample system/NPC messages, tracks read/unread state, shows an unread indicator on the mail shortcut and allows claiming a sample currency attachment into the shared wallet. Mail content and attachments are demo data; no remote mail delivery exists.
