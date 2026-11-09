@@ -368,3 +368,7 @@
   .window-title{height:36px;min-height:36px}
   .window-content{padding:8px}
 }
+
+
+.quest-unlock-hint{display:block;margin-top:6px;color:#b8a27d;font-size:11px;line-height:1.45}
+.quest-card-footer button:disabled{opacity:.58;cursor:not-allowed;filter:saturate(.55)}
