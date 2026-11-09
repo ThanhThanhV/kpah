@@ -257,6 +257,11 @@ function renderSkillPanel(){
     <div class="skill-section-title">KỸ NĂNG CHỦ ĐỘNG</div><div class="skill-list skill-list-live">${cards(active)}</div>
     <div class="skill-section-title">KỸ NĂNG BỊ ĐỘNG</div><div class="skill-list skill-list-live">${cards(passive)}</div>`;
 }
+function syncCombatTarget(target){
+  if(!target)return {ok:false,message:'Chưa chọn mục tiêu.'};
+  const current=skillCombat.snapshot().target;
+  return current?.id===target.id?skillCombat.syncTarget(target):skillCombat.setTarget(target);
+}
 function renderWorldTarget(){
   const target=worldEntityState.snapshot().selected;
   const panel=document.querySelector('#world-target');
@@ -317,7 +322,7 @@ function executeActionSlot(slot){
       return;
     }
   }
-  skillCombat.setTarget(target);
+  syncCombatTarget(target);
   const character=characterState.snapshot();
   const result=skillCombat.useSlot(slot,character);
   if(!result.ok){toast(result.message);return;}
@@ -341,7 +346,7 @@ function executeActionSlot(slot){
       result.message+=' · nhận '+worldHit.experience+' EXP'+(collected.length?' · rơi '+collected.join(', '):'');
       if(gained.levelsGained)toast('Lên cấp '+gained.level+'!');
       const nextTarget=worldEntityState.snapshot().selected;
-      if(nextTarget)skillCombat.setTarget(nextTarget);
+      if(nextTarget)syncCombatTarget(nextTarget);
     }else{
       characterState.receiveDamage(result.enemyDamage);
     }
@@ -463,7 +468,7 @@ window.addEventListener('kpah:monster-select',event=>{
   const id=event.detail?.id;
   const result=worldEntityState.select(id);
   if(!result.ok){toast(result.message);return;}
-  skillCombat.setTarget(result.monster);
+  syncCombatTarget(result.monster);
   renderWorldTarget();
   toast('Đã chọn '+result.monster.name+'. Tiếp cận mục tiêu và sử dụng kỹ năng.');
 });
@@ -615,7 +620,7 @@ class WorldScene extends Phaser.Scene {
     }
     if(revived.length){
       const selected=worldEntityState.snapshot().selected;
-      if(selected){skillCombat.setTarget(selected);renderWorldTarget();}
+      if(selected){syncCombatTarget(selected);renderWorldTarget();}
     }
   }
   configureCamera(){
