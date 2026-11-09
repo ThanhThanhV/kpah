@@ -9,8 +9,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 | Phase | Scope | Progress | Basis |
 |---|---|---:|---|
 | P0 | Foundation and original resources (5 tasks) | 36% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
-| P1 | Reconstructed client/gameplay (10 tasks) | 37% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel and zone-specific NPC quest interactions are implemented; original map data, real animation and server combat remain unimplemented. |
-| P2 | Game systems (10 tasks) | 37% | Character/inventory/equipment, skill progression, quest progression, local world hunting, merchant purchases, guild contribution and mailbox rewards now share wallet/inventory state; local friends/party and guild systems are present. All content remains client-side demo data. |
+| P1 | Reconstructed client/gameplay (10 tasks) | 37% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel, zone-specific NPC quest interactions and checkpoint respawn are implemented; original map data, real animation and server combat remain unimplemented. |
+| P2 | Game systems (10 tasks) | 37% | Character/inventory/equipment, skill progression, quest progression, local world hunting, merchant purchases, guild contribution and mailbox rewards now share wallet/inventory state; local friends/party and guild systems are present, with browser-local saves for character progression, inventory/equipment, quests and learned skill configuration. All content remains client-side demo data. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 0% | Not started. |
 
@@ -162,3 +162,6 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 
 - Follow-up static validation found and repaired a malformed nested-template renderer in the party panel. The complete `src/main.js` entrypoint now passes the available V8 syntax compilation check after import declarations are removed for parsing.
+
+
+- Mobile audit tightened game-window sizing against device safe areas, enabled contained momentum scrolling for long panels, and reduced modal chrome on short phone screens. This is a CSS-level audit; no physical-device/browser verification has been run.
