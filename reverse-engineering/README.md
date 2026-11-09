@@ -65,11 +65,12 @@ Detailed traces:
 - [Server selection](server-selection-trace.md)
 - [Authentication requests](authentication-request-trace.md)
 - [Socket transport](socket-transport-trace.md)
+- [Packed resource format](resource-pack-format.md)
 
 ## Next investigation sequence
 
-1. Decode the `.sh`, `.wp`, and `.wps` resource formats from their readers and rendering call sites.
+1. Decode the remaining `.wp` and `.wps` formats; the `.sh` format is now decoded by the extraction script.
 2. Trace the map-entry response and initialization of `mj`, including its render-ready state and camera/tile setup.
-3. Map the original sprite sheets, font sheets, tile sets, and UI panels to the screen classes.
+3. Decode the font data records and map sprite sheets, tile sets, and UI panels to screen classes.
 4. Replace the mock server/login/character flow and then the mock world HUD incrementally using verified dimensions and assets.
 5. Record every inferred mapping with the class/method or resource evidence that supports it.
