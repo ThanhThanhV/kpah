@@ -55,3 +55,8 @@ The character creation form loads the five verified `.wps` profession-preview pa
 ## Sprite inspection
 
 Open **Tài nguyên gốc** and use the Sprite Sheet Inspector below the PNG browser. Select an extracted PNG, enter the number of rows and columns, set preview FPS, then step through or play the resulting frame grid. The grid is manually configured for inspection; it does not claim to know the original animation frame order or timing.
+
+
+## Binary metadata inspection
+
+The Resource Viewer includes a read-only `.d` inspector for decoded packed metadata files. It displays byte offsets, hexadecimal bytes and printable ASCII. No semantic field interpretation is assumed until the client bytecode confirms the record layout.
