@@ -116,3 +116,10 @@ The mailbox now displays sample system/NPC messages, tracks read/unread state, s
 
 
 The chat composer now includes a recipient selector for local private messages. The guild channel is blocked until the local character joins a guild; world/private/system channel filtering remains local to the current browser session. These controls do not deliver messages to other clients.
+
+
+## Local character save and recovery
+
+Character identity, level/experience, attributes and potential points, HP/MP, currency, inventory/equipment, quest progress and learned skill/loadout configuration are saved in versioned browser local storage. Loading validates the save against the current local catalogs and ignores unknown items/quests/skills. Storage denial, quota errors, malformed JSON and unsupported save versions fall back to a fresh demo state without blocking the game.
+
+Battle target HP, cooldowns, turn counters, ground drops, player credentials, social/guild/mail sessions and other transient world state are not included. This is device/browser-local demo persistence, not account storage or cross-device synchronization.
