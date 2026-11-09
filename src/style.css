@@ -211,3 +211,18 @@
  .quest-card-heading b{font-size:10px}
  .quest-reward-live{gap:4px}
 }
+
+
+/* Selectable monsters and world target HUD */
+.world-target{position:absolute;z-index:12;top:14px;right:14px;width:min(220px,42%);padding:8px 10px;background:rgba(27,22,24,.91);border:1px solid #8b6942;box-shadow:0 3px 12px #17120f99;pointer-events:none}
+.world-target[hidden]{display:none}
+.world-target-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px}
+.world-target-heading b{font-size:10px;color:#f2d69d}
+.world-target-heading small,.world-target>small{font-size:8px;color:#c5ad88}
+.world-target-health{height:6px;background:#171416;border:1px solid #5a4034;margin-bottom:4px}
+.world-target-health i{display:block;width:100%;height:100%;background:linear-gradient(90deg,#8f382e,#d46b4c);transition:width .15s}
+.world-target>small{display:block;text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:700px){
+ .world-target{top:8px;right:8px;width:min(175px,48%);padding:6px 7px}
+ .world-target-heading b{font-size:9px}
+}
