@@ -103,6 +103,7 @@ export function renderSpriteLab(root, assets) {
     frame = 0;
     slider.max = String(Math.max(0, total - 1));
     slider.value = '0';
+    count.textContent = '0 / ' + total;
     $('sprite-prev').disabled = !valid || total < 2;
     $('sprite-next').disabled = !valid || total < 2;
     $('sprite-play').disabled = !valid || total < 2;
