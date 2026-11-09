@@ -1,4 +1,4 @@
-const ASSET_ROOT = '/assets/kpah-original/';
+import { assetUrl } from './kpah-assets.js';
 
 const style = document.createElement('style');
 style.textContent = `
@@ -15,10 +15,6 @@ style.textContent = `
 @media(max-width:520px){.sprite-lab-controls{grid-template-columns:1fr 58px 58px 58px}.sprite-lab-stage canvas{height:180px}}
 `;
 document.head.append(style);
-
-function assetUrl(path) {
-  return ASSET_ROOT + path.split('/').map(encodeURIComponent).join('/');
-}
 
 export function renderSpriteLab(root, assets) {
   if (!root) return;
@@ -112,7 +108,7 @@ export function renderSpriteLab(root, assets) {
     image = new Image();
     image.onload = updateGrid;
     image.onerror = () => { meta.textContent = 'Không tải được ảnh: ' + item.path; };
-    image.src = assetUrl(item.output);
+    image.src = assetUrl(item.output) || '';
   }
 
   imageSelect.addEventListener('change',loadAsset);
