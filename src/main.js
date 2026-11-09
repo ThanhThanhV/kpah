@@ -31,7 +31,7 @@ app.innerHTML = `
       </aside>
       <section class="world-column">
         <div class="world-toolbar"><div class="location"><span>◈</span><b>Làng Sói Trắng</b><small>· Khu vực an toàn</small></div><div class="world-tools"><button data-window="map">Bản đồ</button><button data-window="ranking">Xếp hạng</button><button data-window="events">Sự kiện</button></div></div>
-        <div class="world-frame"><div id="world"></div><div class="scene-vignette"></div><div class="zone-title"><b>LÀNG SÓI TRẮNG</b><small>Vùng đất khởi nguyên</small></div><div class="world-coords">X: 124 · Y: 087</div><div class="world-hint">Kéo để di chuyển · Chạm mục tiêu để tương tác</div><div class="npc-tag merchant">Thương nhân</div><div class="npc-tag elder">Trưởng làng</div></div>
+        <div class="world-frame"><div id="world"></div><div class="scene-vignette"></div><div class="zone-title"><b>LÀNG SÓI TRẮNG</b><small>Vùng đất khởi nguyên</small></div><div class="world-coords">X: 124 · Y: 087</div><div class="world-hint">Chạm điểm đến để di chuyển · Chạm NPC để tương tác</div><div class="npc-tag merchant">Thương nhân</div><div class="npc-tag elder">Trưởng làng</div></div>
         <div class="world-bottom"><div class="chat"><div class="chat-tabs"><button class="selected" data-chat-channel="world">Thế giới</button><button data-chat-channel="guild">Bang hội</button><button data-chat-channel="private">Riêng</button><button data-chat-channel="system">Hệ thống</button></div><div class="chat-lines" id="chat-lines"><p data-channel="system"><b class="system">[Hệ thống]</b> Chào mừng đến với Khí Phách Anh Hùng!</p><p data-channel="world"><b class="world-chat">[Thế giới]</b> <strong>Kiếm Khách</strong>: Có ai đi săn Sói không?</p><p data-channel="world"><b class="world-chat">[Thế giới]</b> <strong>PhongVân</strong>: Làng đông vui quá.</p></div><form id="chat-form"><select id="chat-channel-select" aria-label="Kênh chat"><option value="world">Thế giới</option><option value="guild">Bang hội</option><option value="private">Riêng</option><option value="system">Hệ thống</option></select><input id="chat-input" placeholder="Nhập nội dung trò chuyện..." maxlength="120"><button type="submit">Gửi</button></form></div><div class="quick-panel"><div class="quick-title">THAO TÁC NHANH</div><div class="quick-grid"><button data-window="inventory"><span>▣</span>Túi đồ</button><button data-window="skills"><span>✦</span>Kỹ năng</button><button data-window="quests"><span>⚑</span>Nhiệm vụ</button><button data-window="map"><span>⌖</span>Bản đồ</button></div></div></div>
       </section>
       <aside class="right-rail">
@@ -118,7 +118,21 @@ document.querySelector('#chat-form').addEventListener('submit',e=>{
 selectChatChannel('world');
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 let toastTimer;function toast(t){const el=document.querySelector('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2300);}
-document.querySelectorAll('.slot').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.slot').forEach(x=>x.classList.remove('active'));b.classList.add('active');toast('Đã chọn: '+b.dataset.skill);}));
+function selectActionSlot(button){
+  if(!button)return;
+  document.querySelectorAll('.slot').forEach(slot=>slot.classList.toggle('active',slot===button));
+  toast('Đã chọn: '+button.dataset.skill);
+}
+document.querySelectorAll('.slot').forEach(button=>button.addEventListener('click',()=>selectActionSlot(button)));
+window.addEventListener('keydown',event=>{
+  if(document.querySelector('.login-cover'))return;
+  if(event.altKey||event.ctrlKey||event.metaKey)return;
+  const target=event.target;
+  if(target instanceof HTMLElement&&(target.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(target.tagName)))return;
+  if(!/^[1-5]$/.test(event.key))return;
+  const slot=document.querySelectorAll('.slot')[Number(event.key)-1];
+  if(slot){event.preventDefault();selectActionSlot(slot);}
+});
 document.querySelector('#window-content').addEventListener('click',event=>{
   const button=event.target.closest('.tabs button');
   if(!button)return;
