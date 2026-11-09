@@ -14,6 +14,20 @@ const QUEST_CATALOG = [
     reward:{experience:420,currency:260,items:[{id:'small-potion',quantity:2}]}
   },
   {
+    id:'meet-hunter',
+    title:'Lời nhắn của thợ săn',
+    description:'Tìm thợ săn tại Rừng Trúc để nhận lời khuyên về bầy thú.',
+    objective:{type:'talk',target:'hunter',label:'Nói chuyện với thợ săn',required:1},
+    reward:{experience:260,currency:150,items:[]}
+  },
+  {
+    id:'meet-guardian',
+    title:'Cánh cổng Hang Đá Đen',
+    description:'Gặp người canh hang để tìm hiểu lối vào khu vực nguy hiểm.',
+    objective:{type:'talk',target:'guardian',label:'Nói chuyện với người canh hang',required:1},
+    reward:{experience:350,currency:200,items:[]}
+  },
+  {
     id:'village-supply',
     title:'Chuẩn bị hành trang',
     description:'Hoàn thành một nhiệm vụ trong làng và nhận phần thưởng.',
