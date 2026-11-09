@@ -97,6 +97,11 @@ const groundDropState=createGroundDropState();
 const socialState=createSocialState();
 const guildState=createGuildState();
 const mailState=createMailState();
+const deathOverlay=document.createElement('section');
+deathOverlay.className='death-overlay';
+deathOverlay.hidden=true;
+deathOverlay.innerHTML='<div class="death-card"><span class="death-mark">✦</span><h2>NHÂN VẬT ĐÃ GỤC</h2><p>Bạn sẽ hồi sinh tại Làng Sói Trắng, điểm hồi sinh an toàn.</p><button type="button" id="respawn-button">Hồi sinh</button></div>';
+app.appendChild(deathOverlay);
 const localSave=createLocalSave();
 const savedGame=localSave.load();
 if(savedGame){
@@ -104,8 +109,24 @@ if(savedGame){
   questState.restore(savedGame.quests);
   skillCombat.restore(savedGame.skills);
 }
+function showDeathOverlay(){deathOverlay.hidden=false;}
+function hideDeathOverlay(){deathOverlay.hidden=true;}
+function respawnPlayer(){
+  const character=characterState.snapshot();
+  characterState.restoreHp(character.maxHp);
+  characterState.restoreMp(Math.ceil(character.maxMp*0.5));
+  const scene=game.scene.getScene('world');
+  const checkpoint=scene?.respawnAtCheckpoint();
+  hideDeathOverlay();
+  updateCharacterHud();
+  updateActionBar();
+  renderWorldTarget();
+  toast(checkpoint?'Đã hồi sinh tại Làng Sói Trắng.':'Đã hồi sinh.');
+}
+deathOverlay.querySelector('#respawn-button').addEventListener('click',respawnPlayer);
 function saveGameProgress(){
-  localSave.save({character:characterState.snapshot(),quests:questState.snapshot(),skills:skillCombat.snapshot()});
+  const skills=skillCombat.snapshot();
+  localSave.save({character:characterState.snapshot(),quests:questState.snapshot(),skills:{skills:skills.skills.map(skill=>({id:skill.id,level:skill.level})),skillPoints:skills.skillPoints,loadout:skills.loadout}});
 }
 
 function openWindow(key){
@@ -387,6 +408,7 @@ function showCombatFeedback(result){
 let pendingMonsterApproach=false;
 let pendingMonsterApproachTimer=null;
 function executeActionSlot(slot){
+  if(characterState.snapshot().hp<=0){showDeathOverlay();return;}
   if(slot===5){
     const item=characterState.snapshot().inventory.find(entry=>entry.category==='consumable'&&entry.restore?.hp);
     if(!item){toast('Không còn bình HP trong hành trang.');return;}
@@ -436,7 +458,7 @@ function executeActionSlot(slot){
     }
   }
   const afterAction=characterState.snapshot();
-  if(afterAction.hp<=0)toast('Nhân vật đã gục. Hãy dùng bình HP trong hành trang.');
+  if(afterAction.hp<=0)showDeathOverlay();
   showCombatFeedback(result);
   updateCharacterHud();
   updateActionBar();
@@ -779,6 +801,21 @@ class WorldScene extends Phaser.Scene {
     if(merchant)merchant.style.display=zone.id==='village'?'':'none';
     if(elder)elder.style.display=zone.id==='village'?'':'none';
   }
+  respawnAtCheckpoint(){
+    const checkpoint=worldMapState.setCurrent('village');
+    if(!checkpoint||!this.playerSprite)return false;
+    if(pendingMonsterApproachTimer!==null){clearTimeout(pendingMonsterApproachTimer);pendingMonsterApproachTimer=null;pendingMonsterApproach=false;}
+    this.tweens.killTweensOf(this.playerSprite);
+    this.clearZone();
+    this.playerSprite.setPosition(checkpoint.entry.x,checkpoint.entry.y);
+    this.playerLabel?.setPosition(checkpoint.entry.x,checkpoint.entry.y-52);
+    this.drawZone(checkpoint);
+    this.cameras.main.setBounds(0,0,this.worldBounds.width,this.worldBounds.height);
+    this.cameras.main.centerOn(checkpoint.entry.x,checkpoint.entry.y);
+    syncCombatTarget(worldEntityState.snapshot().selected);
+    renderWorldTarget();
+    return true;
+  }
   changeZone(zoneId){
     if(pendingMonsterApproachTimer!==null){clearTimeout(pendingMonsterApproachTimer);pendingMonsterApproachTimer=null;pendingMonsterApproach=false;}
     this.tweens.killTweensOf(this.playerSprite);
@@ -867,7 +904,7 @@ class WorldScene extends Phaser.Scene {
     this.movePlayerTo(this.playerSprite.x+dx*distance,this.playerSprite.y+dy*distance,105);
   }
   movePlayerTo(x,y,duration=120,showDestination=false){
-    if(!this.playerSprite)return;
+    if(!this.playerSprite||characterState.snapshot().hp<=0)return;
     const destination={
       x:Phaser.Math.Clamp(x,this.walkBounds.x,this.walkBounds.x+this.walkBounds.width),
       y:Phaser.Math.Clamp(y,this.walkBounds.y,this.walkBounds.y+this.walkBounds.height)
