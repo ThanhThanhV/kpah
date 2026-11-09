@@ -12,6 +12,7 @@ import { createGroundDropState } from './ground-drop-state.js';
 import { createSocialState } from './social-state.js';
 import { createGuildState } from './guild-state.js';
 import { createMailState } from './mail-state.js';
+import { createLocalSave } from './local-save.js';
 
 const app = document.querySelector('#app');
 app.innerHTML = `
@@ -96,6 +97,16 @@ const groundDropState=createGroundDropState();
 const socialState=createSocialState();
 const guildState=createGuildState();
 const mailState=createMailState();
+const localSave=createLocalSave();
+const savedGame=localSave.load();
+if(savedGame){
+  characterState.restore(savedGame.character);
+  questState.restore(savedGame.quests);
+  skillCombat.restore(savedGame.skills);
+}
+function saveGameProgress(){
+  localSave.save({character:characterState.snapshot(),quests:questState.snapshot(),skills:skillCombat.snapshot()});
+}
 
 function openWindow(key){
   const p=panelData[key]||panelData.help;
@@ -349,6 +360,7 @@ function renderWorldTarget(){
 }
 function updateActionBar(){
   const data=skillCombat.snapshot();
+  saveGameProgress();
   const icons={basic:'⚔','sword-wave':'✧',heal:'✚','combo-slash':'⚔','blade-storm':'✹'};
   const names=Object.fromEntries(data.skills.map(skill=>[skill.id,skill.name]));
   document.querySelectorAll('.action-slots .slot').forEach((button,index)=>{
@@ -441,6 +453,7 @@ function refreshCharacterPanel(){
   updateCharacterHud();
 }
 function updateCharacterHud(){
+  saveGameProgress();
   const data=characterState.snapshot();
   document.querySelectorAll('.hero-name').forEach(el=>el.textContent=data.name);
   const profile=document.querySelector('.profile-info');
@@ -466,6 +479,7 @@ function updateMailBadge(){
  else if(badge)badge.remove();
 }
 function updateQuestBadge(){
+  saveGameProgress();
   const button=document.querySelector('[data-window="quests"]');
   if(!button)return;
   const pending=questState.snapshot().counts.completed;
