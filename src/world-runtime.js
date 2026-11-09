@@ -29,7 +29,7 @@ export function loadSpriteSheetTexture(scene, definition) {
   if (typeof key !== 'string' || !key.trim()) {
     return Promise.reject(new Error('Sprite-sheet loading requires a non-empty texture key.'));
   }
-  if (typeof url !== 'string' || !/^https?:\\/\\//i.test(url)) {
+  if (typeof url !== 'string' || !/^https?:\/\//i.test(url)) {
     return Promise.reject(new Error('Sprite-sheet URL must be an HTTP(S) asset URL.'));
   }
   if (!Number.isInteger(frameWidth) || frameWidth < 1 ||
