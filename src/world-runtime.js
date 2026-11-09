@@ -93,7 +93,12 @@ export function createWorldTileLayer(scene, definition) {
   if (!tileset) throw new Error('Unable to bind world tileset: ' + key);
   const layer = map.createLayer(0, tileset, definition.x || 0, definition.y || 0);
   if (Array.isArray(definition.collisions) && definition.collisions.length) {
-    map.setCollision(definition.collisions, true, layer);
+    const collisionIndexes = [...new Set(definition.collisions)];
+    if (collisionIndexes.some(index => !Number.isInteger(index) || index < 0)) {
+      throw new Error('World collision tile IDs must be non-negative integers.');
+    }
+    // Phaser.Tilemap.setCollision(indexes, collides, recalculateFaces, layer)
+    map.setCollision(collisionIndexes, true, true, layer);
   }
   layer.setDepth(definition.depth || 0);
   return { map, layer };
