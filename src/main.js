@@ -293,6 +293,7 @@ function showCombatFeedback(result){
   frame.appendChild(effect);
   effect.addEventListener('animationend',()=>effect.remove(),{once:true});
 }
+let pendingMonsterApproach=false;
 function executeActionSlot(slot){
   if(slot===5){
     const item=characterState.snapshot().inventory.find(entry=>entry.category==='consumable'&&entry.restore?.hp);
@@ -302,6 +303,20 @@ function executeActionSlot(slot){
   }
   const target=worldEntityState.snapshot().selected;
   if(!target){toast('Hiện không có quái vật sống trong khu vực. Hãy chờ chúng hồi sinh.');return;}
+  const scene=game.scene.getScene('world');
+  if(scene?.playerSprite){
+    const distance=Phaser.Math.Distance.Between(scene.playerSprite.x,scene.playerSprite.y,target.x,target.y);
+    if(distance>145){
+      if(pendingMonsterApproach)return;
+      pendingMonsterApproach=true;
+      const angle=Phaser.Math.Angle.Between(scene.playerSprite.x,scene.playerSprite.y,target.x,target.y);
+      const duration=Math.min(1000,Math.max(250,distance*1.15));
+      scene.movePlayerTo(target.x-Math.cos(angle)*95,target.y-Math.sin(angle)*95,duration);
+      toast('Đang tiếp cận '+target.name+'…');
+      window.setTimeout(()=>{pendingMonsterApproach=false;executeActionSlot(slot);},duration+60);
+      return;
+    }
+  }
   skillCombat.setTarget(target);
   const character=characterState.snapshot();
   const result=skillCombat.useSlot(slot,character);
