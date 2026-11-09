@@ -79,7 +79,7 @@ export async function renderResourceViewer(root) {
     const pack = packSelect.value;
     const visible = images.filter(item =>
       (!pack || item.archive === pack) &&
-      (!term || (item.path + ' ' + item.archive).toLowerCase().includes(term))
+      (!term || (item.path + ' ' + item.archive + ' ' + (item.imageClassHint || '')).toLowerCase().includes(term))
     );
     summary.innerHTML = `Hiển thị <b>${visible.length}</b> / <b>${images.length}</b> ảnh PNG · ${packs.length} gói · ${Number(manifest.entryCount || 0)} file trong JAR`;
     if (!visible.length) {
@@ -92,7 +92,7 @@ export async function renderResourceViewer(root) {
         <article class="resource-card">
           <div class="resource-thumb"><img loading="lazy" src="${url}" alt="${escapeHtml(item.path)}"></div>
           <div class="resource-name">${escapeHtml(item.path)}</div>
-          <div class="resource-meta">${escapeHtml(item.archive)} · ${Number(item.size || 0).toLocaleString('vi-VN')} byte</div>
+          <div class="resource-meta">${escapeHtml(item.archive)} · ${item.width && item.height ? item.width + '×' + item.height + ' px · ' : ''}${escapeHtml(item.imageClassHint || 'chưa phân loại')} · ${Number(item.size || 0).toLocaleString('vi-VN')} byte</div>
         </article>`;
     }).join('');
   }
