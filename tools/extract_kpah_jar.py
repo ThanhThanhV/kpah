@@ -108,10 +108,6 @@ def classify_image(width: int, height: int) -> str:
         return "wide-image"
     if ratio <= 0.45:
         return "tall-image"
-    if height >= 2 * width:
-        return "vertical-sheet-candidate"
-    if width >= 2 * height:
-        return "horizontal-sheet-candidate"
     return "general-image"
 
 def main() -> None:
