@@ -147,9 +147,10 @@
 .skill-cooldown{position:absolute;top:5px;right:7px;font-style:normal;font-size:8px;color:#e59a79}
 .action-slots .slot.on-cooldown{filter:saturate(.45);opacity:.7}
 .action-slots .slot.on-cooldown em::after{content:' · hồi';color:#e59a79}
-.combat-feedback{position:absolute;z-index:12;left:50%;top:48%;font-weight:800;font-size:20px;pointer-events:none;text-shadow:0 2px 4px #000;animation:combat-float .9s ease-out forwards}
+.combat-feedback{position:absolute;z-index:12;font-weight:800;font-size:20px;pointer-events:none;white-space:nowrap;text-shadow:0 2px 4px #000;animation:combat-float .9s ease-out forwards}
 .combat-feedback.damage{color:#ffe1a1}
 .combat-feedback.healing{color:#8be0a0}
+.combat-feedback.incoming{color:#ff8b78}
 @keyframes combat-float{0%{opacity:0;transform:translate(-50%,10px) scale(.8)}20%{opacity:1}100%{opacity:0;transform:translate(-50%,-65px) scale(1.15)}}
 @media(max-width:700px){
   .skill-header{padding:8px;gap:6px}
