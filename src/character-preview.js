@@ -105,6 +105,6 @@ export async function mountCharacterPreview(root, classSelect) {
     if (version !== requestVersion) return;
   }
 
-  classSelect.addEventListener('change', render);
+  classSelect.onchange = render;
   render();
 }
