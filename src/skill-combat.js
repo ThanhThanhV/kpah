@@ -103,7 +103,7 @@ export function createSkillCombatState() {
     for (const key of Object.keys(state.cooldowns)) state.cooldowns[key] = Math.max(0,state.cooldowns[key]-1);
     if (skill.cooldown > 0) state.cooldowns[skillId] = skill.cooldown;
     const defeated = state.target.hp <= 0;
-    const enemyDamage = defeated ? 0 : 12 + Math.floor(state.turn*1.5);
+    const enemyDamage = defeated ? 0 : (state.target.damage || 12 + Math.floor(state.turn*1.5));
     addLog(skill.name + (rawDamage ? ' gây ' + rawDamage.toLocaleString('vi-VN') + ' sát thương.' : ' được sử dụng.') + (healing ? ' Hồi ' + healing + ' HP.' : ''));
 
     if (defeated) {
@@ -127,7 +127,8 @@ export function createSkillCombatState() {
       level:Math.max(1,Math.floor(Number(target.level)||1)),
       maxHp:Math.floor(target.maxHp),
       hp:Math.max(0,Math.min(Math.floor(target.maxHp),Math.floor(Number(target.hp)||target.maxHp))),
-      defense:Math.max(0,Math.floor(Number(target.defense)||0))
+      defense:Math.max(0,Math.floor(Number(target.defense)||0)),
+      damage:Math.max(0,Math.floor(Number(target.damage)||0))
     };
     state.cooldowns = {};
     state.turn = 0;
