@@ -107,3 +107,16 @@ This distinguishes the two screens: `lj` selects an existing character; `ls` cre
 
 After choosing a character, `li.b()` activates a short transition state. Its renderer clears the screen to black, animates a small particle/trail field, and draws a 24 × 24 frame from a sprite resource. It periodically sends a small position/status request through `jy.b(int,int,int)` while the transition is active. Treat it as a loading/entry transition, not as the world screen.
 
+
+
+## In-world Canvas state: `mj`
+
+The class `mj` is the main in-world renderer/state, not just a passive data holder:
+
+- It extends `tj` and its `b()` method calls `tj.b()`, making `mj` the active `km.q` screen, then runs its layout/update setup.
+- Its `a(Graphics)` method is the world draw path. It resets the Canvas transform, applies camera offsets, draws world layers and map-backed objects, then iterates world entity collections and renders their sprite/animation frames.
+- It references the active player object `mj.t`, map/camera coordinates, entity collections, and sprite records resolved through `mi`.
+- The class also owns many in-game menu actions and labels (chat, inventory, guild/quest interactions), while `tb` is a separate menu/guild panel state.
+
+This is the strongest current candidate for the core playable world scene. The next task is to trace how the character-selection response and map-entry response initialize `mj` and set its `v` render-ready flag, then map the tile/sprite readers to the original asset sheets.
+
