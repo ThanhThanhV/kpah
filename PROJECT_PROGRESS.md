@@ -165,3 +165,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 
 - Mobile audit tightened game-window sizing against device safe areas, enabled contained momentum scrolling for long panels, and reduced modal chrome on short phone screens. This is a CSS-level audit; no physical-device/browser verification has been run.
+
+
+## P2 — Prerequisite-driven quest progression
+
+- Added a five-step local story chain connecting the village, forest and cave NPCs with the wolf patrol.
+- Quest acceptance checks the previous quest's claimed state; locked quests remain visible with an explicit unlock requirement instead of appearing immediately actionable.
+- Updated the final preparation objective to return to the village elder after the cave encounter.
+- Ground-item pickup is also rejected while the character is knocked out, matching the existing movement/action lock.
