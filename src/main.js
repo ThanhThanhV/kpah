@@ -250,7 +250,7 @@ function renderSkillPanel(){
   return `<div class="skill-header"><div><b>Điểm kỹ năng: <strong>${data.skillPoints}</strong></b><small>Học và nâng cấp kỹ năng, sau đó gán vào thanh thao tác.</small></div><span class="skill-mode">CLIENT DEMO</span></div>
     <section class="training-battle">
       <div class="training-target"><div class="training-monster">♞</div><div class="training-target-info"><b>${escapeHtml(target.name)}</b><small>Cấp ${target.level} · Mục tiêu luyện tập</small><div class="training-hp"><i style="width:${hpPercent}%"></i></div><small>${target.hp.toLocaleString('vi-VN')} / ${target.maxHp.toLocaleString('vi-VN')} HP</small></div></div>
-      <div class="training-controls"><span>Lượt ${data.turn}</span><button type="button" data-training-reset>${data.battleActive?'Đặt lại mục tiêu':'Đánh lại'}</button></div>
+      <div class="training-controls"><span>Lượt ${data.turn}</span><button type="button" data-training-reset>'Chọn lại mục tiêu'</button></div>
       <div class="training-log">${data.log.map(line=>`<p>${escapeHtml(line)}</p>`).join('')}</div>
       <p class="panel-hint">Mô phỏng chiến đấu theo lượt ở client. Công thức và chỉ số chỉ là dữ liệu thử nghiệm, không đại diện máy chủ KPAH.</p>
     </section>
@@ -436,7 +436,7 @@ document.querySelector('#window-content').addEventListener('click',event=>{
   }
   const upgrade=event.target.closest('[data-skill-upgrade]')?.dataset.skillUpgrade;
   if(upgrade){const result=skillCombat.learnOrUpgrade(upgrade);toast(result.message);updateActionBar();document.querySelector('#window-content').innerHTML=renderSkillPanel();return;}
-  if(event.target.closest('[data-training-reset]')){skillCombat.resetTarget();updateActionBar();document.querySelector('#window-content').innerHTML=renderSkillPanel();toast('Đã làm mới mục tiêu luyện tập.');return;}
+  if(event.target.closest('[data-training-reset]')){const target=worldEntityState.snapshot().selected;if(target){syncCombatTarget(target);renderWorldTarget();updateActionBar();document.querySelector('#window-content').innerHTML=renderSkillPanel();toast('Đã đồng bộ mục tiêu đang chọn.');}else toast('Chưa có quái vật sống trong khu vực.');return;}
   const stat=event.target.closest('[data-stat-up]')?.dataset.statUp;
   if(stat){const result=characterState.allocateStat(stat);toast(result.message);refreshCharacterPanel();return;}
   const itemButton=event.target.closest('[data-item-action]');
@@ -583,6 +583,7 @@ class WorldScene extends Phaser.Scene {
       const view=this.drawMonster(monster);
       this.monsterViews.push({id:monster.id,view,monster});
     }
+    syncCombatTarget(worldEntityState.snapshot().selected);
     renderWorldTarget();
   }
   drawMonster(monster){
