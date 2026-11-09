@@ -155,5 +155,31 @@ export function createSkillCombatState() {
     return startBattle();
   }
 
-  return {snapshot,learnOrUpgrade,assignSkill,unassignSkill,useSlot,startBattle,setTarget,syncTarget,resetTarget};
+  function restore(saved) {
+    if (!saved || typeof saved !== 'object') return false;
+    if (Array.isArray(saved.skills)) {
+      for (const candidate of saved.skills) {
+        const skill = skills[candidate?.id];
+        const level = Number(candidate?.level);
+        if (skill && Number.isFinite(level)) skill.level = Math.max(0, Math.min(skill.maxLevel, Math.floor(level)));
+      }
+    }
+    state.skillPoints = Math.max(0, Math.min(100000, Math.floor(Number(saved.skillPoints) || 0)));
+    if (Array.isArray(saved.loadout)) {
+      state.loadout = Array.from({length:4}, (_, index) => {
+        const skill = skills[saved.loadout[index]];
+        return skill && skill.type === 'active' && skill.level > 0 ? skill.id : null;
+      });
+      state.loadout = state.loadout.map((id, index) => id && state.loadout.indexOf(id) !== index ? null : id);
+      if (!state.loadout.some(Boolean)) state.loadout[0] = 'basic';
+    }
+    state.cooldowns = {};
+    state.turn = 0;
+    state.target.hp = state.target.maxHp;
+    state.battleActive = true;
+    state.log = ['Đã khôi phục kỹ năng. Trận luyện tập mới đã sẵn sàng.'];
+    return true;
+  }
+
+  return {snapshot,restore,learnOrUpgrade,assignSkill,unassignSkill,useSlot,startBattle,setTarget,syncTarget,resetTarget};
 }
