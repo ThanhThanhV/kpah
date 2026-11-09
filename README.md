@@ -70,3 +70,7 @@ The extractor records PNG width and height from the PNG header and adds a neutra
 ## Character and inventory client slice
 
 The character profile, inventory and equipment panels share a local state model. The demo supports potential-point allocation, derived HP/MP limits, equipment bonuses, equipping/unequipping, category filters and consumable use. This is client-only sample data: it is not the original server item database, game balance, or persistent account state. Backend integration is intentionally deferred until the BE design stage.
+
+## Skills and training combat client slice
+
+The skills panel includes active/passive skill progression, point-based learning and upgrades, and assignment/removal across four action-bar slots. The action bar and 1–5 shortcuts execute a local turn-based training encounter with target HP, damage, MP costs, cooldowns, self-healing, enemy retaliation, combat log and restart. Slot five consumes an HP potion from the shared inventory. All skill definitions, balance values, target data and combat formulas are illustrative demo content; they are not verified KPAH data and are not server-authoritative.
