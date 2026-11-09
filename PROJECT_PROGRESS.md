@@ -9,12 +9,12 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 | Phase | Scope | Progress | Basis |
 |---|---|---:|---|
 | P0 | Foundation and original resources (5 tasks) | 36% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
-| P1 | Reconstructed client/gameplay (10 tasks) | 36% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel and zone-specific NPC quest interactions are implemented; original map data, real animation and server combat remain unimplemented. |
-| P2 | Game systems (10 tasks) | 36% | Character/inventory/equipment, skill progression, quest progression, local world hunting, merchant purchases, guild contribution and mailbox rewards now share wallet/inventory state; local friends/party and guild systems are present. All content remains client-side demo data. |
+| P1 | Reconstructed client/gameplay (10 tasks) | 37% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel and zone-specific NPC quest interactions are implemented; original map data, real animation and server combat remain unimplemented. |
+| P2 | Game systems (10 tasks) | 37% | Character/inventory/equipment, skill progression, quest progression, local world hunting, merchant purchases, guild contribution and mailbox rewards now share wallet/inventory state; local friends/party and guild systems are present. All content remains client-side demo data. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 0% | Not started. |
 
-**Overall estimate: about 22.5%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 23%** (weighted average of the 41 roadmap items).
 
 ## P0 — Foundation detail
 
@@ -159,3 +159,6 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Added a knockout state when world-combat retaliation reduces character HP to zero. The player cannot continue movement or action-bar attacks while knocked out.
 - Added an explicit respawn action that restores HP and part of MP, returns the character to the Làng Sói Trắng checkpoint, reloads its local world entities and recenters the camera.
 - Death penalties, revive items, timers and original server rules remain unverified; this is an offline reconstruction rule.
+
+
+- Follow-up static validation found and repaired a malformed nested-template renderer in the party panel. The complete `src/main.js` entrypoint now passes the available V8 syntax compilation check after import declarations are removed for parsing.
