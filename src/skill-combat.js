@@ -130,10 +130,8 @@ export function createSkillCombatState() {
       defense:Math.max(0,Math.floor(Number(target.defense)||0)),
       damage:Math.max(0,Math.floor(Number(target.damage)||0))
     };
-    state.cooldowns = {};
-    state.turn = 0;
     state.battleActive = state.target.hp > 0;
-    state.log = [state.target.name+' đã được chọn làm mục tiêu.'];
+    addLog('Đã chọn mục tiêu: '+state.target.name+'.');
     return {ok:true,target:clone(state.target)};
   }
 
