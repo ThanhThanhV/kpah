@@ -1,0 +1,55 @@
+# KPAH 2.7.8 client reverse-engineering notes
+
+## Reference artifact
+
+- File: `KPAH_278.jar`
+- Size: 1,099,370 bytes
+- MIDlet: `game.GameMidlet`
+- Display name: Khi Phach Anh Hung
+- Vendor: TeaM
+- Client version: 1.5.9
+- Runtime: MIDP 2.0 / CLDC 1.0
+- Archive inventory: 1,024 entries, including 782 `.class` files, 29 PNG files, 8 `.sh` files, 5 `.wp` files, and 5 `.wps` files.
+
+The class names are mostly obfuscated. Do not infer class responsibilities from short class names; trace references from `game.GameMidlet` and inspect resource loaders/rendering call sites.
+
+## Resource families observed
+
+- `.sh`: packed client data (includes `main.sh`, `npc.sh`, `eff.sh`, `font.sh`, `arrow.sh`, `box.sh`, `g.sh`, `skillpublic.sh`).
+- `.wp` and `.wps`: packed image/data resources. Splash resources include `wpsplash/0.wp` through `wpsplash/4.wp`.
+- `.png`: UI, font, icon, and sprite-sheet images. Examples include `logo.png`, `icon.png`, `font/*`, `sword skill/*`, and `rong/*`.
+- Extensionless entries: retain their original names and inspect their headers before assigning meaning.
+
+## Reproducible extraction
+
+From the repository root:
+
+```bash
+python tools/extract_kpah_jar.py KPAH_278.jar
+```
+
+This extracts non-class resources to `public/assets/kpah-original/` and writes
+`archive-manifest.json`. The script rejects archive paths that would escape the
+output directory. To extract class files for offline inspection as well:
+
+```bash
+python tools/extract_kpah_jar.py KPAH_278.jar --include-classes
+```
+
+Do not check generated class dumps or extracted assets into Git until their format,
+licensing, and intended use in the recreation have been reviewed. Keep the original
+JAR unchanged as the reference artifact.
+
+## Current reconstruction boundary
+
+The Web client currently contains a mock world and mock panels. It is not yet a
+faithful reproduction of the original screens. Backend behavior and network protocol
+remain intentionally out of scope until agreed with the project owner.
+
+## Next investigation sequence
+
+1. Trace MIDlet lifecycle and startup screen from `game.GameMidlet`.
+2. Identify the canvas/game loop, input dispatch, and screen/state manager.
+3. Decode `.sh`, `.wp`, and `.wps` formats from their readers and rendering call sites.
+4. Replace mock login, character selection, HUD, menus, and world assets incrementally.
+5. Record every inferred mapping with the class/method or resource evidence that supports it.
