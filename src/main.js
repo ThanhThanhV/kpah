@@ -293,8 +293,9 @@ window.addEventListener('keydown',event=>{
 document.querySelector('#window-content').addEventListener('change',event=>{
   const select=event.target.closest('[data-skill-assign]');
   if(!select)return;
-  if(!select.value){toast('Kỹ năng vẫn được giữ trong ô hiện tại.');return;}
-  const result=skillCombat.assignSkill(select.dataset.skillAssign,Number(select.value));
+  const result=select.value
+    ?skillCombat.assignSkill(select.dataset.skillAssign,Number(select.value))
+    :skillCombat.unassignSkill(select.dataset.skillAssign);
   toast(result.message);updateActionBar();document.querySelector('#window-content').innerHTML=renderSkillPanel();
 });
 document.querySelector('#window-content').addEventListener('click',event=>{
