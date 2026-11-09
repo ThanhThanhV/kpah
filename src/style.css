@@ -294,3 +294,41 @@
 .party-invite{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #454a40}
 .party-invite b{flex:1}
 .ground-drop-hint{font-size:11px;color:#f1d48d}
+
+
+/* Guild, mailbox and expanded NPC quest panels */
+.guild-banner{display:flex;align-items:center;gap:12px;padding:14px;background:linear-gradient(120deg,#4b3d26,#292f29);border:1px solid #8e7548;border-radius:9px}
+.guild-banner>span{font-size:30px;color:#e7c77f}
+.guild-banner>div{display:grid;gap:4px;flex:1}
+.guild-banner small,.guild-catalog small{color:#c6b99c;font-size:11px}
+.guild-banner em{font-size:11px;color:#e9d19b;font-style:normal}
+.guild-notice,.guild-intro p{color:#c9c1aa;font-size:12px;line-height:1.5}
+.guild-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}
+.guild-stats>div{display:grid;gap:5px;padding:10px;background:#252d27;border:1px solid #4c5747;border-radius:7px}
+.guild-stats small{font-size:10px;color:#b9b49e}
+.guild-stats b{color:#f1d99d}
+.guild-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.guild-actions button,.guild-catalog button,.mail-actions button{border:1px solid #8d7549;background:#443b2a;color:#f4dfad;border-radius:6px;padding:8px 11px;cursor:pointer}
+.guild-members{display:grid;gap:6px}
+.guild-members p{display:flex;align-items:center;gap:8px;margin:0;padding:9px;background:#252b26;border-radius:6px}
+.guild-members small{color:#bcb39b}
+.guild-members span{margin-left:auto;color:#d9c58e;font-size:11px}
+.guild-catalog{display:grid;gap:9px}
+.guild-catalog article{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #4d5749;background:#252c26;border-radius:8px}
+.guild-catalog article>div{flex:1;min-width:0}
+.guild-catalog article b,.guild-catalog article small{display:block}
+.guild-catalog article p{margin:6px 0 0;color:#bcb69f;font-size:11px}
+.guild-catalog button:disabled{opacity:.5}
+.mail-summary{display:flex;justify-content:space-between;padding:10px 12px;margin-bottom:10px;background:#292f29;border-radius:7px}
+.mail-summary span{color:#dfc78f;font-size:11px}
+.mail-list{display:grid;gap:10px}
+.mail-card{padding:12px;border:1px solid #66583b;background:#292e28;border-radius:8px}
+.mail-card.read{opacity:.78}
+.mail-card-heading{display:flex;justify-content:space-between;gap:8px}
+.mail-card-heading small{color:#bcb39b;font-size:10px}
+.mail-card p{color:#d4cbb3;font-size:12px;line-height:1.5}
+.mail-attachment{padding:8px;background:#3c3527;color:#f0d38b;border-radius:5px;font-size:12px}
+.mail-actions{display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-top:10px}
+.mail-claimed{color:#a7c58f;font-size:11px}
+.quest-card-live[data-quest-status="available"]{border-color:#69704e}
+@media(max-width:560px){.guild-stats{gap:5px}.guild-stats>div{padding:7px}.guild-actions button{flex:1}.guild-catalog article{align-items:flex-start}.mail-card-heading{flex-direction:column;gap:3px}}
