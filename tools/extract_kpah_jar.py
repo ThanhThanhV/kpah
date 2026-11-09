@@ -22,11 +22,18 @@ SH_XOR_KEY = b"NguyenVanMinh"
 
 
 def safe_target(root: Path, name: str) -> Path:
+    # JAR entry names use POSIX separators. Reject Windows separators and drive
+    # prefixes as well, so the same archive is safe on every host platform.
+    if not name or "\\x00" in name or "\\\\" in name:
+        raise ValueError(f"Unsafe archive path: {name!r}")
     relative = PurePosixPath(name)
-    if relative.is_absolute() or ".." in relative.parts or not relative.parts:
+    if (relative.is_absolute() or ".." in relative.parts or not relative.parts
+            or (relative.parts and ":" in relative.parts[0])):
         raise ValueError(f"Unsafe archive path: {name!r}")
     target = root.joinpath(*relative.parts)
-    if root.resolve() not in (target.resolve(), *target.resolve().parents):
+    resolved_root = root.resolve()
+    resolved_target = target.resolve()
+    if resolved_target != resolved_root and resolved_root not in resolved_target.parents:
         raise ValueError(f"Archive path escapes output directory: {name!r}")
     return target
 
@@ -128,10 +135,16 @@ def main() -> None:
     decoded_entries = []
     extracted = 0
     with zipfile.ZipFile(args.jar) as archive:
+        seen_archive_paths: set[str] = set()
         for info in archive.infolist():
             if info.is_dir():
                 continue
             name = info.filename
+            if name in seen_archive_paths:
+                raise ValueError(f"Duplicate JAR entry path: {name!r}")
+            seen_archive_paths.add(name)
+            # Validate before reading or creating any output path.
+            safe_target(args.output, name)
             suffix = PurePosixPath(name).suffix.lower()
             item = {
                 "path": name,
