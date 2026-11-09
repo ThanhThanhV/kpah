@@ -144,6 +144,26 @@ export function createCharacterState() {
     if (typeof profession === 'string' && profession.trim()) state.profession = profession.trim();
   }
 
+  function spendMp(amount) {
+    if (!Number.isFinite(amount) || amount < 0 || state.mp < amount) return {ok:false,spent:0};
+    state.mp -= amount;
+    return {ok:true,spent:amount};
+  }
+
+  function receiveDamage(amount) {
+    const damage = Math.max(0,Math.floor(Number(amount)||0));
+    const dealt = Math.min(state.hp,damage);
+    state.hp -= dealt;
+    return {dealt,hp:state.hp,knockedOut:state.hp<=0};
+  }
+
+  function restoreHp(amount) {
+    const {maxHp} = limits();
+    const restored = Math.min(Math.max(0,Math.floor(Number(amount)||0)),maxHp-state.hp);
+    state.hp += restored;
+    return {restored,hp:state.hp};
+  }
+
   return {
     snapshot,
     equip,
@@ -151,6 +171,9 @@ export function createCharacterState() {
     useItem,
     allocateStat,
     setIdentity,
+    spendMp,
+    receiveDamage,
+    restoreHp,
     get statLabels(){return {...STAT_LABELS};}
   };
 }
