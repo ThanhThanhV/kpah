@@ -10,11 +10,11 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 |---|---|---:|---|
 | P0 | Foundation and original resources (5 tasks) | 36% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
 | P1 | Reconstructed client/gameplay (10 tasks) | 37% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel, zone-specific NPC quest interactions and checkpoint respawn are implemented; original map data, real animation and server combat remain unimplemented. |
-| P2 | Game systems (10 tasks) | 38% | Character/inventory/equipment, skill progression, quest progression, local world hunting, merchant purchases, guild contribution and mailbox rewards now share wallet/inventory state; local friends/party and guild systems are present, with browser-local saves for character progression, inventory/equipment, quests and learned skill configuration. All content remains client-side demo data. |
+| P2 | Game systems (10 tasks) | 39% | Character/inventory/equipment, skill progression, quest progression, local world hunting, merchant purchases, guild contribution and mailbox rewards now share wallet/inventory state; local friends/party and guild systems are present, with browser-local saves for character progression, inventory/equipment, quests and learned skill configuration. All content remains client-side demo data. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 0% | Not started. |
 
-**Overall estimate: about 23.5%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 24%** (weighted average of the 41 roadmap items).
 
 ## P0 — Foundation detail
 
@@ -184,3 +184,6 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Added catalog-validated restore methods; unknown guilds/mail IDs and unrecognized friend IDs are discarded, while user-added local friends are restricted to the local friend ID namespace and bounded names.
 - Rendering these panels snapshots their state so successful local actions are retained on the next browser visit.
 - No credentials, server session, online presence, real chat delivery or cross-device state is saved.
+
+
+- State-level smoke checks restored a locally added friend, pending/accepted party roster, guild membership and contribution, and mailbox read/claimed flags. Party acceptance now checks capacity and duplicate membership before changing an invitation to accepted; the player leader cannot be removed from their own party.
