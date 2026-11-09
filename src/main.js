@@ -8,6 +8,7 @@ import { createQuestState } from './quest-state.js';
 import { createWorldEntityState } from './world-entities.js';
 import { createShopState } from './shop-state.js';
 import { createWorldMapState } from './world-map.js';
+import { createGroundDropState } from './ground-drop-state.js';
 
 const app = document.querySelector('#app');
 app.innerHTML = `
@@ -88,6 +89,7 @@ const questState=createQuestState();
 const worldMapState=createWorldMapState();
 const worldEntityState=createWorldEntityState(Math.random,'village');
 const shopState=createShopState(characterState);
+const groundDropState=createGroundDropState();
 
 function openWindow(key){
   const p=panelData[key]||panelData.help;
@@ -374,13 +376,10 @@ function executeActionSlot(slot){
     if(worldHit.defeated){
       if(target.type==='training-wolf')questState.record('kill','training-wolf');
       const gained=characterState.addExperience(worldHit.experience);
-      const collected=[];
-      for(const drop of worldHit.drops){
-        const added=characterState.addItem(drop.itemId,drop.quantity);
-        if(added.ok)collected.push(drop.quantity+' × '+added.itemId);
-      }
+      const createdDrops=groundDropState.spawn(target,worldHit.drops);
+      game.scene.getScene('world')?.syncGroundDrops();
       updateQuestBadge();
-      result.message+=' · nhận '+worldHit.experience+' EXP'+(collected.length?' · rơi '+collected.join(', '):'');
+      result.message+=' · nhận '+worldHit.experience+' EXP'+(createdDrops.length?' · có '+createdDrops.length+' vật phẩm rơi trên đất':'');
       if(gained.levelsGained)toast('Lên cấp '+gained.level+'!');
       const nextTarget=worldEntityState.snapshot().selected;
       if(nextTarget)syncCombatTarget(nextTarget);
@@ -517,6 +516,20 @@ document.querySelector('#window-content').addEventListener('click',event=>{
     });
   }
 });
+function pickupGroundDrop(id){
+  const scene=game.scene.getScene('world');
+  const drop=groundDropState.snapshot().drops.find(item=>item.id===id);
+  if(!drop||!scene?.playerSprite)return;
+  const distance=Phaser.Math.Distance.Between(scene.playerSprite.x,scene.playerSprite.y,drop.x,drop.y);
+  if(distance>82){toast('Hãy đến gần vật phẩm hơn để nhặt.');return;}
+  const result=groundDropState.pickup(id);
+  if(!result.ok){toast(result.message);scene.syncGroundDrops();return;}
+  const added=characterState.addItem(result.item.itemId,result.item.quantity);
+  if(!added.ok){groundDropState.spawn({x:drop.x,y:drop.y},[{itemId:result.item.itemId,quantity:result.item.quantity}]);toast('Hành trang đầy, vật phẩm vẫn nằm trên mặt đất.');}
+  else{toast('Đã nhặt '+result.item.quantity+' × '+added.itemId+'.');refreshCharacterPanel();}
+  scene.syncGroundDrops();updateCharacterHud();
+}
+window.addEventListener('kpah:ground-drop-select',event=>pickupGroundDrop(event.detail?.id));
 window.addEventListener('kpah:monster-select',event=>{
   const id=event.detail?.id;
   const result=worldEntityState.select(id);
@@ -822,4 +835,4 @@ class WorldScene extends Phaser.Scene {
   }
 }
 const game=new Phaser.Game({type:Phaser.AUTO,parent:'world',width:960,height:560,backgroundColor:'#263c2d',render:{pixelArt:true,antialias:false},scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},scene:[WorldScene]});
-window.addEventListener('keydown',e=>{const dirs={ArrowLeft:[-20,0],ArrowRight:[20,0],ArrowUp:[0,-15],ArrowDown:[0,15]};if(!dirs[e.key])return;const s=game.scene.getScene('world');if(!s.playerSprite)return;e.preventDefault();const [dx,dy]=dirs[e.key];s.movePlayerTo(s.playerSprite.x+dx,s.playerSprite.y+dy,120);});
+window.addEventListener('keydown',e=>{if(e.key.toLowerCase()==='e'){const scene=game.scene.getScene('world');const nearest=scene?.playerSprite?groundDropState.nearest(scene.playerSprite.x,scene.playerSprite.y,90):null;if(nearest){e.preventDefault();pickupGroundDrop(nearest.id);}return;}const dirs={ArrowLeft:[-20,0],ArrowRight:[20,0],ArrowUp:[0,-15],ArrowDown:[0,15]};if(!dirs[e.key])return;const s=game.scene.getScene('world');if(!s.playerSprite)return;e.preventDefault();const [dx,dy]=dirs[e.key];s.movePlayerTo(s.playerSprite.x+dx,s.playerSprite.y+dy,120);});
