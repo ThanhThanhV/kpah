@@ -4,7 +4,7 @@ const style = document.createElement('style');
 style.textContent = `
 .sprite-lab{display:grid;gap:9px;margin-top:14px;padding:10px;border:1px solid #66513b;background:#1b171e;color:#e8d8b8}
 .sprite-lab h3{margin:0;color:#f0d28e;font-size:12px}
-.sprite-lab-controls{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,64px);gap:6px}
+.sprite-lab-filter{display:grid;grid-template-columns:1fr 1fr;gap:6px}.sprite-lab-controls{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,64px);gap:6px}
 .sprite-lab-mapping{display:grid;grid-template-columns:minmax(0,1fr) 90px 90px 90px;gap:6px}
 .sprite-lab-mapping input,.sprite-lab-mapping select{min-width:0;width:100%;height:32px;padding:0 6px;background:#17141b;border:1px solid #66513b;color:#f0dfbd;font-size:10px}
 .sprite-lab-mapping .wide{grid-column:1/-1}.sprite-lab-export{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -16,7 +16,7 @@ style.textContent = `
 .sprite-lab button{padding:6px 10px;background:#403128;border:1px solid #8d7048;color:#f0d9ad;font-size:10px}
 .sprite-lab input[type=range]{flex:1;min-width:90px}
 .sprite-lab-meta{font-size:9px;color:#ad9c80;line-height:1.5}
-@media(max-width:520px){.sprite-lab-controls{grid-template-columns:1fr 58px 58px 58px}.sprite-lab-mapping{grid-template-columns:1fr 1fr}.sprite-lab-stage canvas{height:180px}}
+@media(max-width:520px){.sprite-lab-filter{grid-template-columns:1fr}.sprite-lab-controls{grid-template-columns:1fr 58px 58px 58px}.sprite-lab-mapping{grid-template-columns:1fr 1fr}.sprite-lab-stage canvas{height:180px}}
 `;
 document.head.append(style);
 
@@ -37,6 +37,10 @@ export function renderSpriteLab(root, assets) {
   root.innerHTML = `
     <section class="sprite-lab">
       <h3>Phân tích sprite sheet</h3>
+      <div class="sprite-lab-filter">
+        <select id="sprite-family" aria-label="Lọc nhóm tài nguyên"><option value="">Tất cả nhóm nguồn</option>${[...new Map(images.map(item=>[item.resourceFamily || 'unclassified-pack',item.resourceFamilyLabel || 'Gói chưa phân loại']))].sort((a,b)=>a[1].localeCompare(b[1],'vi')).map(([id,label])=>`<option value="${escapeHtml(id)}">${escapeHtml(label)}</option>`).join('')}</select>
+        <select id="sprite-pack" aria-label="Lọc gói gốc"><option value="">Tất cả gói gốc</option>${[...new Set(images.map(item=>item.archive))].sort().map(pack=>`<option value="${escapeHtml(pack)}">${escapeHtml(pack)}</option>`).join('')}</select>
+      </div>
       <div class="sprite-lab-controls">
         <select id="sprite-asset" aria-label="Chọn ảnh sprite">${images.map((item,index) => `<option value="${index}">${escapeHtml(item.archive)} / ${escapeHtml(item.path)}</option>`).join('')}</select>
         <input id="sprite-cols" type="number" min="1" max="128" value="1" title="Số cột" aria-label="Số cột">
@@ -68,6 +72,8 @@ export function renderSpriteLab(root, assets) {
 
   const $ = id => root.querySelector('#' + id);
   const imageSelect = $('sprite-asset');
+  const familySelect = $('sprite-family');
+  const packSelect = $('sprite-pack');
   const colsInput = $('sprite-cols');
   const rowsInput = $('sprite-rows');
   const fpsInput = $('sprite-fps');
@@ -83,6 +89,7 @@ export function renderSpriteLab(root, assets) {
   const ctx = canvas.getContext('2d');
   const count = $('sprite-count');
   const meta = $('sprite-meta');
+  let visibleImages = images;
   let image = new Image();
   let frame = 0;
   let timer = null;
@@ -146,7 +153,7 @@ export function renderSpriteLab(root, assets) {
 
   function loadAsset() {
     stop();
-    const item = images[Number(imageSelect.value)] || images[0];
+    const item = visibleImages[Number(imageSelect.value)] || visibleImages[0];
     image = new Image();
     image.onload = () => {
       $('sprite-export').disabled = false;
@@ -172,7 +179,39 @@ export function renderSpriteLab(root, assets) {
     image.src = url;
   }
 
+  function applyAssetFilters() {
+    const selectedOutput = visibleImages[Number(imageSelect.value)]?.output;
+    const family = familySelect.value;
+    const pack = packSelect.value;
+    visibleImages = images.filter(item =>
+      (!family || (item.resourceFamily || 'unclassified-pack') === family) &&
+      (!pack || item.archive === pack)
+    );
+    imageSelect.innerHTML = visibleImages.map((item,index) =>
+      `<option value="${index}">${escapeHtml(item.archive)} / ${escapeHtml(item.path)}</option>`
+    ).join('');
+    const selectedIndex = visibleImages.findIndex(item => item.output === selectedOutput);
+    imageSelect.value = String(selectedIndex >= 0 ? selectedIndex : 0);
+    $('sprite-export').disabled = !visibleImages.length;
+    if (!visibleImages.length) {
+      stop();
+      total = 0;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      count.textContent = '0 / 0';
+      meta.textContent = 'Không có ảnh trong nhóm/gói đã chọn.';
+      $('sprite-prev').disabled = true;
+      $('sprite-next').disabled = true;
+      $('sprite-play').disabled = true;
+      slider.disabled = true;
+      copyButton.disabled = true;
+      return;
+    }
+    loadAsset();
+  }
+
   imageSelect.addEventListener('change',loadAsset);
+  familySelect.addEventListener('change',applyAssetFilters);
+  packSelect.addEventListener('change',applyAssetFilters);
   colsInput.addEventListener('change',updateGrid);
   rowsInput.addEventListener('change',updateGrid);
   for (const input of [animationKeyInput,firstFrameInput,lastFrameInput,fpsInput,repeatInput,frameSequenceInput]) {
@@ -180,7 +219,7 @@ export function renderSpriteLab(root, assets) {
     input.addEventListener('change',() => { copyButton.disabled = true; });
   }
   $('sprite-export').addEventListener('click',() => {
-    const item = images[Number(imageSelect.value)] || images[0];
+    const item = visibleImages[Number(imageSelect.value)] || visibleImages[0];
     const key = animationKeyInput.value.trim();
     const first = Number(firstFrameInput.value);
     const last = Number(lastFrameInput.value);
@@ -256,5 +295,5 @@ export function renderSpriteLab(root, assets) {
     $('sprite-play').textContent = 'Dừng';
     timer = setInterval(() => { frame = (frame + 1) % total; draw(); },1000/fps);
   });
-  loadAsset();
+  applyAssetFilters();
 }
