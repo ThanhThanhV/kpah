@@ -4,7 +4,7 @@ import { assetUrl, decodedPngEntries, loadAssetManifest } from './kpah-assets.js
 const style = document.createElement('style');
 style.textContent = `
 .resource-browser{display:grid;gap:12px;color:#e8d8b8;font-size:12px}
-.resource-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:8px}
+.resource-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 180px 180px;gap:8px}
 .resource-toolbar input,.resource-toolbar select{min-width:0;width:100%;height:36px;padding:0 10px;background:#17141b;border:1px solid #66513b;color:#f0dfbd}
 .resource-summary{display:flex;flex-wrap:wrap;gap:8px;color:#bca98a;font-size:10px}
 .resource-summary b{color:#f0d28e}
@@ -53,11 +53,16 @@ export async function renderResourceViewer(root) {
   const images = decodedPngEntries(manifest)
     .sort((a,b) => String(a.archive).localeCompare(String(b.archive)) || String(a.path).localeCompare(String(b.path)));
   const packs = [...new Set(images.map(item => item.archive))].sort();
+  const families = [...new Map(images.map(item => [
+    item.resourceFamily || 'unclassified-pack',
+    item.resourceFamilyLabel || 'Gói chưa phân loại'
+  ])).entries()].sort((a,b) => a[1].localeCompare(b[1], 'vi'));
   root.innerHTML = `
     <section class="resource-browser">
       <div class="resource-toolbar">
         <input type="search" id="resource-search" placeholder="Tìm tên ảnh hoặc đường dẫn..." aria-label="Tìm tài nguyên">
         <select id="resource-pack" aria-label="Lọc theo gói"><option value="">Tất cả gói</option>${packs.map(pack => `<option value="${escapeHtml(pack)}">${escapeHtml(pack)}</option>`).join('')}</select>
+        <select id="resource-family" aria-label="Lọc theo nhóm tài nguyên"><option value="">Tất cả nhóm tài nguyên</option>${families.map(([id,label]) => `<option value="${escapeHtml(id)}">${escapeHtml(label)}</option>`).join('')}</select>
       </div>
       <div class="resource-summary" id="resource-summary"></div>
       <div class="resource-grid" id="resource-grid"></div>
@@ -66,17 +71,20 @@ export async function renderResourceViewer(root) {
 
   const search = root.querySelector('#resource-search');
   const packSelect = root.querySelector('#resource-pack');
+  const familySelect = root.querySelector('#resource-family');
   const grid = root.querySelector('#resource-grid');
   const summary = root.querySelector('#resource-summary');
 
   function draw() {
     const term = search.value.trim().toLowerCase();
     const pack = packSelect.value;
+    const family = familySelect.value;
     const visible = images.filter(item =>
       (!pack || item.archive === pack) &&
-      (!term || (item.path + ' ' + item.archive + ' ' + (item.imageClassHint || '')).toLowerCase().includes(term))
+      (!family || (item.resourceFamily || 'unclassified-pack') === family) &&
+      (!term || (item.path + ' ' + item.archive + ' ' + (item.imageClassHint || '') + ' ' + (item.resourceFamilyLabel || '')).toLowerCase().includes(term))
     );
-    summary.innerHTML = `Hiển thị <b>${visible.length}</b> / <b>${images.length}</b> ảnh PNG · ${packs.length} gói · ${Number(manifest.entryCount || 0)} file trong JAR`;
+    summary.innerHTML = `Hiển thị <b>${visible.length}</b> / <b>${images.length}</b> ảnh PNG · ${packs.length} gói · ${families.length} nhóm nguồn · ${Number(manifest.entryCount || 0)} file trong JAR`;
     if (!visible.length) {
       grid.innerHTML = '<div class="resource-empty">Không tìm thấy ảnh phù hợp.</div>';
       return;
@@ -87,12 +95,13 @@ export async function renderResourceViewer(root) {
         <article class="resource-card">
           <div class="resource-thumb"><img loading="lazy" src="${url}" alt="${escapeHtml(item.path)}"></div>
           <div class="resource-name">${escapeHtml(item.path)}</div>
-          <div class="resource-meta">${escapeHtml(item.archive)} · ${item.width && item.height ? item.width + '×' + item.height + ' px · ' : ''}${escapeHtml(item.imageClassHint || 'chưa phân loại')} · ${Number(item.size || 0).toLocaleString('vi-VN')} byte</div>
+          <div class="resource-meta">${escapeHtml(item.resourceFamilyLabel || 'Gói chưa phân loại')} · ${escapeHtml(item.archive)} · ${item.width && item.height ? item.width + '×' + item.height + ' px · ' : ''}${escapeHtml(item.imageClassHint || 'chưa phân loại')} · ${Number(item.size || 0).toLocaleString('vi-VN')} byte</div>
         </article>`;
     }).join('');
   }
   search.addEventListener('input', draw);
   packSelect.addEventListener('change', draw);
+  familySelect.addEventListener('change', draw);
   draw();
   renderSpriteLab(root.querySelector('#resource-sprite-lab'), images);
   renderBinaryMetadata(root.querySelector('#resource-metadata'), manifest.decodedPackedEntries || []);
