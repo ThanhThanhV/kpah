@@ -71,3 +71,19 @@ The labels and preview are direct evidence of a character-creation/configuration
 2. Trace the callers of `ls.a()` and `ls.b()` to establish exactly when character creation appears and what follows successful creation.
 3. Decode the `.sh` resource readers and map the login background, panel, fonts, and character preview assets.
 4. Trace the main in-world class and network callbacks before implementing world HUD and gameplay behavior.
+
+
+## Character setup option catalog
+
+The `ls` static initializer contains five character lines, each with male and female variants:
+
+| Character line | Weapon label | Region | Element |
+|---|---|---|---|
+| Kiếm Khách | Kiếm | Miền Bắc | Kim |
+| Chiến Binh | Đại đao | Miền Bắc | Hỏa |
+| Pháp Sư | Địa thần | Miền Nam | Thủy |
+| Đấu Sĩ | Rìu | Miền Nam | Thổ |
+| Cung Thủ | Cung | Miền Bắc | Mộc |
+
+The screen also defines six hair options: `Đầu đinh`, `Tóc búi`, `Tóc cột cao`, `Tóc chéo`, `Tóc xù`, and `Tóc ngang vai`. The gender array is `Nam` and `Nữ`. These are exact option values in the class's static initializer; the display font may render accents differently under `javap` on a non-UTF-8 console.
+
