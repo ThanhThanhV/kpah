@@ -85,3 +85,8 @@ The quest journal supports accepting objectives, tracking progress from the vill
 The mock village now has a structured local entity catalog for four ordinary wolves and one pack leader. Monsters can be selected in the Phaser scene; the selected target HUD shows level and current HP. Using an action-bar skill approaches a distant target before the action executes, then applies damage, monster retaliation, experience rewards and chance-based item drops to the shared character/inventory state. Defeated monsters disappear and respawn after their configured local delay. Ordinary wolf defeats also advance the matching accepted hunt objective.
 
 NPC dialogue remains connected to the quest journal and shop entry points. Monster stats, spawn points, respawn delays, rewards and drop chances are illustrative client-side data, not verified original KPAH server values. Combat remains offline and is not authoritative or multiplayer-synchronized.
+
+
+## Merchant and local economy slice
+
+The merchant NPC opens a functional local shop for HP potions, MP potions and upgrade stones. Purchases validate the wallet balance and inventory capacity, deduct Xu and add the purchased stack to the same inventory used by character, combat and quest rewards. The HUD and inventory wallet read the shared currency value. Prices and stock are demo values; there is no server transaction or persistent economy yet.
