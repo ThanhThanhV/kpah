@@ -299,7 +299,7 @@ function renderQuestPanel(){
   const initialFilter=data.counts.completed?'completed':data.counts.active?'active':data.quests.some(q=>q.status==='available')?'available':'claimed';
   const filters=[
     ['active','Đang thực hiện',data.counts.active],
-    ['available','Có thể nhận',data.quests.filter(q=>q.status==='available').length],
+    ['available','Có thể nhận',data.counts.available],
     ['completed','Chờ nhận thưởng',data.counts.completed],
     ['claimed','Đã nhận',data.counts.claimed]
   ];
@@ -308,7 +308,7 @@ function renderQuestPanel(){
     const reward=quest.reward;
     const rewardText=[reward.experience+' EXP',reward.currency+' Xu',...reward.items.map(item=>item.quantity+' vật phẩm')].join(' · ');
     const action=quest.status==='available'
-      ?`<button type="button" data-quest-accept="${quest.id}">Nhận nhiệm vụ</button>`
+      ?(quest.canAccept?`<button type="button" data-quest-accept="${quest.id}">Nhận nhiệm vụ</button>`:`<button type="button" disabled title="${escapeHtml(quest.unlockHint||'Chưa mở khóa')}">Chưa mở khóa</button><small class="quest-unlock-hint">${escapeHtml(quest.unlockHint||'Hoàn thành nhiệm vụ trước đó')}</small>`)
       :quest.status==='completed'
         ?`<button type="button" data-quest-claim="${quest.id}">Nhận thưởng</button>`
         :quest.status==='claimed'?'<span class="quest-state-tag claimed">Đã nhận thưởng</span>':'<span class="quest-state-tag active">Đang thực hiện</span>';
@@ -321,7 +321,7 @@ function renderQuestPanel(){
       <div class="quest-card-footer">${action}</div>
     </article>`;
   }).join('');
-  return `<div class="quest-summary"><div><b>${data.counts.active}</b><small>Đang làm</small></div><div><b>${data.quests.filter(q=>q.status==='available').length}</b><small>Có thể nhận</small></div><div><b>${data.counts.completed}</b><small>Chờ thưởng</small></div></div>
+  return `<div class="quest-summary"><div><b>${data.counts.active}</b><small>Đang làm</small></div><div><b>${data.counts.available}</b><small>Có thể nhận</small></div><div><b>${data.counts.completed}</b><small>Chờ thưởng</small></div></div>
     <div class="quest-filter-tabs">${filters.map(([id,label,count])=>`<button type="button" data-quest-filter="${id}" class="${id===initialFilter?'chosen':''}">${label} <em>${count}</em></button>`).join('')}</div>
     <div class="quest-list-live">${cards}</div>
     <div class="quest-history"><b>Nhật ký nhiệm vụ</b>${data.log.map(line=>`<p>${escapeHtml(line)}</p>`).join('')}</div>
@@ -624,6 +624,7 @@ function pickupGroundDrop(id){
   if(!drop||!scene?.playerSprite)return;
   const distance=Phaser.Math.Distance.Between(scene.playerSprite.x,scene.playerSprite.y,drop.x,drop.y);
   if(distance>82){toast('Hãy đến gần vật phẩm hơn để nhặt.');return;}
+  if(characterState.snapshot().hp<=0){toast('Hãy hồi sinh trước khi nhặt vật phẩm.');return;}
   const result=groundDropState.pickup(id);
   if(!result.ok){toast(result.message);scene.syncGroundDrops();return;}
   const added=characterState.addItem(result.item.itemId,result.item.quantity);
