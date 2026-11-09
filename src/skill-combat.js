@@ -66,6 +66,13 @@ export function createSkillCombatState() {
     return {ok:true,message:skill.name + ' đã gán vào ô ' + slot + '.'};
   }
 
+  function unassignSkill(skillId) {
+    const slot = state.loadout.indexOf(skillId);
+    if (slot < 0) return {ok:false,message:'Kỹ năng chưa được gán vào thanh thao tác.'};
+    state.loadout[slot] = null;
+    return {ok:true,message:skills[skillId].name + ' đã được gỡ khỏi thanh thao tác.'};
+  }
+
   function startBattle() {
     state.target.hp = state.target.maxHp;
     state.cooldowns = {};
@@ -116,5 +123,5 @@ export function createSkillCombatState() {
     return startBattle();
   }
 
-  return {snapshot,learnOrUpgrade,assignSkill,useSlot,startBattle,resetTarget};
+  return {snapshot,learnOrUpgrade,assignSkill,unassignSkill,useSlot,startBattle,resetTarget};
 }
