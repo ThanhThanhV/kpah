@@ -52,14 +52,16 @@ cover.innerHTML=`
       <button class="server-option" data-server="Máy chủ 2"><span>Máy chủ 2<small>Máy chủ minh họa</small></span><b class="server-state">Demo</b></button>
       <button class="server-option" data-server="Máy chủ 3"><span>Máy chủ 3<small>Máy chủ minh họa</small></span><b class="server-state">Demo</b></button>
     </div>
-    <button class="login-primary" id="server-next">TIẾP TỤC</button><button class="login-back" data-back="server">← Quay lại</button>
+    <button class="login-primary" id="server-next">TIẾP TỤC</button>
   </div>
   <div class="login-step" data-step="character">
     <h2>CHỌN NHÂN VẬT</h2>
     <div class="char-choice">
-      <button class="char-option selected" data-class="Kiếm khách"><span>⚔</span>Kiếm khách</button>
-      <button class="char-option" data-class="Chiến binh"><span>🛡</span>Chiến binh</button>
-      <button class="char-option" data-class="Cung thủ"><span>🏹</span>Cung thủ</button>
+      <button class="char-option selected" data-class="Kiếm Khách"><span>⚔</span>Kiếm Khách</button>
+      <button class="char-option" data-class="Chiến Binh"><span>🛡</span>Chiến Binh</button>
+      <button class="char-option" data-class="Pháp Sư"><span>✧</span>Pháp Sư</button>
+      <button class="char-option" data-class="Đấu Sĩ"><span>♜</span>Đấu Sĩ</button>
+      <button class="char-option" data-class="Cung Thủ"><span>➶</span>Cung Thủ</button>
     </div>
     <div class="login-form"><label>TÊN NHÂN VẬT<input id="character-name" value="Kiếm Khách" maxlength="16"></label></div>
     <button class="login-primary" id="enter-world">VÀO THẾ GIỚI</button>
@@ -67,7 +69,7 @@ cover.innerHTML=`
   </div>
 </section>`;
 document.body.append(cover);
-let selectedServer='Máy chủ 1',selectedClass='Kiếm khách';
+let selectedServer='Máy chủ 1',selectedClass='Kiếm Khách';
 function step(name){cover.querySelectorAll('.login-step').forEach(x=>x.classList.toggle('current',x.dataset.step===name));}
 cover.querySelector('#login-form').addEventListener('submit',e=>{e.preventDefault();const user=cover.querySelector('#login-user').value.trim();const pass=cover.querySelector('#login-pass').value;if(!user||!pass){cover.querySelector('#login-error').textContent='Vui lòng nhập đầy đủ tài khoản và mật khẩu.';return;}step('character');});
 cover.querySelectorAll('.server-option').forEach(b=>b.addEventListener('click',()=>{selectedServer=b.dataset.server;cover.querySelectorAll('.server-option').forEach(x=>x.classList.toggle('selected',x===b));}));
