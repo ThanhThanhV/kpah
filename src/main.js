@@ -228,7 +228,7 @@ document.querySelector('#window-content').addEventListener('click',event=>{
   tabs.querySelectorAll('button').forEach(item=>item.classList.toggle('chosen',item===button));
   if(button.dataset.inventoryFilter){
     const filter=button.dataset.inventoryFilter;
-    document.querySelectorAll('#window-content .item-cell').forEach(item=>{
+    document.querySelectorAll('#window-content [data-item-category]').forEach(item=>{
       item.hidden=filter!=='all'&&item.dataset.itemCategory!==filter;
     });
   }
