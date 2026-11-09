@@ -74,3 +74,7 @@ The character profile, inventory and equipment panels share a local state model.
 ## Skills and training combat client slice
 
 The skills panel includes active/passive skill progression, point-based learning and upgrades, and assignment/removal across four action-bar slots. The action bar and 1–5 shortcuts execute a local turn-based training encounter with target HP, damage, MP costs, cooldowns, self-healing, enemy retaliation, combat log and restart. Slot five consumes an HP potion from the shared inventory. All skill definitions, balance values, target data and combat formulas are illustrative demo content; they are not verified KPAH data and are not server-authoritative.
+
+## Quest journal and character progression client slice
+
+The quest journal supports accepting objectives, tracking progress from the village elder interaction and training-wolf defeats, filtering quest states, and claiming rewards. Rewards grant experience, currency and inventory items through the shared character state; experience thresholds can increase level and potential points. The HUD wallet and pending-reward indicator are synchronized locally. Quest names, objectives, targets and rewards are illustrative demo content only, not verified original KPAH data or server transactions.
