@@ -240,12 +240,18 @@ class WorldScene extends Phaser.Scene {
     for(let i=0;i<45;i++){const x=(i*173+47)%950,y=(i*97+35)%500;if(y<280&&x>280&&x<700)continue;g.fillStyle(i%3===0?0xd9c16d:0x8eb66a,0.8);g.fillCircle(x,y,1.7);}
     this.playerSprite=this.add.container(this.player.x,this.player.y);const shadow=this.add.ellipse(0,19,28,9,0x111510,0.35);const cape=this.add.triangle(0,2,0,-2,-17,20,13,20,0x9b3f32);const body=this.add.rectangle(0,0,17,25,0xd5d0b9).setStrokeStyle(2,0x42372b);const head=this.add.circle(0,-17,8,0xe0b88d).setStrokeStyle(2,0x42372b);const hair=this.add.triangle(0,-23,-8,-16,0,-31,9,-15,0x29232a);const sword=this.add.rectangle(13,-3,4,27,0xd6d8d1).setAngle(25).setStrokeStyle(1,0x514d48);this.playerSprite.add([shadow,cape,body,head,hair,sword]);setWorldEntityDepth(this.playerSprite);
     this.playerLabel=this.add.text(480,282,'Kiếm Khách',{fontFamily:'Arial',fontSize:'12px',color:'#fff3c6',stroke:'#34251d',strokeThickness:3}).setOrigin(.5).setDepth(999);
+    this.destinationMarker=this.add.circle(0,0,12,0xf4d58c,0.18)
+      .setStrokeStyle(2,0xf4d58c,0.9).setDepth(500).setVisible(false);
+    this.destinationPulse=this.tweens.add({
+      targets:this.destinationMarker,scale:1.35,alpha:0.25,duration:650,
+      yoyo:true,repeat:-1,paused:true,ease:'Sine.easeInOut'
+    });
     this.configureCamera();
     this.coordsLabel=document.querySelector('.world-coords');
     this.mapPlayerMarker=document.querySelector('.map-player');
     this.add.text(370,291,'Trưởng làng',{fontFamily:'Arial',fontSize:'11px',color:'#ffe6a8',stroke:'#30251a',strokeThickness:3}).setOrigin(.5);
     this.add.text(715,286,'Thương nhân',{fontFamily:'Arial',fontSize:'11px',color:'#ffe6a8',stroke:'#30251a',strokeThickness:3}).setOrigin(.5);
-    this.input.on('pointerdown',p=>this.movePlayerTo(p.worldX,p.worldY,450));
+    this.input.on('pointerdown',p=>this.movePlayerTo(p.worldX,p.worldY,450,true));
     this.scale.on('resize',()=>this.cameras.main.setSize(this.scale.width,this.scale.height));
   }
   configureCamera(){
@@ -258,9 +264,28 @@ class WorldScene extends Phaser.Scene {
     const distance=18;
     this.movePlayerTo(this.playerSprite.x+dx*distance,this.playerSprite.y+dy*distance,105);
   }
-  movePlayerTo(x,y,duration=120){
+  movePlayerTo(x,y,duration=120,showDestination=false){
     if(!this.playerSprite)return;
-    moveWorldEntity(this,this.playerSprite,{x,y},{bounds:this.walkBounds,duration});
+    const destination={
+      x:Phaser.Math.Clamp(x,this.walkBounds.x,this.walkBounds.x+this.walkBounds.width),
+      y:Phaser.Math.Clamp(y,this.walkBounds.y,this.walkBounds.y+this.walkBounds.height)
+    };
+    if(showDestination&&this.destinationMarker){
+      this.destinationMarker.setPosition(destination.x,destination.y+18).setScale(1).setAlpha(0.9).setVisible(true);
+      this.destinationPulse?.restart();
+    }else if(this.destinationMarker){
+      this.destinationPulse?.pause();
+      this.destinationMarker.setVisible(false);
+    }
+    moveWorldEntity(this,this.playerSprite,destination,{
+      bounds:this.walkBounds,duration,
+      onComplete:()=>{
+        if(showDestination&&this.destinationMarker){
+          this.destinationPulse?.pause();
+          this.destinationMarker.setVisible(false);
+        }
+      }
+    });
   }
   update(){
     if(!this.playerSprite)return;
