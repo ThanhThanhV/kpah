@@ -37,7 +37,7 @@ app.innerHTML = `
         <div class="section-label">NHÂN VẬT GẦN ĐÂY <span>3</span></div>
         <div class="nearby"><div class="nearby-avatar blue">風</div><div><b>PhongVân</b><small>Cấp 27 · Kiếm khách</small></div><i class="online-dot"></i></div>
         <div class="nearby"><div class="nearby-avatar red">炎</div><div><b>HỏaLong</b><small>Cấp 31 · Chiến binh</small></div><i class="online-dot"></i></div>
-        <div class="nearby"><div class="nearby-avatar green">月</div><div><b>NguyệtNhi</b><small>Cấp 24 · Pháp sư</small></div><i class="online-dot"></i></div>
+        <div class="nearby"><div class="nearby-avatar green">月</div><div><b>NguyệtNhi</b><small>Cấp 24 · Cung thủ</small></div><i class="online-dot"></i></div>
         <div class="section-label">MỤC TIÊU <span>2</span></div>
         <div class="target-row"><span class="target-icon wolf">♞</span><div><b>Sói hoang</b><small>Cấp 18 · Quái thường</small></div><span class="target-count">× 8</span></div>
         <div class="target-row"><span class="target-icon boss">♜</span><div><b>Sói đầu đàn</b><small>Cấp 22 · Tinh anh</small></div><span class="target-count">× 1</span></div>
@@ -71,7 +71,8 @@ const panelData = {
   mail:{title:'Hòm thư',html:`<div class="empty-state"><span>✉</span><b>Hòm thư trống</b><p>Khi có thư mới, thư sẽ hiển thị tại đây.</p></div>`},
   shop:{title:'Cửa hàng',html:`<div class="tabs"><button class="chosen">Vật phẩm</button><button>Trang bị</button><button>Tiện ích</button></div><div class="shop-row"><span>🧪</span><b>Bình máu nhỏ</b><small>150 Xu</small><button>Mua</button></div><div class="shop-row"><span>🧴</span><b>Bình mana nhỏ</b><small>150 Xu</small><button>Mua</button></div>`}
 };
-function openWindow(key){const p=panelData[key]||panelData.help;document.querySelector('#window-title').textContent=p.title;document.querySelector('#window-content').innerHTML=p.html;document.querySelector('#game-window').classList.add('open');document.querySelector('#modal-backdrop').classList.add('show');document.querySelectorAll('.side-nav button').forEach(b=>b.classList.toggle('active',b.dataset.window===key));}
+let activeCharacterName='Kiếm Khách',activeCharacterClass='Kiếm khách';
+function openWindow(key){const p=panelData[key]||panelData.help;document.querySelector('#window-title').textContent=p.title;const html=key==='character'?p.html.replaceAll('Kiếm Khách',escapeHtml(activeCharacterName)).replace('Chiến binh tập sự',escapeHtml(activeCharacterClass+' · Nhân vật')):p.html;document.querySelector('#window-content').innerHTML=html;document.querySelector('#game-window').classList.add('open');document.querySelector('#modal-backdrop').classList.add('show');document.querySelectorAll('.side-nav button').forEach(b=>b.classList.toggle('active',b.dataset.window===key));}
 function closeWindow(){document.querySelector('#game-window').classList.remove('open');document.querySelector('#modal-backdrop').classList.remove('show');}
 document.querySelectorAll('[data-window]').forEach(b=>b.addEventListener('click',()=>openWindow(b.dataset.window)));
 document.querySelector('#window-close').addEventListener('click',closeWindow);
@@ -100,6 +101,7 @@ document.querySelectorAll('.movement button').forEach(button=>{
 window.addEventListener('kpah:character-selected',event=>{
   const {name,className}=event.detail||{};
   const safeName=name||'Kiếm Khách';
+  activeCharacterName=safeName;activeCharacterClass=className||'Kiếm khách';
   document.querySelectorAll('.hero-name').forEach(el=>el.textContent=safeName);
   document.querySelectorAll('#chat-lines strong').forEach(el=>{if(el.textContent==='Kiếm Khách')el.textContent=safeName;});
   const scene=game.scene.getScene('world');
