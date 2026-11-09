@@ -194,6 +194,8 @@ class WorldScene extends Phaser.Scene {
     this.playerSprite=this.add.container(this.player.x,this.player.y);const shadow=this.add.ellipse(0,19,28,9,0x111510,0.35);const cape=this.add.triangle(0,2,0,-2,-17,20,13,20,0x9b3f32);const body=this.add.rectangle(0,0,17,25,0xd5d0b9).setStrokeStyle(2,0x42372b);const head=this.add.circle(0,-17,8,0xe0b88d).setStrokeStyle(2,0x42372b);const hair=this.add.triangle(0,-23,-8,-16,0,-31,9,-15,0x29232a);const sword=this.add.rectangle(13,-3,4,27,0xd6d8d1).setAngle(25).setStrokeStyle(1,0x514d48);this.playerSprite.add([shadow,cape,body,head,hair,sword]);setWorldEntityDepth(this.playerSprite);
     this.playerLabel=this.add.text(480,282,'Kiếm Khách',{fontFamily:'Arial',fontSize:'12px',color:'#fff3c6',stroke:'#34251d',strokeThickness:3}).setOrigin(.5).setDepth(999);
     this.configureCamera();
+    this.coordsLabel=document.querySelector('.world-coords');
+    this.mapPlayerMarker=document.querySelector('.map-player');
     this.add.text(370,291,'Trưởng làng',{fontFamily:'Arial',fontSize:'11px',color:'#ffe6a8',stroke:'#30251a',strokeThickness:3}).setOrigin(.5);
     this.add.text(715,286,'Thương nhân',{fontFamily:'Arial',fontSize:'11px',color:'#ffe6a8',stroke:'#30251a',strokeThickness:3}).setOrigin(.5);
     this.input.on('pointerdown',p=>this.movePlayerTo(p.worldX,p.worldY,450));
@@ -214,9 +216,18 @@ class WorldScene extends Phaser.Scene {
     moveWorldEntity(this,this.playerSprite,{x,y},{bounds:this.walkBounds,duration});
   }
   update(){
-    if(this.playerLabel&&this.playerSprite){
-      this.playerLabel.setPosition(this.playerSprite.x,this.playerSprite.y-52);
+    if(!this.playerSprite)return;
+    const {x,y}=this.playerSprite;
+    if(this.playerLabel){
+      this.playerLabel.setPosition(x,y-52);
       this.playerLabel.setDepth(this.playerSprite.depth+1);
+    }
+    if(this.coordsLabel){
+      this.coordsLabel.textContent='X: '+Math.round(x)+' · Y: '+Math.round(y);
+    }
+    if(this.mapPlayerMarker){
+      this.mapPlayerMarker.style.left=(x/this.worldBounds.width*100)+'%';
+      this.mapPlayerMarker.style.top=(y/this.worldBounds.height*100)+'%';
     }
   }
   drawTree(g,x,y,s){g.fillStyle(0x4a3325);g.fillRect(x-4*s,y,8*s,24*s);g.fillStyle(0x203c2a);g.fillCircle(x,y-8*s,22*s);g.fillStyle(0x365d39);g.fillCircle(x-8*s,y-17*s,15*s);g.fillStyle(0x537346);g.fillCircle(x+7*s,y-12*s,13*s);g.fillStyle(0x172d20,0.3);g.fillEllipse(x,y+20*s,38*s,8*s);}
