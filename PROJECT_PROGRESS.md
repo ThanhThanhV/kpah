@@ -8,21 +8,21 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 | Phase | Scope | Progress | Basis |
 |---|---|---:|---|
-| P0 | Foundation and original resources (5 tasks) | 36% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
+| P0 | Foundation and original resources (5 tasks) | 38% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
 | P1 | Reconstructed client/gameplay (10 tasks) | 37% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel, zone-specific NPC quest interactions and checkpoint respawn are implemented; original map data, real animation and server combat remain unimplemented. |
 | P2 | Game systems (10 tasks) | 39% | Character/inventory/equipment, skill progression, quest progression, local world hunting, merchant purchases, guild contribution and mailbox rewards now share wallet/inventory state; local friends/party and guild systems are present, with browser-local saves for character progression, inventory/equipment, quests and learned skill configuration. All content remains client-side demo data. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 0% | Not started. |
 
-**Overall estimate: about 24%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 24.5%** (weighted average of the 41 roadmap items).
 
 ## P0 — Foundation detail
 
 | Task | Status | Progress |
 |---|---|---:|
 | 1. Extract .sh, .wp, .wps | Implemented in extractor | 100% |
-| 2. Classify images/resources | Initial pack inventory plus PNG dimension/geometry metadata; semantic sprite mapping pending | 40% |
-| 3. Sprite/animation engine | Manual frame inspector exists; runtime character animation engine/mapping not implemented | 10% |
+| 2. Classify images/resources | PNG geometry hints plus verified source-pack family labels and family filtering; individual sprite semantics pending | 45% |
+| 3. Sprite/animation engine | Manual frame inspector plus explicit runtime spritesheet loading and frame-animation registration/play helpers; verified character frame mappings not integrated | 15% |
 | 4. Original tilemap engine | Generic verified-data adapter added; original map format/data not traced | 5% |
 | 5. Original camera/render pipeline | Shared camera-follow rig, movement bounds and Y-depth sorting integrated; current 960 × 560 mock world cannot demonstrate scrolling | 25% |
 
@@ -195,3 +195,12 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Monster retaliation and player healing feedback appear at the player position with distinct colors; target damage remains attached to the monster.
 - The selected monster now has a visible ground ring, synchronized with selection, defeat and respawn state.
 - The entrypoint passed the available V8 syntax compilation check after import declarations were removed. This is not a browser interaction test or production build; camera alignment still needs visual verification at runtime.
+
+## P0 — Source-pack asset taxonomy and runtime animation loading
+
+- The extractor now adds a resource-family label to decoded entries using the verified source archive name: arrow, box, effect, font, general graphics, main UI, NPC, public skills and profession previews.
+- The Resource Viewer can filter by source family as well as archive. Each image shows the family label alongside its original pack and geometry hint.
+- Family labels are explicitly marked as source-pack classification. They do not claim that an individual PNG is a character, skill, effect frame or animation sequence.
+- Added an explicit Phaser runtime sprite-sheet loader that requires a selected asset URL and measured frame width/height. Existing animation registration/play helpers can then consume a caller-supplied verified frame list, FPS and repeat policy.
+- No original character/monster animation is enabled yet: source frame ordering, frame dimensions and timing still need to be traced per asset before connecting it to in-world entities.
+- The extractor and viewer changes are committed, but the original JAR is not available in this execution environment to regenerate and inspect the resulting manifest. The new taxonomy will appear after running `npm run extract:assets` with `KPAH_278.jar`.
