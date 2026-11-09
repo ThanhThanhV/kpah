@@ -193,7 +193,7 @@ export function renderSpriteLab(root, assets) {
     }
     const sequenceText = frameSequenceInput.value.trim();
     const frames = sequenceText
-      ? sequenceText.split(',').map(value => value.trim()).map(value => /^\\d+$/.test(value) ? Number(value) : NaN)
+      ? sequenceText.split(',').map(value => value.trim()).map(value => /^\d+$/.test(value) ? Number(value) : NaN)
       : Array.from({length:last-first+1},(_,index)=>first+index);
     if (!total || !frames.length || frames.some(frame => !Number.isInteger(frame) || frame < 0 || frame >= total) ||
         (!sequenceText && (!Number.isInteger(first) || !Number.isInteger(last) || first < 0 || last < first || last >= total))) {
