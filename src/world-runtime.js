@@ -19,8 +19,9 @@ export function configureWorldCamera(scene, target, bounds, options = {}) {
     width: Number(bounds?.width),
     height: Number(bounds?.height)
   };
-  if (!(world.width > 0 && world.height > 0)) {
-    throw new Error('World camera requires positive map width and height.');
+  if (![world.x, world.y, world.width, world.height].every(Number.isFinite) ||
+      !(world.width > 0 && world.height > 0)) {
+    throw new Error('World camera requires finite origin and positive map dimensions.');
   }
 
   camera.setBounds(world.x, world.y, world.width, world.height);
@@ -44,12 +45,18 @@ export function configureWorldCamera(scene, target, bounds, options = {}) {
 
 export function moveWorldEntity(scene, entity, destination, options = {}) {
   if (!scene || !entity || !destination) return null;
+  if (!Number.isFinite(destination.x) || !Number.isFinite(destination.y)) {
+    throw new Error('World movement destination must contain finite coordinates.');
+  }
   const bounds = options.bounds;
+  if (bounds && ![bounds.x, bounds.y, bounds.width, bounds.height].every(Number.isFinite)) {
+    throw new Error('World movement bounds must contain finite values.');
+  }
   const x = bounds
-    ? Phaser.Math.Clamp(destination.x, bounds.x, bounds.x + bounds.width)
+    ? Phaser.Math.Clamp(destination.x, bounds.x, bounds.x + Math.max(0, bounds.width))
     : destination.x;
   const y = bounds
-    ? Phaser.Math.Clamp(destination.y, bounds.y, bounds.y + bounds.height)
+    ? Phaser.Math.Clamp(destination.y, bounds.y, bounds.y + Math.max(0, bounds.height))
     : destination.y;
   const duration = Phaser.Math.Clamp(options.duration ?? 120, 0, 5000);
 
