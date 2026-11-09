@@ -7,6 +7,7 @@ import { createSkillCombatState } from './skill-combat.js';
 import { createQuestState } from './quest-state.js';
 import { createWorldEntityState } from './world-entities.js';
 import { createShopState } from './shop-state.js';
+import { createWorldMapState } from './world-map.js';
 
 const app = document.querySelector('#app');
 app.innerHTML = `
@@ -84,13 +85,14 @@ let activeCharacterName='Kiếm Khách',activeCharacterClass='Kiếm khách';
 const characterState=createCharacterState();
 const skillCombat=createSkillCombatState();
 const questState=createQuestState();
-const worldEntityState=createWorldEntityState();
+const worldMapState=createWorldMapState();
+const worldEntityState=createWorldEntityState(Math.random,'village');
 const shopState=createShopState(characterState);
 
 function openWindow(key){
   const p=panelData[key]||panelData.help;
   document.querySelector('#window-title').textContent=p.title;
-  const html=['character','inventory','equipment'].includes(key)?renderCharacterPanel(key):key==='skills'?renderSkillPanel():key==='quests'?renderQuestPanel():key==='shop'?renderShopPanel():p.html;
+  const html=['character','inventory','equipment'].includes(key)?renderCharacterPanel(key):key==='skills'?renderSkillPanel():key==='quests'?renderQuestPanel():key==='shop'?renderShopPanel():key==='map'?renderWorldMapPanel():p.html;
   document.querySelector('#window-content').innerHTML=html;
   document.querySelector('#game-window').classList.add('open');
   document.querySelector('#modal-backdrop').classList.add('show');
@@ -177,6 +179,26 @@ function renderCharacterPanel(key){
   return `<div class="inventory-toolbar"><div class="inventory-capacity"><b>${data.inventory.length} / ${data.inventoryCapacity}</b><span>Ô hành trang đang sử dụng</span></div><div class="inventory-currency"><span>Xu <b>${data.currency.toLocaleString('vi-VN')}</b></span><span>Lượng <b>320</b></span></div></div><div class="tabs inventory-tabs">${categories.map(([id,label],i)=>`<button type="button" class="${i===0?'chosen':''}" data-inventory-filter="${id}">${label}</button>`).join('')}</div><div class="inventory-grid inventory-grid-live">${items||'<div class="inventory-empty">Hành trang trống</div>'}</div><p class="panel-hint">Vật phẩm và thao tác hiện được mô phỏng ở client; chưa đồng bộ máy chủ.</p>`;
 }
 
+
+function renderWorldMapPanel(){
+  const data=worldMapState.snapshot();
+  const level=characterState.snapshot().level;
+  const cards=data.zones.map(zone=>{
+    const current=zone.id===data.current.id;
+    const connected=data.current.connections.includes(zone.id);
+    const locked=level<zone.requiredLevel;
+    const status=current?'Đang ở đây':locked?'Yêu cầu cấp '+zone.requiredLevel:connected?'Có thể di chuyển':'Chưa mở đường';
+    return `<article class="world-map-zone ${current?'current':''} ${locked?'locked':''}">
+      <div class="world-map-zone-art ${zone.kind}"><span>${zone.kind==='safe'?'⌂':zone.kind==='danger'?'◈':'♧'}</span><small>${zone.kindLabel}</small></div>
+      <div class="world-map-zone-info"><b>${escapeHtml(zone.name)}</b><small>${escapeHtml(zone.subtitle)}</small><div class="world-map-zone-meta">Cấp đề xuất ${zone.recommendedLevel} · ${status}</div></div>
+      <button type="button" data-zone-travel="${zone.id}" ${current||!connected||locked?'disabled':''}>${current?'Hiện tại':'Di chuyển'}</button>
+    </article>`;
+  }).join('');
+  return `<div class="world-map-summary"><b>${escapeHtml(data.current.name)}</b><span>${data.current.kindLabel} · Cấp đề xuất ${data.current.recommendedLevel}</span></div>
+    <div class="world-map-route"><span>◈</span><i></i><span>♧</span><i></i><span>◆</span></div>
+    <div class="world-map-zone-list">${cards}</div>
+    <p class="panel-hint">Các khu vực và điều kiện di chuyển hiện là dữ liệu client minh họa. Cấp nhân vật hiện tại: ${level}.</p>`;
+}
 
 function renderShopPanel(){
   const data=shopState.snapshot();
@@ -438,6 +460,14 @@ document.querySelector('#window-content').addEventListener('change',event=>{
   toast(result.message);updateActionBar();document.querySelector('#window-content').innerHTML=renderSkillPanel();
 });
 document.querySelector('#window-content').addEventListener('click',event=>{
+  const destination=event.target.closest('[data-zone-travel]')?.dataset.zoneTravel;
+  if(destination){
+    const scene=game.scene.getScene('world');
+    const result=scene?.changeZone(destination);
+    if(result?.ok){closeWindow();toast(result.message);}
+    else if(result?.message)toast(result.message);
+    return;
+  }
   const purchase=event.target.closest('[data-shop-buy]')?.dataset.shopBuy;
   if(purchase){
     const result=shopState.buy(purchase,1);
@@ -498,7 +528,9 @@ window.addEventListener('kpah:npc-interact',event=>{
   const npc=event.detail?.name;
   const actions={
     'Trưởng làng':{description:'Dân làng đang cần người giúp đỡ. Hãy xem các nhiệm vụ hiện có.',buttons:[['Xem nhiệm vụ','quests'],['Để sau','close']]},
-    'Thương nhân':{description:'Thương nhân bày bán vật phẩm cơ bản cho chuyến hành trình.',buttons:[['Mở cửa hàng','shop'],['Để sau','close']]}
+    'Thương nhân':{description:'Thương nhân bày bán vật phẩm cơ bản cho chuyến hành trình.',buttons:[['Mở cửa hàng','shop'],['Để sau','close']]},
+    'Thợ săn':{description:'Khu rừng có nhiều thú dữ. Hãy chuẩn bị kỹ năng và hành trang trước khi đi sâu vào rừng.',buttons:[['Xem nhiệm vụ','quests'],['Mở bản đồ','map'],['Để sau','close']]},
+    'Người canh hang':{description:'Hang Đá Đen rất nguy hiểm. Chỉ nên tiến vào khi đã chuẩn bị đủ vật phẩm hồi phục.',buttons:[['Xem nhiệm vụ','quests'],['Mở bản đồ','map'],['Để sau','close']]}
   };
   const data=actions[npc];
   if(!data)return;
@@ -571,17 +603,9 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];}
   create(){
-    const g=this.add.graphics();g.fillGradientStyle(0x344c39,0x344c39,0x243b31,0x243b31,1);g.fillRect(0,0,960,560);
-    for(let y=0;y<560;y+=42){for(let x=0;x<960;x+=42){const shade=((x*13+y*7)%5);g.fillStyle(shade===0?0x456044:shade===1?0x3b563e:0x38533b,0.45);g.fillRect(x+((y/42)%2)*20,y,40,38);}}
-    // Stone path and village square
-    g.fillStyle(0x9a8867,0.9);g.fillPoints([new Phaser.Geom.Point(0,390),new Phaser.Geom.Point(240,340),new Phaser.Geom.Point(430,350),new Phaser.Geom.Point(640,300),new Phaser.Geom.Point(960,330),new Phaser.Geom.Point(960,470),new Phaser.Geom.Point(650,430),new Phaser.Geom.Point(420,455),new Phaser.Geom.Point(190,440)],true);
-    g.lineStyle(3,0x655744,0.55);g.strokePoints([new Phaser.Geom.Point(0,390),new Phaser.Geom.Point(240,340),new Phaser.Geom.Point(430,350),new Phaser.Geom.Point(640,300),new Phaser.Geom.Point(960,330)],true);
-    this.drawTree(g,110,170,1.2);this.drawTree(g,220,100,0.9);this.drawTree(g,820,155,1.35);this.drawTree(g,720,95,0.9);this.drawTree(g,900,390,1);
-    this.drawHouse(g,330,185,1.05,0x9a5542);this.drawHouse(g,650,180,0.9,0x6f7f91);this.drawHouse(g,505,100,0.75,0x9a804f);
-    this.drawNpc(370,325,0xf0c16b,'Trưởng làng');this.drawNpc(715,320,0x7ec3c8,'Thương nhân');
-    this.createMonsterViews();
+    this.drawZone(worldMapState.snapshot().current);
     // Ambient flowers and rocks
     for(let i=0;i<45;i++){const x=(i*173+47)%950,y=(i*97+35)%500;if(y<280&&x>280&&x<700)continue;g.fillStyle(i%3===0?0xd9c16d:0x8eb66a,0.8);g.fillCircle(x,y,1.7);}
     this.playerSprite=this.add.container(this.player.x,this.player.y);const shadow=this.add.ellipse(0,19,28,9,0x111510,0.35);const cape=this.add.triangle(0,2,0,-2,-17,20,13,20,0x9b3f32);const body=this.add.rectangle(0,0,17,25,0xd5d0b9).setStrokeStyle(2,0x42372b);const head=this.add.circle(0,-17,8,0xe0b88d).setStrokeStyle(2,0x42372b);const hair=this.add.triangle(0,-23,-8,-16,0,-31,9,-15,0x29232a);const sword=this.add.rectangle(13,-3,4,27,0xd6d8d1).setAngle(25).setStrokeStyle(1,0x514d48);this.playerSprite.add([shadow,cape,body,head,hair,sword]);setWorldEntityDepth(this.playerSprite);
@@ -600,10 +624,93 @@ class WorldScene extends Phaser.Scene {
     this.input.on('pointerdown',p=>this.movePlayerTo(p.worldX,p.worldY,450,true));
     this.scale.on('resize',()=>this.cameras.main.setSize(this.scale.width,this.scale.height));
   }
+  drawZone(zone){
+    this.zoneObjects=[];
+    this.monsterViews=[];
+    this.npcViews=[];
+    worldEntityState.setMap(zone.id);
+    const g=this.add.graphics();
+    g.fillGradientStyle(zone.palette.top,zone.palette.top,zone.palette.bottom,zone.palette.bottom,1);
+    g.fillRect(0,0,960,560);
+    for(let y=0;y<560;y+=42){
+      for(let x=0;x<960;x+=42){
+        const shade=((x*13+y*7)%5);
+        const tint=zone.palette.ground;
+        g.fillStyle(shade===0?tint:shade===1?Phaser.Display.Color.IntegerToColor(tint).darken(10).color:tint,0.38);
+        g.fillRect(x+((y/42)%2)*20,y,40,38);
+      }
+    }
+    g.fillStyle(zone.palette.path,0.9);
+    g.fillPoints([new Phaser.Geom.Point(0,390),new Phaser.Geom.Point(240,340),new Phaser.Geom.Point(430,350),new Phaser.Geom.Point(640,300),new Phaser.Geom.Point(960,330),new Phaser.Geom.Point(960,470),new Phaser.Geom.Point(650,430),new Phaser.Geom.Point(420,455),new Phaser.Geom.Point(190,440)],true);
+    g.lineStyle(3,0x655744,0.55);
+    g.strokePoints([new Phaser.Geom.Point(0,390),new Phaser.Geom.Point(240,340),new Phaser.Geom.Point(430,350),new Phaser.Geom.Point(640,300),new Phaser.Geom.Point(960,330)],true);
+    if(zone.id==='village'){
+      this.drawTree(g,110,170,1.2);this.drawTree(g,220,100,0.9);this.drawTree(g,820,155,1.35);this.drawTree(g,720,95,0.9);this.drawTree(g,900,390,1);
+      this.drawHouse(g,330,185,1.05,0x9a5542);this.drawHouse(g,650,180,0.9,0x6f7f91);this.drawHouse(g,505,100,0.75,0x9a804f);
+    }else if(zone.id==='forest'){
+      for(let i=0;i<15;i++){const x=35+(i*67)%900,y=85+(i*113)%220;this.drawTree(g,x,y,0.85+(i%3)*0.18);}
+      for(let i=0;i<9;i++){g.fillStyle(0x1a3028,0.5);g.fillEllipse(90+i*105,470-(i%3)*30,60,15);}
+    }else{
+      for(let i=0;i<13;i++){const x=35+(i*79)%900,y=90+(i*91)%230;g.fillStyle(i%2?0x55535b:0x69616a,0.95);g.fillPoints([new Phaser.Geom.Point(x-28,y+18),new Phaser.Geom.Point(x-12,y-22-(i%3)*8),new Phaser.Geom.Point(x+18,y-28),new Phaser.Geom.Point(x+35,y+18)],true);}
+      g.fillStyle(0x16191e,0.7);g.fillEllipse(480,145,330,100);
+      g.fillStyle(0x9b6749,0.35);g.fillEllipse(480,145,250,55);
+    }
+    this.zoneObjects.push(g);
+    for(const npc of zone.npcs){
+      const view=this.drawNpc(npc.x,npc.y,npc.color,npc.name);
+      this.npcViews.push(view);this.zoneObjects.push(view);
+      const label=this.add.text(npc.x,npc.y-34,npc.name,{fontFamily:'Arial',fontSize:'11px',color:'#ffe6a8',stroke:'#30251a',strokeThickness:3}).setOrigin(.5);
+      this.zoneObjects.push(label);
+    }
+    this.createMonsterViews();
+    const gate=this.add.container(zone.exit.x,zone.exit.y);
+    gate.add([this.add.circle(0,0,18,0xd6bb82,0.18).setStrokeStyle(2,0xe8d39a),this.add.triangle(0,-1,-8,7,0,-10,8,7,0xe8d39a)]);
+    gate.setDepth(zone.exit.y).setSize(40,45).setInteractive(new Phaser.Geom.Circle(0,0,22),Phaser.Geom.Circle.Contains);
+    gate.on('pointerdown',(pointer,x,y,event)=>{event?.stopPropagation();openWindow('map');});
+    const gateLabel=this.add.text(zone.exit.x,zone.exit.y-32,'Lối sang khu vực khác',{fontFamily:'Arial',fontSize:'10px',color:'#f7dfa9',stroke:'#30251a',strokeThickness:3}).setOrigin(.5);
+    this.zoneObjects.push(gate,gateLabel);
+    this.syncZoneHud(zone);
+  }
+  clearZone(){
+    for(const object of this.zoneObjects)object?.destroy?.();
+    this.zoneObjects=[];this.monsterViews=[];this.npcViews=[];
+  }
+  syncZoneHud(zone){
+    const title=document.querySelector('.zone-title b');
+    const subtitle=document.querySelector('.zone-title small');
+    const location=document.querySelector('.location b');
+    const locationKind=document.querySelector('.location small');
+    const mini=document.querySelector('.map-label');
+    if(title)title.textContent=zone.title;
+    if(subtitle)subtitle.textContent=zone.subtitle;
+    if(location)location.textContent=zone.name;
+    if(locationKind)locationKind.textContent='· '+zone.kindLabel;
+    if(mini)mini.textContent=zone.name;
+    const merchant=document.querySelector('.npc-tag.merchant');
+    const elder=document.querySelector('.npc-tag.elder');
+    if(merchant)merchant.style.display=zone.id==='village'?'':'none';
+    if(elder)elder.style.display=zone.id==='village'?'':'none';
+  }
+  changeZone(zoneId){
+    const level=characterState.snapshot().level;
+    const result=worldMapState.travel(zoneId,level);
+    if(!result.ok)return result;
+    const zone=result.zone;
+    this.clearZone();
+    this.playerSprite.setPosition(zone.entry.x,zone.entry.y);
+    this.playerLabel.setPosition(zone.entry.x,zone.entry.y-52);
+    this.drawZone(zone);
+    this.cameras.main.setBounds(0,0,this.worldBounds.width,this.worldBounds.height);
+    this.cameras.main.centerOn(zone.entry.x,zone.entry.y);
+    syncCombatTarget(worldEntityState.snapshot().selected);
+    renderWorldTarget();
+    return result;
+  }
   createMonsterViews(){
     for(const monster of worldEntityState.snapshot().monsters){
       const view=this.drawMonster(monster);
       this.monsterViews.push({id:monster.id,view,monster});
+      this.zoneObjects.push(view);
     }
     syncCombatTarget(worldEntityState.snapshot().selected);
     renderWorldTarget();
