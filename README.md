@@ -78,3 +78,10 @@ The skills panel includes active/passive skill progression, point-based learning
 ## Quest journal and character progression client slice
 
 The quest journal supports accepting objectives, tracking progress from the village elder interaction and training-wolf defeats, filtering quest states, and claiming rewards. Rewards grant experience, currency and inventory items through the shared character state; experience thresholds can increase level and potential points. The HUD wallet and pending-reward indicator are synchronized locally. Quest names, objectives, targets and rewards are illustrative demo content only, not verified original KPAH data or server transactions.
+
+
+## World entities and hunting loop
+
+The mock village now has a structured local entity catalog for four ordinary wolves and one pack leader. Monsters can be selected in the Phaser scene; the selected target HUD shows level and current HP. Using an action-bar skill approaches a distant target before the action executes, then applies damage, monster retaliation, experience rewards and chance-based item drops to the shared character/inventory state. Defeated monsters disappear and respawn after their configured local delay. Ordinary wolf defeats also advance the matching accepted hunt objective.
+
+NPC dialogue remains connected to the quest journal and shop entry points. Monster stats, spawn points, respawn delays, rewards and drop chances are illustrative client-side data, not verified original KPAH server values. Combat remains offline and is not authoritative or multiplayer-synchronized.
