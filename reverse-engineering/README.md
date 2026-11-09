@@ -69,7 +69,7 @@ Detailed traces:
 
 ## Next investigation sequence
 
-1. Inspect the decoded `.wp` companion `.d` metadata and map the splash/character preview PNGs to their exact screen states.
+1. Inspect the decoded `.wp` companion `.d` metadata and integrate the five `.wps` character-line preview packs into character creation.
 2. Trace the map-entry response and initialization of `mj`, including its render-ready state and camera/tile setup.
 3. Decode the font data records and map sprite sheets, tile sets, and UI panels to screen classes.
 4. Replace the mock server/login/character flow and then the mock world HUD incrementally using verified dimensions and assets.
