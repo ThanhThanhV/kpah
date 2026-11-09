@@ -24,25 +24,27 @@ export function createSocialState(){
   function resolveInvitation(id,accepted){
     const invite=invitations.find(item=>item.id===id&&item.status==='pending');
     if(!invite)return {ok:false,message:'Lời mời không còn hiệu lực.'};
-    invite.status=accepted?'accepted':'declined';
     if(accepted){
       const friend=friends.find(item=>item.id===invite.friendId);
+      if(!friend)return {ok:false,message:'Không tìm thấy người chơi được mời.'};
       if(!party)party={leader:'player',members:[{id:'player',name:'Kiếm Khách',level:25,profession:'Kiếm khách',role:'leader'}]};
       if(party.members.length>=5)return {ok:false,message:'Tổ đội đã đủ 5 thành viên.'};
+      if(party.members.some(item=>item.id===friend.id))return {ok:false,message:'Người chơi đã ở trong tổ đội.'};
       party.members.push({...clone(friend),role:'member'});
     }
+    invite.status=accepted?'accepted':'declined';
     log.unshift((accepted?'Đã chấp nhận':'Đã từ chối')+' lời mời của '+invite.name+'.');
     return {ok:true,message:accepted?'Đã thêm '+invite.name+' vào tổ đội.':'Đã từ chối lời mời.'};
   }
   function leaveParty(){if(!party)return {ok:false,message:'Bạn chưa có tổ đội.'};party=null;log.unshift('Bạn đã rời tổ đội.');return {ok:true,message:'Đã rời tổ đội.'};}
-  function removeMember(id){if(!party||party.leader!=='player')return {ok:false,message:'Chỉ đội trưởng mới có thể mời hoặc loại thành viên.'};party.members=party.members.filter(item=>item.id!==id);return {ok:true,message:'Đã mời thành viên rời tổ đội.'};}
+  function removeMember(id){if(!party||party.leader!=='player')return {ok:false,message:'Chỉ đội trưởng mới có thể mời hoặc loại thành viên.'};if(id==='player')return {ok:false,message:'Không thể loại đội trưởng khỏi tổ đội.'};const before=party.members.length;party.members=party.members.filter(item=>item.id!==id);if(before===party.members.length)return {ok:false,message:'Không tìm thấy thành viên trong tổ đội.'};return {ok:true,message:'Đã mời thành viên rời tổ đội.'};}
   function restore(saved){
     if(!saved||typeof saved!=='object')return false;
     const base=new Map(FRIENDS.map(friend=>[friend.id,clone(friend)]));
     if(Array.isArray(saved.friends))for(const item of saved.friends.slice(0,100)){
       if(!item||typeof item.id!=='string'||typeof item.name!=='string')continue;
       if(base.has(item.id)){base.get(item.id).status=item.status==='offline'?'offline':'online';}
-      else if(item.id.startsWith('friend-')&&item.name.trim().length>=2&&item.name.trim().length<=20){base.set(item.id,{id:item.id,name:item.name.trim(),level:Math.max(1,Math.min(10000,Math.floor(Number(item.level)||1))),profession:typeof item.profession==='string'?item.profession.slice(0,40):'Chưa rõ',status:'offline'});}
+      else if(item.id.startsWith('friend-')&&item.id.length<=64&&item.name.trim().length>=2&&item.name.trim().length<=20){base.set(item.id,{id:item.id,name:item.name.trim(),level:Math.max(1,Math.min(10000,Math.floor(Number(item.level)||1))),profession:typeof item.profession==='string'?item.profession.slice(0,40):'Chưa rõ',status:'offline'});}
     }
     friends=[...base.values()];
     if(saved.party&&saved.party.leader==='player'&&Array.isArray(saved.party.members)){
