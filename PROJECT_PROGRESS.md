@@ -33,6 +33,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Added a configurable sprite-sheet inspector: choose any decoded PNG, set rows/columns/FPS, step through frames or play a preview. This is an analysis tool, not yet the in-game animation system.
 - Added a binary metadata inspector for decoded `.d` entries: selectable file, byte offsets, hexadecimal values and ASCII view. Field meanings remain intentionally unassigned pending bytecode verification.
 - Extended the JAR extractor to record PNG width, height and neutral geometry hints in the manifest; the Resource Viewer now shows these values to help classify original assets without guessing their purpose.
+- Hardened archive extraction against traversal paths, Windows-style separators, NUL bytes and duplicate JAR entry names.
+- Added a shared asset catalog for manifest loading and validated asset URLs; Resource Viewer, profession preview and sprite inspector now use the same path rules.
   - Kiếm Khách → kiem
   - Chiến Binh → daidao
   - Pháp Sư → phapsu
