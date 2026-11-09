@@ -38,7 +38,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Added a shared Phaser world runtime for camera follow, bounded entity movement, Y-based depth sorting and a tile-layer adapter that requires verified tile IDs.
 - Routed pointer, keyboard and directional-pad movement through the shared runtime; the player name label now follows the moving entity.
 - Made the offline server state explicit instead of displaying a false connected status.
-- Added live client display settings for the player name label, world coordinates and minimap visibility; settings apply immediately and the panel can be closed with Escape. These are presentation preferences only, not persistent account settings.
+- Added live client display settings for the player name label, world coordinates and minimap visibility; preferences persist in browser local storage, tolerate unavailable/corrupt storage, and can be reset to defaults. The panel can be closed with Escape. These are local presentation preferences, not account settings.
 - Adjusted mobile safe-area spacing for notched phones and compressed the action bar on very narrow screens to reduce horizontal overflow.
 - Added clickable world NPC hit areas. The village elder opens a dialogue with a route to the quest panel; the merchant opens a dialogue with a route to the shop. These are local client interactions and do not imply original NPC scripts or server transactions.
 - Synced the mock-world coordinate readout and minimap player marker to the player's current scene position.
