@@ -133,3 +133,8 @@ When the local character reaches 0 HP, world movement and action-bar attacks are
 ## Story quest chain
 
 The offline quest journal now follows a prerequisite sequence: village elder → wolf patrol → forest hunter → cave guardian → return to the village elder. Later quests remain visible but cannot be accepted until the previous quest reward is claimed. The final preparation objective requires returning to the elder. This is a coherent client demo progression, not verified original KPAH quest content.
+
+
+## Local social, guild and mailbox recovery
+
+The versioned browser save also retains locally added friends, the simulated party roster/invitations, guild membership and personal contribution, plus read/claimed flags for the sample mailbox. Restore only accepts known demo guild/mail IDs and known or locally created friend IDs; transient online status and network delivery are not represented. These features remain local-only simulations.
