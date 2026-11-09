@@ -16,6 +16,61 @@ export function setWorldEntityDepth(entity, groundOffset = 0) {
  * Frame order, frame rate and repeat behavior must come from source evidence;
  * this helper intentionally does not infer animation layouts.
  */
+/**
+ * Load a source-selected sprite sheet at runtime.
+ * Frame geometry must be measured from the chosen asset; this helper does not
+ * guess frame size, order, animation names or timing.
+ */
+export function loadSpriteSheetTexture(scene, definition) {
+  const { key, url, frameWidth, frameHeight, endFrame } = definition || {};
+  if (!scene?.load || !scene?.textures) {
+    return Promise.reject(new Error('Sprite-sheet loading requires an active Phaser scene.'));
+  }
+  if (typeof key !== 'string' || !key.trim()) {
+    return Promise.reject(new Error('Sprite-sheet loading requires a non-empty texture key.'));
+  }
+  if (typeof url !== 'string' || !/^https?:\\/\\//i.test(url)) {
+    return Promise.reject(new Error('Sprite-sheet URL must be an HTTP(S) asset URL.'));
+  }
+  if (!Number.isInteger(frameWidth) || frameWidth < 1 ||
+      !Number.isInteger(frameHeight) || frameHeight < 1) {
+    return Promise.reject(new Error('Sprite-sheet frame dimensions must be positive integers.'));
+  }
+  if (endFrame !== undefined && (!Number.isInteger(endFrame) || endFrame < 0)) {
+    return Promise.reject(new Error('Sprite-sheet endFrame must be a non-negative integer.'));
+  }
+  if (scene.textures.exists(key)) return Promise.resolve(scene.textures.get(key));
+
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const cleanup = () => {
+      scene.load.off('complete', onComplete);
+      scene.load.off('loaderror', onError);
+    };
+    const finish = (callback, value) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      callback(value);
+    };
+    const onComplete = () => {
+      if (scene.textures.exists(key)) finish(resolve, scene.textures.get(key));
+      else finish(reject, new Error('Sprite-sheet load completed without texture: ' + key));
+    };
+    const onError = file => {
+      if (file?.key === key) finish(reject, new Error('Unable to load sprite sheet: ' + url));
+    };
+    scene.load.once('complete', onComplete);
+    scene.load.on('loaderror', onError);
+    scene.load.spritesheet(key, url, {
+      frameWidth,
+      frameHeight,
+      ...(endFrame === undefined ? {} : { endFrame })
+    });
+    scene.load.start();
+  });
+}
+
 export function registerSpriteAnimation(scene, definition) {
   const { key, textureKey, frames, frameRate = 8, repeat = -1 } = definition || {};
   if (!scene?.anims || !scene?.textures) {
