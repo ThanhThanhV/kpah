@@ -415,14 +415,37 @@ function updateActionBar(){
     button.title=cooldown?'Hồi chiêu '+cooldown+' lượt':(id?names[id]:'Chưa gán kỹ năng');
   });
 }
-function showCombatFeedback(result){
+function showCombatFeedback(result,target,enemyDamage=0){
   const frame=document.querySelector('.world-frame');
-  if(!frame)return;
-  const effect=document.createElement('div');
-  effect.className='combat-feedback '+(result.healing?'healing':'damage');
-  effect.textContent=result.healing?'+'+result.healing+' HP':'-'+result.damage;
-  frame.appendChild(effect);
-  effect.addEventListener('animationend',()=>effect.remove(),{once:true});
+  const scene=game.scene.getScene('world');
+  const canvas=scene?.game?.canvas;
+  const camera=scene?.cameras?.main;
+  if(!frame||!canvas||!camera)return;
+  const frameRect=frame.getBoundingClientRect();
+  const canvasRect=canvas.getBoundingClientRect();
+  const view=camera.worldView;
+  if(!view?.width||!view?.height)return;
+  const addEffect=(worldX,worldY,label,kind)=>{
+    if(!Number.isFinite(worldX)||!Number.isFinite(worldY)||!label)return;
+    const effect=document.createElement('div');
+    effect.className='combat-feedback '+kind;
+    effect.textContent=label;
+    const x=canvasRect.left-frameRect.left+(worldX-view.x)/view.width*canvasRect.width;
+    const y=canvasRect.top-frameRect.top+(worldY-view.y)/view.height*canvasRect.height;
+    effect.style.left=Math.max(8,Math.min(frameRect.width-8,x))+'px';
+    effect.style.top=Math.max(8,Math.min(frameRect.height-8,y))+'px';
+    frame.appendChild(effect);
+    effect.addEventListener('animationend',()=>effect.remove(),{once:true});
+  };
+  if(result.healing>0){
+    const player=scene.playerSprite;
+    if(player)addEffect(player.x,player.y-42,'+'+result.healing+' HP','healing');
+  }
+  if(result.damage>0&&target)addEffect(target.x,target.y-38,'-'+result.damage,'damage');
+  if(enemyDamage>0){
+    const player=scene.playerSprite;
+    if(player)addEffect(player.x,player.y-42,'-'+enemyDamage,'incoming');
+  }
 }
 let pendingMonsterApproach=false;
 let pendingMonsterApproachTimer=null;
@@ -478,7 +501,7 @@ function executeActionSlot(slot){
   }
   const afterAction=characterState.snapshot();
   if(afterAction.hp<=0)showDeathOverlay();
-  showCombatFeedback(result);
+  showCombatFeedback(result,target,result.enemyDamage);
   updateCharacterHud();
   updateActionBar();
   renderWorldTarget();
