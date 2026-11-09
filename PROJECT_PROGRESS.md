@@ -10,11 +10,11 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 |---|---|---:|---|
 | P0 | Foundation and original resources (5 tasks) | 36% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
 | P1 | Reconstructed client/gameplay (10 tasks) | 36% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel and zone-specific NPC quest interactions are implemented; original map data, real animation and server combat remain unimplemented. |
-| P2 | Game systems (10 tasks) | 35% | Character/inventory/equipment, skill progression, quest progression, local world hunting, merchant purchases, guild contribution and mailbox rewards now share wallet/inventory state; local friends/party and guild systems are present. All content remains client-side demo data. |
+| P2 | Game systems (10 tasks) | 36% | Character/inventory/equipment, skill progression, quest progression, local world hunting, merchant purchases, guild contribution and mailbox rewards now share wallet/inventory state; local friends/party and guild systems are present. All content remains client-side demo data. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 0% | Not started. |
 
-**Overall estimate: about 22%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 22.5%** (weighted average of the 41 roadmap items).
 
 ## P0 — Foundation detail
 
@@ -143,3 +143,12 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Added a mailbox with sample system/NPC messages, read/unread tracking, an unread shortcut badge and claimable sample currency attachments.
 - Added a private-chat recipient selector and a guild-chat membership gate. World, guild, private and system channel visibility remains client-local; messages are not delivered to another player.
 - These features use illustrative client data. No guild server, mail service, online friend presence, private message delivery or authoritative quest service exists.
+
+
+## P2 — Local save and resume
+
+- Added a versioned local save envelope with guarded storage access, JSON/schema-version checks and safe fallback when browser storage is unavailable, corrupt or full.
+- Character identity, progression, base attributes, vitals, wallet, inventory and equipment are restored through catalog-validated state hydration. Unknown item IDs and invalid equipment-slot combinations are discarded.
+- Quest status/progress and learned skill levels/loadout are restored against the known local catalogs. Skill cooldowns, practice-target HP and turn state are deliberately reset so a saved browser session cannot resume a stale combat encounter.
+- Character HUD, quest badge and action-bar refresh points write the shared save snapshot after state changes.
+- This remains local browser persistence only. It does not save login credentials, sync across devices, or provide server-authoritative/account persistence.
