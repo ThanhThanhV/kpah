@@ -8,7 +8,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 | Phase | Scope | Progress | Basis |
 |---|---|---:|---|
-| P0 | Foundation and original resources (5 tasks) | 34% | .sh/.wp/.wps extraction and manifest are implemented; initial inventory is documented; sprite animation, original tilemap and original camera/render are not done. |
+| P0 | Foundation and original resources (5 tasks) | 36% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
 | P1 | Reconstructed client/gameplay (10 tasks) | 24% | Demo server/login/character flow exists; profession preview images are now wired; world, movement and NPCs remain mostly mock; combat and real animation are not implemented. |
 | P2 | Game systems (10 tasks) | 5% | UI panels/placeholders exist, but inventory, equipment, skills, quests, chat, party and guild are not backed by game logic. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
@@ -23,8 +23,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 | 1. Extract .sh, .wp, .wps | Implemented in extractor | 100% |
 | 2. Classify images/resources | Initial pack inventory plus PNG dimension/geometry metadata; semantic sprite mapping pending | 40% |
 | 3. Sprite/animation engine | Manual frame inspector exists; runtime character animation engine/mapping not implemented | 10% |
-| 4. Original tilemap engine | Not implemented | 0% |
-| 5. Original camera/render pipeline | Phaser scene and basic camera bounds only; currently mock world | 15% |
+| 4. Original tilemap engine | Generic verified-data adapter added; original map format/data not traced | 5% |
+| 5. Original camera/render pipeline | Shared camera-follow rig, movement bounds and Y-depth sorting integrated; current 960 × 560 mock world cannot demonstrate scrolling | 25% |
 
 ## Latest implementation
 
@@ -35,6 +35,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Extended the JAR extractor to record PNG width, height and neutral geometry hints in the manifest; the Resource Viewer now shows these values to help classify original assets without guessing their purpose.
 - Hardened archive extraction against traversal paths, Windows-style separators, NUL bytes and duplicate JAR entry names.
 - Added a shared asset catalog for manifest loading and validated asset URLs; Resource Viewer, profession preview and sprite inspector now use the same path rules.
+- Added a shared Phaser world runtime for camera follow, bounded entity movement, Y-based depth sorting and a tile-layer adapter that requires verified tile IDs.
+- Routed pointer, keyboard and directional-pad movement through the shared runtime; the player name label now follows the moving entity.
   - Kiếm Khách → kiem
   - Chiến Binh → daidao
   - Pháp Sư → phapsu
@@ -45,4 +47,4 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Validation limitations
 
-GitHub file updates were confirmed on main. The current environment did not run npm install, npm run build, or a browser session, so runtime/build success is not claimed. The original extracted asset directory is generated locally from KPAH_278.jar and is not committed; run npm run extract:assets before testing previews.
+GitHub file updates were confirmed on main. The current environment did not run npm install, npm run build, or a browser session, so runtime/build success is not claimed. The new tile-layer adapter is infrastructure only; no original map data or tile-ID mapping has been supplied to it. The original extracted asset directory is generated locally from KPAH_278.jar and is not committed; run npm run extract:assets before testing previews.
