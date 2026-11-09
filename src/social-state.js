@@ -36,6 +36,25 @@ export function createSocialState(){
   }
   function leaveParty(){if(!party)return {ok:false,message:'Bạn chưa có tổ đội.'};party=null;log.unshift('Bạn đã rời tổ đội.');return {ok:true,message:'Đã rời tổ đội.'};}
   function removeMember(id){if(!party||party.leader!=='player')return {ok:false,message:'Chỉ đội trưởng mới có thể mời hoặc loại thành viên.'};party.members=party.members.filter(item=>item.id!==id);return {ok:true,message:'Đã mời thành viên rời tổ đội.'};}
+  function restore(saved){
+    if(!saved||typeof saved!=='object')return false;
+    const base=new Map(FRIENDS.map(friend=>[friend.id,clone(friend)]));
+    if(Array.isArray(saved.friends))for(const item of saved.friends.slice(0,100)){
+      if(!item||typeof item.id!=='string'||typeof item.name!=='string')continue;
+      if(base.has(item.id)){base.get(item.id).status=item.status==='offline'?'offline':'online';}
+      else if(item.id.startsWith('friend-')&&item.name.trim().length>=2&&item.name.trim().length<=20){base.set(item.id,{id:item.id,name:item.name.trim(),level:Math.max(1,Math.min(10000,Math.floor(Number(item.level)||1))),profession:typeof item.profession==='string'?item.profession.slice(0,40):'Chưa rõ',status:'offline'});}
+    }
+    friends=[...base.values()];
+    if(saved.party&&saved.party.leader==='player'&&Array.isArray(saved.party.members)){
+      const allowed=new Map(friends.map(friend=>[friend.id,friend]));
+      const members=[{id:'player',name:'Kiếm Khách',level:25,profession:'Kiếm khách',role:'leader'}];
+      for(const member of saved.party.members){const friend=allowed.get(member?.id);if(friend&&!members.some(entry=>entry.id===friend.id)&&members.length<5)members.push({...clone(friend),role:'member'});}
+      party=members.length>1?{leader:'player',members}:null;
+    }else party=null;
+    invitations=Array.isArray(saved.invitations)?saved.invitations.filter(item=>item&&friends.some(friend=>friend.id===item.friendId)&&['pending','accepted','declined'].includes(item.status)).slice(0,50).map(item=>({id:'invite-'+item.friendId,friendId:item.friendId,name:friends.find(friend=>friend.id===item.friendId).name,status:item.status})):[];
+    log=Array.isArray(saved.log)?saved.log.filter(item=>typeof item==='string').slice(0,30):[];
+    return true;
+  }
   function addFriend(name){
     const value=String(name||'').trim();
     if(value.length<2||value.length>20)return {ok:false,message:'Tên nhân vật phải có từ 2 đến 20 ký tự.'};
@@ -44,5 +63,5 @@ export function createSocialState(){
     friends.push(friend);log.unshift('Đã thêm '+value+' vào danh sách bạn bè.');
     return {ok:true,message:'Đã thêm '+value+' vào danh sách bạn bè.'};
   }
-  return {snapshot,inviteFriend,resolveInvitation,leaveParty,removeMember,addFriend};
+  return {snapshot,restore,inviteFriend,resolveInvitation,leaveParty,removeMember,addFriend};
 }
