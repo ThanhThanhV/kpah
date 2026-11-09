@@ -7,7 +7,7 @@ style.textContent = `
 .sprite-lab-controls{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,64px);gap:6px}
 .sprite-lab-mapping{display:grid;grid-template-columns:minmax(0,1fr) 90px 90px 90px;gap:6px}
 .sprite-lab-mapping input,.sprite-lab-mapping select{min-width:0;width:100%;height:32px;padding:0 6px;background:#17141b;border:1px solid #66513b;color:#f0dfbd;font-size:10px}
-.sprite-lab-export{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sprite-lab-mapping .wide{grid-column:1/-1}.sprite-lab-export{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .sprite-lab-export pre{flex:1;min-width:180px;max-height:120px;overflow:auto;padding:8px;background:#121015;color:#cbbd9e;font:9px/1.5 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
 .sprite-lab select,.sprite-lab input{min-width:0;width:100%;height:32px;padding:0 6px;background:#17141b;border:1px solid #66513b;color:#f0dfbd;font-size:10px}
 .sprite-lab-stage{min-height:180px;display:grid;place-items:center;background:repeating-conic-gradient(#302a2b 0% 25%,#211d22 0% 50%) 50%/16px 16px}
@@ -48,6 +48,7 @@ export function renderSpriteLab(root, assets) {
         <input id="sprite-first-frame" type="number" min="0" value="0" aria-label="Frame đầu" title="Frame đầu">
         <input id="sprite-last-frame" type="number" min="0" value="0" aria-label="Frame cuối" title="Frame cuối">
         <select id="sprite-repeat" aria-label="Chế độ lặp"><option value="-1">Lặp vô hạn</option><option value="0">Chạy một lần</option></select>
+        <input class="wide" id="sprite-frame-sequence" type="text" placeholder="Thứ tự frame tùy chỉnh, ví dụ: 0,2,1,3 (để trống = chạy liên tiếp)" aria-label="Thứ tự frame tùy chỉnh">
       </div>
       <div class="sprite-lab-stage"><canvas id="sprite-canvas" width="320" height="220"></canvas></div>
       <div class="sprite-lab-actions">
@@ -74,6 +75,7 @@ export function renderSpriteLab(root, assets) {
   const firstFrameInput = $('sprite-first-frame');
   const lastFrameInput = $('sprite-last-frame');
   const repeatInput = $('sprite-repeat');
+  const frameSequenceInput = $('sprite-frame-sequence');
   const mappingOutput = $('sprite-mapping-output');
   const copyButton = $('sprite-copy');
   const slider = $('sprite-frame');
@@ -173,7 +175,7 @@ export function renderSpriteLab(root, assets) {
   imageSelect.addEventListener('change',loadAsset);
   colsInput.addEventListener('change',updateGrid);
   rowsInput.addEventListener('change',updateGrid);
-  for (const input of [animationKeyInput,firstFrameInput,lastFrameInput,fpsInput,repeatInput]) {
+  for (const input of [animationKeyInput,firstFrameInput,lastFrameInput,fpsInput,repeatInput,frameSequenceInput]) {
     input.addEventListener('input',() => { copyButton.disabled = true; });
     input.addEventListener('change',() => { copyButton.disabled = true; });
   }
@@ -189,9 +191,13 @@ export function renderSpriteLab(root, assets) {
       copyButton.disabled = true;
       return;
     }
-    if (!total || !Number.isInteger(first) || !Number.isInteger(last) ||
-        first < 0 || last < first || last >= total) {
-      mappingOutput.textContent = 'Dải frame không hợp lệ. Phải nằm trong khoảng 0 đến ' + (total-1) + '.';
+    const sequenceText = frameSequenceInput.value.trim();
+    const frames = sequenceText
+      ? sequenceText.split(',').map(value => value.trim()).map(value => /^\\d+$/.test(value) ? Number(value) : NaN)
+      : Array.from({length:last-first+1},(_,index)=>first+index);
+    if (!total || !frames.length || frames.some(frame => !Number.isInteger(frame) || frame < 0 || frame >= total) ||
+        (!sequenceText && (!Number.isInteger(first) || !Number.isInteger(last) || first < 0 || last < first || last >= total))) {
+      mappingOutput.textContent = 'Dải hoặc thứ tự frame không hợp lệ. Mỗi frame phải nằm trong khoảng 0 đến ' + (total-1) + '.';
       copyButton.disabled = true;
       return;
     }
@@ -213,7 +219,7 @@ export function renderSpriteLab(root, assets) {
       animation: {
         key,
         textureKey,
-        frames:Array.from({length:last-first+1},(_,index)=>first+index),
+        frames,
         frameRate:fps,
         repeat
       }
