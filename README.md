@@ -40,11 +40,12 @@ Sau khi trích xuất, chạy lại Vite và mở **Tài nguyên gốc** ở tha
 - Phaser 3 cho vùng thế giới 2D và tương tác bản đồ
 - HTML/CSS cho HUD, cửa sổ chức năng, chat và các màn hình UI
 - Trình duyệt tài nguyên đọc manifest do extractor tạo; ảnh được hiển thị với nearest-neighbor/pixelated scaling
+- `src/kpah-assets.js` quản lý việc tải manifest dùng chung và chỉ tạo URL cho đường dẫn tài nguyên hợp lệ.
 - Dữ liệu gameplay hiện tại vẫn là mock UI; chưa kết nối backend
 
 ## Trạng thái và giới hạn
 
-Đây là nền tảng tái hiện client. Resource Viewer hiện chỉ duyệt và xem trước PNG đã giải mã; chưa tự suy luận animation, tilemap, collision hay mapping sprite. Các dữ liệu đó cần được phân tích và xác minh riêng từ bytecode/tài nguyên gốc. Giao thức và backend sẽ được thiết kế riêng sau khi thống nhất.
+Đây là nền tảng tái hiện client. Resource Viewer hiện chỉ duyệt và xem trước PNG đã giải mã; chưa tự suy luận animation, tilemap, collision hay mapping sprite. Extractor đã chặn đường dẫn archive không an toàn và entry trùng tên; phía trình duyệt cũng kiểm tra đường dẫn trước khi tạo URL. Các dữ liệu đó cần được phân tích và xác minh riêng từ bytecode/tài nguyên gốc. Giao thức và backend sẽ được thiết kế riêng sau khi thống nhất.
 
 
 ## Character preview
