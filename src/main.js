@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import './style.css';
+import { renderResourceViewer } from './resource-viewer.js';
 
 const app = document.querySelector('#app');
 app.innerHTML = `
@@ -23,6 +24,7 @@ app.innerHTML = `
           <button data-window="quests"><span>⚑</span>Nhiệm vụ</button>
           <button data-window="friends"><span>♧</span>Bạn bè</button>
           <button data-window="guild"><span>⚑</span>Bang hội</button>
+          <button data-window="resources"><span>▧</span>Tài nguyên gốc</button>
         </nav>
         <div class="mini-status"><div><span>Xu</span><b>125.600</b></div><div><span>Lượng</span><b>320</b></div><div><span>Danh vọng</span><b>48</b></div></div>
       </aside>
@@ -55,6 +57,7 @@ app.innerHTML = `
 `;
 
 const panelData = {
+  resources: {title:'Trình duyệt tài nguyên gốc',html:'<div id="resource-viewer"></div>'},
   character: {title:'Thông tin nhân vật',html:`<div class="character-sheet"><div class="big-avatar">⚔<span>Cấp 25</span></div><div class="character-details"><h2>Kiếm Khách</h2><p class="muted">Chiến binh tập sự · Nam</p><div class="stat-grid"><div><small>Cấp độ</small><b>25</b></div><div><small>Kinh nghiệm</small><b>72.450 / 90.000</b></div><div><small>Sức mạnh</small><b>1.285</b></div><div><small>Thể lực</small><b>860</b></div><div><small>Nhanh nhẹn</small><b>740</b></div><div><small>Tinh thần</small><b>520</b></div></div><button class="gold-button">Phân phối tiềm năng</button></div></div>`},
   inventory:{title:'Hành trang',html:`<div class="tabs"><button class="chosen">Tất cả</button><button>Trang bị</button><button>Tiêu hao</button><button>Nhiệm vụ</button></div><div class="inventory-grid">${['Kiếm tân thủ','Áo vải','Bình máu nhỏ','Bình mana nhỏ','Nhẫn đồng','Đá cường hóa','Lá bùa','Túi nguyên liệu','Giày vải','Găng tay','Ngọc xanh','Rương gỗ'].map((x,i)=>`<div class="item-cell"><span>${['⚔','♧','🧪','🧴','◉','◆','✧','▣','⌑','♢','💎','▤'][i]}</span><small>${x}</small>${i===2||i===3?'<em>×5</em>':''}</div>`).join('')}</div><div class="inventory-footer"><span>Ô trống: 18 / 30</span><button class="gold-button">Mở rộng túi</button></div>`},
   equipment:{title:'Trang bị nhân vật',html:`<div class="equipment-layout"><div class="equip-slots">${['Mũ','Áo','Vũ khí','Găng','Giày','Nhẫn','Dây chuyền','Bùa'].map((x,i)=>`<div class="equip-cell"><span>${['♜','♧','⚔','♢','⌑','◉','◇','✧'][i]}</span><small>${x}</small></div>`).join('')}</div><div class="equip-preview">⚔<b>Kiếm Khách</b><small>Chưa trang bị đầy đủ</small></div></div>`},
@@ -72,7 +75,7 @@ const panelData = {
   shop:{title:'Cửa hàng',html:`<div class="tabs"><button class="chosen">Vật phẩm</button><button>Trang bị</button><button>Tiện ích</button></div><div class="shop-row"><span>🧪</span><b>Bình máu nhỏ</b><small>150 Xu</small><button>Mua</button></div><div class="shop-row"><span>🧴</span><b>Bình mana nhỏ</b><small>150 Xu</small><button>Mua</button></div>`}
 };
 let activeCharacterName='Kiếm Khách',activeCharacterClass='Kiếm khách';
-function openWindow(key){const p=panelData[key]||panelData.help;document.querySelector('#window-title').textContent=p.title;const html=key==='character'?p.html.replaceAll('Kiếm Khách',escapeHtml(activeCharacterName)).replace('Chiến binh tập sự',escapeHtml(activeCharacterClass+' · Nhân vật')):p.html;document.querySelector('#window-content').innerHTML=html;document.querySelector('#game-window').classList.add('open');document.querySelector('#modal-backdrop').classList.add('show');document.querySelectorAll('.side-nav button').forEach(b=>b.classList.toggle('active',b.dataset.window===key));}
+function openWindow(key){const p=panelData[key]||panelData.help;document.querySelector('#window-title').textContent=p.title;const html=key==='character'?p.html.replaceAll('Kiếm Khách',escapeHtml(activeCharacterName)).replace('Chiến binh tập sự',escapeHtml(activeCharacterClass+' · Nhân vật')):p.html;document.querySelector('#window-content').innerHTML=html;document.querySelector('#game-window').classList.add('open');document.querySelector('#modal-backdrop').classList.add('show');document.querySelectorAll('.side-nav button').forEach(b=>b.classList.toggle('active',b.dataset.window===key));if(key==='resources')renderResourceViewer(document.querySelector('#resource-viewer'));}
 function closeWindow(){document.querySelector('#game-window').classList.remove('open');document.querySelector('#modal-backdrop').classList.remove('show');}
 document.querySelectorAll('[data-window]').forEach(b=>b.addEventListener('click',()=>openWindow(b.dataset.window)));
 document.querySelector('#window-close').addEventListener('click',closeWindow);
