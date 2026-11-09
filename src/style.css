@@ -332,3 +332,8 @@
 .mail-claimed{color:#a7c58f;font-size:11px}
 .quest-card-live[data-quest-status="available"]{border-color:#69704e}
 @media(max-width:560px){.guild-stats{gap:5px}.guild-stats>div{padding:7px}.guild-actions button{flex:1}.guild-catalog article{align-items:flex-start}.mail-card-heading{flex-direction:column;gap:3px}}
+
+.mail-nav-count{display:inline-grid;place-items:center;min-width:16px;height:16px;margin-left:4px;padding:0 4px;border-radius:9px;background:#b84d3d;color:#fff;font-size:9px;font-style:normal;font-weight:700}
+#chat-recipient{max-width:105px;min-width:0;background:#252c26;border:1px solid #5b614f;color:#f1e4c3;border-radius:5px;padding:5px;font-size:10px}
+#chat-recipient[hidden]{display:none}
+#chat-form button:disabled{opacity:.45;cursor:not-allowed}
