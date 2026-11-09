@@ -8,7 +8,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 | Phase | Scope | Progress | Basis |
 |---|---|---:|---|
-| P0 | Foundation and original resources (5 tasks) | 38% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
+| P0 | Foundation and original resources (5 tasks) | 38% | Resource extraction, geometry hints, source-pack family taxonomy/filtering, camera/entity runtime, explicit sprite-sheet loading and animation helpers exist; original map data, tile mapping and verified character animation mappings remain unimplemented. |
 | P1 | Reconstructed client/gameplay (10 tasks) | 37% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel, zone-specific NPC quest interactions and checkpoint respawn are implemented; original map data, real animation and server combat remain unimplemented. |
 | P2 | Game systems (10 tasks) | 39% | Character/inventory/equipment, skill progression, quest progression, local world hunting, merchant purchases, guild contribution and mailbox rewards now share wallet/inventory state; local friends/party and guild systems are present, with browser-local saves for character progression, inventory/equipment, quests and learned skill configuration. All content remains client-side demo data. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
