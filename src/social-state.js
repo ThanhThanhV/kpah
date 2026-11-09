@@ -51,7 +51,7 @@ export function createSocialState(){
       const allowed=new Map(friends.map(friend=>[friend.id,friend]));
       const members=[{id:'player',name:'Kiếm Khách',level:25,profession:'Kiếm khách',role:'leader'}];
       for(const member of saved.party.members){const friend=allowed.get(member?.id);if(friend&&!members.some(entry=>entry.id===friend.id)&&members.length<5)members.push({...clone(friend),role:'member'});}
-      party=members.length>1?{leader:'player',members}:null;
+      party=members.length?{leader:'player',members}:null;
     }else party=null;
     invitations=Array.isArray(saved.invitations)?saved.invitations.filter(item=>item&&friends.some(friend=>friend.id===item.friendId)&&['pending','accepted','declined'].includes(item.status)).slice(0,50).map(item=>({id:'invite-'+item.friendId,friendId:item.friendId,name:friends.find(friend=>friend.id===item.friendId).name,status:item.status})):[];
     log=Array.isArray(saved.log)?saved.log.filter(item=>typeof item==='string').slice(0,30):[];
