@@ -10,11 +10,11 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 |---|---|---:|---|
 | P0 | Foundation and original resources (5 tasks) | 36% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
 | P1 | Reconstructed client/gameplay (10 tasks) | 32% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel are implemented; original map data, real animation and server combat remain unimplemented. |
-| P2 | Game systems (10 tasks) | 25% | Character/inventory/equipment, skill progression, quest progression, local world hunting and merchant purchases now share wallet/inventory state. All content remains client-side demo data. |
+| P2 | Game systems (10 tasks) | 29% | Character/inventory/equipment, skill progression, quest progression, local world hunting and merchant purchases now share wallet/inventory state. All content remains client-side demo data. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 0% | Not started. |
 
-**Overall estimate: about 19%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 20%** (weighted average of the 41 roadmap items).
 
 ## P0 — Foundation detail
 
@@ -116,3 +116,12 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Ran JavaScript syntax parsing for `main.js`, `skill-combat.js` and `character-state.js`, plus state-level smoke checks for locked-skill rejection, learning, slot assignment, damage, MP spending, enemy retaliation, cooldown blocking and potion recovery. These checks do not replace a browser/UI test or a full Vite production build.
 
 GitHub file updates were confirmed on main. The current environment did not run npm install, npm run build, or a browser session, so runtime/build success is not claimed. The new tile-layer adapter is infrastructure only; no original map data or tile-ID mapping has been supplied to it. The original extracted asset directory is generated locally from KPAH_278.jar and is not committed; run npm run extract:assets before testing previews.
+
+
+## P1/P2 — Ground loot and social client slice
+
+- Monster drops now spawn as collectible world entities at the defeated monster position instead of being granted directly to inventory.
+- Ground items can be selected by pointer or collected with the E key within pickup range; items expire after a configured local lifetime.
+- Inventory capacity is checked at pickup time. If the bag is full, the item remains on the ground; changing zones clears that zone's transient drops.
+- Friends panel supports adding a local friend and inviting online demo friends. Party panel supports a five-member local party, simulated invitations, accept/decline, member removal and leaving the party.
+- These are client-only simulations. No server-backed friend directory, online status, party invitation, synchronized combat or persistence exists.
