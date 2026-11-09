@@ -119,9 +119,26 @@ export function createSkillCombatState() {
     };
   }
 
+  function setTarget(target) {
+    if (!target || !Number.isFinite(target.maxHp) || target.maxHp <= 0) return {ok:false,message:'Mục tiêu không hợp lệ.'};
+    state.target = {
+      id:String(target.id||'world-target'),
+      name:String(target.name||'Mục tiêu'),
+      level:Math.max(1,Math.floor(Number(target.level)||1)),
+      maxHp:Math.floor(target.maxHp),
+      hp:Math.max(0,Math.min(Math.floor(target.maxHp),Math.floor(Number(target.hp)||target.maxHp))),
+      defense:Math.max(0,Math.floor(Number(target.defense)||0))
+    };
+    state.cooldowns = {};
+    state.turn = 0;
+    state.battleActive = state.target.hp > 0;
+    state.log = [state.target.name+' đã được chọn làm mục tiêu.'];
+    return {ok:true,target:clone(state.target)};
+  }
+
   function resetTarget() {
     return startBattle();
   }
 
-  return {snapshot,learnOrUpgrade,assignSkill,unassignSkill,useSlot,startBattle,resetTarget};
+  return {snapshot,learnOrUpgrade,assignSkill,unassignSkill,useSlot,startBattle,setTarget,resetTarget};
 }
