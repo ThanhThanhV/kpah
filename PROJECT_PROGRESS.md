@@ -10,11 +10,11 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 |---|---|---:|---|
 | P0 | Foundation and original resources (5 tasks) | 36% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
 | P1 | Reconstructed client/gameplay (10 tasks) | 24% | Demo server/login/character flow exists; profession preview images are now wired; world, movement and NPCs remain mostly mock; combat and real animation are not implemented. |
-| P2 | Game systems (10 tasks) | 5% | UI panels/placeholders exist, but inventory, equipment, skills, quests, chat, party and guild are not backed by game logic. |
+| P2 | Game systems (10 tasks) | 6% | Inventory category filtering and local chat-channel interactions are implemented in the client; other systems remain placeholders and nothing is server-backed. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 0% | Not started. |
 
-**Overall estimate: about 12%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 12.3%** (weighted average of the 41 roadmap items).
 
 ## P0 — Foundation detail
 
@@ -37,6 +37,9 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Added a shared asset catalog for manifest loading and validated asset URLs; Resource Viewer, profession preview and sprite inspector now use the same path rules.
 - Added a shared Phaser world runtime for camera follow, bounded entity movement, Y-based depth sorting and a tile-layer adapter that requires verified tile IDs.
 - Routed pointer, keyboard and directional-pad movement through the shared runtime; the player name label now follows the moving entity.
+- Made the offline server state explicit instead of displaying a false connected status.
+- Added client-side chat channel selection/filtering for World, Guild, Private and System; System is read-only and sent messages use the selected channel and current character name. Messages remain local to the browser.
+- Added working inventory filters for equipment, consumables, materials and quest items. Item categories are provisional demo data, not reconstructed server inventory.
   - Kiếm Khách → kiem
   - Chiến Binh → daidao
   - Pháp Sư → phapsu
