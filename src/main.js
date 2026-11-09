@@ -10,6 +10,8 @@ import { createShopState } from './shop-state.js';
 import { createWorldMapState } from './world-map.js';
 import { createGroundDropState } from './ground-drop-state.js';
 import { createSocialState } from './social-state.js';
+import { createGuildState } from './guild-state.js';
+import { createMailState } from './mail-state.js';
 
 const app = document.querySelector('#app');
 app.innerHTML = `
@@ -92,11 +94,13 @@ const worldEntityState=createWorldEntityState(Math.random,'village');
 const shopState=createShopState(characterState);
 const groundDropState=createGroundDropState();
 const socialState=createSocialState();
+const guildState=createGuildState();
+const mailState=createMailState();
 
 function openWindow(key){
   const p=panelData[key]||panelData.help;
   document.querySelector('#window-title').textContent=p.title;
-  const html=['character','inventory','equipment'].includes(key)?renderCharacterPanel(key):key==='skills'?renderSkillPanel():key==='quests'?renderQuestPanel():key==='shop'?renderShopPanel():key==='map'?renderWorldMapPanel():key==='friends'?renderFriendsPanel():key==='party'?renderPartyPanel():p.html;
+  const html=['character','inventory','equipment'].includes(key)?renderCharacterPanel(key):key==='skills'?renderSkillPanel():key==='quests'?renderQuestPanel():key==='shop'?renderShopPanel():key==='map'?renderWorldMapPanel():key==='friends'?renderFriendsPanel():key==='party'?renderPartyPanel():key==='guild'?renderGuildPanel():key==='mail'?renderMailPanel():p.html;
   document.querySelector('#window-content').innerHTML=html;
   document.querySelector('#game-window').classList.add('open');
   document.querySelector('#modal-backdrop').classList.add('show');
@@ -204,6 +208,18 @@ function renderWorldMapPanel(){
     <p class="panel-hint">Các khu vực và điều kiện di chuyển hiện là dữ liệu client minh họa. Cấp nhân vật hiện tại: ${level}.</p>`;
 }
 
+function renderGuildPanel(){
+ const data=guildState.snapshot();
+ if(data.guild){const g=data.guild;return `<div class="guild-banner"><span>⚑</span><div><b>${escapeHtml(g.name)}</b><small>Cấp bang hội ${g.level} · ${g.members} thành viên</small></div><em>${g.role}</em></div>
+ <p class="guild-notice">${escapeHtml(g.notice)}</p><div class="guild-stats"><div><small>Cống hiến cá nhân</small><b>${g.contribution.toLocaleString('vi-VN')}</b></div><div><small>Số lần cống hiến</small><b>${g.donations}</b></div><div><small>Thành viên</small><b>${g.members}/50</b></div></div>
+ <div class="guild-actions"><button type="button" data-guild-donate="500">Cống hiến 500 Xu</button><button type="button" data-guild-donate="2000">Cống hiến 2.000 Xu</button><button type="button" data-guild-leave>Rời bang</button></div>
+ <h3>Thành viên tiêu biểu</h3><div class="guild-members">${g.members.slice(0,3).map(member=>`<p><b>${escapeHtml(member.name)}</b><small>${member.role}</small><span>${member.contribution.toLocaleString('vi-VN')} điểm</span></p>`).join('')}</div>`;}
+ return `<div class="guild-intro"><b>Gia nhập một bang hội</b><p>Tham gia hoạt động cộng đồng, đóng góp Xu và cùng các thành viên phát triển bang hội.</p></div><div class="guild-catalog">${data.catalog.map(item=>`<article><div><b>⚑ ${escapeHtml(item.name)}</b><small>Cấp ${item.level} · ${item.members} thành viên</small><p>${escapeHtml(item.notice)}</p></div><button type="button" data-guild-join="${item.id}" ${data.applications.includes(item.id)?'disabled':''}>${data.applications.includes(item.id)?'Đã gửi đơn':'Xin gia nhập'}</button></article>`).join('')}</div><p class="panel-hint">Việc xét duyệt gia nhập đang được mô phỏng tự động ở client.</p>`;
+}
+function renderMailPanel(){
+ const data=mailState.snapshot();
+ return `<div class="mail-summary"><b>Hòm thư</b><span>${data.unread} thư chưa đọc</span></div><div class="mail-list">${data.messages.map(item=>`<article class="mail-card ${item.read?'read':''}"><div class="mail-card-heading"><b>${escapeHtml(item.subject)}</b><small>${escapeHtml(item.sender)} · ${escapeHtml(item.sentAt)}</small></div><p>${escapeHtml(item.body)}</p>${item.attachments.length?`<div class="mail-attachment">🎁 ${item.attachments.map(a=>a.type==='currency'?a.amount.toLocaleString('vi-VN')+' Xu':a.quantity+' × '+a.itemId).join(' · ')}</div>`:''}<div class="mail-actions"><button type="button" data-mail-read="${item.id}">Đã đọc</button>${item.attachments.length?(item.claimed?'<span class="mail-claimed">Đã nhận quà</span>':`<button type="button" class="gold-button" data-mail-claim="${item.id}">Nhận quà</button>`):''}</div></article>`).join('')}</div><p class="panel-hint">Thư và quà đính kèm hiện là dữ liệu mô phỏng cục bộ, chưa nhận từ máy chủ.</p>`;
+}
 function renderFriendsPanel(){
   const data=socialState.snapshot();
   return `<div class="social-add"><input id="friend-name" maxlength="20" placeholder="Tên nhân vật cần kết bạn"><button type="button" data-friend-add>Thêm bạn</button></div>
@@ -493,7 +509,7 @@ document.querySelector('#window-content').addEventListener('click',event=>{
     document.querySelector('#window-content').innerHTML=renderShopPanel();
     return;
   }
-  const accept=event.target.closest('[data-quest-accept]')?.dataset.questAccept;
+  const guildJoin=event.target.closest('[data-guild-join]')?.dataset.guildJoin;\n  if(guildJoin){const result=guildState.apply(guildJoin);if(result.ok){const joined=guildState.join(guildJoin);toast(joined.message);}else toast(result.message);document.querySelector('#window-content').innerHTML=renderGuildPanel();return;}\n  const guildDonate=event.target.closest('[data-guild-donate]')?.dataset.guildDonate;\n  if(guildDonate){const cost=Number(guildDonate);const paid=characterState.spendCurrency(cost);if(!paid.ok){toast('Không đủ Xu để cống hiến.');return;}const result=guildState.donate(cost);if(!result.ok)characterState.addCurrency(cost);toast(result.message);updateCharacterHud();document.querySelector('#window-content').innerHTML=renderGuildPanel();return;}\n  if(event.target.closest('[data-guild-leave]')){const result=guildState.leave();toast(result.message);document.querySelector('#window-content').innerHTML=renderGuildPanel();return;}\n  const mailRead=event.target.closest('[data-mail-read]')?.dataset.mailRead;\n  if(mailRead){mailState.read(mailRead);document.querySelector('#window-content').innerHTML=renderMailPanel();return;}\n  const mailClaim=event.target.closest('[data-mail-claim]')?.dataset.mailClaim;\n  if(mailClaim){const result=mailState.claim(mailClaim);if(result.ok){for(const attachment of result.attachments){if(attachment.type==='currency')characterState.addCurrency(attachment.amount);else if(attachment.type==='item')characterState.addItem(attachment.itemId,attachment.quantity);}}toast(result.message);updateCharacterHud();document.querySelector('#window-content').innerHTML=renderMailPanel();return;}\n  const accept=event.target.closest('[data-quest-accept]')?.dataset.questAccept;
   if(accept){const result=questState.accept(accept);toast(result.message);document.querySelector('#window-content').innerHTML=renderQuestPanel();return;}
   const claim=event.target.closest('[data-quest-claim]')?.dataset.questClaim;
   if(claim){claimQuestReward(claim);return;}
@@ -560,8 +576,8 @@ window.addEventListener('kpah:npc-interact',event=>{
   const actions={
     'Trưởng làng':{description:'Dân làng đang cần người giúp đỡ. Hãy xem các nhiệm vụ hiện có.',buttons:[['Xem nhiệm vụ','quests'],['Để sau','close']]},
     'Thương nhân':{description:'Thương nhân bày bán vật phẩm cơ bản cho chuyến hành trình.',buttons:[['Mở cửa hàng','shop'],['Để sau','close']]},
-    'Thợ săn':{description:'Khu rừng có nhiều thú dữ. Hãy chuẩn bị kỹ năng và hành trang trước khi đi sâu vào rừng.',buttons:[['Xem nhiệm vụ','quests'],['Mở bản đồ','map'],['Để sau','close']]},
-    'Người canh hang':{description:'Hang Đá Đen rất nguy hiểm. Chỉ nên tiến vào khi đã chuẩn bị đủ vật phẩm hồi phục.',buttons:[['Xem nhiệm vụ','quests'],['Mở bản đồ','map'],['Để sau','close']]}
+    'Thợ săn':{description:'Bầy sói trong rừng đang trở nên hung hãn. Ta có thể chỉ cho ngươi những lối săn an toàn.',buttons:[['Nhận nhiệm vụ khu rừng','quests'],['Mở bản đồ','map'],['Để sau','close']]},
+    'Người canh hang':{description:'Bên trong Hang Đá Đen có nhiều quái vật nguy hiểm. Hãy chuẩn bị hồi phục và kiểm tra cấp độ trước khi tiến vào.',buttons:[['Nhận nhiệm vụ khu hang','quests'],['Mở cửa hàng','shop'],['Để sau','close']]}
   };
   const data=actions[npc];
   if(!data)return;
