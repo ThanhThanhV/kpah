@@ -9,12 +9,12 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 | Phase | Scope | Progress | Basis |
 |---|---|---:|---|
 | P0 | Foundation and original resources (5 tasks) | 36% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
-| P1 | Reconstructed client/gameplay (10 tasks) | 24% | Demo server/login/character flow exists; profession preview images are now wired; world, movement and NPCs remain mostly mock; combat and real animation are not implemented. |
+| P1 | Reconstructed client/gameplay (10 tasks) | 25% | Demo server/login/character flow and profession previews exist; player movement works in the mock scene and NPCs now have clickable dialogue/actions; original world, combat and real animation remain unimplemented. |
 | P2 | Game systems (10 tasks) | 6% | Inventory category filtering and local chat-channel interactions are implemented in the client; other systems remain placeholders and nothing is server-backed. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 0% | Not started. |
 
-**Overall estimate: about 12.3%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 12.6%** (weighted average of the 41 roadmap items).
 
 ## P0 — Foundation detail
 
@@ -39,6 +39,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Routed pointer, keyboard and directional-pad movement through the shared runtime; the player name label now follows the moving entity.
 - Made the offline server state explicit instead of displaying a false connected status.
 - Adjusted mobile safe-area spacing for notched phones and compressed the action bar on very narrow screens to reduce horizontal overflow.
+- Added clickable world NPC hit areas. The village elder opens a dialogue with a route to the quest panel; the merchant opens a dialogue with a route to the shop. These are local client interactions and do not imply original NPC scripts or server transactions.
 - Added client-side chat channel selection/filtering for World, Guild, Private and System; System is read-only and sent messages use the selected channel and current character name. Messages remain local to the browser.
 - Added working inventory filters for equipment, consumables, materials and quest items. Item categories are provisional demo data, not reconstructed server inventory.
   - Kiếm Khách → kiem
