@@ -1,27 +1,34 @@
+import { getWorldZone } from './world-map.js';
+
 const MONSTER_TYPES = [
   {id:'training-wolf',name:'Sói hoang',level:18,maxHp:620,defense:5,experience:45,damage:16,respawnSeconds:18,drops:[{itemId:'small-potion',chance:0.28,min:1,max:1},{itemId:'upgrade-stone',chance:0.18,min:1,max:1}]},
   {id:'pack-leader',name:'Sói đầu đàn',level:22,maxHp:1450,defense:13,experience:135,damage:29,respawnSeconds:32,drops:[{itemId:'small-potion',chance:0.65,min:1,max:2},{itemId:'upgrade-stone',chance:0.55,min:1,max:2}]}
 ];
 
-const SPAWN_POINTS = [
-  {id:'wolf-east-1',type:'training-wolf',x:180,y:385},
-  {id:'wolf-east-2',type:'training-wolf',x:265,y:455},
-  {id:'wolf-west-1',type:'training-wolf',x:820,y:390},
-  {id:'wolf-west-2',type:'training-wolf',x:755,y:455},
-  {id:'wolf-alpha-1',type:'pack-leader',x:570,y:475}
-];
-
 const copy = value => JSON.parse(JSON.stringify(value));
 
-export function createWorldEntityState(random = Math.random) {
-  const monsters = SPAWN_POINTS.map(point => {
-    const type = MONSTER_TYPES.find(entry => entry.id === point.type);
-    return {...copy(type),...point,hp:type.maxHp,alive:true,respawnAt:null};
-  });
+export function createWorldEntityState(random = Math.random, initialMap = 'village') {
+  let mapId = getWorldZone(initialMap)?.id || 'village';
+  let monsters = createMonsters(mapId);
+  function createMonsters(zoneId) {
+    const zone = getWorldZone(zoneId);
+    return (zone?.spawns || []).map(point => {
+      const type = MONSTER_TYPES.find(entry => entry.id === point.type);
+      return {...copy(type),...point,mapId:zoneId,hp:type.maxHp,alive:true,respawnAt:null};
+    });
+  }
   let selectedId = monsters[0]?.id || null;
 
   function snapshot() {
-    return {monsters:copy(monsters),selectedId,selected:copy(monsters.find(item=>item.id===selectedId)||null)};
+    return {mapId,monsters:copy(monsters),selectedId,selected:copy(monsters.find(item=>item.id===selectedId)||null)};
+  }
+  function setMap(zoneId) {
+    const zone=getWorldZone(zoneId);
+    if(!zone)return {ok:false,message:'Không tìm thấy dữ liệu quái của bản đồ.'};
+    mapId=zoneId;
+    monsters=createMonsters(zoneId);
+    selectedId=monsters[0]?.id||null;
+    return {ok:true,mapId,monsters:copy(monsters),selected:copy(monsters[0]||null)};
   }
   function select(id) {
     const monster=monsters.find(item=>item.id===id&&item.alive);
@@ -55,5 +62,5 @@ export function createWorldEntityState(random = Math.random) {
     return revived;
   }
   function get(id) { return copy(monsters.find(item=>item.id===id)||null); }
-  return {snapshot,select,damage,update,get};
+  return {snapshot,select,damage,update,get,setMap};
 }
