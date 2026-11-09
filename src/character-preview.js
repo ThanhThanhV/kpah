@@ -1,5 +1,4 @@
-const MANIFEST_URL = '/assets/kpah-original/archive-manifest.json';
-const ASSET_ROOT = '/assets/kpah-original/';
+import { assetUrl, loadAssetManifest } from './kpah-assets.js';
 const PROFESSION_PACKS = {
   'Kiếm Khách': 'kiem',
   'Chiến Binh': 'daidao',
@@ -22,19 +21,13 @@ style.textContent = `
 `;
 document.head.append(style);
 
-function assetUrl(path) {
-  return ASSET_ROOT + path.split('/').map(encodeURIComponent).join('/');
-}
-
 export async function mountCharacterPreview(root, classSelect) {
   if (!root || !classSelect) return;
   root.className = 'character-preview';
   root.innerHTML = '<div class="character-preview-note">Đang tải ảnh xem trước môn phái...</div>';
   let entries;
   try {
-    const response = await fetch(MANIFEST_URL);
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-    const manifest = await response.json();
+    const manifest = await loadAssetManifest();
     entries = manifest.decodedPackedEntries || [];
   } catch (error) {
     root.innerHTML = '<div class="character-preview-note">Chưa có ảnh xem trước. Hãy chạy <code>npm run extract:assets</code> để giải mã JAR.</div>';
@@ -81,7 +74,7 @@ export async function mountCharacterPreview(root, classSelect) {
     function select(index) {
       activeIndex = index;
       const item = images[index];
-      large.src = assetUrl(item.output);
+      large.src = assetUrl(item.output) || '';
       large.alt = profession + ' · ' + item.path;
       [...strip.children].forEach((button, i) => button.classList.toggle('selected', i === index));
     }
@@ -93,7 +86,7 @@ export async function mountCharacterPreview(root, classSelect) {
       button.title = item.path;
       const image = document.createElement('img');
       image.loading = 'lazy';
-      image.src = assetUrl(item.output);
+      image.src = assetUrl(item.output) || '';
       image.alt = item.path;
       button.append(image);
       button.addEventListener('click', () => select(index));
