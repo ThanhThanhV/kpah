@@ -111,7 +111,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Validation limitations
 
-- Ran JavaScript syntax parsing and state-level smoke checks for quest acceptance, NPC objective progress, monster-kill progress, reward claiming, experience/currency grants and inventory item rewards. These checks do not replace browser interaction testing or a production build. The world-entity/combat and multi-zone travel integrations have not yet been browser-tested or run through a production build.
+- Ran JavaScript syntax parsing and state-level smoke checks for quest acceptance, NPC objective progress, monster-kill progress, reward claiming, experience/currency grants and inventory item rewards. These checks do not replace browser interaction testing or a production build. The world-entity/combat, multi-zone travel, ground-loot and social integrations have not yet been browser-tested or run through a production build.
 
 - Ran JavaScript syntax parsing for `main.js`, `skill-combat.js` and `character-state.js`, plus state-level smoke checks for locked-skill rejection, learning, slot assignment, damage, MP spending, enemy retaliation, cooldown blocking and potion recovery. These checks do not replace a browser/UI test or a full Vite production build.
 
