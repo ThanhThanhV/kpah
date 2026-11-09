@@ -117,6 +117,28 @@ def classify_image(width: int, height: int) -> str:
         return "tall-image"
     return "general-image"
 
+RESOURCE_FAMILIES = {
+    "arrow": "Mũi tên và con trỏ",
+    "box": "Khung và hộp giao diện",
+    "eff": "Hiệu ứng",
+    "font": "Font và chữ",
+    "g": "Tài nguyên đồ họa chung",
+    "main": "Giao diện và màn hình chính",
+    "npc": "Nhân vật và NPC",
+    "skillpublic": "Tài nguyên kỹ năng",
+}
+
+
+def classify_resource_family(archive: str) -> tuple[str, str, str]:
+    """Classify by the verified source pack name, not by guessed image semantics."""
+    source = PurePosixPath(archive)
+    stem = source.stem.lower()
+    if source.suffix.lower() == ".wps":
+        return "profession-preview", "Ảnh giới thiệu môn phái", "source-pack"
+    if stem in RESOURCE_FAMILIES:
+        return stem, RESOURCE_FAMILIES[stem], "source-pack"
+    return "unclassified-pack", "Gói chưa phân loại", "unclassified"
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("jar", type=Path)
@@ -191,6 +213,12 @@ def main() -> None:
                             "height": height,
                             "imageClassHint": classify_image(width, height),
                         })
+                    family_id, family_label, family_basis = classify_resource_family(name)
+                    decoded_item.update({
+                        "resourceFamily": family_id,
+                        "resourceFamilyLabel": family_label,
+                        "resourceFamilyBasis": family_basis,
+                    })
                     decoded_entries.append(decoded_item)
 
     counts = Counter(item["extension"] for item in entries)
