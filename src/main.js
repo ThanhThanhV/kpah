@@ -76,13 +76,39 @@ function closeWindow(){document.querySelector('#game-window').classList.remove('
 document.querySelectorAll('[data-window]').forEach(b=>b.addEventListener('click',()=>openWindow(b.dataset.window)));
 document.querySelector('#window-close').addEventListener('click',closeWindow);
 document.querySelector('#modal-backdrop').addEventListener('click',closeWindow);
-document.querySelector('#logout').addEventListener('click',()=>toast('Chức năng đăng xuất sẽ được kết nối với backend.'));
+document.querySelector('#logout').addEventListener('click',()=>window.dispatchEvent(new Event('kpah:logout')));
 document.querySelector('#chat-form').addEventListener('submit',e=>{e.preventDefault();const i=document.querySelector('#chat-input');if(!i.value.trim())return;const p=document.createElement('p');p.innerHTML='<b class="world-chat">[Thế giới]</b> <strong>Kiếm Khách</strong>: '+escapeHtml(i.value);document.querySelector('#chat-lines').append(p);i.value='';document.querySelector('#chat-lines').scrollTop=9999;});
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 let toastTimer;function toast(t){const el=document.querySelector('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2300);}
 document.querySelectorAll('.slot').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.slot').forEach(x=>x.classList.remove('active'));b.classList.add('active');toast('Đã chọn: '+b.dataset.skill);}));
 document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{b.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('chosen'));b.classList.add('chosen');}));
-['move-left','move-right','move-up','move-down'].forEach(id=>document.querySelector('#'+id).addEventListener('click',()=>toast('Điều khiển di chuyển: '+id.replace('move-',''))));
+const movementVectors={'move-left':[-1,0],'move-right':[1,0],'move-up':[0,-1],'move-down':[0,1]};
+function movePlayer(dx,dy){
+  const scene=game.scene.getScene('world');
+  if(!scene?.playerSprite)return;
+  const distance=18;
+  scene.tweens.add({targets:scene.playerSprite,x:Phaser.Math.Clamp(scene.playerSprite.x+dx*distance,30,930),y:Phaser.Math.Clamp(scene.playerSprite.y+dy*distance,270,520),duration:105,onUpdate:()=>scene.playerSprite.setDepth(scene.playerSprite.y)});
+}
+document.querySelectorAll('.movement button').forEach(button=>{
+  const vector=movementVectors[button.id];
+  if(!vector)return;
+  let repeat;
+  const stop=()=>{if(repeat){clearInterval(repeat);repeat=null;}};
+  button.addEventListener('pointerdown',event=>{event.preventDefault();movePlayer(...vector);stop();repeat=setInterval(()=>movePlayer(...vector),145);});
+  ['pointerup','pointercancel','pointerleave','lostpointercapture'].forEach(type=>button.addEventListener(type,stop));
+});
+window.addEventListener('kpah:character-selected',event=>{
+  const {name,className}=event.detail||{};
+  const safeName=name||'Kiếm Khách';
+  document.querySelectorAll('.hero-name').forEach(el=>el.textContent=safeName);
+  document.querySelectorAll('#chat-lines strong').forEach(el=>{if(el.textContent==='Kiếm Khách')el.textContent=safeName;});
+  const scene=game.scene.getScene('world');
+  if(scene?.playerLabel)scene.playerLabel.setText(safeName);
+  const heading=document.querySelector('.character-details h2');
+  if(heading)heading.textContent=safeName;
+  const role=document.querySelector('.character-details .muted');
+  if(role)role.textContent=(className||'Kiếm khách')+' · Nhân vật';
+});
 
 class WorldScene extends Phaser.Scene {
   constructor(){super('world');this.player={x:480,y:330};}
@@ -98,7 +124,7 @@ class WorldScene extends Phaser.Scene {
     // Ambient flowers and rocks
     for(let i=0;i<45;i++){const x=(i*173+47)%950,y=(i*97+35)%500;if(y<280&&x>280&&x<700)continue;g.fillStyle(i%3===0?0xd9c16d:0x8eb66a,0.8);g.fillCircle(x,y,1.7);}
     this.playerSprite=this.add.container(this.player.x,this.player.y);const shadow=this.add.ellipse(0,19,28,9,0x111510,0.35);const cape=this.add.triangle(0,2,0,-2,-17,20,13,20,0x9b3f32);const body=this.add.rectangle(0,0,17,25,0xd5d0b9).setStrokeStyle(2,0x42372b);const head=this.add.circle(0,-17,8,0xe0b88d).setStrokeStyle(2,0x42372b);const hair=this.add.triangle(0,-23,-8,-16,0,-31,9,-15,0x29232a);const sword=this.add.rectangle(13,-3,4,27,0xd6d8d1).setAngle(25).setStrokeStyle(1,0x514d48);this.playerSprite.add([shadow,cape,body,head,hair,sword]);this.playerSprite.setDepth(this.player.y);
-    this.add.text(480,282,'Kiếm Khách',{fontFamily:'Arial',fontSize:'12px',color:'#fff3c6',stroke:'#34251d',strokeThickness:3}).setOrigin(.5).setDepth(999);
+    this.playerLabel=this.add.text(480,282,'Kiếm Khách',{fontFamily:'Arial',fontSize:'12px',color:'#fff3c6',stroke:'#34251d',strokeThickness:3}).setOrigin(.5).setDepth(999);
     this.add.text(370,291,'Trưởng làng',{fontFamily:'Arial',fontSize:'11px',color:'#ffe6a8',stroke:'#30251a',strokeThickness:3}).setOrigin(.5);
     this.add.text(715,286,'Thương nhân',{fontFamily:'Arial',fontSize:'11px',color:'#ffe6a8',stroke:'#30251a',strokeThickness:3}).setOrigin(.5);
     this.input.on('pointerdown',p=>{const wx=p.worldX,wy=p.worldY;this.tweens.add({targets:this.playerSprite,x:Phaser.Math.Clamp(wx,35,925),y:Phaser.Math.Clamp(wy,270,510),duration:450,ease:'Sine.easeOut',onUpdate:()=>this.playerSprite.setDepth(this.playerSprite.y)});});
