@@ -46,10 +46,30 @@ The Web client currently contains a mock world and mock panels. It is not yet a
 faithful reproduction of the original screens. Backend behavior and network protocol
 remain intentionally out of scope until agreed with the project owner.
 
+## Verified screen and protocol findings
+
+- `uj`: initial server selector; startup worker activates it. It has nine built-in server entries and can refresh them from the original server-list URL.
+- `ro`: login screen with Game ID and Password fields.
+- `lj`: existing-character selection screen.
+- `ls`: character creation/configuration screen with five character lines, two genders, and six hair choices.
+- `li`: loading/entry transition after selecting a character.
+- `mj`: main in-world Canvas renderer/state.
+- `tb`: guild/menu interface.
+- Login request: opcode 1; registration: opcode 39; character selection: opcode 13; character creation: opcode 14.
+- Socket framing and the initial connection handshake are documented separately. The endpoint is selected from the server list, not a single hardcoded host.
+
+Detailed traces:
+
+- [Startup and Canvas](startup-and-canvas.md)
+- [Screen states](screen-state-trace.md)
+- [Server selection](server-selection-trace.md)
+- [Authentication requests](authentication-request-trace.md)
+- [Socket transport](socket-transport-trace.md)
+
 ## Next investigation sequence
 
-1. Trace MIDlet lifecycle and startup screen from `game.GameMidlet`.
-2. Identify the canvas/game loop, input dispatch, and screen/state manager.
-3. Decode `.sh`, `.wp`, and `.wps` formats from their readers and rendering call sites.
-4. Replace mock login, character selection, HUD, menus, and world assets incrementally.
+1. Decode the `.sh`, `.wp`, and `.wps` resource formats from their readers and rendering call sites.
+2. Trace the map-entry response and initialization of `mj`, including its render-ready state and camera/tile setup.
+3. Map the original sprite sheets, font sheets, tile sets, and UI panels to the screen classes.
+4. Replace the mock server/login/character flow and then the mock world HUD incrementally using verified dimensions and assets.
 5. Record every inferred mapping with the class/method or resource evidence that supports it.
