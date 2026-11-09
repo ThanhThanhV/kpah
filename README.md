@@ -60,3 +60,8 @@ Open **Tài nguyên gốc** and use the Sprite Sheet Inspector below the PNG bro
 ## Binary metadata inspection
 
 The Resource Viewer includes a read-only `.d` inspector for decoded packed metadata files. It displays byte offsets, hexadecimal bytes and printable ASCII. No semantic field interpretation is assumed until the client bytecode confirms the record layout.
+
+
+## Asset dimensions and browsing
+
+The extractor records PNG width and height from the PNG header and adds a neutral geometry hint (`small-image`, `wide-image`, `tall-image`, or `general-image`) to each decoded PNG manifest entry. These hints support asset triage only; they do not claim a sprite, animation, or UI role. Re-run `npm run extract:assets` after updating the extractor to regenerate the manifest.
