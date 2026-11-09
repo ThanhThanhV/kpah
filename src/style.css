@@ -165,3 +165,49 @@
   .skill-card-main>p{font-size:8px}
   .training-log{max-height:65px}
 }
+
+
+/* Quest journal, objectives and reward states */
+.quest-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.quest-summary>div{display:grid;gap:3px;padding:9px;background:#29232a;border:1px solid #5e4934;text-align:center}
+.quest-summary b{font-size:18px;color:#e9c783}
+.quest-summary small{font-size:8px;color:#b9a98f}
+.quest-filter-tabs{display:flex;gap:5px;overflow-x:auto;padding-bottom:8px;margin-bottom:9px;border-bottom:1px solid #564431}
+.quest-filter-tabs button{flex:1;min-width:max-content;padding:7px 8px;background:#302831;border:1px solid #594634;color:#c5b294;font-size:9px}
+.quest-filter-tabs button.chosen{background:#604832;border-color:#bd9355;color:#f4dda7}
+.quest-filter-tabs em{font-style:normal;color:#e7c37f}
+.quest-list-live{display:grid;gap:9px}
+.quest-card-live{padding:11px;background:linear-gradient(145deg,#30282b,#211d23);border:1px solid #675039}
+.quest-card-live[hidden]{display:none}
+.quest-card-heading{display:flex;align-items:center;gap:9px}
+.quest-symbol{width:33px;height:33px;flex:none;display:grid;place-items:center;background:#49372d;border:1px solid #8d6a40;color:#f0cc83;font-size:18px}
+.quest-card-heading>div{display:grid;gap:3px;min-width:0}
+.quest-card-heading b{font-size:11px;color:#eed39d}
+.quest-card-heading small{font-size:8px;color:#c29c62}
+.quest-card-live>p{margin:8px 0;font-size:9px;line-height:1.5;color:#c2b39e}
+.quest-objective{display:flex;justify-content:space-between;gap:8px;font-size:9px;color:#d0c0a7}
+.quest-objective b{color:#f1d28e;font-variant-numeric:tabular-nums}
+.quest-progress-live{height:7px;margin-top:6px;background:#151218;border:1px solid #544334}
+.quest-progress-live i{display:block;height:100%;background:linear-gradient(90deg,#8b6237,#e0b15c);transition:width .2s}
+.quest-reward-live{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:9px;padding-top:7px;border-top:1px solid #4b3c31}
+.quest-reward-live small{font-size:8px;color:#9f927f}
+.quest-reward-live span{font-size:8px;color:#dfc28a;text-align:right}
+.quest-card-footer{display:flex;justify-content:flex-end;margin-top:8px}
+.quest-card-footer button{padding:7px 12px;background:#62472e;border:1px solid #a27a47;color:#f4d79d;font-size:9px}
+.quest-state-tag{padding:5px 8px;font-size:8px}
+.quest-state-tag.active{color:#c9d9a3;border:1px solid #65794d}
+.quest-state-tag.claimed{color:#9caa9b;border:1px solid #536057}
+.quest-history{margin-top:13px;padding:9px;background:#1a171d;border:1px solid #44372e}
+.quest-history>b{font-size:9px;color:#d7b979}
+.quest-history p{margin:5px 0 0;font-size:8px;color:#a99b88;line-height:1.5}
+.quest-nav-count{display:inline-grid;place-items:center;min-width:16px;height:16px;margin-left:auto;padding:0 4px;border-radius:9px;background:#a34d39;color:#fff0d1;font-size:8px;font-style:normal}
+@media(max-width:700px){
+ .quest-summary{gap:5px}
+ .quest-summary>div{padding:7px 4px}
+ .quest-summary b{font-size:15px}
+ .quest-filter-tabs{gap:4px}
+ .quest-filter-tabs button{padding:7px 6px;font-size:8px}
+ .quest-card-live{padding:9px}
+ .quest-card-heading b{font-size:10px}
+ .quest-reward-live{gap:4px}
+}
