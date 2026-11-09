@@ -74,4 +74,17 @@ cover.querySelectorAll('.server-option').forEach(b=>b.addEventListener('click',(
 cover.querySelector('#server-next').addEventListener('click',()=>step('character'));
 cover.querySelectorAll('.char-option').forEach(b=>b.addEventListener('click',()=>{selectedClass=b.dataset.class;cover.querySelectorAll('.char-option').forEach(x=>x.classList.toggle('selected',x===b));}));
 cover.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click',()=>step(b.dataset.back)));
-cover.querySelector('#enter-world').addEventListener('click',()=>{const name=cover.querySelector('#character-name').value.trim()||'Kiếm Khách';const profile=document.querySelector('.hero-name');if(profile)profile.textContent=name;const location=document.querySelector('.server span b');if(location)location.textContent=selectedServer;cover.remove();});
+function enterWorld(){
+  const name=cover.querySelector('#character-name').value.trim()||'Kiếm Khách';
+  const location=document.querySelector('.server span b');
+  if(location)location.textContent=selectedServer;
+  window.dispatchEvent(new CustomEvent('kpah:character-selected',{detail:{name,className:selectedClass,server:selectedServer}}));
+  cover.remove();
+}
+cover.querySelector('#enter-world').addEventListener('click',enterWorld);
+window.addEventListener('kpah:logout',()=>{
+  step('login');
+  cover.querySelector('#login-error').textContent='';
+  document.body.append(cover);
+  cover.querySelector('#login-user').focus();
+});
