@@ -65,7 +65,29 @@ cover.innerHTML=`
     </div>
     <div class="login-form"><label>TÊN NHÂN VẬT<input id="character-name" value="Kiếm Khách" maxlength="16"></label></div>
     <button class="login-primary" id="enter-world">VÀO THẾ GIỚI</button>
+    <button class="login-secondary" id="open-create-character">TẠO NHÂN VẬT MỚI</button>
     <button class="login-back" data-back="login">← Quay lại đăng nhập</button>
+  </div>
+  <div class="login-step" data-step="create">
+    <h2>TẠO NHÂN VẬT</h2>
+    <div class="login-form">
+      <label>TÊN NHÂN VẬT<input id="new-character-name" maxlength="16" placeholder="Nhập tên nhân vật"></label>
+      <label>MÔN PHÁI<select id="new-character-class">
+        <option value="Kiếm Khách">Kiếm Khách · Kiếm · Miền Bắc · Kim</option>
+        <option value="Chiến Binh">Chiến Binh · Đại đao · Miền Bắc · Hỏa</option>
+        <option value="Pháp Sư">Pháp Sư · Địa thần · Miền Nam · Thủy</option>
+        <option value="Đấu Sĩ">Đấu Sĩ · Rìu · Miền Nam · Thổ</option>
+        <option value="Cung Thủ">Cung Thủ · Cung · Miền Bắc · Mộc</option>
+      </select></label>
+      <label>GIỚI TÍNH<select id="new-character-gender"><option>Nam</option><option>Nữ</option></select></label>
+      <label>KIỂU TÓC<select id="new-character-hair">
+        <option>Đầu đinh</option><option>Tóc búi</option><option>Tóc cột cao</option>
+        <option>Tóc chéo</option><option>Tóc xù</option><option>Tóc ngang vai</option>
+      </select></label>
+    </div>
+    <div class="login-error" id="create-error"></div>
+    <button class="login-primary" id="save-character">HOÀN TẤT TẠO NHÂN VẬT</button>
+    <button class="login-back" data-back="character">← Quay lại</button>
   </div>
 </section>`;
 document.body.append(cover);
@@ -84,6 +106,22 @@ function enterWorld(){
   cover.remove();
 }
 cover.querySelector('#enter-world').addEventListener('click',enterWorld);
+cover.querySelector('#open-create-character').addEventListener('click',()=>{
+  cover.querySelector('#new-character-name').value='';
+  cover.querySelector('#create-error').textContent='';
+  showStep('create');
+});
+cover.querySelector('#save-character').addEventListener('click',()=>{
+  const name=cover.querySelector('#new-character-name').value.trim();
+  if(!name){cover.querySelector('#create-error').textContent='Vui lòng nhập tên nhân vật.';return;}
+  const className=cover.querySelector('#new-character-class').value;
+  const gender=cover.querySelector('#new-character-gender').value;
+  const hair=cover.querySelector('#new-character-hair').selectedIndex;
+  window.dispatchEvent(new CustomEvent('kpah:character-created',{detail:{name,className,gender,hair}}));
+  cover.querySelector('#character-name').value=name;
+  selectedClass=className;
+  enterWorld();
+});
 window.addEventListener('kpah:logout',()=>{
   step('login');
   cover.querySelector('#login-error').textContent='';
