@@ -1,7 +1,5 @@
 import { renderSpriteLab } from './sprite-lab.js';
-
-const MANIFEST_URL = '/assets/kpah-original/archive-manifest.json';
-const ASSET_ROOT = '/assets/kpah-original/';
+import { assetUrl, decodedPngEntries, loadAssetManifest } from './kpah-assets.js';
 
 const style = document.createElement('style');
 style.textContent = `
@@ -39,9 +37,7 @@ export async function renderResourceViewer(root) {
   root.innerHTML = '<div class="resource-empty">Đang đọc danh mục tài nguyên...</div>';
   let manifest;
   try {
-    const response = await fetch(MANIFEST_URL, { cache: 'no-store' });
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-    manifest = await response.json();
+    manifest = await loadAssetManifest();
   } catch (error) {
     root.innerHTML = `
       <div class="resource-empty">
@@ -55,7 +51,7 @@ export async function renderResourceViewer(root) {
   }
 
   const images = (manifest.decodedPackedEntries || [])
-    .filter(item => /\.png$/i.test(item.path || '') && item.output)
+    .filter(item => decodedPngEntries({decodedPackedEntries:[item]}).length > 0)
     .sort((a,b) => String(a.archive).localeCompare(String(b.archive)) || String(a.path).localeCompare(String(b.path)));
   const packs = [...new Set(images.map(item => item.archive))].sort();
   root.innerHTML = `
@@ -87,7 +83,7 @@ export async function renderResourceViewer(root) {
       return;
     }
     grid.innerHTML = visible.map(item => {
-      const url = ASSET_ROOT + item.output.split('/').map(encodeURIComponent).join('/');
+      const url = assetUrl(item.output);
       return `
         <article class="resource-card">
           <div class="resource-thumb"><img loading="lazy" src="${url}" alt="${escapeHtml(item.path)}"></div>
@@ -125,7 +121,7 @@ function renderBinaryMetadata(root, entries) {
   async function load() {
     const current = ++request;
     const item = metadata[Number(select.value)] || metadata[0];
-    const url = ASSET_ROOT + item.output.split('/').map(encodeURIComponent).join('/');
+    const url = assetUrl(item.output);
     output.textContent = 'Đang đọc ' + item.path + '...';
     try {
       const response = await fetch(url);
