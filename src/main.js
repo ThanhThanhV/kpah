@@ -60,7 +60,7 @@ app.innerHTML = `
 const panelData = {
   resources: {title:'Trình duyệt tài nguyên gốc',html:'<div id="resource-viewer"></div>'},
   character: {title:'Thông tin nhân vật',html:`<div class="character-sheet"><div class="big-avatar">⚔<span>Cấp 25</span></div><div class="character-details"><h2>Kiếm Khách</h2><p class="muted">Chiến binh tập sự · Nam</p><div class="stat-grid"><div><small>Cấp độ</small><b>25</b></div><div><small>Kinh nghiệm</small><b>72.450 / 90.000</b></div><div><small>Sức mạnh</small><b>1.285</b></div><div><small>Thể lực</small><b>860</b></div><div><small>Nhanh nhẹn</small><b>740</b></div><div><small>Tinh thần</small><b>520</b></div></div><button class="gold-button">Phân phối tiềm năng</button></div></div>`},
-  inventory:{title:'Hành trang',html:`<div class="tabs"><button class="chosen">Tất cả</button><button>Trang bị</button><button>Tiêu hao</button><button>Nhiệm vụ</button></div><div class="inventory-grid">${['Kiếm tân thủ','Áo vải','Bình máu nhỏ','Bình mana nhỏ','Nhẫn đồng','Đá cường hóa','Lá bùa','Túi nguyên liệu','Giày vải','Găng tay','Ngọc xanh','Rương gỗ'].map((x,i)=>`<div class="item-cell"><span>${['⚔','♧','🧪','🧴','◉','◆','✧','▣','⌑','♢','💎','▤'][i]}</span><small>${x}</small>${i===2||i===3?'<em>×5</em>':''}</div>`).join('')}</div><div class="inventory-footer"><span>Ô trống: 18 / 30</span><button class="gold-button">Mở rộng túi</button></div>`},
+  inventory:{title:'Hành trang',html:`<div class="tabs inventory-tabs"><button class="chosen" data-inventory-filter="all">Tất cả</button><button data-inventory-filter="equipment">Trang bị</button><button data-inventory-filter="consumable">Tiêu hao</button><button data-inventory-filter="material">Nguyên liệu</button><button data-inventory-filter="quest">Nhiệm vụ</button></div><div class="inventory-grid">${['Kiếm tân thủ','Áo vải','Bình máu nhỏ','Bình mana nhỏ','Nhẫn đồng','Đá cường hóa','Lá bùa','Túi nguyên liệu','Giày vải','Găng tay','Ngọc xanh','Rương gỗ'].map((x,i)=>`<div class="item-cell" data-item-category="${['equipment','equipment','consumable','consumable','equipment','material','consumable','material','equipment','equipment','material','quest'][i]}"><span>${['⚔','♧','🧪','🧴','◉','◆','✧','▣','⌑','♢','💎','▤'][i]}</span><small>${x}</small>${i===2||i===3?'<em>×5</em>':''}</div>`).join('')}</div><div class="inventory-footer"><span>Ô trống: 18 / 30</span><button class="gold-button">Mở rộng túi</button></div>`},
   equipment:{title:'Trang bị nhân vật',html:`<div class="equipment-layout"><div class="equip-slots">${['Mũ','Áo','Vũ khí','Găng','Giày','Nhẫn','Dây chuyền','Bùa'].map((x,i)=>`<div class="equip-cell"><span>${['♜','♧','⚔','♢','⌑','◉','◇','✧'][i]}</span><small>${x}</small></div>`).join('')}</div><div class="equip-preview">⚔<b>Kiếm Khách</b><small>Chưa trang bị đầy đủ</small></div></div>`},
   skills:{title:'Kỹ năng',html:`<div class="tabs"><button class="chosen">Kỹ năng chủ động</button><button>Bị động</button></div><div class="skill-list">${[['Kiếm khí','Cấp 3','Gây sát thương lên mục tiêu phía trước.','✧'],['Liên hoàn trảm','Cấp 2','Tấn công liên tiếp nhiều lần.','⚔'],['Hồi phục','Cấp 1','Khôi phục một phần sinh lực.','✚'],['Bạt kiếm thức','Chưa học','Tuyệt kỹ gây sát thương lớn.','✹']].map(x=>`<div class="skill-row"><span>${x[3]}</span><div><b>${x[0]} <small>${x[1]}</small></b><p>${x[2]}</p></div><button>Chi tiết</button></div>`).join('')}</div>`},
   quests:{title:'Sổ nhiệm vụ',html:`<div class="tabs"><button class="chosen">Đang thực hiện</button><button>Có thể nhận</button><button>Hoàn thành</button></div><div class="quest-card"><b>✦ Dọn dẹp bầy sói</b><p>Tiêu diệt 8 Sói hoang để bảo vệ dân làng.</p><div class="quest-progress"><i style="width:62%"></i></div><small>5 / 8 Sói hoang</small><div class="quest-reward">Phần thưởng: 1.200 EXP · 500 Xu</div></div><div class="quest-card"><b>✦ Gặp trưởng làng</b><p>Đến gặp trưởng làng để nhận chỉ dẫn.</p><small class="complete">Đã hoàn thành mục tiêu</small></div>`},
@@ -119,7 +119,18 @@ selectChatChannel('world');
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 let toastTimer;function toast(t){const el=document.querySelector('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2300);}
 document.querySelectorAll('.slot').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.slot').forEach(x=>x.classList.remove('active'));b.classList.add('active');toast('Đã chọn: '+b.dataset.skill);}));
-document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',()=>{b.parentElement.querySelectorAll('button').forEach(x=>x.classList.remove('chosen'));b.classList.add('chosen');}));
+document.querySelector('#window-content').addEventListener('click',event=>{
+  const button=event.target.closest('.tabs button');
+  if(!button)return;
+  const tabs=button.closest('.tabs');
+  tabs.querySelectorAll('button').forEach(item=>item.classList.toggle('chosen',item===button));
+  if(button.dataset.inventoryFilter){
+    const filter=button.dataset.inventoryFilter;
+    document.querySelectorAll('#window-content .item-cell').forEach(item=>{
+      item.hidden=filter!=='all'&&item.dataset.itemCategory!==filter;
+    });
+  }
+});
 const movementVectors={'move-left':[-1,0],'move-right':[1,0],'move-up':[0,-1],'move-down':[0,1]};
 function movePlayer(dx,dy){
   const scene=game.scene.getScene('world');
