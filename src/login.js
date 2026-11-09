@@ -48,9 +48,15 @@ cover.innerHTML=`
   <div class="login-step current" data-step="server">
     <h2>CHỌN MÁY CHỦ</h2>
     <div class="server-choice">
-      <button class="server-option selected" data-server="Máy chủ 1"><span>Máy chủ 1<small>Máy chủ minh họa</small></span><b class="server-state">Demo</b></button>
-      <button class="server-option" data-server="Máy chủ 2"><span>Máy chủ 2<small>Máy chủ minh họa</small></span><b class="server-state">Demo</b></button>
-      <button class="server-option" data-server="Máy chủ 3"><span>Máy chủ 3<small>Máy chủ minh họa</small></span><b class="server-state">Demo</b></button>
+      <button class="server-option selected" data-server="Máy chủ 1"><span>Máy chủ 1<small>Vị trí máy chủ gốc · Demo offline</small></span><b class="server-state">Chưa kết nối</b></button>
+      <button class="server-option" data-server="Máy chủ 2"><span>Máy chủ 2<small>Vị trí máy chủ gốc · Demo offline</small></span><b class="server-state">Chưa kết nối</b></button>
+      <button class="server-option" data-server="Máy chủ 3"><span>Máy chủ 3<small>Vị trí máy chủ gốc · Demo offline</small></span><b class="server-state">Chưa kết nối</b></button>
+      <button class="server-option" data-server="Máy chủ 4"><span>Máy chủ 4<small>Vị trí máy chủ gốc · Demo offline</small></span><b class="server-state">Chưa kết nối</b></button>
+      <button class="server-option" data-server="Máy chủ 5"><span>Máy chủ 5<small>Vị trí máy chủ gốc · Demo offline</small></span><b class="server-state">Chưa kết nối</b></button>
+      <button class="server-option" data-server="Máy chủ 6"><span>Máy chủ 6<small>Vị trí máy chủ gốc · Demo offline</small></span><b class="server-state">Chưa kết nối</b></button>
+      <button class="server-option" data-server="Máy chủ 7"><span>Máy chủ 7<small>Vị trí máy chủ gốc · Demo offline</small></span><b class="server-state">Chưa kết nối</b></button>
+      <button class="server-option" data-server="Máy chủ 8"><span>Máy chủ 8<small>Vị trí máy chủ gốc · Demo offline</small></span><b class="server-state">Chưa kết nối</b></button>
+      <button class="server-option" data-server="Máy chủ 9"><span>Máy chủ 9<small>Vị trí máy chủ gốc · Demo offline</small></span><b class="server-state">Chưa kết nối</b></button>
     </div>
     <button class="login-primary" id="server-next">TIẾP TỤC</button>
   </div>
@@ -123,7 +129,7 @@ cover.querySelector('#save-character').addEventListener('click',()=>{
   enterWorld();
 });
 window.addEventListener('kpah:logout',()=>{
-  step('login');
+  step('server');
   cover.querySelector('#login-error').textContent='';
   document.body.append(cover);
   cover.querySelector('#login-user').focus();
