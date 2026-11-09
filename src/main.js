@@ -84,6 +84,7 @@ function applyDisplaySettings(){const scene=game.scene.getScene('world');if(scen
 document.querySelector('#window-content').addEventListener('change',event=>{const input=event.target.closest('[data-setting]');if(!input)return;displaySettings[input.dataset.setting]=input.checked;applyDisplaySettings();});
 document.querySelectorAll('[data-window]').forEach(b=>b.addEventListener('click',()=>openWindow(b.dataset.window)));
 document.querySelector('#window-close').addEventListener('click',closeWindow);
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.querySelector('#game-window').classList.contains('open'))closeWindow();});
 document.querySelector('#modal-backdrop').addEventListener('click',closeWindow);
 document.querySelector('#logout').addEventListener('click',()=>window.dispatchEvent(new Event('kpah:logout')));
 const chatChannelSelect=document.querySelector('#chat-channel-select');
