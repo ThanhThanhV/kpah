@@ -54,7 +54,7 @@ export function createCharacterState() {
   function effectiveStats() {
     const result = {...state.baseStats};
     for (const id of Object.values(state.equipment)) {
-      const item = id && findItem(id);
+      const item = id && (findItem(id) || INITIAL_ITEMS.find(entry => entry.id === id));
       if (!item?.bonus) continue;
       for (const [key,value] of Object.entries(item.bonus)) {
         if (key in result) result[key] += value;
