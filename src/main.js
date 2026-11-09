@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import './style.css';
 import { renderResourceViewer } from './resource-viewer.js';
+import { configureWorldCamera, moveWorldEntity, setWorldEntityDepth } from './world-runtime.js';
 
 const app = document.querySelector('#app');
 app.innerHTML = `
@@ -89,9 +90,7 @@ document.querySelectorAll('.tabs button').forEach(b=>b.addEventListener('click',
 const movementVectors={'move-left':[-1,0],'move-right':[1,0],'move-up':[0,-1],'move-down':[0,1]};
 function movePlayer(dx,dy){
   const scene=game.scene.getScene('world');
-  if(!scene?.playerSprite)return;
-  const distance=18;
-  scene.tweens.add({targets:scene.playerSprite,x:Phaser.Math.Clamp(scene.playerSprite.x+dx*distance,30,930),y:Phaser.Math.Clamp(scene.playerSprite.y+dy*distance,270,520),duration:105,onUpdate:()=>scene.playerSprite.setDepth(scene.playerSprite.y)});
+  scene?.movePlayerBy(dx,dy);
 }
 document.querySelectorAll('.movement button').forEach(button=>{
   const vector=movementVectors[button.id];
@@ -116,7 +115,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};}
   create(){
     const g=this.add.graphics();g.fillGradientStyle(0x344c39,0x344c39,0x243b31,0x243b31,1);g.fillRect(0,0,960,560);
     for(let y=0;y<560;y+=42){for(let x=0;x<960;x+=42){const shade=((x*13+y*7)%5);g.fillStyle(shade===0?0x456044:shade===1?0x3b563e:0x38533b,0.45);g.fillRect(x+((y/42)%2)*20,y,40,38);}}
@@ -128,16 +127,37 @@ class WorldScene extends Phaser.Scene {
     this.drawNpc(370,325,0xf0c16b,'Trưởng làng');this.drawNpc(715,320,0x7ec3c8,'Thương nhân');
     // Ambient flowers and rocks
     for(let i=0;i<45;i++){const x=(i*173+47)%950,y=(i*97+35)%500;if(y<280&&x>280&&x<700)continue;g.fillStyle(i%3===0?0xd9c16d:0x8eb66a,0.8);g.fillCircle(x,y,1.7);}
-    this.playerSprite=this.add.container(this.player.x,this.player.y);const shadow=this.add.ellipse(0,19,28,9,0x111510,0.35);const cape=this.add.triangle(0,2,0,-2,-17,20,13,20,0x9b3f32);const body=this.add.rectangle(0,0,17,25,0xd5d0b9).setStrokeStyle(2,0x42372b);const head=this.add.circle(0,-17,8,0xe0b88d).setStrokeStyle(2,0x42372b);const hair=this.add.triangle(0,-23,-8,-16,0,-31,9,-15,0x29232a);const sword=this.add.rectangle(13,-3,4,27,0xd6d8d1).setAngle(25).setStrokeStyle(1,0x514d48);this.playerSprite.add([shadow,cape,body,head,hair,sword]);this.playerSprite.setDepth(this.player.y);
+    this.playerSprite=this.add.container(this.player.x,this.player.y);const shadow=this.add.ellipse(0,19,28,9,0x111510,0.35);const cape=this.add.triangle(0,2,0,-2,-17,20,13,20,0x9b3f32);const body=this.add.rectangle(0,0,17,25,0xd5d0b9).setStrokeStyle(2,0x42372b);const head=this.add.circle(0,-17,8,0xe0b88d).setStrokeStyle(2,0x42372b);const hair=this.add.triangle(0,-23,-8,-16,0,-31,9,-15,0x29232a);const sword=this.add.rectangle(13,-3,4,27,0xd6d8d1).setAngle(25).setStrokeStyle(1,0x514d48);this.playerSprite.add([shadow,cape,body,head,hair,sword]);setWorldEntityDepth(this.playerSprite);
     this.playerLabel=this.add.text(480,282,'Kiếm Khách',{fontFamily:'Arial',fontSize:'12px',color:'#fff3c6',stroke:'#34251d',strokeThickness:3}).setOrigin(.5).setDepth(999);
+    this.configureCamera();
     this.add.text(370,291,'Trưởng làng',{fontFamily:'Arial',fontSize:'11px',color:'#ffe6a8',stroke:'#30251a',strokeThickness:3}).setOrigin(.5);
     this.add.text(715,286,'Thương nhân',{fontFamily:'Arial',fontSize:'11px',color:'#ffe6a8',stroke:'#30251a',strokeThickness:3}).setOrigin(.5);
-    this.input.on('pointerdown',p=>{const wx=p.worldX,wy=p.worldY;this.tweens.add({targets:this.playerSprite,x:Phaser.Math.Clamp(wx,35,925),y:Phaser.Math.Clamp(wy,270,510),duration:450,ease:'Sine.easeOut',onUpdate:()=>this.playerSprite.setDepth(this.playerSprite.y)});});
-    this.cameras.main.setBounds(0,0,960,560);this.scale.on('resize',()=>this.cameras.resize(this.scale.width,this.scale.height));
+    this.input.on('pointerdown',p=>this.movePlayerTo(p.worldX,p.worldY,450));
+    this.scale.on('resize',()=>this.cameras.main.setSize(this.scale.width,this.scale.height));
+  }
+  configureCamera(){
+    configureWorldCamera(this,this.playerSprite,this.worldBounds,{
+      lerpX:0.12,lerpY:0.12,deadzone:{width:180,height:100},roundPixels:true
+    });
+  }
+  movePlayerBy(dx,dy){
+    if(!this.playerSprite)return;
+    const distance=18;
+    this.movePlayerTo(this.playerSprite.x+dx*distance,this.playerSprite.y+dy*distance,105);
+  }
+  movePlayerTo(x,y,duration=120){
+    if(!this.playerSprite)return;
+    moveWorldEntity(this,this.playerSprite,{x,y},{bounds:this.walkBounds,duration});
+  }
+  update(){
+    if(this.playerLabel&&this.playerSprite){
+      this.playerLabel.setPosition(this.playerSprite.x,this.playerSprite.y-52);
+      this.playerLabel.setDepth(this.playerSprite.depth+1);
+    }
   }
   drawTree(g,x,y,s){g.fillStyle(0x4a3325);g.fillRect(x-4*s,y,8*s,24*s);g.fillStyle(0x203c2a);g.fillCircle(x,y-8*s,22*s);g.fillStyle(0x365d39);g.fillCircle(x-8*s,y-17*s,15*s);g.fillStyle(0x537346);g.fillCircle(x+7*s,y-12*s,13*s);g.fillStyle(0x172d20,0.3);g.fillEllipse(x,y+20*s,38*s,8*s);}
   drawHouse(g,x,y,s,roof){g.fillStyle(0x2a241f);g.fillRect(x-42*s,y-42*s,84*s,70*s);g.fillStyle(0xc3a77b);g.fillRect(x-38*s,y-39*s,76*s,64*s);g.fillStyle(roof);g.fillPoints([new Phaser.Geom.Point(x-52*s,y-37*s),new Phaser.Geom.Point(x,y-79*s),new Phaser.Geom.Point(x+52*s,y-37*s)],true);g.fillStyle(0x563b2c);g.fillRect(x-10*s,y-2*s,20*s,27*s);g.fillStyle(0x7a9aa0);g.fillRect(x-31*s,y-24*s,13*s,15*s);g.fillRect(x+18*s,y-24*s,13*s,15*s);}
   drawNpc(x,y,color,name){const c=this.add.container(x,y);c.add([this.add.ellipse(0,14,22,7,0x111510,.35),this.add.rectangle(0,0,15,23,color).setStrokeStyle(2,0x3b3027),this.add.circle(0,-17,7,0xe2bd91).setStrokeStyle(2,0x3b3027),this.add.triangle(0,-23,-7,-15,0,-30,8,-15,0x41312a)]);c.setDepth(y);}
 }
 const game=new Phaser.Game({type:Phaser.AUTO,parent:'world',width:960,height:560,backgroundColor:'#263c2d',render:{pixelArt:true,antialias:false},scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},scene:[WorldScene]});
-window.addEventListener('keydown',e=>{const dirs={ArrowLeft:[-20,0],ArrowRight:[20,0],ArrowUp:[0,-15],ArrowDown:[0,15]};if(!dirs[e.key])return;const s=game.scene.getScene('world');if(!s.playerSprite)return;e.preventDefault();const [dx,dy]=dirs[e.key];s.tweens.add({targets:s.playerSprite,x:Phaser.Math.Clamp(s.playerSprite.x+dx,30,930),y:Phaser.Math.Clamp(s.playerSprite.y+dy,270,520),duration:120,onUpdate:()=>s.playerSprite.setDepth(s.playerSprite.y)});});
+window.addEventListener('keydown',e=>{const dirs={ArrowLeft:[-20,0],ArrowRight:[20,0],ArrowUp:[0,-15],ArrowDown:[0,15]};if(!dirs[e.key])return;const s=game.scene.getScene('world');if(!s.playerSprite)return;e.preventDefault();const [dx,dy]=dirs[e.key];s.movePlayerTo(s.playerSprite.x+dx,s.playerSprite.y+dy,120);});
