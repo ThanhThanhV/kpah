@@ -4,6 +4,7 @@ import { renderResourceViewer } from './resource-viewer.js';
 import { configureWorldCamera, moveWorldEntity, setWorldEntityDepth } from './world-runtime.js';
 import { createCharacterState } from './character-state.js';
 import { createSkillCombatState } from './skill-combat.js';
+import { createQuestState } from './quest-state.js';
 
 const app = document.querySelector('#app');
 app.innerHTML = `
@@ -80,11 +81,12 @@ const panelData = {
 let activeCharacterName='Kiếm Khách',activeCharacterClass='Kiếm khách';
 const characterState=createCharacterState();
 const skillCombat=createSkillCombatState();
+const questState=createQuestState();
 
 function openWindow(key){
   const p=panelData[key]||panelData.help;
   document.querySelector('#window-title').textContent=p.title;
-  const html=['character','inventory','equipment'].includes(key)?renderCharacterPanel(key):key==='skills'?renderSkillPanel():p.html;
+  const html=['character','inventory','equipment'].includes(key)?renderCharacterPanel(key):key==='skills'?renderSkillPanel():key==='quests'?renderQuestPanel():p.html;
   document.querySelector('#window-content').innerHTML=html;
   document.querySelector('#game-window').classList.add('open');
   document.querySelector('#modal-backdrop').classList.add('show');
@@ -171,6 +173,53 @@ function renderCharacterPanel(key){
   return `<div class="inventory-toolbar"><div class="inventory-capacity"><b>${data.inventory.length} / ${data.inventoryCapacity}</b><span>Ô hành trang đang sử dụng</span></div><div class="inventory-currency"><span>Xu <b>125.600</b></span><span>Lượng <b>320</b></span></div></div><div class="tabs inventory-tabs">${categories.map(([id,label],i)=>`<button type="button" class="${i===0?'chosen':''}" data-inventory-filter="${id}">${label}</button>`).join('')}</div><div class="inventory-grid inventory-grid-live">${items||'<div class="inventory-empty">Hành trang trống</div>'}</div><p class="panel-hint">Vật phẩm và thao tác hiện được mô phỏng ở client; chưa đồng bộ máy chủ.</p>`;
 }
 
+
+function renderQuestPanel(){
+  const data=questState.snapshot();
+  const filters=[
+    ['active','Đang thực hiện',data.counts.active],
+    ['available','Có thể nhận',data.quests.filter(q=>q.status==='available').length],
+    ['completed','Chờ nhận thưởng',data.counts.completed],
+    ['claimed','Đã nhận',data.counts.claimed]
+  ];
+  const cards=data.quests.map(quest=>{
+    const percent=Math.min(100,quest.progress/quest.objective.required*100);
+    const reward=quest.reward;
+    const rewardText=[reward.experience+' EXP',reward.currency+' Xu',...reward.items.map(item=>item.quantity+' vật phẩm')].join(' · ');
+    const action=quest.status==='available'
+      ?`<button type="button" data-quest-accept="${quest.id}">Nhận nhiệm vụ</button>`
+      :quest.status==='completed'
+        ?`<button type="button" data-quest-claim="${quest.id}">Nhận thưởng</button>`
+        :quest.status==='claimed'?'<span class="quest-state-tag claimed">Đã nhận thưởng</span>':'<span class="quest-state-tag active">Đang thực hiện</span>';
+    return `<article class="quest-card-live" data-quest-status="${quest.status}">
+      <div class="quest-card-heading"><span class="quest-symbol">⚑</span><div><b>${escapeHtml(quest.title)}</b><small>${quest.status==='available'?'Chưa nhận':quest.status==='active'?'Đang thực hiện':quest.status==='completed'?'Hoàn thành mục tiêu':'Đã hoàn tất'}</small></div></div>
+      <p>${escapeHtml(quest.description)}</p>
+      <div class="quest-objective"><span>${escapeHtml(quest.objective.label)}</span><b>${quest.progress} / ${quest.objective.required}</b></div>
+      <div class="quest-progress-live"><i style="width:${percent}%"></i></div>
+      <div class="quest-reward-live"><small>Phần thưởng</small><span>${escapeHtml(rewardText)}</span></div>
+      <div class="quest-card-footer">${action}</div>
+    </article>`;
+  }).join('');
+  return `<div class="quest-summary"><div><b>${data.counts.active}</b><small>Đang làm</small></div><div><b>${data.quests.filter(q=>q.status==='available').length}</b><small>Có thể nhận</small></div><div><b>${data.counts.completed}</b><small>Chờ thưởng</small></div></div>
+    <div class="quest-filter-tabs">${filters.map(([id,label,count])=>`<button type="button" data-quest-filter="${id}" class="${id==='active'?'chosen':''}">${label} <em>${count}</em></button>`).join('')}</div>
+    <div class="quest-list-live">${cards}</div>
+    <div class="quest-history"><b>Nhật ký nhiệm vụ</b>${data.log.map(line=>`<p>${escapeHtml(line)}</p>`).join('')}</div>
+    <p class="panel-hint">Nhiệm vụ, mục tiêu và phần thưởng hiện là dữ liệu mô phỏng phía client, chưa phải nội dung máy chủ KPAH.</p>`;
+}
+function claimQuestReward(id){
+  const result=questState.claim(id);
+  if(!result.ok){toast(result.message);return;}
+  const reward=result.reward;
+  const exp=characterState.addExperience(reward.experience);
+  const coins=characterState.addCurrency(reward.currency);
+  const items=reward.items.map(item=>characterState.addItem(item.id,item.quantity));
+  questState.record('claim','any');
+  updateCharacterHud();
+  const itemFailures=items.filter(item=>!item.ok).length;
+  toast('Nhận '+reward.experience+' EXP · '+reward.currency+' Xu'+(exp.levelsGained?' · Lên cấp '+exp.level:'')+(itemFailures?' · Hành trang đầy, thiếu vật phẩm':''));
+  document.querySelector('#window-content').innerHTML=renderQuestPanel();
+}
+
 function renderSkillPanel(){
   const data=skillCombat.snapshot();
   const active=data.skills.filter(skill=>skill.type==='active');
@@ -242,6 +291,12 @@ function executeActionSlot(slot){
   characterState.spendMp(result.mpCost);
   if(result.healing)characterState.restoreHp(result.healing);
   if(result.enemyDamage)characterState.receiveDamage(result.enemyDamage);
+  if(result.defeated){
+    questState.record('kill','training-wolf');
+    const gained=characterState.addExperience(25);
+    if(gained.levelsGained)toast('Lên cấp '+gained.level+'!');
+    updateQuestBadge();
+  }
   const afterAction=characterState.snapshot();
   if(afterAction.hp<=0)toast('Nhân vật đã gục. Hãy dùng bình HP trong hành trang.');
   showCombatFeedback(result);
@@ -270,9 +325,24 @@ function updateCharacterHud(){
     if(bars[0])bars[0].style.width=(data.hp/data.maxHp*100)+'%';
     if(bars[1])bars[1].style.width=(data.mp/data.maxMp*100)+'%';
   }
+  const wallet=document.querySelector('.mini-status div:first-child b');
+  if(wallet)wallet.textContent=data.currency.toLocaleString('vi-VN');
+  const level=document.querySelector('.profile-level');
+  if(level)level.textContent='Cấp '+data.level;
+}
+function updateQuestBadge(){
+  const button=document.querySelector('[data-window="quests"]');
+  if(!button)return;
+  const pending=questState.snapshot().counts.completed;
+  let badge=button.querySelector('.quest-nav-count');
+  if(pending>0){
+    if(!badge){badge=document.createElement('em');badge.className='quest-nav-count';button.appendChild(badge);}
+    badge.textContent=String(pending);
+  }else if(badge)badge.remove();
 }
 updateCharacterHud();
 updateActionBar();
+updateQuestBadge();
 
 let toastTimer;function toast(t){const el=document.querySelector('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2300);}
 function selectActionSlot(button){
@@ -299,6 +369,16 @@ document.querySelector('#window-content').addEventListener('change',event=>{
   toast(result.message);updateActionBar();document.querySelector('#window-content').innerHTML=renderSkillPanel();
 });
 document.querySelector('#window-content').addEventListener('click',event=>{
+  const accept=event.target.closest('[data-quest-accept]')?.dataset.questAccept;
+  if(accept){const result=questState.accept(accept);toast(result.message);document.querySelector('#window-content').innerHTML=renderQuestPanel();return;}
+  const claim=event.target.closest('[data-quest-claim]')?.dataset.questClaim;
+  if(claim){claimQuestReward(claim);return;}
+  const filter=event.target.closest('[data-quest-filter]')?.dataset.questFilter;
+  if(filter){
+    document.querySelectorAll('[data-quest-filter]').forEach(button=>button.classList.toggle('chosen',button.dataset.questFilter===filter));
+    document.querySelectorAll('.quest-card-live').forEach(card=>card.hidden=card.dataset.questStatus!==filter);
+    return;
+  }
   const upgrade=event.target.closest('[data-skill-upgrade]')?.dataset.skillUpgrade;
   if(upgrade){const result=skillCombat.learnOrUpgrade(upgrade);toast(result.message);updateActionBar();document.querySelector('#window-content').innerHTML=renderSkillPanel();return;}
   if(event.target.closest('[data-training-reset]')){skillCombat.resetTarget();updateActionBar();document.querySelector('#window-content').innerHTML=renderSkillPanel();toast('Đã làm mới mục tiêu luyện tập.');return;}
@@ -337,6 +417,10 @@ window.addEventListener('kpah:npc-interact',event=>{
   };
   const data=actions[npc];
   if(!data)return;
+  if(npc==='Trưởng làng'){
+    questState.record('talk','elder');
+    updateQuestBadge();
+  }
   document.querySelector('#window-title').textContent=npc;
   document.querySelector('#window-content').innerHTML='<div class="npc-dialog"><p>'+escapeHtml(data.description)+'</p><div class="npc-actions">'+data.buttons.map(([label,action])=>'<button class="gold-button" data-npc-action="'+action+'">'+label+'</button>').join('')+'</div></div>';
   document.querySelector('#game-window').classList.add('open');
