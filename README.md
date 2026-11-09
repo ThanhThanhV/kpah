@@ -90,3 +90,10 @@ NPC dialogue remains connected to the quest journal and shop entry points. Monst
 ## Merchant and local economy slice
 
 The merchant NPC opens a functional local shop for HP potions, MP potions and upgrade stones. Purchases validate the wallet balance and inventory capacity, deduct Xu and add the purchased stack to the same inventory used by character, combat and quest rewards. The HUD and inventory wallet read the shared currency value. Prices and stock are demo values; there is no server transaction or persistent economy yet.
+
+
+## Multi-zone world and travel
+
+The client now has three connected illustrative zones: White Wolf Village (safe hub), Bamboo Forest (level 15 recommendation) and Black Stone Cave (level 20 recommendation). The world map lists current/connected/locked destinations and enforces the local level requirement before travel. A gate marker in each scene opens the map; travel redraws the zone palette and environment, updates the location HUD/minimap label, places the player at the destination entry point, and loads that zone's NPC and monster spawn definitions. Zone transitions cancel a pending monster-approach action so an attack cannot accidentally fire in the next area.
+
+The zone names, layouts, connections, NPC placement, monster spawn points and level gates are client-side reconstruction placeholders. They are not claimed to be verified original KPAH map data; original tile IDs, map files and collision rules remain to be decoded.
