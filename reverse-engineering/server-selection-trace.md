@@ -42,3 +42,15 @@ The class also contains a separate fallback/test tuple (`Server test`, `27.0.12.
 The server list is client-configurable and persisted locally under `ipnqsh`; it is not a hardcoded single endpoint. A Web recreation should model server selection as data, and the backend should support an explicit environment/server configuration rather than silently choosing one of these historical IPs.
 
 The addresses above are literal defaults embedded in the supplied JAR, not a claim that those servers are currently reachable or authorized for use.
+
+
+## Refresh and transition actions
+
+- The `Cập nhật` action is wired to `uk`. It performs an HTTP GET to `http://teamobi.com/srvips/NQSH2.txt`.
+- The response is split into comma-separated server records. Each record is split into four colon-separated fields: display name, host, port, and the extra byte.
+- The refreshed arrays are serialized back into RMS under `ipnqsh`, using the same count/name/host/port/byte layout read by the `uj` constructor.
+- After refresh, the selector recalculates its layout and closes the update/loading overlay.
+- The `Chọn` action is wired to `um`. If a valid server index is selected, it calls `km.v` (the shared `ro` login-screen instance). `ro.b()` then makes the login screen the active `tj` state.
+- The `Thoát` action notifies the MIDlet to exit.
+
+This establishes a concrete screen transition: **server selector (`uj`) → login (`ro`)**. The login worker later opens the selected server endpoint through `km.b()`.
