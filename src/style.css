@@ -226,3 +226,23 @@
  .world-target{top:8px;right:8px;width:min(175px,48%);padding:6px 7px}
  .world-target-heading b{font-size:9px}
 }
+
+
+/* Local merchant inventory and purchase controls */
+.shop-wallet{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px;margin-bottom:10px;background:#2b2528;border:1px solid #725437;color:#c9b89c;font-size:10px}
+.shop-wallet b{color:#f2d18d;font-size:12px}
+.shop-list-live{display:grid;gap:8px}
+.shop-item-live{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:9px;padding:9px;background:linear-gradient(145deg,#30282b,#211d23);border:1px solid #5b4937}
+.shop-item-icon{display:grid;place-items:center;width:36px;height:36px;background:#1b171b;border:1px solid #6b5339;font-size:20px}
+.shop-item-copy{display:grid;gap:4px;min-width:0}
+.shop-item-copy b{font-size:10px;color:#efd39b}
+.shop-item-copy small{font-size:8px;color:#a99b88;line-height:1.4}
+.shop-item-buy{display:grid;justify-items:end;gap:5px}
+.shop-item-buy small{font-size:8px;color:#e5c17e;white-space:nowrap}
+.shop-item-buy button{padding:6px 9px;background:#67492d;border:1px solid #ad824a;color:#ffe2a7;font-size:9px;white-space:nowrap}
+@media(max-width:700px){
+ .shop-item-live{grid-template-columns:32px minmax(0,1fr) auto;gap:7px;padding:7px}
+ .shop-item-icon{width:31px;height:31px;font-size:17px}
+ .shop-item-copy b{font-size:9px}
+ .shop-item-buy button{padding:6px;font-size:8px}
+}
