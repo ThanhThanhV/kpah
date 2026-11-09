@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import './style.css';
 import { renderResourceViewer } from './resource-viewer.js';
 import { configureWorldCamera, moveWorldEntity, setWorldEntityDepth } from './world-runtime.js';
+import { createCharacterState } from './character-state.js';
 
 const app = document.querySelector('#app');
 app.innerHTML = `
@@ -76,7 +77,19 @@ const panelData = {
   shop:{title:'Cửa hàng',html:`<div class="tabs"><button class="chosen">Vật phẩm</button><button>Trang bị</button><button>Tiện ích</button></div><div class="shop-row"><span>🧪</span><b>Bình máu nhỏ</b><small>150 Xu</small><button>Mua</button></div><div class="shop-row"><span>🧴</span><b>Bình mana nhỏ</b><small>150 Xu</small><button>Mua</button></div>`}
 };
 let activeCharacterName='Kiếm Khách',activeCharacterClass='Kiếm khách';
-function openWindow(key){const p=panelData[key]||panelData.help;document.querySelector('#window-title').textContent=p.title;const html=key==='character'?p.html.replaceAll('Kiếm Khách',escapeHtml(activeCharacterName)).replace('Chiến binh tập sự',escapeHtml(activeCharacterClass+' · Nhân vật')):p.html;document.querySelector('#window-content').innerHTML=html;document.querySelector('#game-window').classList.add('open');document.querySelector('#modal-backdrop').classList.add('show');document.querySelectorAll('.side-nav button').forEach(b=>b.classList.toggle('active',b.dataset.window===key));if(key==='resources')renderResourceViewer(document.querySelector('#resource-viewer'));if(key==='settings')syncDisplaySettings();}
+const characterState=createCharacterState();
+
+function openWindow(key){
+  const p=panelData[key]||panelData.help;
+  document.querySelector('#window-title').textContent=p.title;
+  const html=['character','inventory','equipment'].includes(key)?renderCharacterPanel(key):p.html;
+  document.querySelector('#window-content').innerHTML=html;
+  document.querySelector('#game-window').classList.add('open');
+  document.querySelector('#modal-backdrop').classList.add('show');
+  document.querySelectorAll('.side-nav button').forEach(b=>b.classList.toggle('active',b.dataset.window===key));
+  if(key==='resources')renderResourceViewer(document.querySelector('#resource-viewer'));
+  if(key==='settings')syncDisplaySettings();
+}
 function closeWindow(){document.querySelector('#game-window').classList.remove('open');document.querySelector('#modal-backdrop').classList.remove('show');}
 const DISPLAY_SETTINGS_KEY='kpah.display-settings.v1';
 const displaySettings={playerName:true,coordinates:true,minimap:true};
@@ -127,6 +140,55 @@ document.querySelector('#chat-form').addEventListener('submit',e=>{
 });
 selectChatChannel('world');
 function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function renderCharacterPanel(key){
+  const data=characterState.snapshot();
+  const stats=data.stats;
+  const statRows=Object.entries(characterState.statLabels).map(([id,label])=>`
+    <div class="progression-stat"><div><small>${label}</small><b>${stats[id]}</b></div><button type="button" data-stat-up="${id}" ${data.statPoints<=0?'disabled':''}>+</button></div>`).join('');
+  if(key==='character')return `
+    <div class="character-overview">
+      <div class="character-portrait"><div class="portrait-art">⚔</div><span>Cấp ${data.level}</span></div>
+      <div class="character-overview-main"><h2>${escapeHtml(data.name)}</h2><p class="muted">${escapeHtml(data.profession)} · Nhân vật</p>
+        <div class="character-xp"><div><span>Kinh nghiệm</span><b>${data.experience.toLocaleString('vi-VN')} / ${data.nextLevelExperience.toLocaleString('vi-VN')}</b></div><i><em style="width:${Math.min(100,data.experience/data.nextLevelExperience*100)}%"></em></i></div>
+        <div class="character-vitals"><div><span>HP</span><b>${data.hp.toLocaleString('vi-VN')} / ${data.maxHp.toLocaleString('vi-VN')}</b></div><div><span>MP</span><b>${data.mp.toLocaleString('vi-VN')} / ${data.maxMp.toLocaleString('vi-VN')}</b></div></div>
+        <div class="progression-stat-grid">${statRows}</div>
+        <div class="potential-footer"><span>Điểm tiềm năng còn: <b>${data.statPoints}</b></span><small>Điểm cộng được áp dụng ngay trong bản demo.</small></div>
+      </div>
+    </div>
+    <div class="character-subnav"><button type="button" data-character-open="equipment">Trang bị nhân vật</button><button type="button" data-character-open="inventory">Mở hành trang</button></div>`;
+  if(key==='equipment'){
+    const slots=data.equipmentSlots.map(([id,label,icon])=>{
+      const itemId=data.equipment[id];
+      const item=itemId&&data.inventory.find(entry=>entry.id===itemId);
+      const equipped=itemId?({ 'starter-sword':'Kiếm tân thủ','cloth-hat':'Mũ vải','cloth-armor':'Áo vải','bronze-ring':'Nhẫn đồng'}[itemId]||'Trang bị'):'Chưa trang bị';
+      return `<div class="equip-cell ${itemId?'filled':''}"><span>${icon}</span><small>${label}</small><b>${equipped}</b>${itemId?`<button type="button" data-unequip="${id}">Tháo</button>`:''}</div>`;
+    }).join('');
+    return `<div class="equipment-screen"><div class="equip-slots">${slots}</div><div class="equip-preview"><div class="equip-character">⚔</div><b>${escapeHtml(data.name)}</b><small>${escapeHtml(data.profession)} · Cấp ${data.level}</small><div class="equip-summary"><span>HP <b>${data.maxHp}</b></span><span>MP <b>${data.maxMp}</b></span></div></div></div><p class="panel-hint">Chọn vật phẩm trang bị trong hành trang để thay đổi bộ trang bị.</p><button type="button" class="gold-button" data-character-open="inventory">Mở hành trang</button>`;
+  }
+  const categories=[['all','Tất cả'],['equipment','Trang bị'],['consumable','Tiêu hao'],['material','Nguyên liệu'],['quest','Nhiệm vụ']];
+  const items=data.inventory.map(item=>`<article class="inventory-item" data-item-category="${item.category}"><div class="inventory-item-icon">${item.icon}</div><b>${escapeHtml(item.name)}</b><small>${item.category==='equipment'?'Trang bị':item.category==='consumable'?'Vật phẩm tiêu hao':item.category==='material'?'Nguyên liệu':'Nhiệm vụ'}</small><em>×${item.quantity}</em><button type="button" data-item-action="${item.category==='equipment'?'equip':item.category==='consumable'?'use':'info'}" data-item-id="${item.id}" ${item.category==='material'||item.category==='quest'?'disabled':''}>${item.category==='equipment'?'Trang bị':item.category==='consumable'?'Sử dụng':'Chi tiết'}</button></article>`).join('');
+  return `<div class="inventory-toolbar"><div class="inventory-capacity"><b>${data.inventory.length} / ${data.inventoryCapacity}</b><span>Ô hành trang đang sử dụng</span></div><div class="inventory-currency"><span>Xu <b>125.600</b></span><span>Lượng <b>320</b></span></div></div><div class="tabs inventory-tabs">${categories.map(([id,label],i)=>`<button type="button" class="${i===0?'chosen':''}" data-inventory-filter="${id}">${label}</button>`).join('')}</div><div class="inventory-grid inventory-grid-live">${items||'<div class="inventory-empty">Hành trang trống</div>'}</div><p class="panel-hint">Vật phẩm và thao tác hiện được mô phỏng ở client; chưa đồng bộ máy chủ.</p>`;
+}
+function refreshCharacterPanel(){
+  const title=document.querySelector('#window-title').textContent;
+  const key=title==='Thông tin nhân vật'?'character':title==='Trang bị nhân vật'?'equipment':title==='Hành trang'?'inventory':null;
+  if(key)document.querySelector('#window-content').innerHTML=renderCharacterPanel(key);
+  updateCharacterHud();
+}
+function updateCharacterHud(){
+  const data=characterState.snapshot();
+  document.querySelectorAll('.hero-name').forEach(el=>el.textContent=data.name);
+  const profile=document.querySelector('.profile-info');
+  if(profile){
+    const labels=profile.querySelectorAll('.bar-label b');
+    if(labels[0])labels[0].textContent=data.hp.toLocaleString('vi-VN')+' / '+data.maxHp.toLocaleString('vi-VN');
+    if(labels[1])labels[1].textContent=data.mp.toLocaleString('vi-VN')+' / '+data.maxMp.toLocaleString('vi-VN');
+    const bars=profile.querySelectorAll('.meter i');
+    if(bars[0])bars[0].style.width=(data.hp/data.maxHp*100)+'%';
+    if(bars[1])bars[1].style.width=(data.mp/data.maxMp*100)+'%';
+  }
+}
+
 let toastTimer;function toast(t){const el=document.querySelector('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2300);}
 function selectActionSlot(button){
   if(!button)return;
@@ -142,6 +204,22 @@ window.addEventListener('keydown',event=>{
   if(!/^[1-5]$/.test(event.key))return;
   const slot=document.querySelectorAll('.slot')[Number(event.key)-1];
   if(slot){event.preventDefault();selectActionSlot(slot);}
+});
+document.querySelector('#window-content').addEventListener('click',event=>{
+  const stat=event.target.closest('[data-stat-up]')?.dataset.statUp;
+  if(stat){const result=characterState.allocateStat(stat);toast(result.message);refreshCharacterPanel();return;}
+  const itemButton=event.target.closest('[data-item-action]');
+  if(itemButton){
+    const id=itemButton.dataset.itemId;
+    const result=itemButton.dataset.itemAction==='equip'?characterState.equip(id):itemButton.dataset.itemAction==='use'?characterState.useItem(id):{ok:false,message:'Đây là vật phẩm không thể sử dụng trực tiếp.'};
+    toast(result.message);
+    refreshCharacterPanel();
+    return;
+  }
+  const slot=event.target.closest('[data-unequip]')?.dataset.unequip;
+  if(slot){const result=characterState.unequip(slot);toast(result.message);refreshCharacterPanel();return;}
+  const panel=event.target.closest('[data-character-open]')?.dataset.characterOpen;
+  if(panel){openWindow(panel);return;}
 });
 document.querySelector('#window-content').addEventListener('click',event=>{
   const button=event.target.closest('.tabs button');
@@ -215,6 +293,8 @@ window.addEventListener('kpah:character-selected',event=>{
   const {name,className}=event.detail||{};
   const safeName=name||'Kiếm Khách';
   activeCharacterName=safeName;activeCharacterClass=className||'Kiếm khách';
+  characterState.setIdentity(safeName,activeCharacterClass);
+  updateCharacterHud();
   document.querySelectorAll('.hero-name').forEach(el=>el.textContent=safeName);
   document.querySelectorAll('#chat-lines strong').forEach(el=>{if(el.textContent==='Kiếm Khách')el.textContent=safeName;});
   const scene=game.scene.getScene('world');
