@@ -36,6 +36,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Hardened archive extraction against traversal paths, Windows-style separators, NUL bytes and duplicate JAR entry names.
 - Added a shared asset catalog for manifest loading and validated asset URLs; Resource Viewer, profession preview and sprite inspector now use the same path rules.
 - Added a shared Phaser world runtime for camera follow, bounded entity movement, Y-based depth sorting and a tile-layer adapter that requires verified tile IDs.
+- Added reusable Phaser sprite-animation registration/play helpers. They require an explicit texture key, frame sequence, FPS and repeat policy, validate frame references, and deliberately do not infer KPAH animation mappings. The helpers are infrastructure only until source-verified frame sequences are connected.
 - Routed pointer, keyboard and directional-pad movement through the shared runtime; the player name label now follows the moving entity.
 - Made the offline server state explicit instead of displaying a false connected status.
 - Added live client display settings for the player name label, world coordinates and minimap visibility; preferences persist in browser local storage, tolerate unavailable/corrupt storage, and can be reset to defaults. The panel can be closed with Escape. These are local presentation preferences, not account settings.
