@@ -38,5 +38,10 @@ export function createWorldMapState(initialZone='village'){
     currentId=destination.id;
     return {ok:true,zone:getWorldZone(currentId),message:'Đã di chuyển tới '+destination.name+'.'};
   }
-  return {snapshot,travel,getCurrent:()=>getWorldZone(currentId)};
+  function setCurrent(zoneId){
+    if(!WORLD_ZONES.some(zone=>zone.id===zoneId))return null;
+    currentId=zoneId;
+    return getWorldZone(currentId);
+  }
+  return {snapshot,travel,setCurrent,getCurrent:()=>getWorldZone(currentId)};
 }
