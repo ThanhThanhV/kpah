@@ -75,7 +75,8 @@ export function renderSpriteLab(root, assets) {
 
   function draw() {
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    if (!image.complete || !image.naturalWidth || !total) return;
+    if (!image.complete || !image.naturalWidth || !total ||
+        !Number.isInteger(frameWidth) || !Number.isInteger(frameHeight)) return;
     const col = frame % Number(colsInput.value);
     const row = Math.floor(frame / Number(colsInput.value));
     const scale = Math.min((canvas.width - 12) / frameWidth, (canvas.height - 12) / frameHeight);
@@ -97,14 +98,19 @@ export function renderSpriteLab(root, assets) {
     if (!image.naturalWidth) return;
     frameWidth = image.naturalWidth / cols;
     frameHeight = image.naturalHeight / rows;
-    total = cols * rows;
-    frame = 0;
-    slider.max = String(total - 1);
-    slider.value = '0';
     const valid = Number.isInteger(frameWidth) && Number.isInteger(frameHeight);
-    meta.textContent = image.naturalWidth + '×' + image.naturalHeight + ' px · frame ' +
-      frameWidth + '×' + frameHeight + ' px · ' + total + ' frame' + (total > 1 ? 's' : '') +
-      (valid ? '' : ' · Lưới này chia không hết kích thước ảnh');
+    total = valid ? cols * rows : 0;
+    frame = 0;
+    slider.max = String(Math.max(0, total - 1));
+    slider.value = '0';
+    $('sprite-prev').disabled = !valid || total < 2;
+    $('sprite-next').disabled = !valid || total < 2;
+    $('sprite-play').disabled = !valid || total < 2;
+    slider.disabled = !valid || total < 2;
+    meta.textContent = image.naturalWidth + '×' + image.naturalHeight + ' px · ' +
+      (valid
+        ? 'frame ' + frameWidth + '×' + frameHeight + ' px · ' + total + ' frame' + (total > 1 ? 's' : '')
+        : 'Lưới ' + cols + '×' + rows + ' không chia hết kích thước ảnh; hãy đổi số hàng/cột');
     draw();
   }
 
@@ -113,18 +119,41 @@ export function renderSpriteLab(root, assets) {
     const item = images[Number(imageSelect.value)] || images[0];
     image = new Image();
     image.onload = updateGrid;
-    image.onerror = () => { meta.textContent = 'Không tải được ảnh: ' + item.path; };
-    image.src = assetUrl(item.output) || '';
+    image.onerror = () => {
+      total = 0;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      count.textContent = '0 / 0';
+      meta.textContent = 'Không tải được ảnh: ' + item.path;
+      $('sprite-prev').disabled = true;
+      $('sprite-next').disabled = true;
+      $('sprite-play').disabled = true;
+      slider.disabled = true;
+    };
+    const url = assetUrl(item.output);
+    if (!url) {
+      image.onerror();
+      return;
+    }
+    image.src = url;
   }
 
   imageSelect.addEventListener('change',loadAsset);
   colsInput.addEventListener('change',updateGrid);
   rowsInput.addEventListener('change',updateGrid);
   slider.addEventListener('input',() => { frame = Number(slider.value); draw(); });
-  $('sprite-prev').addEventListener('click',() => { frame = (frame - 1 + total) % total; draw(); });
-  $('sprite-next').addEventListener('click',() => { frame = (frame + 1) % total; draw(); });
+  $('sprite-prev').addEventListener('click',() => {
+    if (total < 2) return;
+    frame = (frame - 1 + total) % total;
+    draw();
+  });
+  $('sprite-next').addEventListener('click',() => {
+    if (total < 2) return;
+    frame = (frame + 1) % total;
+    draw();
+  });
   $('sprite-play').addEventListener('click',() => {
     if (timer !== null) { stop(); return; }
+    if (total < 2 || !Number.isInteger(frameWidth) || !Number.isInteger(frameHeight)) return;
     const fps = Math.max(1,Math.min(30,Number(fpsInput.value)||6));
     fpsInput.value = String(fps);
     $('sprite-play').textContent = 'Dừng';
