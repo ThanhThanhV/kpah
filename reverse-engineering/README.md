@@ -64,6 +64,7 @@ Detailed traces:
 - [Authentication requests](authentication-request-trace.md)
 - [Socket transport](socket-transport-trace.md)
 - [Packed resource format](resource-pack-format.md)
+- [World render runtime](world-render-runtime.md)
 
 ## Next investigation sequence
 
