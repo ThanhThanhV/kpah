@@ -8,7 +8,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 | Phase | Scope | Progress | Basis |
 |---|---|---:|---|
-| P0 | Foundation and original resources (5 tasks) | 32% | .sh/.wp/.wps extraction and manifest are implemented; initial inventory is documented; sprite animation, original tilemap and original camera/render are not done. |
+| P0 | Foundation and original resources (5 tasks) | 34% | .sh/.wp/.wps extraction and manifest are implemented; initial inventory is documented; sprite animation, original tilemap and original camera/render are not done. |
 | P1 | Reconstructed client/gameplay (10 tasks) | 24% | Demo server/login/character flow exists; profession preview images are now wired; world, movement and NPCs remain mostly mock; combat and real animation are not implemented. |
 | P2 | Game systems (10 tasks) | 5% | UI panels/placeholders exist, but inventory, equipment, skills, quests, chat, party and guild are not backed by game logic. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
@@ -31,6 +31,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Added Resource Viewer for PNG assets listed in archive-manifest.json.
 - Added original profession preview gallery in character creation, sourced from five .wps packs:
 - Added a configurable sprite-sheet inspector: choose any decoded PNG, set rows/columns/FPS, step through frames or play a preview. This is an analysis tool, not yet the in-game animation system.
+- Added a binary metadata inspector for decoded `.d` entries: selectable file, byte offsets, hexadecimal values and ASCII view. Field meanings remain intentionally unassigned pending bytecode verification.
   - Kiếm Khách → kiem
   - Chiến Binh → daidao
   - Pháp Sư → phapsu
