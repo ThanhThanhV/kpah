@@ -42,9 +42,7 @@ JAR unchanged as the reference artifact.
 
 ## Current reconstruction boundary
 
-The Web client currently contains a mock world and mock panels. It is not yet a
-faithful reproduction of the original screens. Backend behavior and network protocol
-remain intentionally out of scope until agreed with the project owner.
+The Web client currently has a demo startup flow (server selection, local-only login, character selection/creation) and a mock world/panels. The five original character professions, gender choices, and six hair choices are represented in the creation form. Server endpoints, authentication, character persistence, and backend behavior are not connected yet; the server rows are placeholders and must not be treated as live servers.
 
 ## Verified screen and protocol findings
 
