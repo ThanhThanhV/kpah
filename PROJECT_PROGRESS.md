@@ -176,3 +176,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 
 - The five-step quest chain was exercised end-to-end in a state-level smoke check: prerequisite rejection, unlock after claiming the prior reward, objective completion and reward claim all passed. Main client and quest modules pass the available JavaScript syntax check. No browser/Vite build was run.
+
+
+## P2 — Persist local social and mailbox panels
+
+- Extended the versioned local save to include the simulated friends/party roster and invitations, guild membership/contribution, and mailbox read/claimed flags.
+- Added catalog-validated restore methods; unknown guilds/mail IDs and unrecognized friend IDs are discarded, while user-added local friends are restricted to the local friend ID namespace and bounded names.
+- Rendering these panels snapshots their state so successful local actions are retained on the next browser visit.
+- No credentials, server session, online presence, real chat delivery or cross-device state is saved.
