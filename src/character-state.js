@@ -203,8 +203,44 @@ export function createCharacterState() {
     return {ok:true,itemId,quantity:amount};
   }
 
+  function restore(saved) {
+    if (!saved || typeof saved !== 'object') return false;
+    const number = (value, fallback, min = 0, max = 100000000) =>
+      Number.isFinite(Number(value)) ? Math.min(max, Math.max(min, Math.floor(Number(value)))) : fallback;
+    if (typeof saved.name === 'string' && saved.name.trim()) state.name = saved.name.trim().slice(0,16);
+    if (typeof saved.profession === 'string' && saved.profession.trim()) state.profession = saved.profession.trim().slice(0,40);
+    state.level = number(saved.level, state.level, 1, 10000);
+    state.experience = number(saved.experience, state.experience);
+    state.nextLevelExperience = number(saved.nextLevelExperience, state.nextLevelExperience, 1);
+    state.statPoints = number(saved.statPoints, state.statPoints, 0, 100000);
+    state.currency = number(saved.currency, state.currency);
+    for (const key of Object.keys(STAT_LABELS)) state.baseStats[key] = number(saved.baseStats?.[key], state.baseStats[key], 0, 1000000);
+    const restoredInventory = [];
+    if (Array.isArray(saved.inventory)) {
+      for (const candidate of saved.inventory.slice(0, state.inventoryCapacity)) {
+        const template = INITIAL_ITEMS.find(item => item.id === candidate?.id);
+        if (!template) continue;
+        const quantity = number(candidate.quantity, 0, 0, 999999);
+        if (quantity > 0) restoredInventory.push({...clone(template), quantity});
+      }
+    }
+    state.inventory = restoredInventory;
+    const restoredEquipment = {};
+    for (const [slot] of EQUIPMENT_SLOTS) {
+      const id = saved.equipment?.[slot];
+      const item = INITIAL_ITEMS.find(entry => entry.id === id && entry.slot === slot);
+      restoredEquipment[slot] = item ? item.id : null;
+    }
+    state.equipment = restoredEquipment;
+    const {maxHp,maxMp} = limits();
+    state.hp = number(saved.hp, maxHp, 0, maxHp);
+    state.mp = number(saved.mp, maxMp, 0, maxMp);
+    return true;
+  }
+
   return {
     snapshot,
+    restore,
     equip,
     unequip,
     useItem,
