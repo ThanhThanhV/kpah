@@ -187,3 +187,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 
 - State-level smoke checks restored a locally added friend, pending/accepted party roster, guild membership and contribution, and mailbox read/claimed flags. Party acceptance now checks capacity and duplicate membership before changing an invitation to accepted; the player leader cannot be removed from their own party.
+
+
+## P1/P2 — Combat target feedback refinement
+
+- Floating damage is now anchored to the selected monster's world position and converted through the active Phaser camera/canvas viewport, rather than appearing at the center of the game frame.
+- Monster retaliation and player healing feedback appear at the player position with distinct colors; target damage remains attached to the monster.
+- The selected monster now has a visible ground ring, synchronized with selection, defeat and respawn state.
+- The entrypoint passed the available V8 syntax compilation check after import declarations were removed. This is not a browser interaction test or production build; camera alignment still needs visual verification at runtime.
