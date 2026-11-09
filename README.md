@@ -140,3 +140,5 @@ The offline quest journal now follows a prerequisite sequence: village elder →
 ## Local social, guild and mailbox recovery
 
 The versioned browser save also retains locally added friends, the simulated party roster/invitations, guild membership and personal contribution, plus read/claimed flags for the sample mailbox. Restore only accepts known demo guild/mail IDs and known or locally created friend IDs; transient online status and network delivery are not represented. These features remain local-only simulations.
+
+The extractor also tags decoded entries with a source-pack family (for example effects, NPC, public skills, main UI, fonts or profession previews). This is a verified archive-level grouping only; it does not infer the meaning, frame order or timing of an individual image. The Resource Viewer exposes this family as a filter. The Phaser runtime offers explicit sprite-sheet loading and animation registration/play helpers, but callers must supply measured frame dimensions and verified frame lists.
