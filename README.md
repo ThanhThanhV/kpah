@@ -50,3 +50,8 @@ Sau khi trích xuất, chạy lại Vite và mở **Tài nguyên gốc** ở tha
 ## Character preview
 
 The character creation form loads the five verified `.wps` profession-preview packs from `archive-manifest.json`: `kiem` (Kiếm Khách), `daidao` (Chiến Binh), `phapsu` (Pháp Sư), `bua` (Đấu Sĩ), and `cung` (Cung Thủ). It displays the five original PNG entries per pack with nearest-neighbor scaling. These are profession preview images only; gender/hair composition and animation mapping remain unverified.
+
+
+## Sprite inspection
+
+Open **Tài nguyên gốc** and use the Sprite Sheet Inspector below the PNG browser. Select an extracted PNG, enter the number of rows and columns, set preview FPS, then step through or play the resulting frame grid. The grid is manually configured for inspection; it does not claim to know the original animation frame order or timing.
