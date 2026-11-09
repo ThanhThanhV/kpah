@@ -123,3 +123,8 @@ The chat composer now includes a recipient selector for local private messages. 
 Character identity, level/experience, attributes and potential points, HP/MP, currency, inventory/equipment, quest progress and learned skill/loadout configuration are saved in versioned browser local storage. Loading validates the save against the current local catalogs and ignores unknown items/quests/skills. Storage denial, quota errors, malformed JSON and unsupported save versions fall back to a fresh demo state without blocking the game.
 
 Battle target HP, cooldowns, turn counters, ground drops, player credentials, social/guild/mail sessions and other transient world state are not included. This is device/browser-local demo persistence, not account storage or cross-device synchronization.
+
+
+## Knockout and checkpoint respawn
+
+When the local character reaches 0 HP, world movement and action-bar attacks are blocked and a knockout overlay is shown. The respawn action restores HP and part of MP, returns the player to the Làng Sói Trắng checkpoint, reloads that zone's local NPC/monster entities and resets the world camera. This is a client-side demo rule; original KPAH death penalties, revive items, respawn timers and server validation remain unverified.
