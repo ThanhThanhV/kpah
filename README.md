@@ -86,6 +86,8 @@ The mock village now has a structured local entity catalog for four ordinary wol
 
 NPC dialogue remains connected to the quest journal and shop entry points. Monster stats, spawn points, respawn delays, rewards and drop chances are illustrative client-side data, not verified original KPAH server values. Combat remains offline and is not authoritative or multiplayer-synchronized.
 
+Combat feedback is positioned over the affected world entity using the active camera viewport: outgoing damage appears over the selected monster, while retaliation and healing appear over the player. A ground ring marks the selected monster and follows its alive/selected state. This presentation is still awaiting browser/device visual verification.
+
 
 ## Merchant and local economy slice
 
