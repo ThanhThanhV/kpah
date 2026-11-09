@@ -265,10 +265,17 @@ function renderPartyPanel(){
   const data=socialState.snapshot();
   const members=data.party?.members||[];
   const pending=data.invitations.filter(item=>item.status==='pending');
-  return `<div class="party-summary"><b>${members.length}/5 thành viên</b><span>${data.party?'Đội trưởng: Kiếm Khách':'Chưa có tổ đội'}</span></div>
-    ${data.party?`<div class="party-member-list">${members.map(member=>`<article class="party-member"><span class="nearby-avatar blue">${escapeHtml(member.name.slice(0,1))}</span><div><b>${escapeHtml(member.name)}</b><small>Cấp ${member.level} · ${escapeHtml(member.profession)} · ${member.role==='leader'?'Đội trưởng':'Thành viên'}</small></div>${member.id!=='player'?'<button type="button" data-party-remove="'+member.id+'">Mời rời đội</button>':''}</article>`).join('')}</div><button type="button" class="gold-button" data-party-leave>Rời tổ đội</button>`:'<div class="empty-state"><span>♙</span><b>Bạn chưa tham gia tổ đội</b><p>Mời bạn bè trực tuyến để lập tổ đội tối đa 5 người.</p><button type="button" class="gold-button" data-party-create>Tạo tổ đội</button></div>'}
-    ${pending.length?`<h3>Lời mời đang chờ</h3>${pending.map(item=>`<div class="party-invite"><b>${escapeHtml(item.name)}</b><button type="button" data-party-accept="${item.id}">Chấp nhận</button><button type="button" data-party-decline="${item.id}">Từ chối</button></div>`).join('')}:''}
-    <p class="panel-hint">Tổ đội là mô phỏng client offline; chưa có đồng bộ thành viên hoặc chia sẻ chiến đấu qua mạng.</p>`;
+  const memberHtml=members.map(member=>{
+    const removeButton=member.id!=='player'?'<button type="button" data-party-remove="'+escapeHtml(member.id)+'">Mời rời đội</button>':'';
+    return '<article class="party-member"><span class="nearby-avatar blue">'+escapeHtml(member.name.slice(0,1))+'</span><div><b>'+escapeHtml(member.name)+'</b><small>Cấp '+member.level+' · '+escapeHtml(member.profession)+' · '+(member.role==='leader'?'Đội trưởng':'Thành viên')+'</small></div>'+removeButton+'</article>';
+  }).join('');
+  const partyHtml=data.party
+    ?'<div class="party-member-list">'+memberHtml+'</div><button type="button" class="gold-button" data-party-leave>Rời tổ đội</button>'
+    :'<div class="empty-state"><span>♙</span><b>Bạn chưa tham gia tổ đội</b><p>Mời bạn bè trực tuyến để lập tổ đội tối đa 5 người.</p><button type="button" class="gold-button" data-party-create>Tạo tổ đội</button></div>';
+  const pendingHtml=pending.length
+    ?'<h3>Lời mời đang chờ</h3>'+pending.map(item=>'<div class="party-invite"><b>'+escapeHtml(item.name)+'</b><button type="button" data-party-accept="'+escapeHtml(item.id)+'">Chấp nhận</button><button type="button" data-party-decline="'+escapeHtml(item.id)+'">Từ chối</button></div>').join('')
+    :'';
+  return '<div class="party-summary"><b>'+members.length+'/5 thành viên</b><span>'+(data.party?'Đội trưởng: Kiếm Khách':'Chưa có tổ đội')+'</span></div>'+partyHtml+pendingHtml+'<p class="panel-hint">Tổ đội là mô phỏng client offline; chưa có đồng bộ thành viên hoặc chia sẻ chiến đấu qua mạng.</p>';
 }
 function renderShopPanel(){
   const data=shopState.snapshot();
