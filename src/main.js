@@ -108,6 +108,9 @@ if(savedGame){
   characterState.restore(savedGame.character);
   questState.restore(savedGame.quests);
   skillCombat.restore(savedGame.skills);
+  socialState.restore(savedGame.social);
+  guildState.restore(savedGame.guild);
+  mailState.restore(savedGame.mail);
 }
 function showDeathOverlay(){
   deathOverlay.hidden=false;
@@ -131,7 +134,7 @@ function respawnPlayer(){
 deathOverlay.querySelector('#respawn-button').addEventListener('click',respawnPlayer);
 function saveGameProgress(){
   const skills=skillCombat.snapshot();
-  localSave.save({character:characterState.snapshot(),quests:questState.snapshot(),skills:{skills:skills.skills.map(skill=>({id:skill.id,level:skill.level})),skillPoints:skills.skillPoints,loadout:skills.loadout}});
+  localSave.save({character:characterState.snapshot(),quests:questState.snapshot(),skills:{skills:skills.skills.map(skill=>({id:skill.id,level:skill.level})),skillPoints:skills.skillPoints,loadout:skills.loadout},social:socialState.snapshot(),guild:guildState.snapshot(),mail:mailState.snapshot()});
 }
 
 function openWindow(key){
@@ -249,6 +252,7 @@ function renderWorldMapPanel(){
 }
 
 function renderGuildPanel(){
+  saveGameProgress();
  const data=guildState.snapshot();
  if(data.guild){const g=data.guild;return `<div class="guild-banner"><span>⚑</span><div><b>${escapeHtml(g.name)}</b><small>Cấp bang hội ${g.level} · ${g.memberCount} thành viên</small></div><em>${g.role}</em></div>
  <p class="guild-notice">${escapeHtml(g.notice)}</p><div class="guild-stats"><div><small>Cống hiến cá nhân</small><b>${g.contribution.toLocaleString('vi-VN')}</b></div><div><small>Số lần cống hiến</small><b>${g.donations}</b></div><div><small>Thành viên</small><b>${g.memberCount}/50</b></div></div>
@@ -257,16 +261,19 @@ function renderGuildPanel(){
  return `<div class="guild-intro"><b>Gia nhập một bang hội</b><p>Tham gia hoạt động cộng đồng, đóng góp Xu và cùng các thành viên phát triển bang hội.</p></div><div class="guild-catalog">${data.catalog.map(item=>`<article><div><b>⚑ ${escapeHtml(item.name)}</b><small>Cấp ${item.level} · ${item.members} thành viên</small><p>${escapeHtml(item.notice)}</p></div><button type="button" data-guild-join="${item.id}" ${data.applications.includes(item.id)?'disabled':''}>${data.applications.includes(item.id)?'Đã gửi đơn':'Xin gia nhập'}</button></article>`).join('')}</div><p class="panel-hint">Việc xét duyệt gia nhập đang được mô phỏng tự động ở client.</p>`;
 }
 function renderMailPanel(){
+  saveGameProgress();
  const data=mailState.snapshot();
  return `<div class="mail-summary"><b>Hòm thư</b><span>${data.unread} thư chưa đọc</span></div><div class="mail-list">${data.messages.map(item=>`<article class="mail-card ${item.read?'read':''}"><div class="mail-card-heading"><b>${escapeHtml(item.subject)}</b><small>${escapeHtml(item.sender)} · ${escapeHtml(item.sentAt)}</small></div><p>${escapeHtml(item.body)}</p>${item.attachments.length?`<div class="mail-attachment">🎁 ${item.attachments.map(a=>a.type==='currency'?a.amount.toLocaleString('vi-VN')+' Xu':a.quantity+' × '+a.itemId).join(' · ')}</div>`:''}<div class="mail-actions"><button type="button" data-mail-read="${item.id}">Đã đọc</button>${item.attachments.length?(item.claimed?'<span class="mail-claimed">Đã nhận quà</span>':`<button type="button" class="gold-button" data-mail-claim="${item.id}">Nhận quà</button>`):''}</div></article>`).join('')}</div><p class="panel-hint">Thư và quà đính kèm hiện là dữ liệu mô phỏng cục bộ, chưa nhận từ máy chủ.</p>`;
 }
 function renderFriendsPanel(){
+  saveGameProgress();
   const data=socialState.snapshot();
   return `<div class="social-add"><input id="friend-name" maxlength="20" placeholder="Tên nhân vật cần kết bạn"><button type="button" data-friend-add>Thêm bạn</button></div>
     <div class="friend-list-live">${data.friends.map(friend=>`<article class="friend-card-live"><span class="nearby-avatar ${friend.status==='online'?'blue':'green'}">${escapeHtml(friend.name.slice(0,1))}</span><div><b>${escapeHtml(friend.name)}</b><small>Cấp ${friend.level} · ${escapeHtml(friend.profession)} · ${friend.status==='online'?'Trực tuyến':'Ngoại tuyến'}</small></div><button type="button" data-friend-invite="${friend.id}" ${friend.status!=='online'?'disabled':''}>Mời tổ đội</button></article>`).join('')}</div>
     <p class="panel-hint">Danh sách và thao tác hiện lưu trong phiên client. Trạng thái trực tuyến là dữ liệu mô phỏng.</p>`;
 }
 function renderPartyPanel(){
+  saveGameProgress();
   const data=socialState.snapshot();
   const members=data.party?.members||[];
   const pending=data.invitations.filter(item=>item.status==='pending');
