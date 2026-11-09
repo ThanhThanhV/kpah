@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Extract original KPAH client resources and decode verified .sh resource packs.
+"""Extract original KPAH client resources and decode verified packed resource files.
 
 Usage:
   python tools/extract_kpah_jar.py KPAH_278.jar
   python tools/extract_kpah_jar.py KPAH_278.jar --output public/assets/kpah-original
-  python tools/extract_kpah_jar.py KPAH_278.jar --no-decode-sh
+  python tools/extract_kpah_jar.py KPAH_278.jar --no-decode-packed
 
 Class files are intentionally excluded from the browser asset directory.
 The original JAR remains the canonical evidence artifact.
@@ -35,8 +35,8 @@ def xor_repeating(data: bytes, key: bytes = SH_XOR_KEY) -> bytes:
     return bytes(value ^ key[index % len(key)] for index, value in enumerate(data))
 
 
-def decode_sh(data: bytes) -> list[tuple[str, bytes]]:
-    """Decode the indexed/XOR format used by the original ba resource loader."""
+def decode_packed(data: bytes) -> list[tuple[str, bytes]]:
+    """Decode the indexed/XOR container used by the original ba resource loader (.sh/.wp/.wps)."""
     if not data:
         raise ValueError("Empty .sh resource pack")
 
@@ -98,8 +98,8 @@ def main() -> None:
     parser.add_argument("--output", type=Path, default=Path("public/assets/kpah-original"))
     parser.add_argument("--include-classes", action="store_true",
                         help="Also extract .class files (not needed by the browser client)")
-    parser.add_argument("--decode-sh", action=argparse.BooleanOptionalAction, default=True,
-                        help="Decode .sh packs using the format verified in class ba (default: on)")
+    parser.add_argument("--decode-packed", action=argparse.BooleanOptionalAction, default=True,
+                        help="Decode .sh, .wp and .wps packs using the format verified in class ba (default: on)")
     args = parser.parse_args()
 
     if not args.jar.is_file():
@@ -107,7 +107,7 @@ def main() -> None:
 
     args.output.mkdir(parents=True, exist_ok=True)
     entries = []
-    decoded_sh_entries = []
+    decoded_entries = []
     extracted = 0
     with zipfile.ZipFile(args.jar) as archive:
         for info in archive.infolist():
@@ -132,14 +132,22 @@ def main() -> None:
             target.write_bytes(raw)
             extracted += 1
 
-            if suffix == ".sh" and args.decode_sh:
-                decoded_root = args.output / "decoded-sh" / PurePosixPath(name).stem
-                for internal_name, internal_data in decode_sh(raw):
+            if suffix in {".sh", ".wp", ".wps"} and args.decode_packed:
+                # Keep the established decoded-sh path; isolate splash packs by archive
+                # directory and extension so identically named entries cannot collide.
+                if suffix == ".sh":
+                    decoded_root = args.output / "decoded-sh" / PurePosixPath(name).stem
+                else:
+                    archive_path = PurePosixPath(name)
+                    decoded_root = (args.output / "decoded-packed" /
+                                    archive_path.parent / f"{archive_path.stem}{suffix}")
+                for internal_name, internal_data in decode_packed(raw):
                     internal_target = safe_target(decoded_root, internal_name)
                     internal_target.parent.mkdir(parents=True, exist_ok=True)
                     internal_target.write_bytes(internal_data)
-                    decoded_sh_entries.append({
+                    decoded_entries.append({
                         "archive": name,
+                        "packType": suffix,
                         "path": internal_name,
                         "size": len(internal_data),
                         "output": internal_target.relative_to(args.output).as_posix(),
@@ -152,8 +160,8 @@ def main() -> None:
         "extractedCount": extracted,
         "classCount": sum(1 for item in entries if item["isClass"]),
         "extensionCounts": dict(sorted(counts.items())),
-        "decodedShCount": len(decoded_sh_entries),
-        "decodedShEntries": decoded_sh_entries,
+        "decodedPackedCount": len(decoded_entries),
+        "decodedPackedEntries": decoded_entries,
         "entries": entries,
     }
     manifest_path = args.output / "archive-manifest.json"
@@ -162,7 +170,7 @@ def main() -> None:
     print(f"Entries: {len(entries)}")
     print(f"Classes: {manifest['classCount']} (excluded={not args.include_classes})")
     print(f"Extracted files: {extracted}")
-    print(f"Decoded .sh resources: {len(decoded_sh_entries)}")
+    print(f"Decoded packed resources (.sh/.wp/.wps): {len(decoded_entries)}")
     print(f"Manifest: {manifest_path}")
 
 
