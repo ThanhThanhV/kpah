@@ -3,6 +3,7 @@ import './style.css';
 import { renderResourceViewer } from './resource-viewer.js';
 import { configureWorldCamera, moveWorldEntity, setWorldEntityDepth } from './world-runtime.js';
 import { createCharacterState } from './character-state.js';
+import { createSkillCombatState } from './skill-combat.js';
 
 const app = document.querySelector('#app');
 app.innerHTML = `
@@ -78,11 +79,12 @@ const panelData = {
 };
 let activeCharacterName='Kiếm Khách',activeCharacterClass='Kiếm khách';
 const characterState=createCharacterState();
+const skillCombat=createSkillCombatState();
 
 function openWindow(key){
   const p=panelData[key]||panelData.help;
   document.querySelector('#window-title').textContent=p.title;
-  const html=['character','inventory','equipment'].includes(key)?renderCharacterPanel(key):p.html;
+  const html=['character','inventory','equipment'].includes(key)?renderCharacterPanel(key):key==='skills'?renderSkillPanel():p.html;
   document.querySelector('#window-content').innerHTML=html;
   document.querySelector('#game-window').classList.add('open');
   document.querySelector('#modal-backdrop').classList.add('show');
@@ -168,6 +170,86 @@ function renderCharacterPanel(key){
   const items=data.inventory.map(item=>`<article class="inventory-item" data-item-category="${item.category}"><div class="inventory-item-icon">${item.icon}</div><b>${escapeHtml(item.name)}</b><small>${item.category==='equipment'?'Trang bị':item.category==='consumable'?'Vật phẩm tiêu hao':item.category==='material'?'Nguyên liệu':'Nhiệm vụ'}</small><em>×${item.quantity}</em><button type="button" data-item-action="${item.category==='equipment'?'equip':item.category==='consumable'?'use':'info'}" data-item-id="${item.id}" ${item.category==='material'||item.category==='quest'?'disabled':''}>${item.category==='equipment'?'Trang bị':item.category==='consumable'?'Sử dụng':'Chi tiết'}</button></article>`).join('');
   return `<div class="inventory-toolbar"><div class="inventory-capacity"><b>${data.inventory.length} / ${data.inventoryCapacity}</b><span>Ô hành trang đang sử dụng</span></div><div class="inventory-currency"><span>Xu <b>125.600</b></span><span>Lượng <b>320</b></span></div></div><div class="tabs inventory-tabs">${categories.map(([id,label],i)=>`<button type="button" class="${i===0?'chosen':''}" data-inventory-filter="${id}">${label}</button>`).join('')}</div><div class="inventory-grid inventory-grid-live">${items||'<div class="inventory-empty">Hành trang trống</div>'}</div><p class="panel-hint">Vật phẩm và thao tác hiện được mô phỏng ở client; chưa đồng bộ máy chủ.</p>`;
 }
+
+function renderSkillPanel(){
+  const data=skillCombat.snapshot();
+  const active=data.skills.filter(skill=>skill.type==='active');
+  const passive=data.skills.filter(skill=>skill.type==='passive');
+  const cards=items=>items.map(skill=>{
+    const learned=skill.level>0;
+    const maxed=skill.level>=skill.maxLevel;
+    const cost=learned?1:(skill.requiredPoints||1);
+    const assigned=data.loadout.indexOf(skill.id);
+    const cooldown=data.cooldowns[skill.id]||0;
+    return `<article class="skill-card ${learned?'learned':'locked'}">
+      <div class="skill-icon">${skill.icon}</div>
+      <div class="skill-card-main"><div class="skill-card-title"><b>${escapeHtml(skill.name)}</b><span>${learned?'Cấp '+skill.level:'Chưa học'}</span></div>
+        <p>${escapeHtml(skill.description)}</p>
+        <small>${skill.type==='passive'?'Bị động':`MP ${skill.mpCost} · Hồi chiêu ${skill.cooldown} lượt`}</small>
+        ${skill.type==='active'&&learned?`<label class="skill-assign">Gán ô thao tác <select data-skill-assign="${skill.id}"><option value="">Chưa gán</option>${[1,2,3,4].map(slot=>`<option value="${slot}" ${assigned===slot-1?'selected':''}>Ô ${slot}</option>`).join('')}</select></label>`:''}
+      </div>
+      <div class="skill-card-actions">${maxed?'<span class="skill-max">Tối đa</span>':`<button type="button" data-skill-upgrade="${skill.id}" ${data.skillPoints<cost?'disabled':''}>${learned?'Nâng cấp':'Học'} · ${cost} điểm</button>`}</div>
+      ${cooldown? `<em class="skill-cooldown">Hồi chiêu ${cooldown}</em>`:''}
+    </article>`;
+  }).join('');
+  const target=data.target;
+  const hpPercent=Math.max(0,target.hp/target.maxHp*100);
+  return `<div class="skill-header"><div><b>Điểm kỹ năng: <strong>${data.skillPoints}</strong></b><small>Học và nâng cấp kỹ năng, sau đó gán vào thanh thao tác.</small></div><span class="skill-mode">CLIENT DEMO</span></div>
+    <section class="training-battle">
+      <div class="training-target"><div class="training-monster">♞</div><div class="training-target-info"><b>${escapeHtml(target.name)}</b><small>Cấp ${target.level} · Mục tiêu luyện tập</small><div class="training-hp"><i style="width:${hpPercent}%"></i></div><small>${target.hp.toLocaleString('vi-VN')} / ${target.maxHp.toLocaleString('vi-VN')} HP</small></div></div>
+      <div class="training-controls"><span>Lượt ${data.turn}</span><button type="button" data-training-reset>${data.battleActive?'Đặt lại mục tiêu':'Đánh lại'}</button></div>
+      <div class="training-log">${data.log.map(line=>`<p>${escapeHtml(line)}</p>`).join('')}</div>
+      <p class="panel-hint">Mô phỏng chiến đấu theo lượt ở client. Công thức và chỉ số chỉ là dữ liệu thử nghiệm, không đại diện máy chủ KPAH.</p>
+    </section>
+    <div class="skill-section-title">KỸ NĂNG CHỦ ĐỘNG</div><div class="skill-list skill-list-live">${cards(active)}</div>
+    <div class="skill-section-title">KỸ NĂNG BỊ ĐỘNG</div><div class="skill-list skill-list-live">${cards(passive)}</div>`;
+}
+function updateActionBar(){
+  const data=skillCombat.snapshot();
+  const icons={basic:'⚔','sword-wave':'✧',heal:'✚','combo-slash':'⚔','blade-storm':'✹'};
+  const names=Object.fromEntries(data.skills.map(skill=>[skill.id,skill.name]));
+  document.querySelectorAll('.action-slots .slot').forEach((button,index)=>{
+    if(index===4){button.dataset.skill='Bình HP';button.querySelector('span').textContent='🧪';button.querySelector('em').textContent='Bình HP';return;}
+    const id=data.loadout[index];
+    button.dataset.skillId=id||'';
+    button.dataset.skill=id?names[id]:'Chưa gán';
+    button.querySelector('span').textContent=id?icons[id]||'✦':'＋';
+    button.querySelector('em').textContent=id?names[id]:'Trống';
+    const cooldown=id?(data.cooldowns[id]||0):0;
+    button.classList.toggle('on-cooldown',cooldown>0);
+    button.title=cooldown?'Hồi chiêu '+cooldown+' lượt':(id?names[id]:'Chưa gán kỹ năng');
+  });
+}
+function showCombatFeedback(result){
+  const frame=document.querySelector('.world-frame');
+  if(!frame)return;
+  const effect=document.createElement('div');
+  effect.className='combat-feedback '+(result.healing?'healing':'damage');
+  effect.textContent=result.healing?'+'+result.healing+' HP':'-'+result.damage;
+  frame.appendChild(effect);
+  effect.addEventListener('animationend',()=>effect.remove(),{once:true});
+}
+function executeActionSlot(slot){
+  if(slot===5){
+    const item=characterState.snapshot().inventory.find(entry=>entry.category==='consumable'&&entry.restore?.hp);
+    if(!item){toast('Không còn bình HP trong hành trang.');return;}
+    const result=characterState.useItem(item.id);
+    toast(result.message);updateCharacterHud();refreshCharacterPanel();return;
+  }
+  const character=characterState.snapshot();
+  const result=skillCombat.useSlot(slot,character);
+  if(!result.ok){toast(result.message);return;}
+  characterState.spendMp(result.mpCost);
+  if(result.healing)characterState.restoreHp(result.healing);
+  if(result.enemyDamage)characterState.receiveDamage(result.enemyDamage);
+  showCombatFeedback(result);
+  updateCharacterHud();
+  updateActionBar();
+  const panel=document.querySelector('#window-title').textContent;
+  if(panel==='Kỹ năng')document.querySelector('#window-content').innerHTML=renderSkillPanel();
+  toast(result.message+(result.enemyDamage?' · nhận '+result.enemyDamage+' sát thương':''));
+}
+
 function refreshCharacterPanel(){
   const title=document.querySelector('#window-title').textContent;
   const key=title==='Thông tin nhân vật'?'character':title==='Trang bị nhân vật'?'equipment':title==='Hành trang'?'inventory':null;
@@ -188,12 +270,13 @@ function updateCharacterHud(){
   }
 }
 updateCharacterHud();
+updateActionBar();
 
 let toastTimer;function toast(t){const el=document.querySelector('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2300);}
 function selectActionSlot(button){
   if(!button)return;
   document.querySelectorAll('.slot').forEach(slot=>slot.classList.toggle('active',slot===button));
-  toast('Đã chọn: '+button.dataset.skill);
+  executeActionSlot(Number(button.querySelector('small')?.textContent||0));
 }
 document.querySelectorAll('.slot').forEach(button=>button.addEventListener('click',()=>selectActionSlot(button)));
 window.addEventListener('keydown',event=>{
@@ -205,7 +288,17 @@ window.addEventListener('keydown',event=>{
   const slot=document.querySelectorAll('.slot')[Number(event.key)-1];
   if(slot){event.preventDefault();selectActionSlot(slot);}
 });
+document.querySelector('#window-content').addEventListener('change',event=>{
+  const select=event.target.closest('[data-skill-assign]');
+  if(!select)return;
+  if(!select.value){toast('Kỹ năng vẫn được giữ trong ô hiện tại.');return;}
+  const result=skillCombat.assignSkill(select.dataset.skillAssign,Number(select.value));
+  toast(result.message);updateActionBar();document.querySelector('#window-content').innerHTML=renderSkillPanel();
+});
 document.querySelector('#window-content').addEventListener('click',event=>{
+  const upgrade=event.target.closest('[data-skill-upgrade]')?.dataset.skillUpgrade;
+  if(upgrade){const result=skillCombat.learnOrUpgrade(upgrade);toast(result.message);updateActionBar();document.querySelector('#window-content').innerHTML=renderSkillPanel();return;}
+  if(event.target.closest('[data-training-reset]')){skillCombat.resetTarget();updateActionBar();document.querySelector('#window-content').innerHTML=renderSkillPanel();toast('Đã làm mới mục tiêu luyện tập.');return;}
   const stat=event.target.closest('[data-stat-up]')?.dataset.statUp;
   if(stat){const result=characterState.allocateStat(stat);toast(result.message);refreshCharacterPanel();return;}
   const itemButton=event.target.closest('[data-item-action]');
