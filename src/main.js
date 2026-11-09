@@ -785,7 +785,8 @@ class WorldScene extends Phaser.Scene {
     }
   }
   syncMonsterViews(){
-    groundDropState.update();
+    const expiredDrops=groundDropState.update();
+    if(expiredDrops)this.syncGroundDrops();
     const revived=worldEntityState.update();
     const states=worldEntityState.snapshot().monsters;
     for(const entry of this.monsterViews){
