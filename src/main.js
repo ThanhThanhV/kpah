@@ -109,7 +109,12 @@ if(savedGame){
   questState.restore(savedGame.quests);
   skillCombat.restore(savedGame.skills);
 }
-function showDeathOverlay(){deathOverlay.hidden=false;}
+function showDeathOverlay(){
+  deathOverlay.hidden=false;
+  const scene=game.scene.getScene('world');
+  if(scene?.playerSprite)scene.tweens.killTweensOf(scene.playerSprite);
+  if(pendingMonsterApproachTimer!==null){clearTimeout(pendingMonsterApproachTimer);pendingMonsterApproachTimer=null;pendingMonsterApproach=false;}
+}
 function hideDeathOverlay(){deathOverlay.hidden=true;}
 function respawnPlayer(){
   const character=characterState.snapshot();
@@ -935,7 +940,7 @@ class WorldScene extends Phaser.Scene {
   }
   update(){
     this.syncMonsterViews();
-    if(!this.playerSprite)return;
+    if(!this.playerSprite||characterState.snapshot().hp<=0)return;
     const {x,y}=this.playerSprite;
     const nearbyDrop=groundDropState.nearest(x,y,38);
     if(nearbyDrop){
