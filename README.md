@@ -113,3 +113,6 @@ The hunter in Bamboo Forest and the cave guardian now advance separate zone-expl
 The guild panel now supports browsing a small demo guild catalog, submitting a local join request (auto-accepted in this offline prototype), viewing guild/member contribution summaries, contributing Xu and leaving the guild. Contributions deduct currency from the shared character wallet. Guild membership and ranks are local illustrative state only.
 
 The mailbox now displays sample system/NPC messages, tracks read/unread state, shows an unread indicator on the mail shortcut and allows claiming a sample currency attachment into the shared wallet. Mail content and attachments are demo data; no remote mail delivery exists.
+
+
+The chat composer now includes a recipient selector for local private messages. The guild channel is blocked until the local character joins a guild; world/private/system channel filtering remains local to the current browser session. These controls do not deliver messages to other clients.
