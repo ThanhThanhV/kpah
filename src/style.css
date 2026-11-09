@@ -246,3 +246,35 @@
  .shop-item-copy b{font-size:9px}
  .shop-item-buy button{padding:6px;font-size:8px}
 }
+
+
+/* Connected world map and zone travel */
+.world-map-summary{display:grid;gap:4px;padding:11px 12px;background:linear-gradient(110deg,#3b302e,#24202a);border:1px solid #80603d}
+.world-map-summary b{font:700 13px Cinzel,serif;color:#f0d28e}
+.world-map-summary span{font-size:9px;color:#b9aa98}
+.world-map-route{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 8px;color:#e2c17e}
+.world-map-route span{display:grid;place-items:center;width:28px;height:28px;border:1px solid #967447;background:#352a2b}
+.world-map-route i{width:22%;height:2px;background:linear-gradient(90deg,#8a6841,#c4a06a)}
+.world-map-zone-list{display:grid;gap:8px}
+.world-map-zone{display:grid;grid-template-columns:58px minmax(0,1fr) auto;align-items:center;gap:9px;padding:8px;background:linear-gradient(145deg,#30282b,#211d23);border:1px solid #5a4938}
+.world-map-zone.current{border-color:#c19a5c;background:linear-gradient(145deg,#46372d,#282129)}
+.world-map-zone.locked{opacity:.65}
+.world-map-zone-art{height:54px;display:grid;place-items:center;align-content:center;gap:3px;background:linear-gradient(150deg,#355b43,#1e332b);border:1px solid #65764b;color:#e9d09a}
+.world-map-zone-art.field{background:linear-gradient(150deg,#37684b,#1d3d30)}
+.world-map-zone-art.danger{background:linear-gradient(150deg,#55515b,#252831);border-color:#77626a}
+.world-map-zone-art span{font-size:22px;line-height:1}
+.world-map-zone-art small{font-size:6px;color:#d7c4a2}
+.world-map-zone-info{min-width:0;display:grid;gap:4px}
+.world-map-zone-info>b{font-size:10px;color:#efd49c}
+.world-map-zone-info>small{font-size:8px;color:#b2a28b}
+.world-map-zone-meta{font-size:8px;color:#d0b37d;line-height:1.4}
+.world-map-zone>button{padding:7px 8px;background:#60472f;border:1px solid #9d7746;color:#f3d69d;font-size:8px;white-space:nowrap}
+.world-map-zone>button:disabled{background:#29252a;border-color:#51483e;color:#8f8678;cursor:not-allowed}
+@media(max-width:700px){
+ .world-map-zone{grid-template-columns:46px minmax(0,1fr) auto;gap:6px;padding:6px}
+ .world-map-zone-art{height:48px}
+ .world-map-zone-info>b{font-size:9px}
+ .world-map-zone-info>small,.world-map-zone-meta{font-size:7px}
+ .world-map-zone>button{padding:6px;font-size:7px}
+ .world-map-route{padding:8px}
+}
