@@ -152,3 +152,10 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Quest status/progress and learned skill levels/loadout are restored against the known local catalogs. Skill cooldowns, practice-target HP and turn state are deliberately reset so a saved browser session cannot resume a stale combat encounter.
 - Character HUD, quest badge and action-bar refresh points write the shared save snapshot after state changes.
 - This remains local browser persistence only. It does not save login credentials, sync across devices, or provide server-authoritative/account persistence.
+
+
+## P1/P2 — Knockout and checkpoint recovery
+
+- Added a knockout state when world-combat retaliation reduces character HP to zero. The player cannot continue movement or action-bar attacks while knocked out.
+- Added an explicit respawn action that restores HP and part of MP, returns the character to the Làng Sói Trắng checkpoint, reloads its local world entities and recenters the camera.
+- Death penalties, revive items, timers and original server rules remain unverified; this is an offline reconstruction rule.
