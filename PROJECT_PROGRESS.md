@@ -10,11 +10,11 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 |---|---|---:|---|
 | P0 | Foundation and original resources (5 tasks) | 36% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
 | P1 | Reconstructed client/gameplay (10 tasks) | 25% | Demo server/login/character flow and profession previews exist; player movement works in the mock scene and NPCs now have clickable dialogue/actions; original world, combat and real animation remain unimplemented. |
-| P2 | Game systems (10 tasks) | 18% | Character/inventory/equipment share a client state model; skill learning/upgrades, action-bar assignment and a turn-based training-combat loop are now wired locally. Values and combat formulas are illustrative only; other systems and server authority remain unimplemented. |
+| P2 | Game systems (10 tasks) | 22% | Character/inventory/equipment, skill progression and local training combat are connected; a quest journal now supports accepting objectives, tracking NPC conversations and monster defeats, claiming EXP/currency/items, and character progression. All content remains client-side demo data. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 0% | Not started. |
 
-**Overall estimate: about 15.5%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 16.5%** (weighted average of the 41 roadmap items).
 
 ## P0 — Foundation detail
 
@@ -77,7 +77,17 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Slot five uses an HP consumable from the same inventory state used by the character panel.
 - This is a client-side vertical slice with illustrative skill names, values and formulas. It is not a verified recreation of KPAH skill data, balance, effects, PvE rules or server authority.
 
+## P2 — Quest and character progression client slice
+
+- Added a quest state model with available, active, completed and claimed states, objective progress, journal history and one-time reward claiming.
+- The village elder interaction advances the accepted conversation objective; defeating the training wolf advances the active monster-hunt objective.
+- Quest rewards grant experience, currency and inventory items through the shared character state. Experience thresholds can increase character level and award potential points.
+- The quest journal supports status filters, objective progress bars, reward previews, claim actions and a pending-reward navigation indicator.
+- Added wallet synchronization to the HUD. The quest catalog, NPC objective, training-wolf target and reward values are illustrative local data, not verified original KPAH content or server transactions.
+
 ## Validation limitations
+
+- Ran JavaScript syntax parsing and state-level smoke checks for quest acceptance, NPC objective progress, monster-kill progress, reward claiming, experience/currency grants and inventory item rewards. These checks do not replace browser interaction testing or a production build.
 
 - Ran JavaScript syntax parsing for `main.js`, `skill-combat.js` and `character-state.js`, plus state-level smoke checks for locked-skill rejection, learning, slot assignment, damage, MP spending, enemy retaliation, cooldown blocking and potion recovery. These checks do not replace a browser/UI test or a full Vite production build.
 
