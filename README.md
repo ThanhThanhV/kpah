@@ -45,3 +45,8 @@ Sau khi trích xuất, chạy lại Vite và mở **Tài nguyên gốc** ở tha
 ## Trạng thái và giới hạn
 
 Đây là nền tảng tái hiện client. Resource Viewer hiện chỉ duyệt và xem trước PNG đã giải mã; chưa tự suy luận animation, tilemap, collision hay mapping sprite. Các dữ liệu đó cần được phân tích và xác minh riêng từ bytecode/tài nguyên gốc. Giao thức và backend sẽ được thiết kế riêng sau khi thống nhất.
+
+
+## Character preview
+
+The character creation form loads the five verified `.wps` profession-preview packs from `archive-manifest.json`: `kiem` (Kiếm Khách), `daidao` (Chiến Binh), `phapsu` (Pháp Sư), `bua` (Đấu Sĩ), and `cung` (Cung Thủ). It displays the five original PNG entries per pack with nearest-neighbor scaling. These are profession preview images only; gender/hair composition and animation mapping remain unverified.
