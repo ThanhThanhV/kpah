@@ -41,6 +41,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Adjusted mobile safe-area spacing for notched phones and compressed the action bar on very narrow screens to reduce horizontal overflow.
 - Added clickable world NPC hit areas. The village elder opens a dialogue with a route to the quest panel; the merchant opens a dialogue with a route to the shop. These are local client interactions and do not imply original NPC scripts or server transactions.
 - Synced the mock-world coordinate readout and minimap player marker to the player's current scene position.
+- Added 1–5 keyboard shortcuts for selecting action-bar slots, while ignoring editable fields and the login overlay; clarified the world touch hint to match tap-to-move behavior.
 - Added client-side chat channel selection/filtering for World, Guild, Private and System; System is read-only and sent messages use the selected channel and current character name. Messages remain local to the browser.
 - Added working inventory filters for equipment, consumables, materials and quest items. Item categories are provisional demo data, not reconstructed server inventory.
   - Kiếm Khách → kiem
