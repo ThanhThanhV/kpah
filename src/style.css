@@ -23,3 +23,5 @@
 .npc-dialog p{margin:0;color:#d8c8aa;font-size:12px;line-height:1.7}
 .npc-actions{display:flex;flex-wrap:wrap;gap:8px}
 .npc-actions .gold-button{margin:0}
+
+.settings-note{margin:2px 0 0;color:#a99b88;font-size:9px;line-height:1.6;border-top:1px solid #514333;padding-top:10px}.settings-list input[type=checkbox]{accent-color:#c49a58;width:16px;height:16px}
