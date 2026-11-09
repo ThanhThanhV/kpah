@@ -188,6 +188,7 @@ function updateCharacterHud(){
     if(bars[1])bars[1].style.width=(data.mp/data.maxMp*100)+'%';
   }
 }
+updateCharacterHud();
 
 let toastTimer;function toast(t){const el=document.querySelector('#toast');el.textContent=t;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2300);}
 function selectActionSlot(button){
