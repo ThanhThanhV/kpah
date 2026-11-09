@@ -315,12 +315,12 @@ function executeActionSlot(slot){
     result.defeated=worldHit.defeated;
     result.enemyDamage=worldHit.defeated?0:target.damage;
     if(worldHit.defeated){
-      if(target.id==='training-wolf')questState.record('kill','training-wolf');
+      if(target.type==='training-wolf')questState.record('kill','training-wolf');
       const gained=characterState.addExperience(worldHit.experience);
       const collected=[];
       for(const drop of worldHit.drops){
         const added=characterState.addItem(drop.itemId,drop.quantity);
-        if(added.ok)collected.push(drop.quantity+' × '+added.item.name);
+        if(added.ok)collected.push(drop.quantity+' × '+added.itemId);
       }
       updateQuestBadge();
       result.message+=' · nhận '+worldHit.experience+' EXP'+(collected.length?' · rơi '+collected.join(', '):'');
