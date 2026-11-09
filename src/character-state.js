@@ -185,6 +185,13 @@ export function createCharacterState() {
     return {gained,currency:state.currency};
   }
 
+  function spendCurrency(amount) {
+    const cost=Math.max(0,Math.floor(Number(amount)||0));
+    if(state.currency<cost)return {ok:false,currency:state.currency};
+    state.currency-=cost;
+    return {ok:true,spent:cost,currency:state.currency};
+  }
+
   function addItem(itemId,quantity=1) {
     const amount=Math.max(1,Math.floor(Number(quantity)||1));
     const template=INITIAL_ITEMS.find(item=>item.id===itemId);
@@ -208,6 +215,7 @@ export function createCharacterState() {
     restoreHp,
     addExperience,
     addCurrency,
+    spendCurrency,
     addItem,
     get statLabels(){return {...STAT_LABELS};}
   };
