@@ -97,3 +97,10 @@ The merchant NPC opens a functional local shop for HP potions, MP potions and up
 The client now has three connected illustrative zones: White Wolf Village (safe hub), Bamboo Forest (level 15 recommendation) and Black Stone Cave (level 20 recommendation). The world map lists current/connected/locked destinations and enforces the local level requirement before travel. A gate marker in each scene opens the map; travel redraws the zone palette and environment, updates the location HUD/minimap label, places the player at the destination entry point, and loads that zone's NPC and monster spawn definitions. Zone transitions cancel a pending monster-approach action so an attack cannot accidentally fire in the next area.
 
 The zone names, layouts, connections, NPC placement, monster spawn points and level gates are client-side reconstruction placeholders. They are not claimed to be verified original KPAH map data; original tile IDs, map files and collision rules remain to be decoded.
+
+
+## Ground loot and social client slice
+
+Monster drop rolls now create visible ground-loot entities at the defeat location instead of inserting items directly into the bag. Loot expires after a local lifetime, can be clicked or collected with the E key when nearby, and is added to the shared inventory only after a capacity check. If the bag is full, the item remains available on the ground. Zone changes clear local ground loot. The drop lifetime, placement and pickup radius are demo rules.
+
+Friends and party panels now use a shared local social state. The client can add a friend by name, invite online demo friends, create a party by inviting the first online friend, accept/decline simulated invitations, remove members and leave the party. Party size is capped at five. These are offline UI/state simulations only; there is no real player directory, network invitation, chat delivery or synchronized party combat.
