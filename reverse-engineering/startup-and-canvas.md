@@ -64,3 +64,15 @@ javap -classpath KPAH_278.jar -p -c km
 ```
 
 For full Java source reconstruction, use JADX CLI (the GUI-with-JRE package does not necessarily include `bin/jadx.bat`). Keep the raw JAR as the baseline and compare decompiler output against bytecode when control flow is unclear.
+
+
+## Render loop and input details (verified from `km` bytecode)
+
+- `km.d()` starts a dedicated Thread for the Canvas Runnable once.
+- `km.run()` updates the active `tj` state, updates overlay/runtime objects, calls `km.f()`, requests `repaint()`, then services repaints.
+- The loop targets a 40 ms frame interval (approximately 25 updates/second): it sleeps for the remainder of 40 ms, or 1 ms when the frame has already exceeded that budget.
+- `km.paint(Graphics)` delegates drawing to the active `tj` state, optional `md` overlay, optional `sg` layer, optional `xf` overlay, and finally `mj.c(Graphics)`. This is direct evidence of a state-driven Canvas renderer with layered overlays.
+- Pointer press/drag/release store pointer coordinates and update separate pressed/released flags. The client therefore has a pointer/touch path in addition to key-code input.
+- `sizeChanged` recalculates screen center coordinates and notifies the current screen/state objects so they can rebuild size-dependent layout.
+
+The exact meanings of the obfuscated classes (`tj`, `md`, `sg`, `xf`, `mj`) are not yet established. Their draw/update call sites are confirmed; semantic names must wait for inspection of their implementations.
