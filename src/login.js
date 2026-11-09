@@ -59,7 +59,7 @@ cover.innerHTML=`
     <div class="char-choice">
       <button class="char-option selected" data-class="Kiếm khách"><span>⚔</span>Kiếm khách</button>
       <button class="char-option" data-class="Chiến binh"><span>🛡</span>Chiến binh</button>
-      <button class="char-option" data-class="Pháp sư"><span>✦</span>Pháp sư</button>
+      <button class="char-option" data-class="Cung thủ"><span>🏹</span>Cung thủ</button>
     </div>
     <div class="login-form"><label>TÊN NHÂN VẬT<input id="character-name" value="Kiếm Khách" maxlength="16"></label></div>
     <button class="login-primary" id="enter-world">VÀO THẾ GIỚI</button>
