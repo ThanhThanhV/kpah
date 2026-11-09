@@ -36,16 +36,16 @@ cover.innerHTML=`
   <div class="login-emblem"><span>K</span></div>
   <div class="login-title">KHÍ PHÁCH ANH HÙNG</div>
   <div class="login-subtitle">HÀNH TRÌNH HUYỀN THOẠI</div>
-  <div class="login-step current" data-step="login">
+  <div class="login-step" data-step="login">
     <form class="login-form" id="login-form">
       <label>TÀI KHOẢN<input id="login-user" autocomplete="username" placeholder="Nhập tên tài khoản" value="KiemKhach"></label>
       <label>MẬT KHẨU<input id="login-pass" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu" value="kpah-demo"></label>
       <div class="login-error" id="login-error"></div>
       <button class="login-primary">ĐĂNG NHẬP</button>
     </form>
-    <div class="login-foot">Bản tái hiện giao diện Web · Chế độ xem thử<br>Đăng nhập và tài khoản sẽ kết nối backend sau.</div>
+    <div class="login-foot">Bản tái hiện giao diện Web · Chế độ demo ngoại tuyến<br>Thông tin đăng nhập chưa được gửi đến máy chủ.</div>
   </div>
-  <div class="login-step" data-step="server">
+  <div class="login-step current" data-step="server">
     <h2>CHỌN MÁY CHỦ</h2>
     <div class="server-choice">
       <button class="server-option selected" data-server="Long Kiếm"><span>Long Kiếm<small>Máy chủ đề xuất · Ổn định</small></span><b class="server-state">● Online</b></button>
@@ -69,9 +69,9 @@ cover.innerHTML=`
 document.body.append(cover);
 let selectedServer='Long Kiếm',selectedClass='Kiếm khách';
 function step(name){cover.querySelectorAll('.login-step').forEach(x=>x.classList.toggle('current',x.dataset.step===name));}
-cover.querySelector('#login-form').addEventListener('submit',e=>{e.preventDefault();const user=cover.querySelector('#login-user').value.trim();const pass=cover.querySelector('#login-pass').value;if(!user||!pass){cover.querySelector('#login-error').textContent='Vui lòng nhập đầy đủ tài khoản và mật khẩu.';return;}step('server');});
+cover.querySelector('#login-form').addEventListener('submit',e=>{e.preventDefault();const user=cover.querySelector('#login-user').value.trim();const pass=cover.querySelector('#login-pass').value;if(!user||!pass){cover.querySelector('#login-error').textContent='Vui lòng nhập đầy đủ tài khoản và mật khẩu.';return;}step('character');});
 cover.querySelectorAll('.server-option').forEach(b=>b.addEventListener('click',()=>{selectedServer=b.dataset.server;cover.querySelectorAll('.server-option').forEach(x=>x.classList.toggle('selected',x===b));}));
-cover.querySelector('#server-next').addEventListener('click',()=>step('character'));
+cover.querySelector('#server-next').addEventListener('click',()=>step('login'));
 cover.querySelectorAll('.char-option').forEach(b=>b.addEventListener('click',()=>{selectedClass=b.dataset.class;cover.querySelectorAll('.char-option').forEach(x=>x.classList.toggle('selected',x===b));}));
 cover.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click',()=>step(b.dataset.back)));
 function enterWorld(){
