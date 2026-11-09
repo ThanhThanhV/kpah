@@ -10,7 +10,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 |---|---|---:|---|
 | P0 | Foundation and original resources (5 tasks) | 36% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
 | P1 | Reconstructed client/gameplay (10 tasks) | 29% | Demo server/login/character flow, profession previews, player movement, NPC interactions and selectable in-world monsters are implemented locally; original world data, real animation and server combat remain unimplemented. |
-| P2 | Game systems (10 tasks) | 24% | Character/inventory/equipment, skill progression, quest progression and local world hunting are connected; combat now grants monster EXP and chance-based drops into shared inventory. All content remains client-side demo data. |
+| P2 | Game systems (10 tasks) | 25% | Character/inventory/equipment, skill progression, quest progression, local world hunting and merchant purchases now share wallet/inventory state. All content remains client-side demo data. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 0% | Not started. |
 
@@ -85,6 +85,13 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Monsters are selectable in the Phaser scene. A target panel shows the selected monster's HP; the action bar approaches distant targets before applying the chosen skill.
 - Monster attacks reduce player HP; defeats award experience and may add potions or upgrade stones to the shared inventory. Defeated monsters disappear and return after their configured respawn delay.
 - Ordinary wolf defeats advance the existing accepted hunt quest. This is a connected offline gameplay loop, not original KPAH balance or server-authoritative combat.
+- Connected the merchant NPC to a working local shop. HP potions, MP potions and upgrade stones can be purchased with Xu; the purchase validates funds and bag capacity, updates the shared wallet and inventory, and keeps HUD/inventory balances synchronized.
+
+## P2 — Merchant and local economy slice
+
+- Added a shop state model with a small illustrative catalog and validated quantity/purchase handling.
+- Added currency spending to the shared character state. The merchant panel deducts Xu and adds bought item stacks to the same inventory used by drops, quest rewards and consumable use.
+- The merchant NPC routes into the functional shop; the HUD and inventory panel reflect the shared wallet. Prices and catalog remain demo-only.
 
 ## P2 — Quest and character progression client slice
 
