@@ -18,3 +18,8 @@
   .slot span{font-size:16px}
   .action-meta button{padding:5px 4px}
 }
+
+.npc-dialog{display:grid;gap:12px;min-height:120px;align-content:center}
+.npc-dialog p{margin:0;color:#d8c8aa;font-size:12px;line-height:1.7}
+.npc-actions{display:flex;flex-wrap:wrap;gap:8px}
+.npc-actions .gold-button{margin:0}
