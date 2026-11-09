@@ -16,7 +16,7 @@ The class names are mostly obfuscated. Do not infer class responsibilities from 
 ## Resource families observed
 
 - `.sh`: packed client data (includes `main.sh`, `npc.sh`, `eff.sh`, `font.sh`, `arrow.sh`, `box.sh`, `g.sh`, `skillpublic.sh`).
-- `.wp` and `.wps`: packed image/data resources. Splash resources include `wpsplash/0.wp` through `wpsplash/4.wp`.
+- `.wp` and `.wps`: use the same indexed/XOR container as `.sh`; splash resources include `wpsplash/0.wp` through `wpsplash/4.wp`, while the five `.wps` packs contain character-line preview PNGs.
 - `.png`: UI, font, icon, and sprite-sheet images. Examples include `logo.png`, `icon.png`, `font/*`, `sword skill/*`, and `rong/*`.
 - Extensionless entries: retain their original names and inspect their headers before assigning meaning.
 
@@ -69,7 +69,7 @@ Detailed traces:
 
 ## Next investigation sequence
 
-1. Decode the remaining `.wp` and `.wps` formats; the `.sh` format is now decoded by the extraction script.
+1. Inspect the decoded `.wp` companion `.d` metadata and map the splash/character preview PNGs to their exact screen states.
 2. Trace the map-entry response and initialization of `mj`, including its render-ready state and camera/tile setup.
 3. Decode the font data records and map sprite sheets, tile sets, and UI panels to screen classes.
 4. Replace the mock server/login/character flow and then the mock world HUD incrementally using verified dimensions and assets.
