@@ -92,6 +92,28 @@ def decode_packed(data: bytes) -> list[tuple[str, bytes]]:
     return decoded
 
 
+def png_dimensions(data: bytes) -> tuple[int, int] | None:
+    """Read PNG dimensions from IHDR without requiring an imaging dependency."""
+    if len(data) < 24 or data[:8] != bytes((137, 80, 78, 71, 13, 10, 26, 10)) or data[12:16] != b"IHDR":
+        return None
+    return int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big")
+
+
+def classify_image(width: int, height: int) -> str:
+    """A neutral geometry hint for browsing; not a semantic asset mapping."""
+    ratio = width / height if height else 0
+    if width <= 96 and height <= 96:
+        return "small-image"
+    if ratio >= 2.2:
+        return "wide-image"
+    if ratio <= 0.45:
+        return "tall-image"
+    if height >= 2 * width:
+        return "vertical-sheet-candidate"
+    if width >= 2 * height:
+        return "horizontal-sheet-candidate"
+    return "general-image"
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("jar", type=Path)
@@ -145,13 +167,22 @@ def main() -> None:
                     internal_target = safe_target(decoded_root, internal_name)
                     internal_target.parent.mkdir(parents=True, exist_ok=True)
                     internal_target.write_bytes(internal_data)
-                    decoded_entries.append({
+                    decoded_item = {
                         "archive": name,
                         "packType": suffix,
                         "path": internal_name,
                         "size": len(internal_data),
                         "output": internal_target.relative_to(args.output).as_posix(),
-                    })
+                    }
+                    dimensions = png_dimensions(internal_data)
+                    if dimensions:
+                        width, height = dimensions
+                        decoded_item.update({
+                            "width": width,
+                            "height": height,
+                            "imageClassHint": classify_image(width, height),
+                        })
+                    decoded_entries.append(decoded_item)
 
     counts = Counter(item["extension"] for item in entries)
     manifest = {
