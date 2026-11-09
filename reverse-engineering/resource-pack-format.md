@@ -36,7 +36,7 @@ All 18 supplied packed files pass the format checks: header lengths sum exactly 
 | `g.sh` | 3 | Small game UI icons |
 | `skillpublic.sh` | 1 | Shared shop/skill UI sprite |
 
-Across the packs this yields **157 internal resources**, including **128 PNG files**. The remaining entries include raw font data and related non-PNG records.
+Across the eight `.sh` packs this yields **157 internal resources**, including **128 PNG files**. Decoding all 18 packed files (`.sh`, `.wp`, `.wps`) yields **198 internal resources**, including **161 PNG files**; the remaining entries include font data and eight 192-byte `.d` metadata records from the splash packs.
 
 Examples confirmed in `main.sh` include:
 
@@ -67,4 +67,4 @@ Decoded `.sh` resources are written under `public/assets/kpah-original/decoded-s
 
 The five `wpsplash/*.wp` files contain 2–4 indexed resources each. Their decoded PNG entries have valid PNG signatures; companion `.d` entries are 192-byte binary metadata records and are preserved without assigning undocumented semantics.
 
-The five `wpsplash/*.wps` files (`bua`, `cung`, `daidao`, `kiem`, `phapsu`) each contain five PNG resources. These are the character-line preview image packs used alongside the character creation flow. The class `ku` constructs paths under `/wpsplash/` and instantiates the same `ba` resource loader for `.wp` files, confirming that these files use the shared packed-resource container.
+The five `wpsplash/*.wps` files (`bua`, `cung`, `daidao`, `kiem`, `phapsu`) each contain five PNG resources. Their names correspond to the five weapon/class preview groups used by character creation: axe (`bua`), bow (`cung`), greatblade (`daidao`), sword (`kiem`), and mage (`phapsu`). Image dimensions are small native pixel-art sizes (roughly 28–71 pixels wide), so preserve nearest-neighbor scaling. The class `ku` constructs paths under `/wpsplash/` and instantiates the same `ba` resource loader for `.wp` files, confirming that these files use the shared packed-resource container.
