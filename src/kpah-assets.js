@@ -3,7 +3,7 @@ let manifestRequest;
 
 export async function loadAssetManifest() {
   if (!manifestRequest) {
-    manifestRequest = fetch(ASSET_ROOT + 'archive-manifest.json')
+    manifestRequest = fetch(ASSET_ROOT + 'archive-manifest.json', { cache: 'no-store' })
       .then(response => {
         if (!response.ok) throw new Error('HTTP ' + response.status);
         return response.json();
