@@ -38,8 +38,8 @@ cover.innerHTML=`
   <div class="login-subtitle">HÀNH TRÌNH HUYỀN THOẠI</div>
   <div class="login-step" data-step="login">
     <form class="login-form" id="login-form">
-      <label>TÀI KHOẢN<input id="login-user" autocomplete="username" placeholder="Nhập tên tài khoản" value="KiemKhach"></label>
-      <label>MẬT KHẨU<input id="login-pass" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu" value="kpah-demo"></label>
+      <label>TÀI KHOẢN<input id="login-user" autocomplete="username" placeholder="Nhập tên tài khoản" value=""></label>
+      <label>MẬT KHẨU<input id="login-pass" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu" value=""></label>
       <div class="login-error" id="login-error"></div>
       <button class="login-primary">ĐĂNG NHẬP</button>
     </form>
@@ -48,11 +48,11 @@ cover.innerHTML=`
   <div class="login-step current" data-step="server">
     <h2>CHỌN MÁY CHỦ</h2>
     <div class="server-choice">
-      <button class="server-option selected" data-server="Long Kiếm"><span>Long Kiếm<small>Máy chủ đề xuất · Ổn định</small></span><b class="server-state">● Online</b></button>
-      <button class="server-option" data-server="Bạch Hổ"><span>Bạch Hổ<small>Cộng đồng phiêu lưu</small></span><b class="server-state">● Online</b></button>
-      <button class="server-option" data-server="Thanh Long"><span>Thanh Long<small>Máy chủ mới</small></span><b class="server-state">● Online</b></button>
+      <button class="server-option selected" data-server="Máy chủ 1"><span>Máy chủ 1<small>Máy chủ minh họa</small></span><b class="server-state">Demo</b></button>
+      <button class="server-option" data-server="Máy chủ 2"><span>Máy chủ 2<small>Máy chủ minh họa</small></span><b class="server-state">Demo</b></button>
+      <button class="server-option" data-server="Máy chủ 3"><span>Máy chủ 3<small>Máy chủ minh họa</small></span><b class="server-state">Demo</b></button>
     </div>
-    <button class="login-primary" id="server-next">TIẾP TỤC</button><button class="login-back" data-back="login">← Quay lại</button>
+    <button class="login-primary" id="server-next">TIẾP TỤC</button><button class="login-back" data-back="server">← Quay lại</button>
   </div>
   <div class="login-step" data-step="character">
     <h2>CHỌN NHÂN VẬT</h2>
@@ -63,11 +63,11 @@ cover.innerHTML=`
     </div>
     <div class="login-form"><label>TÊN NHÂN VẬT<input id="character-name" value="Kiếm Khách" maxlength="16"></label></div>
     <button class="login-primary" id="enter-world">VÀO THẾ GIỚI</button>
-    <button class="login-back" data-back="server">← Quay lại chọn máy chủ</button>
+    <button class="login-back" data-back="login">← Quay lại đăng nhập</button>
   </div>
 </section>`;
 document.body.append(cover);
-let selectedServer='Long Kiếm',selectedClass='Kiếm khách';
+let selectedServer='Máy chủ 1',selectedClass='Kiếm khách';
 function step(name){cover.querySelectorAll('.login-step').forEach(x=>x.classList.toggle('current',x.dataset.step===name));}
 cover.querySelector('#login-form').addEventListener('submit',e=>{e.preventDefault();const user=cover.querySelector('#login-user').value.trim();const pass=cover.querySelector('#login-pass').value;if(!user||!pass){cover.querySelector('#login-error').textContent='Vui lòng nhập đầy đủ tài khoản và mật khẩu.';return;}step('character');});
 cover.querySelectorAll('.server-option').forEach(b=>b.addEventListener('click',()=>{selectedServer=b.dataset.server;cover.querySelectorAll('.server-option').forEach(x=>x.classList.toggle('selected',x===b));}));
