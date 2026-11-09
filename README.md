@@ -66,3 +66,7 @@ The Resource Viewer includes a read-only `.d` inspector for decoded packed metad
 ## Asset dimensions and browsing
 
 The extractor records PNG width and height from the PNG header and adds a neutral geometry hint (`small-image`, `wide-image`, `tall-image`, or `general-image`) to each decoded PNG manifest entry. These hints support asset triage only; they do not claim a sprite, animation, or UI role. Re-run `npm run extract:assets` after updating the extractor to regenerate the manifest.
+
+## Character and inventory client slice
+
+The character profile, inventory and equipment panels share a local state model. The demo supports potential-point allocation, derived HP/MP limits, equipment bonuses, equipping/unequipping, category filters and consumable use. This is client-only sample data: it is not the original server item database, game balance, or persistent account state. Backend integration is intentionally deferred until the BE design stage.
