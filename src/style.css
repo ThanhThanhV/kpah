@@ -278,3 +278,19 @@
  .world-map-zone>button{padding:6px;font-size:7px}
  .world-map-route{padding:8px}
 }
+
+
+/* Ground loot and offline social panels */
+.social-add{display:flex;gap:8px;margin-bottom:14px}
+.social-add input{min-width:0;flex:1;background:#171d1b;border:1px solid #59604c;border-radius:6px;color:#f4ead0;padding:10px}
+.social-add button,.friend-card-live button,.party-member button,.party-invite button{border:1px solid #8d7549;background:#443b2a;color:#f4dfad;border-radius:6px;padding:8px 11px;cursor:pointer}
+.social-add button:disabled,.friend-card-live button:disabled{opacity:.45;cursor:not-allowed}
+.friend-list-live,.party-member-list{display:grid;gap:9px}
+.friend-card-live,.party-member{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #4b5145;background:#242b25;border-radius:8px}
+.friend-card-live>div,.party-member>div{flex:1;min-width:0;display:grid;gap:3px}
+.friend-card-live small,.party-member small{color:#b8b39d;font-size:11px}
+.party-summary{display:flex;justify-content:space-between;gap:10px;padding:12px;margin-bottom:12px;background:#282f28;border:1px solid #59604c;border-radius:8px}
+.party-summary span{color:#c4b99e;font-size:12px}
+.party-invite{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #454a40}
+.party-invite b{flex:1}
+.ground-drop-hint{font-size:11px;color:#f1d48d}
