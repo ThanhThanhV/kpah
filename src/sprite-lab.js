@@ -16,9 +16,15 @@ style.textContent = `
 `;
 document.head.append(style);
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[char]);
+}
+
 export function renderSpriteLab(root, assets) {
   if (!root) return;
-  const images = assets.filter(item => /\.png$/i.test(item.path || '') && item.output);
+  const images = assets.filter(item => /\.png$/i.test(item.path || '') && assetUrl(item.output));
   if (!images.length) {
     root.innerHTML = '<div class="sprite-lab-meta">Không có PNG để phân tích sprite.</div>';
     return;
@@ -28,7 +34,7 @@ export function renderSpriteLab(root, assets) {
     <section class="sprite-lab">
       <h3>Phân tích sprite sheet</h3>
       <div class="sprite-lab-controls">
-        <select id="sprite-asset" aria-label="Chọn ảnh sprite">${images.map((item,index) => `<option value="${index}">${item.archive} / ${item.path}</option>`).join('')}</select>
+        <select id="sprite-asset" aria-label="Chọn ảnh sprite">${images.map((item,index) => `<option value="${index}">${escapeHtml(item.archive)} / ${escapeHtml(item.path)}</option>`).join('')}</select>
         <input id="sprite-cols" type="number" min="1" max="128" value="1" title="Số cột" aria-label="Số cột">
         <input id="sprite-rows" type="number" min="1" max="128" value="1" title="Số hàng" aria-label="Số hàng">
         <input id="sprite-fps" type="number" min="1" max="30" value="6" title="FPS" aria-label="FPS">
