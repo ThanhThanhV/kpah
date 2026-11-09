@@ -10,11 +10,11 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 |---|---|---:|---|
 | P0 | Foundation and original resources (5 tasks) | 36% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
 | P1 | Reconstructed client/gameplay (10 tasks) | 25% | Demo server/login/character flow and profession previews exist; player movement works in the mock scene and NPCs now have clickable dialogue/actions; original world, combat and real animation remain unimplemented. |
-| P2 | Game systems (10 tasks) | 12% | Character attributes/potential allocation, equipment slots, inventory filters, equipping/unequipping and consumable use now share one local state model; remaining systems are placeholders and nothing is server-backed. |
+| P2 | Game systems (10 tasks) | 18% | Character/inventory/equipment share a client state model; skill learning/upgrades, action-bar assignment and a turn-based training-combat loop are now wired locally. Values and combat formulas are illustrative only; other systems and server authority remain unimplemented. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 0% | Not started. |
 
-**Overall estimate: about 14.0%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 15.5%** (weighted average of the 41 roadmap items).
 
 ## P0 — Foundation detail
 
@@ -45,6 +45,11 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Synced the mock-world coordinate readout and minimap player marker to the player's current scene position.
 - Added 1–5 keyboard shortcuts for selecting action-bar slots, while ignoring editable fields and the login overlay; clarified the world touch hint to match tap-to-move behavior.
 - Added client-side chat channel selection/filtering for World, Guild, Private and System; System is read-only and sent messages use the selected channel and current character name. Messages remain local to the browser.
+- Added a local skill progression model with active/passive skills, point costs, level upgrades, cooldown tracking and assignable action-bar slots.
+- Replaced the skills placeholder with a functional skill book: learn/upgrade skills, assign or remove active skills from four action slots, and inspect costs/cooldowns.
+- Added a turn-based training encounter with a practice wolf, HP tracking, skill damage, MP costs, self-healing, enemy retaliation, combat log, defeat state and restart.
+- Connected the five-slot action bar and keyboard shortcuts to the training combat loop; slot five consumes an HP potion from the shared inventory and the character HUD reflects combat HP/MP.
+- Added floating combat feedback and responsive skill/training panels. Skill data, balance, target and combat formulas are demo-only; no original KPAH skill tables or server rules have been asserted.
 - Replaced the disconnected character, inventory and equipment mock panels with a shared client-side state flow. Character stats and potential allocation affect derived HP/MP, equipment changes apply/remove bonuses, consumables update vitals and quantities, and the profile HUD reflects the same state. This is a local UI/gameplay slice only; persistence and server authority are not implemented.
 - Hardened press-and-hold movement controls for touch and mouse: pointer capture keeps the hold gesture stable, and pointer release/cancel, lost capture, tab hiding or window blur stops repeated movement. This remains local mock-scene movement.
 - Added a temporary pulsing destination marker for tap-to-move. The marker follows the clamped walk destination, disappears when the character arrives, and is cleared when directional-pad movement takes over; it is a navigation cue in the demo scene, not an original-game asset.
@@ -63,6 +68,14 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Starting weapon, hat and armor occupy equipment slots and contribute attribute bonuses.
 - Inventory supports category filters, equipping compatible gear, unequipping gear and using HP/MP consumables.
 - The profile HUD and all three panels read the same in-memory character state. Values and item catalog are illustrative demo data only.
+
+## P2 — Skills and training combat
+
+- The skill book separates active and passive skills, shows levels and costs, and supports learning/upgrading with skill points.
+- Four active action slots can be assigned or cleared from the skill book; the bottom action bar and 1–5 keyboard shortcuts invoke the selected slots.
+- A local turn-based training encounter tracks a practice target's HP, applies skill damage and MP costs, handles self-healing and enemy retaliation, and can be restarted after defeat.
+- Slot five uses an HP consumable from the same inventory state used by the character panel.
+- This is a client-side vertical slice with illustrative skill names, values and formulas. It is not a verified recreation of KPAH skill data, balance, effects, PvE rules or server authority.
 
 ## Validation limitations
 
