@@ -180,13 +180,36 @@ function movePlayer(dx,dy){
   const scene=game.scene.getScene('world');
   scene?.movePlayerBy(dx,dy);
 }
+let activeMovement=null;
+function stopActiveMovement(){
+  if(!activeMovement)return;
+  clearInterval(activeMovement.repeat);
+  activeMovement=null;
+}
 document.querySelectorAll('.movement button').forEach(button=>{
   const vector=movementVectors[button.id];
   if(!vector)return;
-  let repeat;
-  const stop=()=>{if(repeat){clearInterval(repeat);repeat=null;}};
-  button.addEventListener('pointerdown',event=>{event.preventDefault();movePlayer(...vector);stop();repeat=setInterval(()=>movePlayer(...vector),145);});
-  ['pointerup','pointercancel','pointerleave','lostpointercapture'].forEach(type=>button.addEventListener(type,stop));
+  button.addEventListener('pointerdown',event=>{
+    if(event.button!==0)return;
+    event.preventDefault();
+    stopActiveMovement();
+    try{button.setPointerCapture(event.pointerId);}catch(error){/* Capture is optional on older browsers. */}
+    movePlayer(...vector);
+    activeMovement={button,pointerId:event.pointerId,repeat:setInterval(()=>{
+      if(activeMovement?.button===button)movePlayer(...vector);
+    },145)};
+  });
+  button.addEventListener('pointerup',event=>{
+    if(activeMovement?.button===button&&activeMovement.pointerId===event.pointerId)stopActiveMovement();
+  });
+  button.addEventListener('pointercancel',stopActiveMovement);
+  button.addEventListener('lostpointercapture',()=>{
+    if(activeMovement?.button===button)stopActiveMovement();
+  });
+});
+window.addEventListener('blur',stopActiveMovement);
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden)stopActiveMovement();
 });
 window.addEventListener('kpah:character-selected',event=>{
   const {name,className}=event.detail||{};
