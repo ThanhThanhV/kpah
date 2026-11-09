@@ -11,6 +11,64 @@ export function setWorldEntityDepth(entity, groundOffset = 0) {
   entity.setDepth(Math.round(entity.y + groundOffset));
 }
 
+/**
+ * Register an animation from an explicitly verified sprite-sheet frame list.
+ * Frame order, frame rate and repeat behavior must come from source evidence;
+ * this helper intentionally does not infer animation layouts.
+ */
+export function registerSpriteAnimation(scene, definition) {
+  const { key, textureKey, frames, frameRate = 8, repeat = -1 } = definition || {};
+  if (!scene?.anims || !scene?.textures) {
+    throw new Error('Sprite animation requires an active Phaser scene.');
+  }
+  if (typeof key !== 'string' || !key.trim()) {
+    throw new Error('Sprite animation requires a non-empty key.');
+  }
+  if (typeof textureKey !== 'string' || !scene.textures.exists(textureKey)) {
+    throw new Error('Sprite animation texture is missing: ' + String(textureKey));
+  }
+  if (!Array.isArray(frames) || !frames.length ||
+      frames.some(frame => !Number.isInteger(frame) || frame < 0)) {
+    throw new Error('Sprite animation frames must be a non-empty list of non-negative integers.');
+  }
+  if (!Number.isFinite(frameRate) || frameRate <= 0 || frameRate > 60) {
+    throw new Error('Sprite animation frame rate must be greater than 0 and at most 60.');
+  }
+  if (!Number.isInteger(repeat) || repeat < -1) {
+    throw new Error('Sprite animation repeat must be -1 or a non-negative integer.');
+  }
+  if (scene.anims.exists(key)) {
+    throw new Error('Sprite animation key is already registered: ' + key);
+  }
+
+  const texture = scene.textures.get(textureKey);
+  const missing = [...new Set(frames)].filter(frame => !texture.has(String(frame)));
+  if (missing.length) {
+    throw new Error('Sprite animation references missing texture frames: ' + missing.join(', '));
+  }
+
+  const animation = scene.anims.create({
+    key,
+    frames: scene.anims.generateFrameNumbers(textureKey, { frames }),
+    frameRate,
+    repeat
+  });
+  if (!animation) throw new Error('Unable to register sprite animation: ' + key);
+  return animation;
+}
+
+/** Play a previously registered animation on a Phaser Sprite. */
+export function playSpriteAnimation(entity, key, ignoreIfPlaying = true) {
+  if (!entity?.anims || typeof key !== 'string' || !key.trim()) {
+    throw new Error('Playing a sprite animation requires an animated entity and a key.');
+  }
+  if (!entity.anims.animationManager?.exists(key)) {
+    throw new Error('Sprite animation is not registered: ' + key);
+  }
+  entity.play(key, ignoreIfPlaying);
+  return entity;
+}
+
 export function configureWorldCamera(scene, target, bounds, options = {}) {
   const camera = scene.cameras.main;
   const world = {
