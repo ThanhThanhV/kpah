@@ -13,7 +13,7 @@ export function createSkillCombatState() {
   const skills = Object.fromEntries(SKILL_CATALOG.map(skill => [skill.id,{...skill,level:skill.initialLevel}]));
   const state = {
     skillPoints: 6,
-    loadout: ['basic','sword-wave','heal','basic'],
+    loadout: ['basic','sword-wave','heal',null],
     cooldowns: {},
     target: {id:'training-wolf',name:'Sói luyện tập',level:18,maxHp:1800,hp:1800,defense:8},
     turn: 0,
@@ -77,6 +77,7 @@ export function createSkillCombatState() {
 
   function useSlot(slot, character) {
     if (!Number.isInteger(slot) || slot < 1 || slot > 5) return {ok:false,message:'Ô thao tác không hợp lệ.'};
+    if (character.hp <= 0) return {ok:false,message:'Nhân vật đã gục. Dùng bình HP rồi tiếp tục.'};
     if (!state.battleActive || state.target.hp <= 0) return {ok:false,message:'Hãy bắt đầu trận luyện tập mới.'};
     if (slot === 5) return {ok:false,message:'Dùng bình HP trong hành trang để hồi phục.'};
     const skillId = state.loadout[slot-1];
