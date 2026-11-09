@@ -50,8 +50,7 @@ export async function renderResourceViewer(root) {
     return;
   }
 
-  const images = (manifest.decodedPackedEntries || [])
-    .filter(item => decodedPngEntries({decodedPackedEntries:[item]}).length > 0)
+  const images = decodedPngEntries(manifest)
     .sort((a,b) => String(a.archive).localeCompare(String(b.archive)) || String(a.path).localeCompare(String(b.path)));
   const packs = [...new Set(images.map(item => item.archive))].sort();
   root.innerHTML = `
@@ -101,7 +100,7 @@ export async function renderResourceViewer(root) {
 
 function renderBinaryMetadata(root, entries) {
   if (!root) return;
-  const metadata = entries.filter(item => /\.d$/i.test(item.path || '') && item.output);
+  const metadata = entries.filter(item => /\.d$/i.test(item.path || '') && assetUrl(item.output));
   if (!metadata.length) {
     root.innerHTML = '<div class="resource-metadata-note">Không có file metadata .d trong manifest.</div>';
     return;
