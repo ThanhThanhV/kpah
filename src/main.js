@@ -656,6 +656,7 @@ class WorldScene extends Phaser.Scene {
     this.monsterViews=[];
     this.npcViews=[];
     worldEntityState.setMap(zone.id);
+    groundDropState.setMap(zone.id);
     const g=this.add.graphics();
     g.fillGradientStyle(zone.palette.top,zone.palette.top,zone.palette.bottom,zone.palette.bottom,1);
     g.fillRect(0,0,960,560);
@@ -695,6 +696,7 @@ class WorldScene extends Phaser.Scene {
       this.zoneObjects.push(label);
     }
     this.createMonsterViews();
+    this.syncGroundDrops();
     const gate=this.add.container(zone.exit.x,zone.exit.y);
     gate.add([this.add.circle(0,0,18,0xd6bb82,0.18).setStrokeStyle(2,0xe8d39a),this.add.triangle(0,-1,-8,7,0,-10,8,7,0xe8d39a)]);
     gate.setDepth(zone.exit.y).setSize(40,45).setInteractive(new Phaser.Geom.Circle(0,0,22),Phaser.Geom.Circle.Contains);
@@ -771,7 +773,19 @@ class WorldScene extends Phaser.Scene {
     c.setData('hpFill',fill);
     return c;
   }
+  syncGroundDrops(){
+    for(const entry of this.groundDropViews||[])entry.view.destroy();
+    this.groundDropViews=[];
+    for(const drop of groundDropState.snapshot().drops){
+      const view=this.add.container(drop.x,drop.y);
+      view.add([this.add.ellipse(0,7,20,6,0x111111,.35),this.add.circle(0,0,8,0xe7c66f).setStrokeStyle(2,0x5b4426),this.add.text(0,-1,'✦',{fontFamily:'Arial',fontSize:'11px',color:'#553b18'}).setOrigin(.5)]);
+      view.setDepth(drop.y+2).setSize(30,25).setInteractive(new Phaser.Geom.Circle(0,0,15),Phaser.Geom.Circle.Contains);
+      view.on('pointerdown',(pointer,x,y,event)=>{event?.stopPropagation();window.dispatchEvent(new CustomEvent('kpah:ground-drop-select',{detail:{id:drop.id}}));});
+      this.groundDropViews.push({id:drop.id,view});
+    }
+  }
   syncMonsterViews(){
+    groundDropState.update();
     const revived=worldEntityState.update();
     const states=worldEntityState.snapshot().monsters;
     for(const entry of this.monsterViews){
@@ -824,6 +838,11 @@ class WorldScene extends Phaser.Scene {
     this.syncMonsterViews();
     if(!this.playerSprite)return;
     const {x,y}=this.playerSprite;
+    const nearbyDrop=groundDropState.nearest(x,y,38);
+    if(nearbyDrop){
+      const now=Date.now();
+      if(!this.lastAutoPickupAt||now-this.lastAutoPickupAt>450){this.lastAutoPickupAt=now;pickupGroundDrop(nearbyDrop.id);}
+    }
     if(this.playerLabel){
       this.playerLabel.setPosition(x,y-52);
       this.playerLabel.setDepth(this.playerSprite.depth+1);
