@@ -21,7 +21,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 | Task | Status | Progress |
 |---|---|---:|
 | 1. Extract .sh, .wp, .wps | Implemented in extractor | 100% |
-| 2. Classify images/resources | Initial pack inventory; detailed sprite mapping pending | 35% |
+| 2. Classify images/resources | Initial pack inventory plus PNG dimension/geometry metadata; semantic sprite mapping pending | 40% |
 | 3. Sprite/animation engine | Manual frame inspector exists; runtime character animation engine/mapping not implemented | 10% |
 | 4. Original tilemap engine | Not implemented | 0% |
 | 5. Original camera/render pipeline | Phaser scene and basic camera bounds only; currently mock world | 15% |
@@ -32,6 +32,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Added original profession preview gallery in character creation, sourced from five .wps packs:
 - Added a configurable sprite-sheet inspector: choose any decoded PNG, set rows/columns/FPS, step through frames or play a preview. This is an analysis tool, not yet the in-game animation system.
 - Added a binary metadata inspector for decoded `.d` entries: selectable file, byte offsets, hexadecimal values and ASCII view. Field meanings remain intentionally unassigned pending bytecode verification.
+- Extended the JAR extractor to record PNG width, height and neutral geometry hints in the manifest; the Resource Viewer now shows these values to help classify original assets without guessing their purpose.
   - Kiếm Khách → kiem
   - Chiến Binh → daidao
   - Pháp Sư → phapsu
