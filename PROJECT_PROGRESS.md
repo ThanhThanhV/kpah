@@ -9,12 +9,12 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 | Phase | Scope | Progress | Basis |
 |---|---|---:|---|
 | P0 | Foundation and original resources (5 tasks) | 36% | Resource extraction and manifest are implemented; camera/entity runtime and a generic tile-layer adapter now exist, but original map data, tile mapping and animation remain unimplemented. |
-| P1 | Reconstructed client/gameplay (10 tasks) | 25% | Demo server/login/character flow and profession previews exist; player movement works in the mock scene and NPCs now have clickable dialogue/actions; original world, combat and real animation remain unimplemented. |
-| P2 | Game systems (10 tasks) | 22% | Character/inventory/equipment, skill progression and local training combat are connected; a quest journal now supports accepting objectives, tracking NPC conversations and monster defeats, claiming EXP/currency/items, and character progression. All content remains client-side demo data. |
+| P1 | Reconstructed client/gameplay (10 tasks) | 29% | Demo server/login/character flow, profession previews, player movement, NPC interactions and selectable in-world monsters are implemented locally; original world data, real animation and server combat remain unimplemented. |
+| P2 | Game systems (10 tasks) | 24% | Character/inventory/equipment, skill progression, quest progression and local world hunting are connected; combat now grants monster EXP and chance-based drops into shared inventory. All content remains client-side demo data. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 0% | Not started. |
 
-**Overall estimate: about 16.5%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 18%** (weighted average of the 41 roadmap items).
 
 ## P0 — Foundation detail
 
@@ -42,6 +42,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Added live client display settings for the player name label, world coordinates and minimap visibility; preferences persist in browser local storage, tolerate unavailable/corrupt storage, and can be reset to defaults. The panel can be closed with Escape. These are local presentation preferences, not account settings.
 - Adjusted mobile safe-area spacing for notched phones and compressed the action bar on very narrow screens to reduce horizontal overflow.
 - Added clickable world NPC hit areas. The village elder opens a dialogue with a route to the quest panel; the merchant opens a dialogue with a route to the shop. These are local client interactions and do not imply original NPC scripts or server transactions.
+- Added a structured local world-entity catalog with four ordinary wolf spawn points and one pack leader. Monster views are interactive Phaser entities with name/level labels and health bars; selecting one updates the target HUD.
+- Connected action-bar combat to the selected world monster. The player approaches distant targets before attacking; damage, monster retaliation, target defeat, experience, chance-based inventory drops and respawn timers update the shared client state. Ordinary wolf kills advance the accepted hunt quest. These stats, drops and timings are demo data only.
 - Synced the mock-world coordinate readout and minimap player marker to the player's current scene position.
 - Added 1–5 keyboard shortcuts for selecting action-bar slots, while ignoring editable fields and the login overlay; clarified the world touch hint to match tap-to-move behavior.
 - Added client-side chat channel selection/filtering for World, Guild, Private and System; System is read-only and sent messages use the selected channel and current character name. Messages remain local to the browser.
@@ -77,6 +79,13 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Slot five uses an HP consumable from the same inventory state used by the character panel.
 - This is a client-side vertical slice with illustrative skill names, values and formulas. It is not a verified recreation of KPAH skill data, balance, effects, PvE rules or server authority.
 
+## P1/P2 — World hunting gameplay slice
+
+- Added five local monster spawn entities: four ordinary wolves and one stronger pack leader, each with its own level, HP, defense, attack damage, EXP, drop chances and respawn delay.
+- Monsters are selectable in the Phaser scene. A target panel shows the selected monster's HP; the action bar approaches distant targets before applying the chosen skill.
+- Monster attacks reduce player HP; defeats award experience and may add potions or upgrade stones to the shared inventory. Defeated monsters disappear and return after their configured respawn delay.
+- Ordinary wolf defeats advance the existing accepted hunt quest. This is a connected offline gameplay loop, not original KPAH balance or server-authoritative combat.
+
 ## P2 — Quest and character progression client slice
 
 - Added a quest state model with available, active, completed and claimed states, objective progress, journal history and one-time reward claiming.
@@ -87,7 +96,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Validation limitations
 
-- Ran JavaScript syntax parsing and state-level smoke checks for quest acceptance, NPC objective progress, monster-kill progress, reward claiming, experience/currency grants and inventory item rewards. These checks do not replace browser interaction testing or a production build.
+- Ran JavaScript syntax parsing and state-level smoke checks for quest acceptance, NPC objective progress, monster-kill progress, reward claiming, experience/currency grants and inventory item rewards. These checks do not replace browser interaction testing or a production build. The new world-entity/combat integration has not yet been browser-tested.
 
 - Ran JavaScript syntax parsing for `main.js`, `skill-combat.js` and `character-state.js`, plus state-level smoke checks for locked-skill rejection, learning, slot assignment, damage, MP spending, enemy retaliation, cooldown blocking and potion recovery. These checks do not replace a browser/UI test or a full Vite production build.
 
