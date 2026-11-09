@@ -225,8 +225,7 @@ class WorldScene extends Phaser.Scene {
     const c=this.add.container(x,y);
     c.add([this.add.ellipse(0,14,22,7,0x111510,.35),this.add.rectangle(0,0,15,23,color).setStrokeStyle(2,0x3b3027),this.add.circle(0,-17,7,0xe2bd91).setStrokeStyle(2,0x3b3027),this.add.triangle(0,-23,-7,-15,0,-30,8,-15,0x41312a)]);
     c.setDepth(y);
-    c.setSize(38,54);
-    c.setInteractive({useHandCursor:true});
+    c.setInteractive(new Phaser.Geom.Rectangle(-19,-38,38,54),Phaser.Geom.Rectangle.Contains);
     c.on('pointerdown',(pointer,localX,localY,event)=>{
       event?.stopPropagation();
       window.dispatchEvent(new CustomEvent('kpah:npc-interact',{detail:{name}}));
