@@ -214,6 +214,7 @@ function claimQuestReward(id){
   const coins=characterState.addCurrency(reward.currency);
   const items=reward.items.map(item=>characterState.addItem(item.id,item.quantity));
   questState.record('claim','any');
+  updateQuestBadge();
   updateCharacterHud();
   const itemFailures=items.filter(item=>!item.ok).length;
   toast('Nhận '+reward.experience+' EXP · '+reward.currency+' Xu'+(exp.levelsGained?' · Lên cấp '+exp.level:'')+(itemFailures?' · Hành trang đầy, thiếu vật phẩm':''));
@@ -327,8 +328,8 @@ function updateCharacterHud(){
   }
   const wallet=document.querySelector('.mini-status div:first-child b');
   if(wallet)wallet.textContent=data.currency.toLocaleString('vi-VN');
-  const level=document.querySelector('.profile-level');
-  if(level)level.textContent='Cấp '+data.level;
+  const level=document.querySelector('.avatar-frame .level');
+  if(level)level.textContent=String(data.level);
 }
 function updateQuestBadge(){
   const button=document.querySelector('[data-window="quests"]');
