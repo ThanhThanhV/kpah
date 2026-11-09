@@ -40,6 +40,7 @@ export function createCharacterState() {
     nextLevelExperience: 90000,
     baseStats: {strength:40,stamina:32,agility:28,spirit:20},
     statPoints: 5,
+    currency: 125600,
     hp: 1250,
     mp: 680,
     inventoryCapacity: 30,
@@ -164,6 +165,37 @@ export function createCharacterState() {
     return {restored,hp:state.hp};
   }
 
+  function addExperience(amount) {
+    const gained=Math.max(0,Math.floor(Number(amount)||0));
+    state.experience+=gained;
+    let levelsGained=0;
+    while(state.experience>=state.nextLevelExperience){
+      state.experience-=state.nextLevelExperience;
+      state.level+=1;
+      state.nextLevelExperience=Math.round(state.nextLevelExperience*1.18);
+      state.statPoints+=3;
+      levelsGained+=1;
+    }
+    return {gained,levelsGained,level:state.level,experience:state.experience,nextLevelExperience:state.nextLevelExperience};
+  }
+
+  function addCurrency(amount) {
+    const gained=Math.max(0,Math.floor(Number(amount)||0));
+    state.currency+=gained;
+    return {gained,currency:state.currency};
+  }
+
+  function addItem(itemId,quantity=1) {
+    const amount=Math.max(1,Math.floor(Number(quantity)||1));
+    const template=INITIAL_ITEMS.find(item=>item.id===itemId);
+    if(!template)return {ok:false,message:'Vật phẩm thưởng chưa có trong danh mục.'};
+    const existing=findItem(itemId);
+    if(existing){existing.quantity+=amount;return {ok:true,itemId,quantity:existing.quantity};}
+    if(state.inventory.length>=state.inventoryCapacity)return {ok:false,message:'Hành trang đầy, không thể nhận vật phẩm.'};
+    state.inventory.push({...clone(template),quantity:amount});
+    return {ok:true,itemId,quantity:amount};
+  }
+
   return {
     snapshot,
     equip,
@@ -174,6 +206,9 @@ export function createCharacterState() {
     spendMp,
     receiveDamage,
     restoreHp,
+    addExperience,
+    addCurrency,
+    addItem,
     get statLabels(){return {...STAT_LABELS};}
   };
 }
