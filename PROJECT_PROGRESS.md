@@ -210,5 +210,6 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Extended Sprite Lab with an animation key, frame range, optional explicit comma-separated frame order, FPS and repeat policy.
 - The tool validates every frame against the selected sheet grid and exports a JSON mapping with original pack/path, measured image dimensions, absolute asset URL, texture loading definition and Phaser animation registration definition.
 - The exported `load` and `animation` objects match the runtime helpers' input contracts; the output can be copied from the UI for review and later committed as source-verified mapping data.
+- Added source-family and original-pack filters inside Sprite Lab so large asset sets can be narrowed before selecting a candidate sheet.
 - The workbench is an authoring aid, not an automatic reverse-engineering result. No frame sequence has been declared to be a real KPAH walk/attack/death animation without tracing its source.
 - Runtime helper smoke checks passed for texture loading, animation registration, playback and rejection of a non-HTTP URL. Sprite Lab and runtime modules pass syntax compilation. No browser clipboard/UI test or Vite build was run.
