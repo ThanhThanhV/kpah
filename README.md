@@ -128,3 +128,8 @@ Battle target HP, cooldowns, turn counters, ground drops, player credentials, so
 ## Knockout and checkpoint respawn
 
 When the local character reaches 0 HP, world movement and action-bar attacks are blocked and a knockout overlay is shown. The respawn action restores HP and part of MP, returns the player to the Làng Sói Trắng checkpoint, reloads that zone's local NPC/monster entities and resets the world camera. This is a client-side demo rule; original KPAH death penalties, revive items, respawn timers and server validation remain unverified.
+
+
+## Story quest chain
+
+The offline quest journal now follows a prerequisite sequence: village elder → wolf patrol → forest hunter → cave guardian → return to the village elder. Later quests remain visible but cannot be accepted until the previous quest reward is claimed. The final preparation objective requires returning to the elder. This is a coherent client demo progression, not verified original KPAH quest content.
