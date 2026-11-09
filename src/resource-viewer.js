@@ -1,3 +1,5 @@
+import { renderSpriteLab } from './sprite-lab.js';
+
 const MANIFEST_URL = '/assets/kpah-original/archive-manifest.json';
 const ASSET_ROOT = '/assets/kpah-original/';
 
@@ -59,6 +61,7 @@ export async function renderResourceViewer(root) {
       </div>
       <div class="resource-summary" id="resource-summary"></div>
       <div class="resource-grid" id="resource-grid"></div>
+      <div id="resource-sprite-lab"></div>
     </section>`;
 
   const search = root.querySelector('#resource-search');
@@ -91,4 +94,5 @@ export async function renderResourceViewer(root) {
   search.addEventListener('input', draw);
   packSelect.addEventListener('change', draw);
   draw();
+  renderSpriteLab(root.querySelector('#resource-sprite-lab'), images);
 }
