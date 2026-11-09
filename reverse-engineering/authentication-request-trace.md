@@ -47,3 +47,24 @@ The separate callback `ru` toggles the saved-credential state on the login scree
 - The screen transition after successful authentication and the exact character-list response.
 
 Those details must be traced from `act`, `acu`, the connection implementation, and the inbound message dispatcher before defining a compatible backend.
+
+
+## Character-list and character-creation requests
+
+The character-selection screen `lj` is populated by the inbound dispatcher in `ka`, which parses a collection of `ca` character records and passes the array to `lj.a(ca[])`. The handler then activates `lj` as the current `tj` state.
+
+Selecting an existing character sends opcode **13**. Its payload is:
+
+1. A subcommand byte (the selection callback passes value **1**).
+2. The selected character ID (int).
+
+The create-character button in `ls` validates the name length to **4–15 characters**. If valid, it sends opcode **14** with:
+
+1. Character name (UTF)
+2. Character-line index (byte)
+3. Weapon/style ID from the selected `ab` option (byte)
+4. Gender index (byte)
+5. Hair-style index (byte)
+6. The selected server's per-server extra byte (`uj.j[uj.a]`)
+
+The UI then displays a waiting message. This confirms that the five character-line choices, gender, and hair selection are not merely decorative: they are serialized into the create-character request.
