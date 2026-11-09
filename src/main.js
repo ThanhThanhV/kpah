@@ -335,6 +335,7 @@ function showCombatFeedback(result){
   effect.addEventListener('animationend',()=>effect.remove(),{once:true});
 }
 let pendingMonsterApproach=false;
+let pendingMonsterApproachTimer=null;
 function executeActionSlot(slot){
   if(slot===5){
     const item=characterState.snapshot().inventory.find(entry=>entry.category==='consumable'&&entry.restore?.hp);
@@ -354,7 +355,7 @@ function executeActionSlot(slot){
       const duration=Math.min(1000,Math.max(250,distance*1.15));
       scene.movePlayerTo(target.x-Math.cos(angle)*95,target.y-Math.sin(angle)*95,duration);
       toast('Đang tiếp cận '+target.name+'…');
-      window.setTimeout(()=>{pendingMonsterApproach=false;executeActionSlot(slot);},duration+60);
+      pendingMonsterApproachTimer=window.setTimeout(()=>{pendingMonsterApproach=false;pendingMonsterApproachTimer=null;executeActionSlot(slot);},duration+60);
       return;
     }
   }
@@ -693,6 +694,8 @@ class WorldScene extends Phaser.Scene {
     if(elder)elder.style.display=zone.id==='village'?'':'none';
   }
   changeZone(zoneId){
+    if(pendingMonsterApproachTimer!==null){clearTimeout(pendingMonsterApproachTimer);pendingMonsterApproachTimer=null;pendingMonsterApproach=false;}
+    this.tweens.killTweensOf(this.playerSprite);
     const level=characterState.snapshot().level;
     const result=worldMapState.travel(zoneId,level);
     if(!result.ok)return result;
