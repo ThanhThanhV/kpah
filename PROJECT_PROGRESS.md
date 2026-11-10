@@ -398,3 +398,12 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Keyboard selection uses the same target synchronization path as pointer/map selection, refreshing the target HUD, scene ring, combat target and open world-map marker state together.
 - The existing 1–5 action-slot shortcuts remain unchanged; editable fields and login overlays continue to suppress gameplay shortcuts.
 - This is client-side target selection only. It does not add server targeting or claim original KPAH key bindings.
+
+
+## B14 — Generated transport codec increment
+
+- Added `tools/generate_transport_codec.py`; it validates the transport declaration in `protocol/protocol.yaml` and generates JavaScript `transport-codec.js` plus Java `TransportCodec.java`.
+- Both runtimes implement prefix-XOR handshake key derivation, XOR stream with explicit independent cursors, C2S u16 frames, S2C short frames, and encrypted S2C long frames (0x80 marker + u32 length).
+- Synthetic cross-language vectors cover handshake, encrypted C2S, S2C short/long and cursor wrap. The APIs return the updated cursor; callers must maintain send and receive cursors independently.
+- CI run `42797122962`: SUCCESS. Vite production build, generated-source consistency, JavaScript transport tests, Java 21 compilation and transport smoke tests passed. The earlier stale-output failure was corrected by regenerating committed files from the canonical generator templates.
+- Scope remains protocol tooling only: no production network capture, live server, WebSocket gateway, or BE session has been implemented.
