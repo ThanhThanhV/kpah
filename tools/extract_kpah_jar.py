@@ -145,7 +145,9 @@ def main() -> None:
     parser.add_argument("jar", type=Path)
     parser.add_argument("--output", type=Path, default=Path("public/assets/kpah-original"))
     parser.add_argument("--include-classes", action="store_true",
-                        help="Also extract .class files (not needed by the browser client)")
+                        help="Also extract .class files for offline reverse engineering")
+    parser.add_argument("--class-output", type=Path, default=Path("tools/reports/class-files"),
+                        help="Separate destination for .class files; never place bytecode in public assets")
     parser.add_argument("--decode-packed", action=argparse.BooleanOptionalAction, default=True,
                         help="Decode .sh, .wp and .wps packs using the format verified in class ba (default: on)")
     args = parser.parse_args()
@@ -155,6 +157,8 @@ def main() -> None:
 
     source_sha256 = hashlib.sha256(args.jar.read_bytes()).hexdigest()
     args.output.mkdir(parents=True, exist_ok=True)
+    if args.include_classes:
+        args.class_output.mkdir(parents=True, exist_ok=True)
     entries = []
     decoded_entries = []
     extracted = 0
@@ -180,10 +184,12 @@ def main() -> None:
                 "sha256": hashlib.sha256(raw).hexdigest(),
             }
             entries.append(item)
-            if suffix == ".class" and not args.include_classes:
-                continue
-
-            target = safe_target(args.output, name)
+            if suffix == ".class":
+                if not args.include_classes:
+                    continue
+                target = safe_target(args.class_output, name)
+            else:
+                target = safe_target(args.output, name)
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(raw)
             extracted += 1
@@ -254,6 +260,8 @@ def main() -> None:
     print(f"Entries: {len(entries)}")
     print(f"Classes: {manifest['classCount']} (excluded={not args.include_classes})")
     print(f"Extracted files: {extracted}")
+    if args.include_classes:
+        print(f"Class output: {args.class_output}")
     print(f"Decoded packed resources (.sh/.wp/.wps): {len(decoded_entries)}")
     print(f"Manifest: {manifest_path}")
 
