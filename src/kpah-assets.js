@@ -1,5 +1,6 @@
 const ASSET_ROOT = '/assets/kpah-original/';
 let manifestRequest;
+let assetVersion = '';
 
 export async function loadAssetManifest() {
   if (!manifestRequest) {
@@ -12,6 +13,8 @@ export async function loadAssetManifest() {
         if (!manifest || !Array.isArray(manifest.decodedPackedEntries)) {
           throw new Error('Manifest không đúng định dạng hoặc thiếu decodedPackedEntries.');
         }
+        assetVersion = typeof manifest.assetVersion === 'string' &&
+          /^[a-f0-9]{16}$/i.test(manifest.assetVersion) ? manifest.assetVersion : '';
         return manifest;
       })
       .catch(error => {
@@ -26,7 +29,8 @@ export function assetUrl(path) {
   if (typeof path !== 'string' || !path || path.includes('\\') || path.includes('\0')) return null;
   const segments = path.split('/');
   if (segments.some(segment => !segment || segment === '.' || segment === '..')) return null;
-  return ASSET_ROOT + segments.map(encodeURIComponent).join('/');
+  const url = ASSET_ROOT + segments.map(encodeURIComponent).join('/');
+  return assetVersion ? url + '?v=' + encodeURIComponent(assetVersion) : url;
 }
 
 export function decodedPngEntries(manifest) {
