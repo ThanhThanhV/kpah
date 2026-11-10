@@ -203,3 +203,6 @@ Each character's browser-local save now includes the current world zone. Switchi
 ## Exact character location resume
 
 Per-character browser saves now also store the player's world coordinates. On character selection, the zone is rebuilt and the saved coordinates are passed through the current obstacle-aware movement resolver before restoring the player and camera. Older saves without coordinates remain compatible and use the zone entry point. The client flushes the save on page hide and when the tab becomes hidden. This is still local browser persistence, not server-side character position synchronization.
+
+
+The character-selection cards also preview the saved zone and rounded world coordinates for each character. Unknown zones and older saves without coordinates use fallback labels, keeping the roster compatible with existing local saves.
