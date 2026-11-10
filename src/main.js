@@ -277,15 +277,27 @@ function renderCharacterPanel(key){
     </div>
     <div class="character-subnav"><button type="button" data-character-open="equipment">Trang bị nhân vật</button><button type="button" data-character-open="inventory">Mở hành trang</button></div>`;
   if(key==='equipment'){
-    const slots=data.equipmentSlots.map(([id,label,icon])=>{
+    const equippedItems=data.equipmentSlots.map(([id,label,icon])=>{
       const itemId=data.equipment[id];
-      const equipped=itemId?({ 'starter-sword':'Kiếm tân thủ','cloth-hat':'Mũ vải','cloth-armor':'Áo vải','bronze-ring':'Nhẫn đồng'}[itemId]||'Trang bị'):'Chưa trang bị';
-      return `<div class="equip-cell ${itemId?'filled':''}"><span>${icon}</span><small>${label}</small><b>${equipped}</b>${itemId?`<button type="button" data-unequip="${id}">Tháo</button>`:''}</div>`;
+      const item=data.inventory.find(entry=>entry.id===itemId)||({
+        'starter-sword':{id:'starter-sword',name:'Kiếm tân thủ',bonus:{strength:8}},
+        'cloth-hat':{id:'cloth-hat',name:'Mũ vải',bonus:{stamina:3}},
+        'cloth-armor':{id:'cloth-armor',name:'Áo vải',bonus:{stamina:6}},
+        'bronze-ring':{id:'bronze-ring',name:'Nhẫn đồng',bonus:{agility:4}}
+      }[itemId]);
+      const bonus=item?.bonus?Object.entries(item.bonus).map(([stat,value])=>(characterState.statLabels[stat]||stat)+' +'+value).join(' · '):'';
+      return `<div class="equip-cell ${itemId?'filled':''}"><span>${icon}</span><small>${label}</small><b>${escapeHtml(item?.name||'Chưa trang bị')}</b>${bonus?`<em>${escapeHtml(bonus)}</em>`:''}${itemId?`<button type="button" data-unequip="${id}">Tháo</button>`:''}</div>`;
     }).join('');
-    return `<div class="equipment-screen"><div class="equip-slots">${slots}</div><div class="equip-preview"><div class="equip-character">⚔</div><b>${escapeHtml(data.name)}</b><small>${escapeHtml(data.profession)} · Cấp ${data.level}</small><div class="equip-summary"><span>HP <b>${data.maxHp}</b></span><span>MP <b>${data.maxMp}</b></span></div></div></div><p class="panel-hint">Chọn vật phẩm trang bị trong hành trang để thay đổi bộ trang bị.</p><button type="button" class="gold-button" data-character-open="inventory">Mở hành trang</button>`;
+    const bonusRows=Object.entries(stats).map(([id,value])=>`<div><span>${escapeHtml(characterState.statLabels[id])}</span><b>${value}</b></div>`).join('');
+    return `<div class="equipment-screen"><div class="equip-slots">${equippedItems}</div><div class="equip-preview"><div class="equip-character">⚔</div><b>${escapeHtml(data.name)}</b><small>${escapeHtml(data.profession)} · Cấp ${data.level}</small><div class="equip-summary"><span>HP <b>${data.hp.toLocaleString('vi-VN')} / ${data.maxHp.toLocaleString('vi-VN')}</b></span><span>MP <b>${data.mp.toLocaleString('vi-VN')} / ${data.maxMp.toLocaleString('vi-VN')}</b></span></div><div class="equip-stat-summary">${bonusRows}</div></div></div><p class="panel-hint">Chỉ số bên phải đã bao gồm thuộc tính cộng thêm từ trang bị đang mặc. Tháo trang bị sẽ đưa vật phẩm về hành trang.</p><button type="button" class="gold-button" data-character-open="inventory">Mở hành trang</button>`;
   }
   const categories=[['all','Tất cả'],['equipment','Trang bị'],['consumable','Tiêu hao'],['material','Nguyên liệu'],['quest','Nhiệm vụ']];
-  const items=data.inventory.map(item=>`<article class="inventory-item" data-item-category="${item.category}"><div class="inventory-item-icon">${item.icon}</div><b>${escapeHtml(item.name)}</b><small>${item.category==='equipment'?'Trang bị':item.category==='consumable'?'Vật phẩm tiêu hao':item.category==='material'?'Nguyên liệu':'Nhiệm vụ'}</small><em>×${item.quantity}</em><button type="button" data-item-action="${item.category==='equipment'?'equip':item.category==='consumable'?'use':'info'}" data-item-id="${item.id}" ${item.category==='material'||item.category==='quest'?'disabled':''}>${item.category==='equipment'?'Trang bị':item.category==='consumable'?'Sử dụng':'Chi tiết'}</button></article>`).join('');
+  const items=data.inventory.map(item=>{
+    const isEquipped=Object.values(data.equipment).includes(item.id);
+    const detail=item.bonus?Object.entries(item.bonus).map(([stat,value])=>(characterState.statLabels[stat]||stat)+' +'+value).join(' · '):item.restore?Object.entries(item.restore).map(([stat,value])=>(stat==='hp'?'HP':'MP')+' +'+value).join(' · '):item.category==='material'?'Dùng để nâng cấp trang bị':'Vật phẩm nhiệm vụ';
+    const action=item.category==='equipment'?'equip':item.category==='consumable'?'use':'info';
+    return `<article class="inventory-item ${isEquipped?'is-equipped':''}" data-item-category="${item.category}"><div class="inventory-item-icon">${item.icon}</div><b>${escapeHtml(item.name)}</b><small>${item.category==='equipment'?'Trang bị':item.category==='consumable'?'Vật phẩm tiêu hao':item.category==='material'?'Nguyên liệu':'Nhiệm vụ'}</small><em>×${item.quantity}</em><p class="inventory-item-detail">${escapeHtml(detail)}</p>${isEquipped?'<span class="inventory-equipped-tag">Đang mặc</span>':`<button type="button" data-item-action="${action}" data-item-id="${item.id}" ${item.category==='material'||item.category==='quest'?'disabled':''}>${item.category==='equipment'?'Trang bị':item.category==='consumable'?'Sử dụng':'Chi tiết'}</button>`}</article>`;
+  }).join('');
   return `<div class="inventory-toolbar"><div class="inventory-capacity"><b>${data.inventory.length} / ${data.inventoryCapacity}</b><span>Ô hành trang đang sử dụng</span></div><div class="inventory-currency"><span>Xu <b>${data.currency.toLocaleString('vi-VN')}</b></span><span>Lượng <b>320</b></span></div></div><div class="tabs inventory-tabs">${categories.map(([id,label],i)=>`<button type="button" class="${i===0?'chosen':''}" data-inventory-filter="${id}">${label}</button>`).join('')}</div><div class="inventory-grid inventory-grid-live">${items||'<div class="inventory-empty">Hành trang trống</div>'}</div><p class="panel-hint">Vật phẩm và thao tác hiện được mô phỏng ở client; chưa đồng bộ máy chủ.</p>`;
 }
 
