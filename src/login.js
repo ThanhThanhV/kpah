@@ -17,6 +17,23 @@ style.textContent = `
 .login-primary{width:100%;height:42px;margin-top:8px;border:1px solid #edcd8b;background:linear-gradient(#b98e51,#76502f);color:#fff0c6;font:700 12px Cinzel,serif;letter-spacing:1px;box-shadow:inset 0 1px #fff5}
 .login-foot{margin-top:15px;color:#9e8e77;font-size:8px;line-height:1.7}
 .login-step{display:none}.login-step.current{display:block}
+.login-cover{overflow:auto;align-items:start}
+.login-card{margin:auto}
+.character-roster{display:grid;gap:8px;margin:0 0 12px;max-height:min(42vh,330px);overflow:auto}
+.character-roster-empty{padding:18px 12px;border:1px dashed #70593d;background:#211c23;color:#b9a88e;font-size:10px;line-height:1.7}
+.character-roster-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px;background:#28222a;border:1px solid #5a4937}
+.character-roster-card.selected{border-color:#e3c17d;background:#49382f}
+.character-roster-card .roster-select{display:flex;align-items:center;gap:10px;min-width:0;text-align:left;background:none;border:0;color:#e5d2ac}
+.character-roster-card .roster-avatar{width:38px;height:42px;display:grid;place-items:center;flex:none;border:1px solid #8d7048;background:#1a171d;color:#e0bd7a;font-size:22px}
+.character-roster-card b,.character-roster-card small{display:block}
+.character-roster-card b{font-size:10px;overflow-wrap:anywhere}
+.character-roster-card small{font-size:8px;color:#b5a184;margin-top:3px}
+.character-roster-card .roster-delete{border:1px solid #80504a;background:#42282a;color:#f0b7a7;padding:7px 9px;font-size:9px}
+.roster-actions{display:grid;gap:7px}
+.roster-actions .login-primary{margin:0}
+.login-secondary{width:100%;min-height:38px;border:1px solid #8a704d;background:#30272b;color:#e6ca92;font-size:10px}
+.login-secondary:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:520px){.login-cover{padding:12px}.login-card{margin:auto;padding:20px 16px}.character-roster{max-height:34vh}}
 .login-step h2{font:700 16px Cinzel,serif;color:#f0d28e;margin:0 0 14px}
 .server-choice{display:grid;gap:7px;margin-bottom:13px}
 .server-option{display:flex;align-items:center;justify-content:space-between;padding:11px 12px;background:#28222a;border:1px solid #584635;color:#d9c7a7;text-align:left;font-size:11px}
@@ -65,16 +82,11 @@ cover.innerHTML=`
   </div>
   <div class="login-step" data-step="character">
     <h2>CHỌN NHÂN VẬT</h2>
-    <div class="char-choice">
-      <button class="char-option selected" data-class="Kiếm Khách"><span>⚔</span>Kiếm Khách</button>
-      <button class="char-option" data-class="Chiến Binh"><span>🛡</span>Chiến Binh</button>
-      <button class="char-option" data-class="Pháp Sư"><span>✧</span>Pháp Sư</button>
-      <button class="char-option" data-class="Đấu Sĩ"><span>♜</span>Đấu Sĩ</button>
-      <button class="char-option" data-class="Cung Thủ"><span>➶</span>Cung Thủ</button>
+    <div class="character-roster" id="character-roster" aria-live="polite"></div>
+    <div class="roster-actions">
+      <button class="login-primary" id="enter-world" disabled>VÀO THẾ GIỚI</button>
+      <button class="login-secondary" id="open-create-character">TẠO NHÂN VẬT MỚI · 0/3</button>
     </div>
-    <div class="login-form"><label>TÊN NHÂN VẬT<input id="character-name" value="Kiếm Khách" maxlength="16"></label></div>
-    <button class="login-primary" id="enter-world">VÀO THẾ GIỚI</button>
-    <button class="login-secondary" id="open-create-character">TẠO NHÂN VẬT MỚI</button>
     <button class="login-back" data-back="login">← Quay lại đăng nhập</button>
   </div>
   <div class="login-step" data-step="create">
@@ -101,39 +113,93 @@ cover.innerHTML=`
   </div>
 </section>`;
 document.body.append(cover);
-let selectedServer='Máy chủ 1',selectedClass='Kiếm Khách';
+let selectedServer='Máy chủ 1',selectedCharacterId=null;
+const CHARACTER_STORAGE_KEY='kpah.character-roster.v1';
+const MAX_CHARACTERS=3;
+const professionIcons={'Kiếm Khách':'⚔','Chiến Binh':'🛡','Pháp Sư':'✧','Đấu Sĩ':'♜','Cung Thủ':'➶'};
+function loadCharacterRoster(){
+  try{
+    const parsed=JSON.parse(localStorage.getItem(CHARACTER_STORAGE_KEY)||'[]');
+    if(!Array.isArray(parsed))return [];
+    return parsed.filter(c=>c&&typeof c.id==='string'&&typeof c.name==='string'&&c.name.length>0&&Object.hasOwn(professionIcons,c.className)).slice(0,MAX_CHARACTERS);
+  }catch{return [];}
+}
+let characterRoster=loadCharacterRoster();
+function saveCharacterRoster(){
+  try{localStorage.setItem(CHARACTER_STORAGE_KEY,JSON.stringify(characterRoster));return true;}
+  catch{return false;}
+}
+function renderCharacterRoster(){
+  const list=cover.querySelector('#character-roster');
+  const enter=cover.querySelector('#enter-world');
+  const create=cover.querySelector('#open-create-character');
+  if(!list||!enter||!create)return;
+  if(!characterRoster.some(c=>c.id===selectedCharacterId))selectedCharacterId=characterRoster[0]?.id||null;
+  list.innerHTML=characterRoster.length?characterRoster.map(c=>`<article class="character-roster-card ${c.id===selectedCharacterId?'selected':''}">
+    <button class="roster-select" data-select-character="${c.id}">
+      <span class="roster-avatar">${professionIcons[c.className]}</span>
+      <span><b>${escapeRosterText(c.name)}</b><small>${escapeRosterText(c.className)} · ${escapeRosterText(c.gender||'Nam')}</small></span>
+    </button>
+    <button class="roster-delete" data-delete-character="${c.id}" aria-label="Xóa ${escapeRosterText(c.name)}">XÓA</button>
+  </article>`).join(''):'<div class="character-roster-empty">Chưa có nhân vật nào. Hãy tạo nhân vật mới để bắt đầu hành trình.</div>';
+  enter.disabled=!selectedCharacterId;
+  create.disabled=characterRoster.length>=MAX_CHARACTERS;
+  create.textContent=characterRoster.length>=MAX_CHARACTERS?'ĐÃ ĐỦ 3/3 NHÂN VẬT':`TẠO NHÂN VẬT MỚI · ${characterRoster.length}/3`;
+}
+function escapeRosterText(value){
+  return String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
 function step(name){cover.querySelectorAll('.login-step').forEach(x=>x.classList.toggle('current',x.dataset.step===name));}
-cover.querySelector('#login-form').addEventListener('submit',e=>{e.preventDefault();const user=cover.querySelector('#login-user').value.trim();const pass=cover.querySelector('#login-pass').value;if(!user||!pass){cover.querySelector('#login-error').textContent='Vui lòng nhập đầy đủ tài khoản và mật khẩu.';return;}step('character');});
+cover.querySelector('#login-form').addEventListener('submit',e=>{e.preventDefault();const user=cover.querySelector('#login-user').value.trim();const pass=cover.querySelector('#login-pass').value;if(!user||!pass){cover.querySelector('#login-error').textContent='Vui lòng nhập đầy đủ tài khoản và mật khẩu.';return;}renderCharacterRoster();step('character');});
 cover.querySelectorAll('.server-option').forEach(b=>b.addEventListener('click',()=>{selectedServer=b.dataset.server;cover.querySelectorAll('.server-option').forEach(x=>x.classList.toggle('selected',x===b));}));
 cover.querySelector('#server-next').addEventListener('click',()=>step('login'));
-cover.querySelectorAll('.char-option').forEach(b=>b.addEventListener('click',()=>{selectedClass=b.dataset.class;cover.querySelectorAll('.char-option').forEach(x=>x.classList.toggle('selected',x===b));}));
+cover.querySelector('#character-roster').addEventListener('click',e=>{
+  const select=e.target.closest('[data-select-character]');
+  const remove=e.target.closest('[data-delete-character]');
+  if(select){selectedCharacterId=select.dataset.selectCharacter;renderCharacterRoster();return;}
+  if(remove){
+    const character=characterRoster.find(c=>c.id===remove.dataset.deleteCharacter);
+    if(!character||!window.confirm(`Xóa nhân vật "${character.name}" khỏi danh sách demo trên trình duyệt?`))return;
+    characterRoster=characterRoster.filter(c=>c.id!==character.id);
+    if(selectedCharacterId===character.id)selectedCharacterId=characterRoster[0]?.id||null;
+    saveCharacterRoster();renderCharacterRoster();
+  }
+});
 cover.querySelectorAll('[data-back]').forEach(b=>b.addEventListener('click',()=>step(b.dataset.back)));
 function enterWorld(){
-  const name=cover.querySelector('#character-name').value.trim()||'Kiếm Khách';
+  const character=characterRoster.find(c=>c.id===selectedCharacterId);
+  if(!character)return;
   const location=document.querySelector('.server span b');
   if(location)location.textContent=selectedServer;
-  window.dispatchEvent(new CustomEvent('kpah:character-selected',{detail:{name,className:selectedClass,server:selectedServer}}));
+  window.dispatchEvent(new CustomEvent('kpah:character-selected',{detail:{name:character.name,className:character.className,gender:character.gender,hair:character.hair,server:selectedServer}}));
   cover.remove();
 }
 cover.querySelector('#enter-world').addEventListener('click',enterWorld);
 cover.querySelector('#open-create-character').addEventListener('click',()=>{
+  if(characterRoster.length>=MAX_CHARACTERS)return;
   cover.querySelector('#new-character-name').value='';
   cover.querySelector('#create-error').textContent='';
   step('create');
   mountCharacterPreview(cover.querySelector('#character-preview'), cover.querySelector('#new-character-class'));
 });
 cover.querySelector('#save-character').addEventListener('click',()=>{
+  if(characterRoster.length>=MAX_CHARACTERS){cover.querySelector('#create-error').textContent='Danh sách đã đủ 3 nhân vật.';return;}
   const name=cover.querySelector('#new-character-name').value.trim();
   if(!name){cover.querySelector('#create-error').textContent='Vui lòng nhập tên nhân vật.';return;}
+  if(name.length>16){cover.querySelector('#create-error').textContent='Tên nhân vật tối đa 16 ký tự.';return;}
+  if(characterRoster.some(c=>c.name.toLocaleLowerCase()===name.toLocaleLowerCase())){cover.querySelector('#create-error').textContent='Tên nhân vật đã tồn tại trong danh sách.';return;}
   const className=cover.querySelector('#new-character-class').value;
   const gender=cover.querySelector('#new-character-gender').value;
   const hair=cover.querySelector('#new-character-hair').selectedIndex;
+  const character={id:`local-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`,name,className,gender,hair};
+  characterRoster.push(character);selectedCharacterId=character.id;saveCharacterRoster();
   window.dispatchEvent(new CustomEvent('kpah:character-created',{detail:{name,className,gender,hair}}));
-  cover.querySelector('#character-name').value=name;
-  selectedClass=className;
-  enterWorld();
+  renderCharacterRoster();step('character');
 });
+renderCharacterRoster();
 window.addEventListener('kpah:logout',()=>{
+  selectedCharacterId=characterRoster[0]?.id||null;
+  renderCharacterRoster();
   step('server');
   cover.querySelector('#login-error').textContent='';
   document.body.append(cover);
