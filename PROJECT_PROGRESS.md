@@ -119,6 +119,13 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - The quest journal supports status filters, objective progress bars, reward previews, claim actions and a pending-reward navigation indicator.
 - Added wallet synchronization to the HUD. The quest catalog, NPC objective, training-wolf target and reward values are illustrative local data, not verified original KPAH content or server transactions.
 
+## Latest client increment — equipment and inventory presentation
+
+- Equipment slots now resolve equipped item names and show attribute bonuses where available. The equipment panel displays current HP/MP and all four effective attributes, including equipment bonuses.
+- Inventory entries show concise item effects: attribute bonuses for gear, HP/MP restoration values for consumables, and usage categories for materials and quest items.
+- Existing equip, unequip and potion actions remain connected to shared character state and HUD updates. Item definitions and values remain demo data, not extracted original KPAH definitions.
+- Mobile styles were added for equipment stats and item detail text. JavaScript syntax and targeted source checks passed; browser interaction and production build remain untested.
+
 ## Latest client increment — character deletion and logout lifecycle
 
 - Logout now saves the active character before returning to the login overlay and clears the active in-memory profile pointer.
