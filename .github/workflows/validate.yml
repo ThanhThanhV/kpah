@@ -40,6 +40,33 @@ jobs:
         run: python -m compileall -q tools
       - name: Test protocol reference vectors
         run: python tools/kpah_protocol_reference.py --self-test
+      - name: Verify generated protocol sources
+        run: npm run check:protocol-generated
+      - name: Test generated JavaScript protocol codec
+        run: npm run test:protocol-codegen
+      - name: Compile and smoke-test generated Java protocol codec
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/kpah-protocol-classes"
+          javac --release 21 -d "$RUNNER_TEMP/kpah-protocol-classes" $(find protocol/generated/java -name '*.java')
+          cat > "$RUNNER_TEMP/ProtocolCodegenSmoke.java" <<'JAVA'
+          import com.kpah.protocol.generated.*;
+          import java.util.*;
+          public class ProtocolCodegenSmoke {
+            public static void main(String[] args) throws Exception {
+              byte[] payload = ProtocolPacketCodec.encode("C2S_REFINE_ITEM", Map.of("action", 10, "itemId", 17));
+              if (!Arrays.equals(payload, new byte[]{10, 17})) throw new AssertionError(Arrays.toString(payload));
+              Map<String,Object> decoded = ProtocolPacketCodec.decode("C2S_REFINE_ITEM", payload);
+              if (!decoded.get("action").equals(10) || !decoded.get("itemId").equals(17)) throw new AssertionError(decoded);
+              if (ProtocolCommand.find(ProtocolCommand.Direction.C2S, -25).orElseThrow() != ProtocolCommand.C2S_REFINE_ITEM) throw new AssertionError("opcode lookup");
+              PacketReader reader = new PacketReader(new PacketWriter().writeUTF("\u0000Xin chào 😀").toByteArray());
+              if (!reader.readUTF().equals("\u0000Xin chào 😀") || reader.remaining() != 0) throw new AssertionError("modified UTF-8");
+              System.out.println("Generated Java protocol codec: PASS");
+            }
+          }
+          JAVA
+          javac --release 21 -cp "$RUNNER_TEMP/kpah-protocol-classes" -d "$RUNNER_TEMP/kpah-protocol-classes" "$RUNNER_TEMP/ProtocolCodegenSmoke.java"
+          java -cp "$RUNNER_TEMP/kpah-protocol-classes" ProtocolCodegenSmoke
       - name: Smoke-test bytecode analyzer and class-role report
         shell: bash
         run: |
