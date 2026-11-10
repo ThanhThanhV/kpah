@@ -121,7 +121,7 @@ function loadCharacterRoster(){
   try{
     const parsed=JSON.parse(localStorage.getItem(CHARACTER_STORAGE_KEY)||'[]');
     if(!Array.isArray(parsed))return [];
-    return parsed.filter(c=>c&&typeof c.id==='string'&&typeof c.name==='string'&&c.name.length>0&&Object.hasOwn(professionIcons,c.className)).slice(0,MAX_CHARACTERS);
+    return parsed.filter(c=>c&&typeof c.id==='string'&&/^local-[a-z0-9-]{1,40}$/.test(c.id)&&typeof c.name==='string'&&c.name.trim().length>0&&c.name.length<=16&&Object.hasOwn(professionIcons,c.className)&&['Nam','Nữ'].includes(c.gender)&&Number.isInteger(c.hair)&&c.hair>=0&&c.hair<=5).slice(0,MAX_CHARACTERS);
   }catch{return [];}
 }
 let characterRoster=loadCharacterRoster();
