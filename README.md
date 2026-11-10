@@ -37,6 +37,19 @@ Công cụ giữ nguyên các gói gốc và tạo:
 
 Sau khi trích xuất, chạy lại Vite và mở **Tài nguyên gốc** ở thanh bên để tìm kiếm, lọc theo gói và xem trước ảnh PNG. Nếu deploy lên hosting, phải đưa cả thư mục `public/assets/kpah-original/` vào bản build.
 
+## Phân tích bytecode Java
+
+Sau khi giải nén JAR, có thể yêu cầu extractor xuất cả `.class` vào thư mục tài nguyên phân tích (không đưa class lên web client):
+
+```bash
+python tools/extract_kpah_jar.py KPAH_278.jar --include-classes
+npm run analyze:classes
+```
+
+Tool `tools/analyze_class_files.py` đọc constant pool, class/interface/field/method metadata, giải mã bytecode cơ bản, đếm opcode và tạo call graph từ các lệnh invoke. Báo cáo mặc định ở `tools/reports/kpah-class-analysis.json`. Có thể lọc dấu vết bằng `--contains <chuỗi>` hoặc `--opcode <mnemonic|0xNN>` (lặp `--opcode` để kết hợp nhiều opcode); `--disassemble-all` xuất bytecode mọi method và có thể tạo JSON lớn.
+
+Tool chỉ lập chỉ mục bằng chứng bytecode, không tự đặt tên class obfuscated hoặc suy diễn ý nghĩa nghiệp vụ. Cần đối chiếu các call edge/string/opcode với JADX/CFR/Vineflower và kiểm tra thủ công trước khi đưa kết luận vào protocol/gameplay spec.
+
 ## Kiến trúc hiện tại
 
 - Vite + JavaScript modules
