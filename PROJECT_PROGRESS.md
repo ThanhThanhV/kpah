@@ -32,6 +32,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Latest implementation
 
+- Original JAR scan completed in GitHub Actions run `80b1df5`: 1,024 archive entries; all 782 class files parsed with zero errors; 3,094 methods, 19,878 call edges, 38,448 field references and 3,968 type references. All 198 decoded packed resources passed SHA-256 verification. The role mapper produced 16 known anchors, 129 role hypotheses and 637 unclassified classes. Added `docs/reverse-engineering/class-role-map.md` with evidence-backed anchors and a prioritized candidate review queue. This does not mean all 129 hypotheses are confirmed.
+
 - Reverse-engineering CI extension: added a separate `analyze-original-jar` job. It extracts the committed `KPAH_278.jar`, isolates class files outside `public/`, verifies decoded asset hashes, analyzes all extracted classes, generates evidence-ranked class-role reports, and uploads the JSON/Markdown reports plus manifest as a 14-day artifact. The new job's first run is pending; no original-JAR scan result is claimed yet.
 
 - CI refinement: validation workflow now groups runs by workflow and ref and cancels superseded runs, preventing multiple long builds from piling up after consecutive main commits.
