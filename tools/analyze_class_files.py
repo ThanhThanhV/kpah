@@ -320,6 +320,8 @@ def main() -> None:
 
     classes = []
     call_graph = []
+    field_reference_graph = []
+    type_reference_graph = []
     opcode_counts: Counter[str] = Counter()
     matches = []
     errors = []
@@ -339,10 +341,26 @@ def main() -> None:
                 for instruction in instructions:
                     opcode_counts[instruction["opcode"]] += 1
                     reference = instruction.get("reference")
+                    source_method = f'{class_name}.{method["name"]}{method["descriptor"]}'
                     if instruction["opcode"] in ("invokevirtual", "invokespecial", "invokestatic", "invokeinterface") and reference:
                         call_graph.append({
-                            "from": f'{class_name}.{method["name"]}{method["descriptor"]}',
+                            "from": source_method,
                             "to": f'{reference["owner"]}.{reference["name"]}{reference["descriptor"]}',
+                            "opcode": instruction["opcode"],
+                            "bytecodeOffset": instruction["offset"],
+                        })
+                    if instruction["opcode"] in ("getstatic", "putstatic", "getfield", "putfield") and reference:
+                        field_reference_graph.append({
+                            "from": source_method,
+                            "to": f'{reference["owner"]}.{reference["name"]}:{reference["descriptor"]}',
+                            "opcode": instruction["opcode"],
+                            "bytecodeOffset": instruction["offset"],
+                        })
+                    class_reference = instruction.get("classReference")
+                    if class_reference:
+                        type_reference_graph.append({
+                            "from": source_method,
+                            "to": class_reference,
                             "opcode": instruction["opcode"],
                             "bytecodeOffset": instruction["offset"],
                         })
@@ -379,15 +397,19 @@ def main() -> None:
         "errorCount": len(errors),
         "methodCount": sum(len(item["methods"]) for item in classes),
         "callEdgeCount": len(call_graph),
+        "fieldReferenceCount": len(field_reference_graph),
+        "typeReferenceCount": len(type_reference_graph),
         "opcodeCounts": dict(sorted(opcode_counts.items())),
         "classes": classes,
         "callGraph": call_graph,
+        "fieldReferenceGraph": field_reference_graph,
+        "typeReferenceGraph": type_reference_graph,
         "matches": matches,
         "errors": errors,
     }
     args.output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"Class files: {len(class_files)}; parsed: {len(classes)}; errors: {len(errors)}")
-    print(f"Methods: {report['methodCount']}; call edges: {len(call_graph)}; matches: {len(matches)}")
+    print(f"Methods: {report['methodCount']}; call edges: {len(call_graph)}; field refs: {len(field_reference_graph)}; type refs: {len(type_reference_graph)}; matches: {len(matches)}")
     print(f"Report: {args.output}")
 
 
