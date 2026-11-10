@@ -110,7 +110,7 @@
 | [ ] | C6 | R1 | P0 | Convert tile, .type, dữ liệu map | t.png (16x3712) thành tileset; .type thành bảng va chạm/loại ô; map thành JSON | C1 | RE | 5 | Chưa triển khai theo WBS |
 | [ ] | C7 | R1 | P0 | Bitmap font và tiếng Việt | Chuyển arial11/fbv sang bitmap font; kiểm tra bộ dấu tiếng Việt, fallback web font | C1 | CL | 3 | Chưa triển khai theo WBS |
 | [ ] | C8 | R3 | P2 | Chọn hoặc mua âm thanh mới (jar không có) | Chọn nhạc nền, SFX đánh/nhặt/UI từ nguồn có giấy phép; nén OGG | A2 | PM | 3 | Chưa triển khai theo WBS |
-| [ ] | C9 | R1 | P0 | Pipeline build asset tự động, versioning | Một lệnh chạy toàn bộ converter, xuất manifest có hash để cache-busting | C2 | OPS | 3 | Một phần – extractor ghi SHA-256 cho JAR, từng entry và tài nguyên giải mã; tạo assetVersion fingerprint, loader tự thêm query version để cache-busting. CI/build pipeline và atlas manifest còn thiếu |
+| [ ] | C9 | R1 | P0 | Pipeline build asset tự động, versioning | Một lệnh chạy toàn bộ converter, xuất manifest có hash để cache-busting | C2 | OPS | 3 | Một phần – extractor ghi SHA-256 cho JAR, từng entry và tài nguyên giải mã; tạo assetVersion fingerprint, loader tự thêm query version để cache-busting. đã có lệnh verify hash tài nguyên/assetVersion; CI/build pipeline và atlas manifest còn thiếu |
 | [ ] | C10 | R1 | P0 | Thiết kế game tối thiểu (GDD) | Công thức sát thương, phòng thủ, EXP, đường cong level, drop, thông số cơ bản cho 5 hệ; viết dưới dạng bảng tham số | B13 | SV | 10 | Chưa triển khai theo WBS |
 | [ ] | C11 | R1 | P0 | Soạn dữ liệu tĩnh bộ 1: lõi chơi | 5 hệ, skill cơ bản, ~30 item, ~10 mob, 3 map, NPC/shop khởi đầu | C10 | SV | 8 | Chưa triển khai theo WBS |
 | [ ] | C12 | R3 | P1 | Soạn dữ liệu tĩnh bộ 2: nội dung chính | Thêm item/mob/map, chuỗi nhiệm vụ, boss, tàu/vé, ngựa | C11 | SV | 12 | Chưa triển khai theo WBS |
@@ -611,6 +611,7 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 | Ngày | Task | Thay đổi | Commit | Bằng chứng / giới hạn |
 |---|---|---|---|---|
 | 2026-11-10 | A3 / theo dõi dự án | Đưa WBS Markdown thành nguồn tiến độ chuẩn; README và PROJECT_PROGRESS dẫn về file này | `84242be` | Đã xác minh file và các liên kết trên `main` |
+| 2026-11-10 | C9 | Thêm verifier kiểm tra SHA-256 từng tài nguyên giải mã, tái tạo `assetVersion`, tùy chọn đối chiếu JAR nguồn; tách class output khỏi public assets | `02ea560`, `8999b31`, `7dcf7e9` | Verifier smoke test PASS với manifest tổng hợp; chấp nhận file nguyên vẹn và từ chối file bị sửa; chưa chạy trên bộ asset gốc do JAR không có trong môi trường thực thi |
 | 2026-11-10 | B1 | Thêm `tools/analyze_class_files.py` và lệnh `npm run analyze:classes`; xuất class/method index, opcode counts, call graph và method matches theo chuỗi/opcode | `8460780`, `f866a7b`, `02ea560`, `89657c0`, `8a0aab6`, `d2e1750` | `py_compile`, test class Java tổng hợp (`javac`), tìm `KPAH`, `invokevirtual` và `tableswitch` đều PASS; class output tách khỏi `public/`; chưa chạy trên JAR gốc do file JAR không có trong môi trường thực thi |
 | 2026-11-10 | C9 | Thêm SHA-256 cho file JAR nguồn, từng entry và từng tài nguyên giải mã; tạo `assetVersion` từ fingerprint nội dung; asset loader thêm `?v=` vào URL để tránh cache ảnh cũ | `b7de9f6` | Đã kiểm tra nội dung commit trên GitHub; chưa chạy extractor trên JAR thật trong phiên này vì JAR không có trong môi trường thực thi |
 
