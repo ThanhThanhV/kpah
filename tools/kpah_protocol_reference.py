@@ -19,6 +19,23 @@ def derive_xor_key(encoded_key: bytes) -> bytes:
     return bytes(key)
 
 
+def decode_handshake_key(payload: bytes) -> bytes:
+    """Read keyLength + delta-coded key bytes from the initial server -40 packet."""
+    if not payload:
+        raise ValueError("The -40 handshake payload is empty")
+    key_length = signed_byte(payload[0])
+    if key_length <= 0 or len(payload) != key_length + 1:
+        raise ValueError("Invalid -40 handshake key length")
+    return derive_xor_key(payload[1:])
+
+
+def encode_handshake_payload(encoded_key: bytes) -> bytes:
+    """Build a synthetic server -40 payload for deterministic tests."""
+    if not 1 <= len(encoded_key) <= 127:
+        raise ValueError("The signed handshake key length must be between 1 and 127")
+    return bytes((len(encoded_key),)) + encoded_key
+
+
 def xor_stream(data: bytes, key: bytes | None, cursor: int = 0) -> tuple[bytes, int]:
     """XOR bytes with the independent send/receive cursor and wrap at key length."""
     if key is None:
@@ -74,6 +91,8 @@ def encode_server_frame(opcode: int, payload: bytes, key: bytes | None = None,
     if not -128 <= opcode <= 255:
         raise ValueError("Opcode must fit in one byte")
     if long_length:
+        if key is None:
+            raise ValueError("The 0x80 long-length marker is only handled in encrypted receive mode")
         header = bytes((0x80, opcode & 0xFF)) + len(payload).to_bytes(4, "big")
     else:
         if len(payload) > 0xFFFF:
@@ -120,6 +139,9 @@ def self_test() -> None:
     encoded_key = bytes((0x10, 0x20, 0x30))
     key = derive_xor_key(encoded_key)
     assert key == bytes((0x10, 0x30, 0x00)), key
+    handshake_payload = encode_handshake_payload(encoded_key)
+    assert handshake_payload == bytes.fromhex("03 10 20 30")
+    assert decode_handshake_key(handshake_payload) == key
 
     plain_client, plain_cursor = encode_client_frame(1, bytes((1, 2, 3)))
     assert plain_client == bytes.fromhex("01 00 03 01 02 03")
