@@ -32,6 +32,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Latest implementation
 
+- B8 NPC/menu/quest slice: documented entity speech opcode 27, help/information -24, world message -26, quest collection -64, quest detail/objectives -30/-31 and generic accept/reject prompt -32. Traced quest model `cy`, menu `tb`, world state `mj` and prompt callbacks `kk/kc`. NPC action trees and reward schema remain open.
+
 - B7 inventory/equipment/trade slice: documented material/recipe list opcode 73, equipment list 76, trade/market panel 94, market listing request/response 92 and item update/remove 95. Traced item models `bo`, `be`, `de` and client collections `xg.E`, `ca.N/O/P`. NPC shop purchase, use-item, equip/unequip, upgrade/refine and warehouse flows remain open.
 
 - B6 combat/skill protocol slice: documented C2S skill cast opcode 51 and S2C damage events 6/9/10/83/106 plus timed effect/buff events -74/-71 and extended effect -73. Traced target HP mutation, floating damage/MISS, attacker animation callbacks and entity effect-list lifecycle. Damage formula, crit/defense rules, complete skill-code mapping and buff stacking remain unverified.
