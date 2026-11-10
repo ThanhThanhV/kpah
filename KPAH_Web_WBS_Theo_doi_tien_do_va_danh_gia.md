@@ -648,3 +648,10 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Trong Markdown, cập nhật checkbox và nhật ký commit/bằng chứng nghiệm thu.
 - Độ phủ 80% là phép đếm feature, không phải tỷ lệ nội dung/độ sâu được tái hiện.
 - C15 (art/âm thanh thay thế) chưa tính vào 737 ngày công; chỉ kích hoạt khi quyết định phát hành công khai/kinh doanh.
+
+### B14 — transport codec Java/JavaScript (2026-11-10)
+
+- Mở rộng codegen transport từ `protocol/protocol.yaml`: prefix-XOR handshake -40, XOR stream, C2S short frame, S2C short frame và S2C encrypted long frame marker 0x80/u32.
+- Hai ngôn ngữ expose cursor tường minh; send/receive cursor do caller quản lý riêng, không reset tại packet boundary.
+- Thêm test vectors handshake, key derivation, encrypted C2S, S2C short/long, cursor wrap; CI compile/smoke-test Java 21 và test JavaScript.
+- B14 vẫn **Một phần**: 239 payload opaque, chưa có complete conditional/nested schemas, production capture và server/gateway.
