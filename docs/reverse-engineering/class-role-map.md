@@ -9,7 +9,7 @@
 - Archive: 1.024 entries; 782 `.class`; 198 tài nguyên nội bộ được giải mã.
 - Asset integrity: 198/198 tài nguyên giải mã khớp SHA-256; `assetVersion=9750a6d205d77c1d`.
 - Bytecode: 782/782 class parse thành công, 0 lỗi; 3.094 methods; 19.878 method-call edges; 38.448 field-reference edges; 3.968 type-reference edges.
-- Role suggestions: 16 anchor đã biết; 129 class có ít nhất một giả thuyết vai trò; 637 class chưa đủ tín hiệu.
+- Role suggestions: 16 anchor trong lần chạy role-ranker đầu tiên; 129 class có ít nhất một giả thuyết vai trò; 637 class chưa đủ tín hiệu. Sau khi CFR review, đã xác nhận thêm 17 class và cập nhật anchor registry; lần chạy role-ranker kế tiếp sẽ chốt lại số liệu.
 - CI run: [#42781275080](https://github.com/ThanhThanhV/kpah/actions/runs/42781275080). Artifact: `kpah-original-jar-analysis`.
 
 ## Anchor đã xác minh
@@ -33,39 +33,40 @@
 | `kv` | Startup/resource initialization worker | Implements `Runnable`; `run()` khởi tạo tài nguyên và kích hoạt bước startup tiếp theo. |
 | `jy` | Protocol request/handshake helper | Kế thừa `jx`; nhiều method dựng `acu` với opcode và payload; liên quan login/handshake. |
 
-## Ứng viên vai trò cần decompile/review
+| `acx` | Socket receive worker và inbound frame parser | Implements `Runnable`; đọc opcode, length, body từ `DataInputStream`, xử lý XOR và marker `0x80`, dispatch `acu`. |
+| `acy` | Socket connection bootstrap worker | Mở `SocketConnection`, input/output streams, khởi chạy reader/writer và xếp handshake `-40`. |
+| `acw` | Connection timeout watchdog | `Runnable` đợi 20 giây; nếu connection vẫn đang connect thì đóng socket và reset state. |
+| `acz` | Outbound packet queue worker | `Runnable` duyệt outbound `Vector`, chỉ flush khi XOR handshake đã bật, sleep 10 ms giữa vòng lặp. |
+| `ka` | Incoming opcode dispatcher | Implements `acs`; `switch(acu.a)` định tuyến các opcode tới `km.s`, `mj` và các handler. |
+| `uk` | Server-list refresh worker | GET `NQSH2.txt`, parse name/host/port/byte, lưu RMS `ipnqsh`, cập nhật màn hình `uj`. |
+| `ku` | Central asset/game-data manager | Khởi tạo nhiều pack `.sh`, `.wp`, `/nation`, `/t.type`, sprite/skill/effect/NPC assets và cache ảnh/animation. |
+| `mh` | Bitmap font manager/renderer | Chứa glyph table tiếng Việt, width từng ký tự, load font atlas qua `ba` và vẽ bằng `Graphics.drawRegion`. |
+| `hf` | Map data loader và tile/NPC layer renderer | Parse map width/height, tile index, overlay/object records; nạp `/npc.sh`, quản lý tile/NPC layer và vẽ tile. |
+| `xg` | Inventory/equipment/character-function screen | Kế thừa `tj`; string `Hành trang`, `Trang bị`, `Kỹ năng`, `Tiềm năng`, `Giao dịch`, `Luyện đồ`, `Kho đồ`. |
+| `im` | Sword-skill sprite animation renderer | Kế thừa `aq`; tạo `bc` từ `/sword skill/kiem01.png`, load `/sword skill/all1.png`, render theo frame. |
+| `jo` | Public-skill resource handler | Kế thừa `ib`; load `/skillpublic.sh`, thao tác với entity/effect object. |
+| `w` | Boss entity renderer | Kế thừa `cd`; dùng `/m/bosshothanh.png`, frame animation và world entity coordinates. |
+| `r` | Dragon entity renderer | Kế thừa `cd`; load `/rong/Big0.png`, `/rong/shadow.png`, parse `/rong/dragonData`, vẽ frame/offset. |
+| `ad` | Sprite-part frame data decoder/renderer | Parse byte stream thành image và frame/offset tables; vẽ các region từ atlas bằng `drawRegion`. |
+| `i` | Animation frame data parser/renderer | Parse binary animation records, frame offsets and multiple frame tables; render image regions. |
+| `cg` | Boss data cache/loader and request model | Load `/boss/{id}` frame records, cache vectors, request remote boss data bằng opcode `-47`. |
 
-| Class | Vai trò ứng viên | Bằng chứng bytecode/tài nguyên | Mức xác nhận |
-|---|---|---|---|
-| `uk` | Tải/cập nhật danh sách server | Giữ tham chiếu `uj`; URL `http://teamobi.com/srvips/NQSH2.txt`; `ipnqsh`; dùng stream và callback `bg`. | Cao, cần xác nhận body |
-| `ku` | Resource/data manager cấp cao | Nạp `/main.sh`, `/arrow.sh`, `/box.sh`, `/eff.sh`, `/g.sh`, `.wp`, `.png`, `/t.png`, `/t.type`, `/nation`, `/wpsplash/`; gọi `ba`, `Graphics`, `Image`. | Cao, phạm vi trách nhiệm cần tách |
-| `mh` | Bitmap font manager/renderer | Charset tiếng Việt đầy đủ; `/font.sh`, `/arial11.png`, `/font/fbv.png`, các font ID; nhận `Graphics`. | Cao |
-| `hf` | NPC pack/data loader | String `/npc.sh`, `DataInputStream`, `Hashtable`, các hàm nhận dữ liệu và render. | Cao |
-| `ka` | Incoming command/message dispatcher | Implements `acs`; method `a(Lacu;)V` có bytecode lớn; nhiều nhánh xử lý thông báo, nhiệm vụ, bang hội, item; liên kết `mj`, `acu`, `DataInputStream`. | Cao, cần lập bảng opcode |
-| `acx` | Network worker | Implements `Runnable`; giữ `acv`; `run()` gọi `DataInputStream`, `acv`, `acu`. | Trung bình-cao |
-| `acy` | Connection/session worker | Implements `Runnable`; giữ `acv` và `String`; liên kết `acw`, `acs`, `Thread`. | Trung bình |
-| `acw` | Socket connection worker | Implements `Runnable`; giữ `acy`; tham chiếu `javax.microedition.io.Connection`, `acv`. | Trung bình |
-| `xg` | Màn hình túi đồ/trang bị/kỹ năng/chức năng nhân vật | Kế thừa `tj`; string `Hành trang`, `Trang bị`, `Kỹ năng`, `Tiềm năng`, `Giao dịch`, `Luyện đồ`, `Kho đồ`, `Thú cưng`. | Cao |
-| `im` | Renderer/loader animation vũ khí hoặc skill | Kế thừa `aq`; nạp `/sword skill/all1.png`, `/sword skill/kiem01.png`; dùng `bc`. | Cao, cần phân biệt skill và weapon |
-| `jo` | Resource/animation handler cho skill công cộng | Kế thừa `ib`; nạp `/skillpublic.sh`; liên kết `ku`, `z`. | Cao, cần xác nhận cách render |
-| `w` | Boss entity renderer | Kế thừa `cd`; nạp `/m/bosshothanh.png`; nhận world entity `j`. | Cao |
-| `r` | Dragon entity renderer | Kế thừa `cd`; nạp `/rong/Big0.png`, `/rong/shadow.png`, `/rong/dragonData`. | Cao |
-| `ad` | Character-part/sprite data renderer | Mảng dữ liệu 2 chiều, `Image`, byte array; string `LOI PART`; có hàm vẽ `Graphics`. | Trung bình-cao |
-| `i` | Effect/frame data decoder | Nhận byte array; string `loi dataeff:`; tạo frame/region và render bằng `Image`/`Graphics`. | Trung bình-cao |
-| `cg` | Boss data loader | String `/boss/`, `_h`, `data`; parse byte arrays và danh sách entity. | Cao |
+## Ứng viên còn lại cần review
+
+Role-ranker đầu tiên còn 112 ứng viên sau khi loại 17 class đã được CFR xác nhận khỏi nhóm giả thuyết. Danh sách đầy đủ có trong JSON/Markdown artifact CI. Ưu tiên review tiếp các nhóm screen phụ (`sc`, `so`, `sg`), widget input (`xf`, `wu`), entity/model (`z`, `un`) và data/packet helpers (`qk`, `qj`, `qh`, `tx`). Các tên vai trò này vẫn là giả thuyết cho đến khi đối chiếu source cụ thể.
 
 ## Cách đọc kết quả
 
 - Bảng anchor là các tên/vai trò đã có bằng chứng độc lập; không thay bằng tên tự đặt.
 - Bảng ứng viên là thứ tự ưu tiên review, không phải kết luận decompile. Một class có thể có nhiều vai trò phụ.
 - Heuristic scoring cố ý không tự rename class. Tín hiệu `Graphics`/`DataInputStream` xuất hiện ở nhiều class nên điểm vai trò có thể trùng và có false positive.
-- Full JSON/Markdown role report và bytecode index nằm trong artifact CI `kpah-original-jar-analysis` (giữ 14 ngày).
-- Bước tiếp theo: đối chiếu CFR/Vineflower, bắt đầu từ `acv/acx/acy/acw/ka/acu/jy` để chốt protocol, sau đó `ku/ba/hf/mh/ad/i/cg` để chốt asset/data pipeline.
+- CFR 0.152 decompile thành công 782/782 class thành source `.java`; artifact CI chứa decompiled source, JSON/Markdown role report và bytecode index (giữ 14 ngày).
+- Bước tiếp theo: dùng CFR source làm cơ sở lập opcode/payload catalog B4–B16; sau đó xác minh schema map/tile/part/skill asset C1–C7.
 
 ## Các giới hạn chưa được xác nhận
 
 - Chưa giải mã hoặc mô tả đầy đủ các file `qs`, `boss`, `dragonData`, `nation` theo schema có kiểm chứng.
 - Chưa xác nhận đầy đủ chiều nhận của XOR, key cursor, reset key và ngoại lệ opcode `-128`.
 - Chưa có bảng opcode C2S/S2C hoàn chỉnh; call graph chỉ cho biết quan hệ gọi, không tự xác định semantics từng packet.
-- Chưa dùng decompiler để review source toàn bộ 782 class ở phiên cập nhật này; job CFR đang được bổ sung vào CI.
+- CFR 0.152 đã decompile toàn bộ 782 class thành 782 file `.java`; chưa review thủ công toàn bộ source và chưa chạy Vineflower để so sánh decompiler.
 
