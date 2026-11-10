@@ -807,6 +807,10 @@ window.addEventListener('kpah:character-selected',event=>{
   }
   characterState.setIdentity(safeName,activeCharacterClass);
   updateCharacterHud();
+  updateActionBar();
+  updateQuestBadge();
+  updateMailBadge();
+  renderWorldTarget();
   document.querySelectorAll('.hero-name').forEach(el=>el.textContent=safeName);
   document.querySelectorAll('#chat-lines strong').forEach(el=>{if(el.textContent==='Kiếm Khách')el.textContent=safeName;});
   const scene=game.scene.getScene('world');
