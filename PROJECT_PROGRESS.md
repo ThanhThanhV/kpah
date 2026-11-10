@@ -12,9 +12,11 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 | P1 | Reconstructed client/gameplay (10 tasks) | 37% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel, zone-specific NPC quest interactions and checkpoint respawn are implemented; original map data, real animation and server combat remain unimplemented. |
 | P2 | Game systems (10 tasks) | 39% | Character/inventory/equipment, skill progression, quest progression, local world hunting, merchant purchases, guild contribution and mailbox rewards now share wallet/inventory state; local friends/party and guild systems are present, with browser-local saves for character progression, inventory/equipment, quests and learned skill configuration. All content remains client-side demo data. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
-| P4 | Optimization and release (6 tasks) | 0% | Not started. |
+| P4 | Optimization and release (6 tasks) | 1.5% | Initial mobile viewport compatibility only; performance, reconnect, security and deployment work remain pending. |
 
-**Overall estimate: about 25.2%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 25.3%** (weighted average of the 41 roadmap items).
+
+- Mobile viewport compatibility: synchronize shell and modal height to `visualViewport` (falling back to `innerHeight`) so the visible layout can adapt when the virtual keyboard opens; chat inputs use 16px text to avoid iOS focus zoom. Real-device testing remains pending.
 
 ## P0 — Foundation detail
 
