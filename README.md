@@ -2,6 +2,9 @@
 
 Bản tái hiện client giao diện KPAH từ tài liệu tham chiếu `KPAH_278.jar` (MIDlet 1.5.9, MIDP 2.0 / CLDC 1.0).
 
+## WBS và theo dõi tiến độ
+
+Nguồn theo dõi tiến độ chính thức: [KPAH Web WBS](./KPAH_Web_WBS_Theo_doi_tien_do_va_danh_gia.md). Mọi task được cập nhật theo ID, phụ thuộc, đợt bàn giao và tiêu chí nghiệm thu trong file này. Các phần demo/local không được đánh dấu hoàn thành thay cho tính năng có dữ liệu gốc hoặc backend authoritative.
 ## Chạy local
 
 Yêu cầu Node.js và Python 3.
