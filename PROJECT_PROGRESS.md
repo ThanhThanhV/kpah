@@ -241,3 +241,6 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Pointer movement, directional controls and combat approach movement now sample the requested path and stop at the last walkable point before a solid obstacle. The player can no longer walk straight through those demo structures.
 - Collision shapes are derived from the current procedural mock scenery only. Original KPAH collision masks, map boundaries and tile collision semantics remain unverified and are not claimed.
 - Validation in this increment: source-level checks confirmed all three zone obstacle-registration branches, path sampling, radius-expanded circle/rectangle tests, and use of the resolved destination by the shared movement entrypoint. No browser/device test or Vite production build was run.
+
+
+- Follow-up movement refinement: when the direct sampled path is blocked, the resolver evaluates horizontal-first and vertical-first alternatives and selects the route with the greatest valid progress. This improves wall sliding around the current demo obstacles without weakening collision checks. Source/static checks confirm both alternate routes use the same collision-tested trace function; no browser/device test or Vite build was run.
