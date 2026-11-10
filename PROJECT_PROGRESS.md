@@ -32,6 +32,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Latest implementation
 
+- CI refinement: validation workflow now groups runs by workflow and ref and cancels superseded runs, preventing multiple long builds from piling up after consecutive main commits.
+
 - WBS A3/C9 increment: added `.github/workflows/validate.yml` to run the Vite production build, Python compileall, a Java fixture bytecode-analysis/class-role smoke test, and synthetic asset-manifest integrity/tamper checks on pushes to main, pull requests and manual dispatch. Workflow is committed but its GitHub Actions run has not yet been observed; this is validation CI, not staging deployment or full original-JAR extraction.
 
 - B1/B2 dependency evidence increment: the bytecode analyzer now exports field-reference edges (`getfield`/`putfield`/static variants) and type-reference edges (class operands), in addition to method call edges. The class-role review tool consumes these graphs and includes field-owner/type-reference summaries while excluding external JDK packages from the internal class map. This improves the review evidence but does not yet establish the semantic names of unverified classes.
