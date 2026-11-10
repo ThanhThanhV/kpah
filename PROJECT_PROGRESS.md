@@ -119,6 +119,13 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - The quest journal supports status filters, objective progress bars, reward previews, claim actions and a pending-reward navigation indicator.
 - Added wallet synchronization to the HUD. The quest catalog, NPC objective, training-wolf target and reward values are illustrative local data, not verified original KPAH content or server transactions.
 
+## Latest client increment — character-specific saves
+
+- Split browser save data by stable local character ID instead of sharing one progression record across every roster entry. Each character now has an independent save key for stats, level, wallet, inventory/equipment, quests, skill progression/loadout, social state, guild and mailbox.
+- Selecting a character resets in-memory gameplay models to their defaults before hydrating that character's save, preventing the previous character's state from leaking into the next selection. HUD, action bar, quest badge and mail badge refresh after activation.
+- The former single-profile save is migrated only when its saved character name and profession match the selected roster entry; otherwise it is not assigned to another character. Saves are written only after a valid roster character ID is activated.
+- All persistence remains browser-local and is not account/server persistence.
+
 ## Latest client increment — character roster\n\n- Rebuilt the post-login character-selection step as a maximum-three-character roster instead of the previous five-profession shortcut. Existing local characters can be selected, new characters can be created while a slot is free, and entries can be deleted with confirmation.\n- Character roster data is isolated under its own versioned localStorage key and does not store login credentials. It remains browser-local demo data and is not connected to an account or server.\n- Verified the committed source contains the three-slot limit, roster rendering, selection/deletion handlers, and the existing character-selected event. Full browser interaction and mobile-device checks have not been run.\n\n## Validation limitations
 
 - Ran JavaScript syntax parsing and state-level smoke checks for quest acceptance, NPC objective progress, monster-kill progress, reward claiming, experience/currency grants and inventory item rewards. These checks do not replace browser interaction testing or a production build. The world-entity/combat, multi-zone travel, ground-loot and social integrations have not yet been browser-tested or run through a production build.
