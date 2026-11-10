@@ -226,3 +226,8 @@ Local monsters now keep their original spawn coordinates and a small AI state. T
 ## Monster attack telegraph
 
 Local monster AI states have distinct overhead cues. Close-range attacks now show a pulsing warning ring for 450 ms before applying damage; moving out of attack range cancels the pending strike. Cooldown and wind-up state are reset on zone changes and respawns. This is provisional offline combat feedback, not a verified original KPAH mechanic.
+
+
+## Keyboard target selection
+
+Press **Tab** to select the next living monster or **Shift+Tab** to select the previous one. Selection wraps through the current zone's living monsters and updates the world target HUD, ground ring, combat target and open world map. The existing 1–5 action-bar shortcuts are unchanged. These are web-client controls, not verified original KPAH key bindings.
