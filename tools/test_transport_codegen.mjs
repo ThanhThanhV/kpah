@@ -1,0 +1,26 @@
+import assert from "node:assert/strict";
+import { deriveXorKey, decodeHandshakeKey, encodeHandshakePayload, xorStream,
+  encodeClientFrame, decodeClientFrame, encodeServerFrame, decodeServerFrame } from "../src/protocol/generated/transport-codec.js";
+const encoded = Uint8Array.from([0x10,0x20,0x30]);
+const key = deriveXorKey(encoded);
+assert.deepEqual([...key], [0x10,0x30,0x00]);
+assert.deepEqual([...decodeHandshakeKey(encodeHandshakePayload(encoded))], [...key]);
+const c2s = encodeClientFrame(1, Uint8Array.from([1,2,3]), key, 0);
+assert.deepEqual([...c2s.data], [0x11,0x30,0x03,0x11,0x32,0x03]);
+const c2sDecoded = decodeClientFrame(c2s.data,key,0);
+assert.equal(c2sDecoded.opcode,1); assert.deepEqual([...c2sDecoded.payload],[1,2,3]); assert.equal(c2sDecoded.cursor,c2s.cursor);
+const s2c = encodeServerFrame(0x2a,Uint8Array.from([0xaa,0xbb]),key,1);
+assert.deepEqual([...s2c.data],[0x1a,0x00,0x12,0x9a,0xbb]);
+const s2cDecoded=decodeServerFrame(s2c.data,key,1);
+assert.equal(s2cDecoded.opcode,0x2a); assert.deepEqual([...s2cDecoded.payload],[0xaa,0xbb]); assert.equal(s2cDecoded.cursor,s2c.cursor);
+const long=encodeServerFrame(0x35,Uint8Array.from([1,2,3]),key,2,true);
+assert.deepEqual([...long.data],[0x80,0x25,0x30,0x00,0x10,0x33,0x01,0x12,0x33]);
+const longDecoded=decodeServerFrame(long.data,key,2);
+assert.equal(longDecoded.opcode,0x35); assert.equal(longDecoded.longLength,true); assert.deepEqual([...longDecoded.payload],[1,2,3]);
+const wrapped=xorStream(Uint8Array.from({length:10},(_,i)=>i),key,2);
+assert.equal(wrapped.cursor,0);
+assert.deepEqual([...xorStream(wrapped.data,key,2).data],[0,1,2,3,4,5,6,7,8,9]);
+assert.throws(()=>decodeHandshakeKey(Uint8Array.from([0])),/length/i);
+assert.throws(()=>encodeClientFrame(1,new Uint8Array(65536)),/u16/i);
+assert.throws(()=>encodeServerFrame(1,new Uint8Array(1),null,0,true),/encrypted/i);
+console.log("Generated transport codec: PASS (handshake, XOR, C2S, S2C short/long, cursor wrap)");
