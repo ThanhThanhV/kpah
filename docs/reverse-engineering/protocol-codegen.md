@@ -22,6 +22,8 @@ Command chưa có schema typed sẽ bị `encodePayload`/`decodePayload` từ ch
 |---|---|---|
 | JavaScript | `src/protocol/generated/commands.js` | C2S/S2C constants, catalog và payload schema |
 | JavaScript | `src/protocol/generated/packet-codec.js` | `PacketWriter`, `PacketReader`, typed payload encode/decode |
+| JavaScript | `src/protocol/generated/transport-codec.js` | Handshake key, XOR stream, C2S/S2C framing và long S2C header |
+| Java | `protocol/generated/java/com/kpah/protocol/generated/TransportCodec.java` | Cùng transport API và byte layout với JavaScript |
 | Java | `protocol/generated/java/com/kpah/protocol/generated/ProtocolCommand.java` | Enum direction + opcode, lookup theo direction/opcode |
 | Java | `protocol/generated/java/com/kpah/protocol/generated/ProtocolPacketCodec.java` | Encode/decode payload theo schema đã xác minh |
 | Java | `protocol/generated/java/com/kpah/protocol/generated/PacketWriter.java` | Primitive writer và Java modified UTF-8 |
@@ -49,6 +51,9 @@ Command chưa có schema typed sẽ bị `encodePayload`/`decodePayload` từ ch
 npm run generate:protocol
 npm run check:protocol-generated
 npm run test:protocol-codegen
+npm run generate:transport
+npm run check:transport-generated
+npm run test:transport-codegen
 ```
 
 - `tools/generate_protocol.py` sinh toàn bộ file generated từ `protocol/protocol.yaml`.
@@ -56,11 +61,19 @@ npm run test:protocol-codegen
 - Java generated sources được compile bằng Java 21 trong CI.
 - JS test kiểm tra opcode counts, payload vectors, signed integer, modified UTF-8 (bao gồm NUL và surrogate pair), payload trailing bytes và bounds.
 
+## Transport codec đã generate
+
+- Handshake opcode -40: đọc signed key length, giải mã prefix-XOR key material; encode helper chỉ phục vụ vector tổng hợp.
+- XOR stream dùng cursor độc lập theo từng hướng; cursor được trả về sau mỗi lần encode/decode và không tự động lưu state toàn cục.
+- C2S: opcode + u16 big-endian + payload; S2C short cùng header; S2C long dùng marker 0x80 + opcode + u32 big-endian và chỉ bật ở encrypted mode.
+- API nhận/trả cursor rõ ràng để caller quản lý stream state; không reset cursor ở ranh giới packet.
+- JavaScript và Java có cùng test vectors cho handshake, C2S, S2C short/long và cursor wrap.
+
 ## Giới hạn còn lại của B14
 
 - Chưa có schema typed cho toàn bộ 109 C2S và 142 S2C entries; 239 command entries còn opaque.
 - Chưa generate đầy đủ request/response classes cho payload có conditional fields, arrays, nested records và optional extension sections.
-- Chưa generate frame-level TCP codec/XOR vào Java/JS từ cùng YAML; hiện framing/XOR reference vẫn nằm ở `tools/kpah_protocol_reference.py` và `protocol-transport.md`.
+- Đã generate frame-level TCP codec/XOR cho Java và JavaScript từ transport section trong `protocol/protocol.yaml`; các vector tổng hợp được kiểm tra ở cả hai ngôn ngữ. Chưa có capture mạng thật hoặc kiểm chứng với server đang hoạt động.
 - Chưa có capture phiên production để xác nhận packet order, optional fields và server version negotiation.
 - Chưa xây WebSocket gateway hoặc server session; các generated Java classes chỉ là protocol contract độc lập, chưa phải BE.
 
