@@ -168,3 +168,8 @@ The live world map now keeps its player marker synchronized while the character 
 ## Character selection roster
 
 After the offline login step, the character-selection screen displays up to three locally saved character entries. Select an existing character to enter the world, create another while a slot is available, or delete an entry after confirmation. The roster is stored separately in browser local storage and never stores the account password. This is a client-only convenience flow; it does not create, delete, restore or synchronize characters on the original game server.
+
+
+## Per-character offline progress
+
+Each locally created character now has an independent browser save, keyed by its roster ID. Character level/stats, wallet, inventory/equipment, quests, skill progress/loadout, and local social/guild/mail state are restored separately when that character is selected. Switching characters resets the in-memory client models before loading the selected profile. The older single-profile demo save is migrated only when its saved name and profession match the selected roster entry. This remains local browser storage and is not server/account persistence.
