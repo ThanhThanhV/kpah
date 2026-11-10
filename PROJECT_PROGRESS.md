@@ -119,6 +119,12 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - The quest journal supports status filters, objective progress bars, reward previews, claim actions and a pending-reward navigation indicator.
 - Added wallet synchronization to the HUD. The quest catalog, NPC objective, training-wolf target and reward values are illustrative local data, not verified original KPAH content or server transactions.
 
+## Latest client increment — character deletion and logout lifecycle
+
+- Logout now saves the active character before returning to the login overlay and clears the active in-memory profile pointer.
+- Deleting a local roster entry emits a validated character-deleted event; the matching per-character browser save key is cleared so deleted profiles do not leave stale progression behind.
+- This is local browser data lifecycle handling only; it does not issue a delete request to the original game server.
+
 ## Latest client increment — merchant purchase quantities
 
 - Merchant rows now allow selecting a purchase quantity from 1 to 99 with increment/decrement controls and a live line total. The purchase handler clamps the value again before calling the existing shop transaction, so direct input edits cannot bypass the limit.
