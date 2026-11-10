@@ -786,7 +786,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];}
   create(){
     this.drawZone(worldMapState.snapshot().current);
     this.playerSprite=this.add.container(this.player.x,this.player.y);const shadow=this.add.ellipse(0,19,28,9,0x111510,0.35);const cape=this.add.triangle(0,2,0,-2,-17,20,13,20,0x9b3f32);const body=this.add.rectangle(0,0,17,25,0xd5d0b9).setStrokeStyle(2,0x42372b);const head=this.add.circle(0,-17,8,0xe0b88d).setStrokeStyle(2,0x42372b);const hair=this.add.triangle(0,-23,-8,-16,0,-31,9,-15,0x29232a);const sword=this.add.rectangle(13,-3,4,27,0xd6d8d1).setAngle(25).setStrokeStyle(1,0x514d48);this.playerSprite.add([shadow,cape,body,head,hair,sword]);setWorldEntityDepth(this.playerSprite);
@@ -807,6 +807,7 @@ class WorldScene extends Phaser.Scene {
     this.zoneObjects=[];
     this.monsterViews=[];
     this.npcViews=[];
+    this.worldObstacles=[];
     worldEntityState.setMap(zone.id);
     groundDropState.setMap(zone.id);
     const g=this.add.graphics();
@@ -825,13 +826,15 @@ class WorldScene extends Phaser.Scene {
     g.lineStyle(3,0x655744,0.55);
     g.strokePoints([new Phaser.Geom.Point(0,390),new Phaser.Geom.Point(240,340),new Phaser.Geom.Point(430,350),new Phaser.Geom.Point(640,300),new Phaser.Geom.Point(960,330)],true);
     if(zone.id==='village'){
-      this.drawTree(g,110,170,1.2);this.drawTree(g,220,100,0.9);this.drawTree(g,820,155,1.35);this.drawTree(g,720,95,0.9);this.drawTree(g,900,390,1);
-      this.drawHouse(g,330,185,1.05,0x9a5542);this.drawHouse(g,650,180,0.9,0x6f7f91);this.drawHouse(g,505,100,0.75,0x9a804f);
+      const trees=[[110,170,1.2],[220,100,0.9],[820,155,1.35],[720,95,0.9],[900,390,1]];
+      for(const [x,y,scale] of trees){this.drawTree(g,x,y,scale);this.worldObstacles.push({type:'circle',x,y:y+12,radius:8*scale});}
+      const houses=[[330,185,1.05],[650,180,0.9],[505,100,0.75]];
+      for(const [x,y,scale] of houses){this.drawHouse(g,x,y,scale,x===330?0x9a5542:x===650?0x6f7f91:0x9a804f);this.worldObstacles.push({type:'rect',x:x-42*scale,y:y-40*scale,width:84*scale,height:68*scale});}
     }else if(zone.id==='forest'){
-      for(let i=0;i<15;i++){const x=35+(i*67)%900,y=85+(i*113)%220;this.drawTree(g,x,y,0.85+(i%3)*0.18);}
+      for(let i=0;i<15;i++){const x=35+(i*67)%900,y=85+(i*113)%220,scale=0.85+(i%3)*0.18;this.drawTree(g,x,y,scale);this.worldObstacles.push({type:'circle',x,y:y+15*scale,radius:9*scale});}
       for(let i=0;i<9;i++){g.fillStyle(0x1a3028,0.5);g.fillEllipse(90+i*105,470-(i%3)*30,60,15);}
     }else{
-      for(let i=0;i<13;i++){const x=35+(i*79)%900,y=90+(i*91)%230;g.fillStyle(i%2?0x55535b:0x69616a,0.95);g.fillPoints([new Phaser.Geom.Point(x-28,y+18),new Phaser.Geom.Point(x-12,y-22-(i%3)*8),new Phaser.Geom.Point(x+18,y-28),new Phaser.Geom.Point(x+35,y+18)],true);}
+      for(let i=0;i<13;i++){const x=35+(i*79)%900,y=90+(i*91)%230;g.fillStyle(i%2?0x55535b:0x69616a,0.95);g.fillPoints([new Phaser.Geom.Point(x-28,y+18),new Phaser.Geom.Point(x-12,y-22-(i%3)*8),new Phaser.Geom.Point(x+18,y-28),new Phaser.Geom.Point(x+35,y+18)],true);this.worldObstacles.push({type:'rect',x:x-20,y:y-2,width:42,height:24});}
       g.fillStyle(0x16191e,0.7);g.fillEllipse(480,145,330,100);
       g.fillStyle(0x9b6749,0.35);g.fillEllipse(480,145,250,55);
     }
@@ -987,12 +990,28 @@ class WorldScene extends Phaser.Scene {
     const distance=18;
     this.movePlayerTo(this.playerSprite.x+dx*distance,this.playerSprite.y+dy*distance,105);
   }
+  resolveWalkDestination(x,y){
+    const start={x:this.playerSprite.x,y:this.playerSprite.y};
+    const end={x:Phaser.Math.Clamp(x,this.walkBounds.x,this.walkBounds.x+this.walkBounds.width),y:Phaser.Math.Clamp(y,this.walkBounds.y,this.walkBounds.y+this.walkBounds.height)};
+    const distance=Phaser.Math.Distance.Between(start.x,start.y,end.x,end.y);
+    const steps=Math.max(1,Math.ceil(distance/6));
+    let last={...start};
+    const blocked=(point)=>this.worldObstacles.some(obstacle=>{
+      if(obstacle.type==='circle')return Phaser.Math.Distance.Between(point.x,point.y,obstacle.x,obstacle.y)<=obstacle.radius+11;
+      if(obstacle.type==='rect')return point.x>=obstacle.x-11&&point.x<=obstacle.x+obstacle.width+11&&point.y>=obstacle.y-11&&point.y<=obstacle.y+obstacle.height+11;
+      return false;
+    });
+    for(let index=1;index<=steps;index++){
+      const ratio=index/steps;
+      const point={x:start.x+(end.x-start.x)*ratio,y:start.y+(end.y-start.y)*ratio};
+      if(blocked(point))break;
+      last=point;
+    }
+    return last;
+  }
   movePlayerTo(x,y,duration=120,showDestination=false){
     if(!this.playerSprite||characterState.snapshot().hp<=0)return;
-    const destination={
-      x:Phaser.Math.Clamp(x,this.walkBounds.x,this.walkBounds.x+this.walkBounds.width),
-      y:Phaser.Math.Clamp(y,this.walkBounds.y,this.walkBounds.y+this.walkBounds.height)
-    };
+    const destination=this.resolveWalkDestination(x,y);
     if(showDestination&&this.destinationMarker){
       this.destinationMarker.setPosition(destination.x,destination.y+18).setScale(1).setAlpha(0.9).setVisible(true);
       this.destinationPulse?.restart();
