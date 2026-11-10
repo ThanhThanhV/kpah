@@ -37,6 +37,17 @@ Công cụ giữ nguyên các gói gốc và tạo:
 
 Sau khi trích xuất, chạy lại Vite và mở **Tài nguyên gốc** ở thanh bên để tìm kiếm, lọc theo gói và xem trước ảnh PNG. Nếu deploy lên hosting, phải đưa cả thư mục `public/assets/kpah-original/` vào bản build.
 
+## Gợi ý vai trò class obfuscated
+
+Sau khi có báo cáo bytecode, chạy:
+
+```bash
+npm run suggest:class-roles
+```
+
+`tools/suggest_class_roles.py` tạo danh sách class theo vai trò ứng viên (transport, packet, resource loader, rendering, input, screen, world entity, persistence và thread lifecycle), dựa trên chuỗi hằng, superclass/interface, method/field signature và call graph. Kết quả có cả JSON và Markdown để review.
+
+Tool giữ riêng các anchor đã xác minh từ quá trình đọc JAR (ví dụ `km`, `uj`, `ro`, `mj`, `ba`) và đánh dấu các gợi ý khác là giả thuyết cần kiểm tra. Điểm số chỉ dùng để xếp hàng review, tuyệt đối không tự đổi tên class hoặc kết luận nghiệp vụ.
 ## Kiểm tra tính toàn vẹn tài nguyên
 
 Sau khi trích xuất, chạy:
