@@ -96,11 +96,28 @@ export function renderSpriteLab(root, assets) {
   let frameWidth = 0;
   let frameHeight = 0;
   let total = 0;
+  let playbackFrames = [];
+  let playbackIndex = 0;
 
   function stop() {
     if (timer !== null) clearInterval(timer);
     timer = null;
+    playbackFrames = [];
+    playbackIndex = 0;
     $('sprite-play').textContent = 'Phát';
+  }
+
+  function selectedAnimationFrames() {
+    const sequenceText = frameSequenceInput.value.trim();
+    const first = Number(firstFrameInput.value);
+    const last = Number(lastFrameInput.value);
+    const frames = sequenceText
+      ? sequenceText.split(',').map(value => value.trim()).map(value => /^\\d+$/.test(value) ? Number(value) : NaN)
+      : Array.from({length:last-first+1},(_,index)=>first+index);
+    const valid = total > 0 && frames.length > 0 &&
+      frames.every(value => Number.isInteger(value) && value >= 0 && value < total) &&
+      (sequenceText || (Number.isInteger(first) && Number.isInteger(last) && first >= 0 && last >= first && last < total));
+    return valid ? frames : null;
   }
 
   function draw() {
@@ -230,12 +247,8 @@ export function renderSpriteLab(root, assets) {
       copyButton.disabled = true;
       return;
     }
-    const sequenceText = frameSequenceInput.value.trim();
-    const frames = sequenceText
-      ? sequenceText.split(',').map(value => value.trim()).map(value => /^\d+$/.test(value) ? Number(value) : NaN)
-      : Array.from({length:last-first+1},(_,index)=>first+index);
-    if (!total || !frames.length || frames.some(frame => !Number.isInteger(frame) || frame < 0 || frame >= total) ||
-        (!sequenceText && (!Number.isInteger(first) || !Number.isInteger(last) || first < 0 || last < first || last >= total))) {
+    const frames = selectedAnimationFrames();
+    if (!frames) {
       mappingOutput.textContent = 'Dải hoặc thứ tự frame không hợp lệ. Mỗi frame phải nằm trong khoảng 0 đến ' + (total-1) + '.';
       copyButton.disabled = true;
       return;
@@ -290,10 +303,29 @@ export function renderSpriteLab(root, assets) {
   $('sprite-play').addEventListener('click',() => {
     if (timer !== null) { stop(); return; }
     if (total < 2 || !Number.isInteger(frameWidth) || !Number.isInteger(frameHeight)) return;
-    const fps = Math.max(1,Math.min(30,Number(fpsInput.value)||6));
+    playbackFrames = selectedAnimationFrames();
+    if (!playbackFrames || !playbackFrames.length) {
+      meta.textContent = 'Không thể phát: hãy kiểm tra dải frame hoặc thứ tự frame tùy chỉnh.';
+      return;
+    }
+    const fps = Math.max(1,Math.min(60,Number(fpsInput.value)||6));
     fpsInput.value = String(fps);
+    const currentIndex = playbackFrames.indexOf(frame);
+    playbackIndex = currentIndex >= 0 ? currentIndex : 0;
+    frame = playbackFrames[playbackIndex];
+    draw();
     $('sprite-play').textContent = 'Dừng';
-    timer = setInterval(() => { frame = (frame + 1) % total; draw(); },1000/fps);
+    timer = setInterval(() => {
+      if (playbackIndex >= playbackFrames.length - 1) {
+        if (Number(repeatInput.value) === 0) {
+          stop();
+          return;
+        }
+        playbackIndex = 0;
+      } else playbackIndex += 1;
+      frame = playbackFrames[playbackIndex];
+      draw();
+    },1000/fps);
   });
   applyAssetFilters();
 }
