@@ -173,3 +173,8 @@ After the offline login step, the character-selection screen displays up to thre
 ## Per-character offline progress
 
 Each locally created character now has an independent browser save, keyed by its roster ID. Character level/stats, wallet, inventory/equipment, quests, skill progress/loadout, and local social/guild/mail state are restored separately when that character is selected. Switching characters resets the in-memory client models before loading the selected profile. The older single-profile demo save is migrated only when its saved name and profession match the selected roster entry. This remains local browser storage and is not server/account persistence.
+
+
+## Merchant quantity selection
+
+The offline merchant now supports buying between 1 and 99 units per transaction. Each item row has decrement/increment controls, a numeric quantity field and a live total price. The value is clamped again at purchase time; the existing shop state checks wallet balance and inventory capacity before completing the transaction. Catalog entries and prices remain demo data.
