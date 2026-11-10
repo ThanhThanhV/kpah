@@ -32,6 +32,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Latest implementation
 
+- B6 combat/skill protocol slice: documented C2S skill cast opcode 51 and S2C damage events 6/9/10/83/106 plus timed effect/buff events -74/-71 and extended effect -73. Traced target HP mutation, floating damage/MISS, attacker animation callbacks and entity effect-list lifecycle. Damage formula, crit/defense rules, complete skill-code mapping and buff stacking remain unverified.
+
 - B5 world/map protocol slice: documented C2S movement opcode 4 and map request opcode 12; S2C entity spawn/update opcode 4, player snapshot opcode 5, entity snapshot opcode 7, despawn opcode 8 and map transition opcode 12. Traced `ca extends z`, `z`, `cd`, `ce`, `mj`, `hf`, including the factory mapping from entity kind/template to runtime classes. Ground drops and full movement interpolation remain open.
 
 - B4 auth/character protocol slice: added `docs/reverse-engineering/protocol-auth-character.md` with source-backed server-list HTTP/RMS format, login opcode 1 field order, pre-login opcode -1, registration opcode 39, character select/delete/restore subcommands on opcode 13, create-character opcode 14, roster response opcode 13 and registration response opcode 39. Caller methods `rq`, `lk`, `ln`, `lp`, `lv` were traced into `jy` writers and `ka` handlers. Response opcode 1/3 and gameplay payloads remain to be decoded.
