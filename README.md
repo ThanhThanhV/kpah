@@ -206,3 +206,8 @@ Per-character browser saves now also store the player's world coordinates. On ch
 
 
 The character-selection cards also preview the saved zone and rounded world coordinates for each character. Unknown zones and older saves without coordinates use fallback labels, keeping the roster compatible with existing local saves.
+
+
+## Nearby monster combat
+
+Living monsters in the current offline demo zone now periodically attack when the player is within their engagement radius. Damage is applied through the shared character state and can trigger the existing knockout/checkpoint respawn flow. Attack range, cadence and damage are provisional demo values, not verified original KPAH rules. This is still client-side combat without server authority or multiplayer synchronization.
