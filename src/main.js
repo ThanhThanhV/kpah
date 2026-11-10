@@ -114,15 +114,42 @@ deathOverlay.className='death-overlay';
 deathOverlay.hidden=true;
 deathOverlay.innerHTML='<div class="death-card"><span class="death-mark">✦</span><h2>NHÂN VẬT ĐÃ GỤC</h2><p>Bạn sẽ hồi sinh tại Làng Sói Trắng, điểm hồi sinh an toàn.</p><button type="button" id="respawn-button">Hồi sinh</button></div>';
 app.appendChild(deathOverlay);
-const localSave=createLocalSave();
-const savedGame=localSave.load();
-if(savedGame){
-  characterState.restore(savedGame.character);
-  questState.restore(savedGame.quests);
-  skillCombat.restore(savedGame.skills);
-  socialState.restore(savedGame.social);
-  guildState.restore(savedGame.guild);
-  mailState.restore(savedGame.mail);
+let activeCharacterId=null;
+let localSave=createLocalSave('kpah.game-save.v1.unselected');
+const legacyLocalSave=createLocalSave();
+function resetCharacterProgress(){
+  characterState.restore(createCharacterState().snapshot());
+  questState.restore(createQuestState().snapshot());
+  skillCombat.restore(createSkillCombatState().snapshot());
+  socialState.restore(createSocialState().snapshot());
+  guildState.restore(createGuildState().snapshot());
+  mailState.restore(createMailState().snapshot());
+}
+function activateCharacterProgress(characterId,identity){
+  if(typeof characterId!=='string'||!/^local-[a-z0-9-]{1,40}$/.test(characterId))return false;
+  if(activeCharacterId&&activeCharacterId!==characterId)saveGameProgress();
+  activeCharacterId=characterId;
+  localSave=createLocalSave('kpah.game-save.v1.'+characterId);
+  resetCharacterProgress();
+  let savedGame=localSave.load();
+  if(!savedGame){
+    const legacy=legacyLocalSave.load();
+    const legacyName=legacy?.character?.name;
+    const legacyProfession=legacy?.character?.profession;
+    if(legacyName===identity?.name&&legacyProfession===identity?.className){
+      savedGame=legacy;
+      localSave.save(legacy);
+    }
+  }
+  if(savedGame){
+    characterState.restore(savedGame.character);
+    questState.restore(savedGame.quests);
+    skillCombat.restore(savedGame.skills);
+    socialState.restore(savedGame.social);
+    guildState.restore(savedGame.guild);
+    mailState.restore(savedGame.mail);
+  }
+  return true;
 }
 function showDeathOverlay(){
   deathOverlay.hidden=false;
@@ -145,8 +172,9 @@ function respawnPlayer(){
 }
 deathOverlay.querySelector('#respawn-button').addEventListener('click',respawnPlayer);
 function saveGameProgress(){
+  if(!activeCharacterId)return false;
   const skills=skillCombat.snapshot();
-  localSave.save({character:characterState.snapshot(),quests:questState.snapshot(),skills:{skills:skills.skills.map(skill=>({id:skill.id,level:skill.level})),skillPoints:skills.skillPoints,loadout:skills.loadout},social:socialState.snapshot(),guild:guildState.snapshot(),mail:mailState.snapshot()});
+  return localSave.save({character:characterState.snapshot(),quests:questState.snapshot(),skills:{skills:skills.skills.map(skill=>({id:skill.id,level:skill.level})),skillPoints:skills.skillPoints,loadout:skills.loadout},social:socialState.snapshot(),guild:guildState.snapshot(),mail:mailState.snapshot()});
 }
 
 function openWindow(key){
@@ -770,9 +798,13 @@ document.addEventListener('visibilitychange',()=>{
   if(document.hidden)stopActiveMovement();
 });
 window.addEventListener('kpah:character-selected',event=>{
-  const {name,className}=event.detail||{};
+  const {id,name,className}=event.detail||{};
   const safeName=name||'Kiếm Khách';
   activeCharacterName=safeName;activeCharacterClass=className||'Kiếm khách';
+  if(!activateCharacterProgress(id,{name:safeName,className:activeCharacterClass})){
+    toast('Không thể mở dữ liệu nhân vật này.');
+    return;
+  }
   characterState.setIdentity(safeName,activeCharacterClass);
   updateCharacterHud();
   document.querySelectorAll('.hero-name').forEach(el=>el.textContent=safeName);
