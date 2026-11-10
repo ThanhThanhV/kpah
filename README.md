@@ -90,6 +90,10 @@ Packet schemas đã trace cho C2S skill cast opcode 51, S2C damage opcode 6/9/10
 
 Source-backed packet schemas cho movement opcode 4, map transition opcode 12, entity spawn/update opcode 4 S2C, player snapshot opcode 5, entity snapshot opcode 7 và despawn opcode 8: [protocol-world-map.md](./docs/reverse-engineering/protocol-world-map.md).
 
+## Server initialization data
+
+Schema notes for S2C global configuration opcode 1, selected-character snapshot 3, shop/catalog 15 and character inventory/skill extension 16: [protocol-initialization-data.md](./docs/reverse-engineering/protocol-initialization-data.md). Field consumers and optional sections are recorded separately from unresolved business semantics.
+
 ## Client movement và damage feedback
 
 Client movement step/target/path handling, 250 ms coordinate send throttle và floating damage/MISS lifecycle: [client-motion-and-damage.md](./docs/reverse-engineering/client-motion-and-damage.md). Jump physics và damage formula chưa được xác minh.
