@@ -71,6 +71,8 @@ npm run test:protocol
 
 ## Mã tham chiếu và giới hạn
 
+CI đã chạy self-test thành công cho codec tham chiếu (key derivation, C2S, S2C short/long và cursor wrap). Xem thêm [protocol-auth-character.md](./protocol-auth-character.md) cho login, server list và character payloads.
+
 - `tools/kpah_protocol_reference.py` cung cấp key derivation, XOR stream, C2S frame encoder/decoder và S2C frame encoder/decoder để tái lập test vectors.
 - Đây là codec tham chiếu để kiểm tra byte layout, chưa phải socket client/server và chưa triển khai WebSocket gateway.
 - Đã xác minh framing trong client decompile; chưa có capture mạng thật hoặc server source để đối chiếu tương tác với server production.
