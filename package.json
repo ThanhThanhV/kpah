@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "extract:assets": "python tools/extract_kpah_jar.py KPAH_278.jar",
-    "analyze:classes": "python tools/analyze_class_files.py tools/reports/class-files"
+    "analyze:classes": "python tools/analyze_class_files.py tools/reports/class-files",
+    "verify:assets": "python tools/verify_asset_manifest.py public/assets/kpah-original --jar KPAH_278.jar"
   },
   "dependencies": {
     "phaser": "^3.90.0"
