@@ -1,5 +1,7 @@
 # KPAH Web reconstruction — progress snapshot
 
+> **WBS chuẩn:** [KPAH_Web_WBS_Theo_doi_tien_do_va_danh_gia.md](./KPAH_Web_WBS_Theo_doi_tien_do_va_danh_gia.md) là nguồn theo dõi chính thức từ 10/11/2026. Phần trăm P0–P4 dưới đây là snapshot theo roadmap 41 mục cũ, chỉ giữ để tham khảo lịch sử; không quy đổi trực tiếp sang 118 task của WBS mới. Mọi cập nhật tiếp theo phải ghi theo task ID và tiêu chí nghiệm thu trong WBS.
+
 Updated: 2026-11-10
 
 This percentage is a task-weighted estimate against the agreed 41-item roadmap (P0–P4), not a line-of-code percentage. A task receives partial credit only for verified implementation; mock UI does not count as a completed gameplay/backend feature.
