@@ -211,3 +211,8 @@ The character-selection cards also preview the saved zone and rounded world coor
 ## Nearby monster combat
 
 Living monsters in the current offline demo zone now periodically attack when the player is within their engagement radius. Damage is applied through the shared character state and can trigger the existing knockout/checkpoint respawn flow. Attack range, cadence and damage are provisional demo values, not verified original KPAH rules. This is still client-side combat without server authority or multiplayer synchronization.
+
+
+## Monster aggro and pursuit
+
+In the offline demo world, living monsters acquire the player within a local radius, approach at a bounded speed and attack at close range using per-monster cooldowns. Monster coordinates are shared by the Phaser views and world-map markers. Pursuit steps are blocked by the current procedural scenery collision shapes; there is no navigation mesh, verified original KPAH AI or server-authoritative combat yet. All aggro and movement tuning remains provisional demo behavior.
