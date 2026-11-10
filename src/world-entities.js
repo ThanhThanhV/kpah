@@ -55,7 +55,7 @@ export function createWorldEntityState(random = Math.random, initialMap = 'villa
     const revived=[];
     for(const monster of monsters){
       if(!monster.alive&&monster.respawnAt!==null&&now>=monster.respawnAt){
-        monster.hp=monster.maxHp;monster.alive=true;monster.respawnAt=null;revived.push(monster.id);
+        monster.hp=monster.maxHp;monster.alive=true;monster.respawnAt=null;monster.aiState='idle';monster.x=monster.homeX;monster.y=monster.homeY;revived.push(monster.id);
       }
     }
     if(!monsters.some(item=>item.id===selectedId&&item.alive))selectedId=monsters.find(item=>item.alive)?.id||null;
@@ -67,6 +67,12 @@ export function createWorldEntityState(random = Math.random, initialMap = 'villa
     monster.x=x;monster.y=y;
     return true;
   }
+  function setAiState(id,state) {
+    const monster=monsters.find(item=>item.id===id&&item.alive);
+    if(!monster||!['idle','chasing','attacking','returning'].includes(state))return false;
+    monster.aiState=state;
+    return true;
+  }
   function get(id) { return copy(monsters.find(item=>item.id===id)||null); }
-  return {snapshot,select,damage,update,get,move,setMap};
+  return {snapshot,select,damage,update,get,move,setAiState,setMap};
 }
