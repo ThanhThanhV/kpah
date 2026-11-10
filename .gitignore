@@ -1,0 +1,7 @@
+node_modules/
+dist/
+coverage/
+__pycache__/
+*.py[cod]
+tools/reports/
+public/assets/kpah-original/
