@@ -59,8 +59,9 @@ jobs:
               Map<String,Object> decoded = ProtocolPacketCodec.decode("C2S_REFINE_ITEM", payload);
               if (!decoded.get("action").equals(10) || !decoded.get("itemId").equals(17)) throw new AssertionError(decoded);
               if (ProtocolCommand.find(ProtocolCommand.Direction.C2S, -25).orElseThrow() != ProtocolCommand.C2S_REFINE_ITEM) throw new AssertionError("opcode lookup");
-              PacketReader reader = new PacketReader(new PacketWriter().writeUTF("\u0000Xin chào 😀").toByteArray());
-              if (!reader.readUTF().equals("\u0000Xin chào 😀") || reader.remaining() != 0) throw new AssertionError("modified UTF-8");
+              String text = String.valueOf((char) 0) + "Xin chào 😀";
+              PacketReader reader = new PacketReader(new PacketWriter().writeUTF(text).toByteArray());
+              if (!reader.readUTF().equals(text) || reader.remaining() != 0) throw new AssertionError("modified UTF-8");
               System.out.println("Generated Java protocol codec: PASS");
             }
           }
