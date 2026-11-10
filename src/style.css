@@ -241,11 +241,21 @@
 .shop-item-buy{display:grid;justify-items:end;gap:5px}
 .shop-item-buy small{font-size:8px;color:#e5c17e;white-space:nowrap}
 .shop-item-buy button{padding:6px 9px;background:#67492d;border:1px solid #ad824a;color:#ffe2a7;font-size:9px;white-space:nowrap}
+.shop-quantity{display:grid;grid-template-columns:23px 42px 23px;align-items:center;gap:3px}
+.shop-quantity button{width:23px;height:25px;padding:0;font-size:13px;line-height:1}
+.shop-quantity input{width:42px;height:25px;min-width:0;padding:2px;text-align:center;background:#17151a;border:1px solid #70583d;color:#f0d7a3;font-size:10px;font-variant-numeric:tabular-nums}
+.shop-line-total{color:#d7b77d!important}
+.shop-item-live:focus-within{border-color:#b18b51}
+.shop-item-buy button:active,.shop-quantity button:active{transform:translateY(1px);filter:brightness(1.2)}
 @media(max-width:700px){
  .shop-item-live{grid-template-columns:32px minmax(0,1fr) auto;gap:7px;padding:7px}
  .shop-item-icon{width:31px;height:31px;font-size:17px}
  .shop-item-copy b{font-size:9px}
  .shop-item-buy button{padding:6px;font-size:8px}
+ .shop-quantity{grid-template-columns:21px 36px 21px;gap:2px}
+ .shop-quantity button{width:21px;height:24px}
+ .shop-quantity input{width:36px;height:24px;font-size:10px}
+ .shop-line-total{font-size:8px!important}
 }
 
 
