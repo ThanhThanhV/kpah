@@ -90,6 +90,10 @@ Packet schemas đã trace cho C2S skill cast opcode 51, S2C damage opcode 6/9/10
 
 Source-backed packet schemas cho movement opcode 4, map transition opcode 12, entity spawn/update opcode 4 S2C, player snapshot opcode 5, entity snapshot opcode 7 và despawn opcode 8: [protocol-world-map.md](./docs/reverse-engineering/protocol-world-map.md).
 
+## Protocol YAML và code generation
+
+`protocol/protocol.yaml` hiện catalog 110 C2S + 142 S2C entries; Java/JS command constants và payload codecs được generate từ cùng spec. Chỉ 13 payload schema đã đủ bằng chứng để typed encode/decode; các command còn lại được giữ opaque: [protocol-codegen.md](./docs/reverse-engineering/protocol-codegen.md).
+
 ## Nhóm tính năng nâng cao R4
 
 Đánh giá bằng chứng client cho luyện trang bị, pet, cây thần, cổ vật, ranking, vé tàu và các mục chưa xác minh như ngựa/mount, đấu trường, đấu giá: [advanced-features-r4.md](./docs/reverse-engineering/advanced-features-r4.md).
