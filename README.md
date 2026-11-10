@@ -37,6 +37,16 @@ Công cụ giữ nguyên các gói gốc và tạo:
 
 Sau khi trích xuất, chạy lại Vite và mở **Tài nguyên gốc** ở thanh bên để tìm kiếm, lọc theo gói và xem trước ảnh PNG. Nếu deploy lên hosting, phải đưa cả thư mục `public/assets/kpah-original/` vào bản build.
 
+## Kiểm tra tính toàn vẹn tài nguyên
+
+Sau khi trích xuất, chạy:
+
+```bash
+npm run verify:assets
+```
+
+`tools/verify_asset_manifest.py` kiểm tra SHA-256 của từng tài nguyên đã giải mã, xác nhận `assetVersion` có thể tái tạo từ manifest và đối chiếu hash JAR nguồn nếu truyền `--jar`. Lệnh trả mã lỗi khác 0 nếu thiếu file, sai hash, trùng output path hoặc manifest bị sửa không đồng bộ. Đây là bước kiểm tra dữ liệu asset, chưa thay thế CI build/test toàn dự án.
+
 ## Phân tích bytecode Java
 
 Sau khi giải nén JAR, có thể yêu cầu extractor xuất cả `.class` vào thư mục tài nguyên phân tích (không đưa class lên web client):
