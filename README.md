@@ -66,6 +66,10 @@ Open **Tài nguyên gốc** and use the Sprite Sheet Inspector below the PNG bro
 The Resource Viewer includes a read-only `.d` inspector for decoded packed metadata files. It displays byte offsets, hexadecimal bytes and printable ASCII. No semantic field interpretation is assumed until the client bytecode confirms the record layout.
 
 
+## Asset manifest integrity and cache versioning
+
+The extractor records SHA-256 fingerprints for the original JAR, every archive entry and every decoded packed resource. It derives a content-based `assetVersion` in `archive-manifest.json`; the shared asset loader appends this version to decoded asset URLs so browsers do not keep displaying stale images after the asset output changes. Re-run `npm run extract:assets` after changing the source JAR or extraction output. CI automation and atlas-level manifests remain pending.
+
 ## Asset dimensions and browsing
 
 The extractor records PNG width and height from the PNG header and adds a neutral geometry hint (`small-image`, `wide-image`, `tall-image`, or `general-image`) to each decoded PNG manifest entry. These hints support asset triage only; they do not claim a sprite, animation, or UI role. Re-run `npm run extract:assets` after updating the extractor to regenerate the manifest.
