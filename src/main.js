@@ -993,21 +993,34 @@ class WorldScene extends Phaser.Scene {
   resolveWalkDestination(x,y){
     const start={x:this.playerSprite.x,y:this.playerSprite.y};
     const end={x:Phaser.Math.Clamp(x,this.walkBounds.x,this.walkBounds.x+this.walkBounds.width),y:Phaser.Math.Clamp(y,this.walkBounds.y,this.walkBounds.y+this.walkBounds.height)};
-    const distance=Phaser.Math.Distance.Between(start.x,start.y,end.x,end.y);
-    const steps=Math.max(1,Math.ceil(distance/6));
-    let last={...start};
     const blocked=(point)=>this.worldObstacles.some(obstacle=>{
       if(obstacle.type==='circle')return Phaser.Math.Distance.Between(point.x,point.y,obstacle.x,obstacle.y)<=obstacle.radius+11;
       if(obstacle.type==='rect')return point.x>=obstacle.x-11&&point.x<=obstacle.x+obstacle.width+11&&point.y>=obstacle.y-11&&point.y<=obstacle.y+obstacle.height+11;
       return false;
     });
-    for(let index=1;index<=steps;index++){
-      const ratio=index/steps;
-      const point={x:start.x+(end.x-start.x)*ratio,y:start.y+(end.y-start.y)*ratio};
-      if(blocked(point))break;
-      last=point;
-    }
-    return last;
+    const trace=(from,to)=>{
+      const distance=Phaser.Math.Distance.Between(from.x,from.y,to.x,to.y);
+      const steps=Math.max(1,Math.ceil(distance/6));
+      let last={...from};
+      for(let index=1;index<=steps;index++){
+        const ratio=index/steps;
+        const point={x:from.x+(to.x-from.x)*ratio,y:from.y+(to.y-from.y)*ratio};
+        if(blocked(point))break;
+        last=point;
+      }
+      return last;
+    };
+    const direct=trace(start,end);
+    if(Phaser.Math.Distance.Between(direct.x,direct.y,end.x,end.y)<1)return direct;
+    // If a diagonal route hits a wall, try both axis orders and keep the
+    // route that advances furthest without crossing an obstacle.
+    const xFirst=trace(trace(start,{x:end.x,y:start.y}),end);
+    const yFirst=trace(trace(start,{x:start.x,y:end.y}),end);
+    const directProgress=Phaser.Math.Distance.Between(start.x,start.y,direct.x,direct.y);
+    const xProgress=Phaser.Math.Distance.Between(start.x,start.y,xFirst.x,xFirst.y);
+    const yProgress=Phaser.Math.Distance.Between(start.x,start.y,yFirst.x,yFirst.y);
+    return xProgress>=yProgress&&xProgress>directProgress?xFirst:
+      yProgress>directProgress?yFirst:direct;
   }
   movePlayerTo(x,y,duration=120,showDestination=false){
     if(!this.playerSprite||characterState.snapshot().hp<=0)return;
