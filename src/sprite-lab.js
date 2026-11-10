@@ -231,6 +231,7 @@ export function renderSpriteLab(root, assets) {
       slider.disabled = true;
       $('sprite-export').disabled = true;
       copyButton.disabled = true;
+      saveButton.disabled = true;
     };
     const url = assetUrl(item.output);
     if (!url) {
