@@ -1,0 +1,81 @@
+# KPAH 2.7.8 — inventory, equipment, market và trade
+
+> Nguồn: CFR 0.152 source của `jy.java`, `ka.java`, `mj.java`, `xg.java`, `bo.java`, `be.java`, `de.java`. Tài liệu giữ nguyên field order; các trường chưa xác định ngữ nghĩa được mô tả trung tính.
+
+## Runtime data models
+
+- `bo`: item/gear record trong character inventory và market window; chứa item ID `i`, type/category `D/m`, price/listing value `B`, stat vector `H`, description `d` và các thuộc tính item khác.
+- `be`: material/equipment-list record; field `a` là category/type, `b` là item ID, `c` là quantity/count.
+- `de`: market listing record; field `a` là item ID, `b` là owner/character ID, `c` là price.
+- `xg.E`: danh sách item/listing đang hiển thị trong market/trade panel.
+- `ca.N`, `ca.O`: hai nhóm material/recipe list; `ca.P`: equipment/gear list được refresh trong character panel.
+
+## Client → server
+
+### Opcode 94 — request trade/market panel data
+
+Writer `jy.a(int modeA, int modeB, int targetId)` ghi: byte subcommand `1`, byte modeA, byte modeB, short targetId. Đây là request mở/refresh panel; S2C opcode 94 trả danh sách player hoặc item records theo subcommand.
+
+### Opcode 92 — market listing / retrieve listing
+
+Writer ghi theo thứ tự:
+
+1. boolean add/list or retrieve
+2. byte market category
+3. byte market subcategory
+4. short item ID (lấy từ `bo.i` hoặc tham số item ID)
+5. int price
+6. byte source mode (`0` cho item `bo`, `1` cho listing `de`)
+
+Caller `xg.a(bo, itemId, price, isListing)` dùng writer này để đưa item vào gian hàng hoặc lấy item ra. Đây là market action; không nhầm với packet purchase.
+
+### Opcode 95 — market item action
+
+Writer `jy.a(int ownerOrContext, int category, int subcategory, int itemId, int action)` ghi: byte category, byte subcategory, short owner/context ID, short item ID, byte action. Caller `zx` truyền owner/context từ panel, hai category bytes, item ID và action 0/1; caller `ez` dùng owner/context 0 để thao tác item đang chọn.
+
+Không gán action 0/1 thành buy/sell nếu chưa đối chiếu từng caller; chúng là action flag được source truyền vào.
+
+## Server → client
+
+### Opcode 73 — recipe/material lists
+
+Payload: short record count; mỗi record gồm short item ID (`be.b`), short material/category (`be.a`), short quantity (`be.c`); cuối packet có byte selector. Selector `0` thay `ca.N`, khác `0` thay `ca.O`. Nếu đang mở crafting/material tab, UI refresh list tương ứng.
+
+### Opcode 76 — equipment/gear list
+
+Payload: byte record count; mỗi record gồm short item ID (`be.b`), byte equipment slot/category (`be.a`), short value/count (`be.c`). Handler thay `ca.P`; nếu character panel đang mở ở equipment tab, refresh UI.
+
+### Opcode 94 — trade/market window
+
+Prefix gồm hai byte mode. Theo mode thứ ba:
+
+- Mode `0`: byte player count; mỗi entry là UTF player name + short player ID. Client tạo lựa chọn người chơi để mở trade.
+- Mode `1`: clear `xg.E`; đọc byte item count và short owner/character ID; mỗi item `bo` gồm byte type/category, short item ID, short `r`, byte `s`, int price/value, byte `y`, short `u`, byte `I`, byte `J`, byte stat count, lặp unsigned-byte stat ID + short stat value, các byte flags `K/n/o/p/q/C`, UTF description. Tiếp theo đọc byte listing count; mỗi `de` gồm short item ID, short owner ID, int price.
+
+Handler lưu category/mode vào `xg.af/ag`, owner ID vào `xg.D`, và danh sách item/listing vào `xg.E`. Nếu panel là chính người chơi, client merge trạng thái item với inventory `z.bx`.
+
+### Opcode 92 — market listing response
+
+Payload prefix: boolean listed/retrieve, short item ID, int price nếu boolean true, byte result/mode.
+
+- Result `0`: tìm `bo` trong player inventory; cập nhật flag listed `bo.z` và price `bo.B`; add/remove khỏi `xg.E`; hiển thị message đưa vào/lấy khỏi gian hàng.
+- Nhánh khác: đọc short owner/record ID. Khi listed, giảm quantity của material `be` và tạo `de` listing với owner/price. Khi retrieve, remove `de` khỏi `xg.E` và cộng lại quantity vào material list.
+
+### Opcode 95 — remove/update market item
+
+Payload: short item ID, short owner/context ID, byte item class. Handler gọi `mj.c(...)`, tìm `bo` hoặc `de` phù hợp trong `xg.E`, loại khỏi panel và refresh UI nếu market tab đang mở.
+
+## Phân biệt với các hệ thống khác
+
+- Opcode 73 là material/recipe data; không phải inventory bag snapshot tổng thể.
+- Opcode 76 là equipment/gear list; không phải character stat snapshot.
+- Opcode 94 là trade/market panel data; hai mode trả player list hoặc item/listing list.
+- Opcode 92/95 là market listing actions và responses; không tự động suy ra purchase semantics.
+- Chưa đóng toàn bộ C2S purchase, shop NPC, use-item, equip/unequip, upgrade/refine và warehouse flows; chúng sẽ được truy vết riêng từ caller UI và các response handler.
+
+## Bước tiếp theo
+
+- Trace shop NPC purchase và item use/equip/unequip theo caller trong `xg`, `tb`, `dh` và handler response.
+- Trace upgrade/refine/material consumption, đối chiếu opcode `-52`, `-51`, `-48` cùng các bảng item/material.
+- Xác nhận currency debit/credit và server-side validation; không dùng client message làm nguồn sự thật.
+
