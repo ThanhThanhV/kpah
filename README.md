@@ -90,6 +90,10 @@ Packet schemas đã trace cho C2S skill cast opcode 51, S2C damage opcode 6/9/10
 
 Source-backed packet schemas cho movement opcode 4, map transition opcode 12, entity spawn/update opcode 4 S2C, player snapshot opcode 5, entity snapshot opcode 7 và despawn opcode 8: [protocol-world-map.md](./docs/reverse-engineering/protocol-world-map.md).
 
+## Local TCP replay harness
+
+Mock TCP loopback server để kiểm tra handshake `-40`, XOR cursor và capture C2S login đầu tiên (login payload được redacted): [local-tcp-replay-harness.md](./docs/reverse-engineering/local-tcp-replay-harness.md). Chưa có emulator replay hoặc auth/world response.
+
 ## Protocol YAML và code generation
 
 `protocol/protocol.yaml` hiện catalog 110 C2S + 142 S2C entries; Java/JS command constants và payload codecs được generate từ cùng spec. Chỉ 13 payload schema đã đủ bằng chứng để typed encode/decode; các command còn lại được giữ opaque: [protocol-codegen.md](./docs/reverse-engineering/protocol-codegen.md).
