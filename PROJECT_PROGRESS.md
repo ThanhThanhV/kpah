@@ -8,13 +8,13 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 | Phase | Scope | Progress | Basis |
 |---|---|---:|---|
-| P0 | Foundation and original resources (5 tasks) | 40% | Resource extraction, geometry hints, source-pack family taxonomy/filtering, camera/entity runtime, explicit sprite-sheet loading and animation helpers exist; original map data, tile mapping and verified character animation mappings remain unimplemented. |
+| P0 | Foundation and original resources (5 tasks) | 41% | Resource extraction, geometry hints, source-pack family taxonomy/filtering, camera/entity runtime, explicit sprite-sheet loading and animation helpers exist; original map data, tile mapping and verified character animation mappings remain unimplemented. |
 | P1 | Reconstructed client/gameplay (10 tasks) | 37% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel, zone-specific NPC quest interactions and checkpoint respawn are implemented; original map data, real animation and server combat remain unimplemented. |
 | P2 | Game systems (10 tasks) | 39% | Character/inventory/equipment, skill progression, quest progression, local world hunting, merchant purchases, guild contribution and mailbox rewards now share wallet/inventory state; local friends/party and guild systems are present, with browser-local saves for character progression, inventory/equipment, quests and learned skill configuration. All content remains client-side demo data. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 0% | Not started. |
 
-**Overall estimate: about 25%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 25.2%** (weighted average of the 41 roadmap items).
 
 ## P0 — Foundation detail
 
@@ -22,7 +22,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 |---|---|---:|
 | 1. Extract .sh, .wp, .wps | Implemented in extractor | 100% |
 | 2. Classify images/resources | PNG geometry hints plus verified source-pack family labels and family filtering; individual sprite semantics pending | 45% |
-| 3. Sprite/animation engine | Manual frame inspector, Phaser texture loader, animation registration/play helpers and a mapping workbench that exports explicit frame order/FPS/repeat config; original in-game mappings not integrated | 25% |
+| 3. Sprite/animation engine | Manual frame inspector, Phaser texture loader, animation registration/play helpers, exact configured-sequence preview and locally saved mapping drafts; original in-game mappings not integrated | 30% |
 | 4. Original tilemap engine | Generic verified-data adapter added; original map format/data not traced | 5% |
 | 5. Original camera/render pipeline | Shared camera-follow rig, movement bounds and Y-depth sorting integrated; current 960 × 560 mock world cannot demonstrate scrolling | 25% |
 
@@ -211,5 +211,7 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - The tool validates every frame against the selected sheet grid and exports a JSON mapping with original pack/path, measured image dimensions, absolute asset URL, texture loading definition and Phaser animation registration definition.
 - The exported `load` and `animation` objects match the runtime helpers' input contracts; the output can be copied from the UI for review and later committed as source-verified mapping data.
 - Added source-family and original-pack filters inside Sprite Lab so large asset sets can be narrowed before selecting a candidate sheet.
+- Sprite Lab playback now follows the exact configured frame range/order, FPS and one-shot/loop policy instead of always cycling the whole sheet. Mapping JSON includes measured grid metadata.
+- Added a browser-local mapping draft catalog with save, reopen, delete and guarded storage access. Drafts remain on the current browser and are not synchronized or treated as source-verified game data.
 - The workbench is an authoring aid, not an automatic reverse-engineering result. No frame sequence has been declared to be a real KPAH walk/attack/death animation without tracing its source.
 - Runtime helper smoke checks passed for texture loading, animation registration, playback and rejection of a non-HTTP URL. Sprite Lab and runtime modules pass syntax compilation. No browser clipboard/UI test or Vite build was run.
