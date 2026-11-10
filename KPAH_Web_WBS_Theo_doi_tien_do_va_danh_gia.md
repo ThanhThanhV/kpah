@@ -45,8 +45,8 @@
 | Trạng thái baseline | Số lượng |
 |---|---:|
 | Task đã nghiệm thu đầy đủ theo tiêu chí WBS | 0/118 |
-| Task đã có một phần triển khai/prototype được xác minh | 17/118 |
-| Task chưa có triển khai được ghi nhận | 101/118 |
+| Task đã có một phần triển khai/prototype được xác minh | 18/118 |
+| Task chưa có triển khai được ghi nhận | 100/118 |
 
 > 0 task nghiệm thu không có nghĩa repo chưa có sản phẩm. Các phần demo/local/prototype đã được ghi trong cột **Tình trạng hiện tại**, nhưng chưa đạt toàn bộ tiêu chí WBS (đặc biệt là nguồn dữ liệu gốc, server-authoritative, persistence và kiểm thử).
 
@@ -81,7 +81,7 @@
 
 | Done | ID | Đợt | Ưu tiên | Công việc | Giải pháp / phạm vi | Phụ thuộc | Vai trò | md | Tình trạng hiện tại |
 |---|---|---|---|---|---|---|---|---:|---|
-| [ ] | B1 | R1 | P0 | Toolchain phân tích bytecode | Mở rộng bộ đọc constant pool và disassembler Python đã có: xuất call-graph, tìm theo mã lệnh/chuỗi; đối chiếu bằng Vineflower hoặc CFR trên máy có mạng | A3 | RE | 3 | Một phần – có script trích tài nguyên; chưa có pipeline disassembler/call-graph phủ 782 class |
+| [ ] | B1 | R1 | P0 | Toolchain phân tích bytecode | Mở rộng bộ đọc constant pool và disassembler Python đã có: xuất call-graph, tìm theo mã lệnh/chuỗi; đối chiếu bằng Vineflower hoặc CFR trên máy có mạng | A3 | RE | 3 | Một phần – đã có Python class-file parser, đọc constant pool/metadata, disassemble bytecode cơ bản, đếm opcode, tạo call graph và lọc chuỗi/opcode; smoke test bằng class Java tổng hợp đạt, chưa scan 782 class gốc |
 | [ ] | B2 | R1 | P0 | Khôi phục tên class theo vai trò | Đặt tên theo chuỗi UI, tài nguyên được nạp, kiểu tham chiếu; ghi bản đồ a->tên thật | B1 | RE | 5 | Chưa triển khai theo WBS |
 | [ ] | B3 | R1 | P0 | Đặc tả transport: khung gói, handshake, XOR | Xác nhận chiều ghi (acz), con trỏ khóa gửi, gói -128; viết test vector hai chiều | B1 | RE | 2 | Chưa triển khai theo WBS |
 | [ ] | B4 | R1 | P0 | Trích lệnh: Auth, danh sách server, nhân vật | Lần theo handler ka.a cho cmd đăng nhập, chọn/tạo nhân vật; ghi field theo thứ tự đọc/ghi | B2,B3 | RE | 4 | Chưa triển khai theo WBS |
@@ -611,6 +611,7 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 | Ngày | Task | Thay đổi | Commit | Bằng chứng / giới hạn |
 |---|---|---|---|---|
 | 2026-11-10 | A3 / theo dõi dự án | Đưa WBS Markdown thành nguồn tiến độ chuẩn; README và PROJECT_PROGRESS dẫn về file này | `84242be` | Đã xác minh file và các liên kết trên `main` |
+| 2026-11-10 | B1 | Thêm `tools/analyze_class_files.py` và lệnh `npm run analyze:classes`; xuất class/method index, opcode counts, call graph và method matches theo chuỗi/opcode | `9f0c83e` | `py_compile`, test bằng class Java tổng hợp (`javac`), tìm `KPAH` và `invokevirtual` đều PASS; chưa chạy trên JAR gốc do file JAR không có trong môi trường hiện tại |
 | 2026-11-10 | C9 | Thêm SHA-256 cho file JAR nguồn, từng entry và từng tài nguyên giải mã; tạo `assetVersion` từ fingerprint nội dung; asset loader thêm `?v=` vào URL để tránh cache ảnh cũ | `b7de9f6` | Đã kiểm tra nội dung commit trên GitHub; chưa chạy extractor trên JAR thật trong phiên này vì JAR không có trong môi trường thực thi |
 
 ## 14. Hướng dẫn đọc sheet `Đọc trước`
