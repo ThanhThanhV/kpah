@@ -70,6 +70,10 @@ npm run verify:assets
 
 `tools/verify_asset_manifest.py` kiểm tra SHA-256 của từng tài nguyên đã giải mã, xác nhận `assetVersion` có thể tái tạo từ manifest và đối chiếu hash JAR nguồn nếu truyền `--jar`. Lệnh trả mã lỗi khác 0 nếu thiếu file, sai hash, trùng output path hoặc manifest bị sửa không đồng bộ. Đây là bước kiểm tra dữ liệu asset, chưa thay thế CI build/test toàn dự án.
 
+## Đặc tả transport TCP gốc
+
+Đặc tả frame, handshake `-40`, XOR key/cursor, marker long-length `0x80` và test vectors được ghi tại [protocol-transport.md](./docs/reverse-engineering/protocol-transport.md). Codec tham chiếu nằm trong `tools/kpah_protocol_reference.py`; chạy `npm run test:protocol` để kiểm tra vector tổng hợp.
+
 ## Bản đồ vai trò class từ JAR gốc
 
 Xem [class-role-map.md](./docs/reverse-engineering/class-role-map.md) để biết 16 anchor class đã xác minh, nhóm class ứng viên cần review, SHA-256 JAR và số liệu bytecode scan thực tế. Không tự đổi tên class dựa riêng vào điểm heuristic.
