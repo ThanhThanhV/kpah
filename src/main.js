@@ -920,7 +920,7 @@ class WorldScene extends Phaser.Scene {
   }
   drawMonster(monster){
     const c=this.add.container(monster.x,monster.y);
-    const elite=monster.id==='pack-leader';
+    const elite=monster.type==='pack-leader';
     const color=elite?0x8c4c46:0x777d55;
     const targetRing=this.add.ellipse(0,13,48,21,0xf1c96b,.08).setStrokeStyle(2,0xf1c96b,.9).setVisible(false);
     const shadow=this.add.ellipse(0,13,30,8,0x10130f,.4);
