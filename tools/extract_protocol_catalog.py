@@ -13,8 +13,8 @@ METHOD_RE = re.compile(
     r"(?m)^\s*(?:public|private|protected)\s+(?:(?:static|final|synchronized)\s+)*"
     r"[\w.$<>\[\]]+\s+([A-Za-z_$][\w$]*)\s*\(([^)]*)\)\s*\{"
 )
-OPCODE_RE = re.compile(
-    r"(?:jy\.b\(\s*\(byte\)\s*(-?\d+)\s*\)|new\s+acu\(\s*(?:\(byte\)\s*)?(-?\d+)\s*\))"
+PACKET_CREATE_RE = re.compile(
+    r"(?:jy\.b\(\s*((?:\(byte\)\s*)?[^()]*)\s*\)|new\s+acu\(\s*([^()]*)\s*\))"
 )
 CASE_RE = re.compile(r"\bcase\s+(-?\d+)\s*:\s*\{")
 WRITE_RE = re.compile(r"\.write(Byte|Short|Int|Long|UTF|Boolean)\s*\(")
@@ -121,12 +121,15 @@ def extract_outbound(java_file: Path) -> list[dict[str, Any]]:
     records = []
     for method in extract_blocks(source, METHOD_RE):
         body = method["body"]
-        opcodes = list(OPCODE_RE.finditer(body))
-        for index, match in enumerate(opcodes):
-            opcode = int(match.group(1) if match.group(1) is not None else match.group(2))
-            end = opcodes[index + 1].start() if index + 1 < len(opcodes) else len(body)
+        creations = list(PACKET_CREATE_RE.finditer(body))
+        for index, match in enumerate(creations):
+            expression = (match.group(1) if match.group(1) is not None else match.group(2)).strip()
+            normalized = re.sub(r"^\(byte\)\s*", "", expression).strip()
+            numeric_match = re.fullmatch(r"-?\d+", normalized)
+            opcode = int(normalized) if numeric_match else None
+            end = creations[index + 1].start() if index + 1 < len(creations) else len(body)
             segment = body[match.start():end]
-            variable_match = re.search(r"\bacu\s+([A-Za-z_$][\w$]*)\s*=\s*$", body[max(0, match.start() - 80):match.start()])
+            variable_match = re.search(r"\bacu\s+([A-Za-z_$][\w$]*)\s*=\s*$", body[max(0, match.start() - 100):match.start()])
             variable = variable_match.group(1) if variable_match else None
             send_calls = len(re.findall(r"\.a\(\s*" + re.escape(variable) + r"\s*\)", segment)) if variable else len(re.findall(r"\.a\(\s*acu\d*\s*\)", segment))
             records.append({
@@ -134,7 +137,8 @@ def extract_outbound(java_file: Path) -> list[dict[str, Any]]:
                 "signature": method["signature"],
                 "sourceLine": method["line"],
                 "opcode": opcode,
-                "opcodeHex": "0x{0:02X}".format(opcode & 0xFF),
+                "opcodeExpression": expression,
+                "opcodeHex": "0x{0:02X}".format(opcode & 0xFF) if opcode is not None else None,
                 "payloadWrites": extract_write_operations(segment),
                 "sendCallCount": send_calls,
                 "sourceFile": java_file.name,
@@ -173,17 +177,24 @@ def main() -> int:
     missing = [str(path) for path in (jy_file, ka_file) if not path.is_file()]
     if missing:
         parser.error("Missing required CFR source file(s): " + ", ".join(missing))
-    outbound = extract_outbound(jy_file)
+    java_files = sorted(args.cfr_source.rglob("*.java"))
+    outbound = []
+    for java_file in java_files:
+        outbound.extend(extract_outbound(java_file))
     inbound = extract_inbound(ka_file)
+    numeric_declarations = {item["opcode"] for item in outbound if item["opcode"] is not None}
+    numeric_sent = {item["opcode"] for item in outbound if item["opcode"] is not None and item["sendCallCount"] > 0}
     report = {
         "sourceFiles": {
             "jy.java": hashlib.sha256(jy_file.read_bytes()).hexdigest(),
             "ka.java": hashlib.sha256(ka_file.read_bytes()).hexdigest(),
         },
+        "outboundSourceFileCount": len(java_files),
         "outboundWriterDeclarationCount": len(outbound),
+        "outboundDynamicOpcodeDeclarationCount": sum(item["opcode"] is None for item in outbound),
         "outboundUnsentDeclarationCount": sum(item["sendCallCount"] == 0 for item in outbound),
-        "outboundUniqueDeclaredOpcodeCount": len({item["opcode"] for item in outbound}),
-        "outboundUniqueSentOpcodeCount": len({item["opcode"] for item in outbound if item["sendCallCount"] > 0}),
+        "outboundUniqueDeclaredOpcodeCount": len(numeric_declarations),
+        "outboundUniqueSentOpcodeCount": len(numeric_sent),
         "inboundCaseCount": len(inbound),
         "inboundUniqueOpcodeCount": len({item["opcode"] for item in inbound}),
         "outbound": outbound,
@@ -195,21 +206,24 @@ def main() -> int:
     args.json.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     lines = [
         "# KPAH protocol opcode catalog", "",
-        "- Outbound writer declarations: " + str(report["outboundWriterDeclarationCount"]),
+        "- CFR source files scanned for packet builders: " + str(report["outboundSourceFileCount"]),
+        "- Outbound packet-builder declarations: " + str(report["outboundWriterDeclarationCount"]),
+        "- Dynamic opcode expressions: " + str(report["outboundDynamicOpcodeDeclarationCount"]),
         "- Unique C2S opcodes actually enqueued: " + str(report["outboundUniqueSentOpcodeCount"]),
         "- Writer declarations not enqueued: " + str(report["outboundUnsentDeclarationCount"]),
         "- Inbound dispatcher cases: " + str(report["inboundCaseCount"]),
         "- Unique S2C opcodes: " + str(report["inboundUniqueOpcodeCount"]), "",
         "> Evidence extracted from CFR source. Opcode meaning and payload business semantics are not inferred.", "",
         "## Client to server writers", "",
-        "| Opcode | Status | Method | Payload writes (source order) |",
-        "|---:|---|---|---|",
+        "| Opcode | Status | Source | Method | Payload writes (source order) |",
+        "|---|---|---|---|---|",
     ]
     for item in outbound:
         writes = "; ".join(operation["type"] + "(" + operation["argument"] + ")" for operation in item["payloadWrites"]) or "(empty payload)"
         status = "not enqueued" if item["sendCallCount"] == 0 else "enqueued x" + str(item["sendCallCount"])
-        lines.append("| {0} / {1} | {2} | {3} | {4} |".format(
-            item["opcode"], item["opcodeHex"], status, item["signature"], writes.replace("|", "\\|")))
+        opcode_label = str(item["opcode"]) + " / " + str(item["opcodeHex"]) if item["opcode"] is not None else "dynamic: " + item["opcodeExpression"]
+        lines.append("| {0} | {1} | {2} ({3}) | {4} | {5} |".format(
+            opcode_label, status, item["sourceFile"], item["sourceLine"], item["signature"], writes.replace("|", "\\|")))
     lines.extend(["", "## Server to client dispatch", "",
         "| Opcode | Payload reads | Dispatch targets |",
         "|---:|---|---|"])
@@ -219,8 +233,9 @@ def main() -> int:
             ", ".join(item["readOperations"]) or "—",
             ", ".join(item["dispatchTargets"]) or "—"))
     args.markdown.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print("C2S declarations: {0}; sent opcodes: {1}; unsent declarations: {2}; S2C cases: {3} ({4} unique opcodes)".format(
-        report["outboundWriterDeclarationCount"], report["outboundUniqueSentOpcodeCount"],
+    print("Source files: {0}; C2S declarations: {1}; dynamic opcodes: {2}; sent opcodes: {3}; unsent: {4}; S2C cases: {5} ({6} unique)".format(
+        report["outboundSourceFileCount"], report["outboundWriterDeclarationCount"],
+        report["outboundDynamicOpcodeDeclarationCount"], report["outboundUniqueSentOpcodeCount"],
         report["outboundUnsentDeclarationCount"], report["inboundCaseCount"], report["inboundUniqueOpcodeCount"]))
     print("JSON: " + str(args.json))
     print("Markdown: " + str(args.markdown))
