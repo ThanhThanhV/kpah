@@ -322,3 +322,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Monsters stop at close range and use their individual damage values on a per-monster cooldown. Their updated coordinates are written to the shared world-entity state, so the scene views, world-map pins and combat target positions use the same location.
 - Monster movement respects the current demo obstacle shapes by rejecting a blocked movement step. It does not yet implement pathfinding around obstacles, original monster AI states, attack animations or server-authoritative combat.
 - Validation: main.js and world-entities.js passed V8 syntax compilation after removing static imports and export declarations. No browser timing/interaction test or Vite production build was run.
+
+
+## P1 — Monster leash and spawn recovery
+
+- Each local monster now retains its spawn/home coordinates and a persisted local AI state (`idle`, `chasing`, `attacking`, `returning`) in the shared world-entity model.
+- Monsters acquire the player within the existing demo aggro radius, stop at attack distance, and return toward their original spawn when the player breaks the leash. Returning monsters move more slowly; their respawn also restores the original spawn position and clears the AI state.
+- Pursuit/return steps now try direct and axis-aligned alternatives against the current demo obstacle geometry instead of freezing at the first blocked diagonal step. This is still lightweight local steering, not navmesh pathfinding or original KPAH AI.
+- Validation: V8 syntax compilation passed for `src/main.js` and `src/world-entities.js` after stripping module imports/exports. GitHub writes were verified on `main`; no browser timing test or Vite production build was run.
