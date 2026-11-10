@@ -70,6 +70,12 @@ npm run verify:assets
 
 `tools/verify_asset_manifest.py` kiểm tra SHA-256 của từng tài nguyên đã giải mã, xác nhận `assetVersion` có thể tái tạo từ manifest và đối chiếu hash JAR nguồn nếu truyền `--jar`. Lệnh trả mã lỗi khác 0 nếu thiếu file, sai hash, trùng output path hoặc manifest bị sửa không đồng bộ. Đây là bước kiểm tra dữ liệu asset, chưa thay thế CI build/test toàn dự án.
 
+## Opcode catalog từ CFR
+
+Sau khi CFR decompile JAR, workflow chạy `tools/extract_protocol_catalog.py` trên `jy.java` và `ka.java`, trích danh sách C2S writer opcode cùng thứ tự `writeByte/writeShort/writeInt/writeUTF/writeBoolean`, và S2C dispatcher case cùng read operations/dispatch targets. JSON/Markdown catalog được đính kèm artifact CI.
+
+Catalog giữ tên method obfuscated và chỉ ghi bằng chứng source; chưa tự gán tên nghiệp vụ hoặc coi payload schema là hoàn chỉnh. Dùng nó làm đầu vào cho B4–B16.
+
 ## Đặc tả transport TCP gốc
 
 Đặc tả frame, handshake `-40`, XOR key/cursor, marker long-length `0x80` và test vectors được ghi tại [protocol-transport.md](./docs/reverse-engineering/protocol-transport.md). Codec tham chiếu nằm trong `tools/kpah_protocol_reference.py`; chạy `npm run test:protocol` để kiểm tra vector tổng hợp.
