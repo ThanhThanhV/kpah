@@ -678,6 +678,17 @@ window.addEventListener('keydown',event=>{
   if(event.altKey||event.ctrlKey||event.metaKey)return;
   const target=event.target;
   if(target instanceof HTMLElement&&(target.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(target.tagName)))return;
+  if(event.key==='Tab'){
+    event.preventDefault();
+    const result=worldEntityState.selectNext(event.shiftKey?-1:1);
+    if(!result.ok){toast(result.message);return;}
+    syncCombatTarget(result.monster);
+    game.scene.getScene('world')?.syncMonsterViews();
+    renderWorldTarget();
+    if(document.querySelector('#window-title').textContent==='Bản đồ thế giới')document.querySelector('#window-content').innerHTML=renderWorldMapPanel();
+    toast('Mục tiêu '+(result.index+1)+'/'+result.total+': '+result.monster.name+'.');
+    return;
+  }
   if(!/^[1-5]$/.test(event.key))return;
   const slot=document.querySelectorAll('.slot')[Number(event.key)-1];
   if(slot){event.preventDefault();selectActionSlot(slot);}
