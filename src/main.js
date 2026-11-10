@@ -916,6 +916,8 @@ class WorldScene extends Phaser.Scene {
     this.npcViews=[];
     this.worldObstacles=[];
     worldEntityState.setMap(zone.id);
+    this.monsterAttackAt.clear();
+    this.monsterAttackWindupAt.clear();
     groundDropState.setMap(zone.id);
     const g=this.add.graphics();
     g.fillGradientStyle(zone.palette.top,zone.palette.top,zone.palette.bottom,zone.palette.bottom,1);
@@ -1094,6 +1096,7 @@ class WorldScene extends Phaser.Scene {
     const expiredDrops=groundDropState.update();
     if(expiredDrops)this.syncGroundDrops();
     const revived=worldEntityState.update();
+    for(const id of revived){this.monsterAttackAt.delete(id);this.monsterAttackWindupAt.delete(id);}
     const worldState=worldEntityState.snapshot();
     const states=worldState.monsters;
     for(const entry of this.monsterViews){
