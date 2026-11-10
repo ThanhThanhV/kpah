@@ -10,7 +10,7 @@
 - Asset integrity: 198/198 tài nguyên giải mã khớp SHA-256; `assetVersion=9750a6d205d77c1d`.
 - Bytecode: 782/782 class parse thành công, 0 lỗi; 3.094 methods; 19.878 method-call edges; 38.448 field-reference edges; 3.968 type-reference edges.
 - Role suggestions: 16 anchor trong lần chạy role-ranker đầu tiên; 129 class có ít nhất một giả thuyết vai trò; 637 class chưa đủ tín hiệu. Sau khi CFR review, đã xác nhận thêm 17 class và cập nhật anchor registry; lần chạy role-ranker kế tiếp sẽ chốt lại số liệu.
-- CI run: [#42781275080](https://github.com/ThanhThanhV/kpah/actions/runs/42781275080). Artifact: `kpah-original-jar-analysis`.
+- CFR 0.152: decompile thành công 782/782 class thành 782 file `.java` (4,4 MB source).
 
 ## Anchor đã xác minh
 
@@ -53,7 +53,7 @@
 
 ## Ứng viên còn lại cần review
 
-Role-ranker đầu tiên còn 112 ứng viên sau khi loại 17 class đã được CFR xác nhận khỏi nhóm giả thuyết. Danh sách đầy đủ có trong JSON/Markdown artifact CI. Ưu tiên review tiếp các nhóm screen phụ (`sc`, `so`, `sg`), widget input (`xf`, `wu`), entity/model (`z`, `un`) và data/packet helpers (`qk`, `qj`, `qh`, `tx`). Các tên vai trò này vẫn là giả thuyết cho đến khi đối chiếu source cụ thể.
+Role-ranker sau khi áp dụng 33 anchor còn 112 ứng viên cần review. Danh sách đầy đủ có trong JSON/Markdown artifact CI. Ưu tiên review tiếp các nhóm screen phụ (`sc`, `so`, `sg`), widget input (`xf`, `wu`), entity/model (`z`, `un`) và data/packet helpers (`qk`, `qj`, `qh`, `tx`). Các tên vai trò này vẫn là giả thuyết cho đến khi đối chiếu source cụ thể.
 
 ## Cách đọc kết quả
 
