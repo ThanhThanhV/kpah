@@ -373,3 +373,14 @@
 
 .quest-unlock-hint{display:block;margin-top:6px;color:#b8a27d;font-size:11px;line-height:1.45}
 .quest-card-footer button:disabled{opacity:.58;cursor:not-allowed;filter:saturate(.55)}
+
+
+/* Keep the one-screen game layout inside the visible viewport on mobile. */
+.shell{height:var(--app-height,100dvh)}
+.game-window{max-height:min(570px,calc(var(--app-height,100dvh) - 30px))}
+@media(max-width:700px){
+  .shell{height:var(--app-height,100dvh);min-height:0}
+  .game-window{max-height:calc(var(--app-height,100dvh) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px)}
+  .movement button,.action-meta button,.slot{touch-action:manipulation}
+  .chat form input,.chat form select{font-size:16px}
+}
