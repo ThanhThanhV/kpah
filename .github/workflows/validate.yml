@@ -120,6 +120,8 @@ jobs:
         run: curl --fail --location --retry 3 https://repo.maven.apache.org/maven2/org/benf/cfr/0.152/cfr-0.152.jar --output "$RUNNER_TEMP/cfr.jar"
       - name: Decompile original JAR with CFR
         run: java -jar "$RUNNER_TEMP/cfr.jar" KPAH_278.jar --outputdir tools/reports/cfr-source --silent true
+      - name: Extract C2S and S2C opcode catalog
+        run: python tools/extract_protocol_catalog.py tools/reports/cfr-source --json tools/reports/protocol-opcode-catalog.json --markdown tools/reports/protocol-opcode-catalog.md
       - name: Build evidence-ranked class role map
         run: python tools/suggest_class_roles.py tools/reports/kpah-class-analysis.json --json tools/reports/class-role-candidates.json --markdown tools/reports/class-role-candidates.md
       - name: Upload reverse-engineering reports
@@ -130,6 +132,8 @@ jobs:
             tools/reports/kpah-class-analysis.json
             tools/reports/class-role-candidates.json
             tools/reports/class-role-candidates.md
+            tools/reports/protocol-opcode-catalog.json
+            tools/reports/protocol-opcode-catalog.md
             tools/reports/cfr-source/**/*.java
             public/assets/kpah-original/archive-manifest.json
           if-no-files-found: error
