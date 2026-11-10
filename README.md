@@ -193,3 +193,8 @@ The equipment panel shows equipped item names, attribute bonuses, and the charac
 ## Character roster progress preview
 
 The character-selection roster reads each character's own browser save and shows level, current/next EXP, Xu, occupied inventory slots and the last local save time. Characters without a save are labelled as new. The reader validates the save version and payload and safely falls back if local data is malformed. The roster remains a three-character local demo and does not display server-side character status.
+
+
+## Per-character world location
+
+Each character's browser-local save now includes the current world zone. Switching between characters restores their individual zone, and entering a restored zone places the player at its entry point while rebuilding that zone's demo NPCs, monsters and ground drops. Zone travel and checkpoint respawn save the new location. Player coordinates and live monster state are not persisted yet.
