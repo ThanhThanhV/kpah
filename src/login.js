@@ -160,6 +160,7 @@ cover.querySelector('#character-roster').addEventListener('click',e=>{
   if(remove){
     const character=characterRoster.find(c=>c.id===remove.dataset.deleteCharacter);
     if(!character||!window.confirm(`Xóa nhân vật "${character.name}" khỏi danh sách demo trên trình duyệt?`))return;
+    window.dispatchEvent(new CustomEvent('kpah:character-deleted',{detail:{id:character.id}}));
     characterRoster=characterRoster.filter(c=>c.id!==character.id);
     if(selectedCharacterId===character.id)selectedCharacterId=characterRoster[0]?.id||null;
     saveCharacterRoster();renderCharacterRoster();
