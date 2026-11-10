@@ -32,6 +32,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Latest implementation
 
+- B4 protocol extraction increment: `tools/extract_protocol_catalog.py` reads CFR `jy.java` and `ka.java` to produce a source-backed C2S writer/payload-field catalog and S2C dispatch/read catalog. First scan found 125 opcode declarations, 124 with actual send calls, 106 unique enqueued C2S opcodes, and 149 S2C cases (142 unique opcodes). One declaration (opcode 11) creates/closes a packet but never enqueues it, so it is explicitly excluded from sent-opcode counts. Business semantics remain to be annotated.
+
 - B3 protocol increment: CFR source confirmed the transport framing and handshake. Added a reference codec with synthetic test vectors for cumulative-XOR key derivation, C2S short frames, S2C short frames, encrypted 0x80 long-length frames and independent cursor wrap. Added `npm run test:protocol` and a GitHub Actions step; CI result is pending. No production server capture has been used.
 
 - Original JAR scan completed in GitHub Actions run `80b1df5`: 1,024 archive entries; all 782 class files parsed with zero errors; 3,094 methods, 19,878 call edges, 38,448 field references and 3,968 type references. All 198 decoded packed resources passed SHA-256 verification. The role mapper produced 16 known anchors, 129 role hypotheses and 637 unclassified classes. Added `docs/reverse-engineering/class-role-map.md` with evidence-backed anchors and a prioritized candidate review queue. This does not mean all 129 hypotheses are confirmed.
