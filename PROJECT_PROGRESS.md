@@ -330,3 +330,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Monsters acquire the player within the existing demo aggro radius, stop at attack distance, and return toward their original spawn when the player breaks the leash. Returning monsters move more slowly; their respawn also restores the original spawn position and clears the AI state.
 - Pursuit/return steps now try direct and axis-aligned alternatives against the current demo obstacle geometry instead of freezing at the first blocked diagonal step. This is still lightweight local steering, not navmesh pathfinding or original KPAH AI.
 - Validation: V8 syntax compilation passed for `src/main.js` and `src/world-entities.js` after stripping module imports/exports. GitHub writes were verified on `main`; no browser timing test or Vite production build was run.
+
+
+## P1 — Monster attack telegraph and AI feedback
+
+- Monster entities now show a lightweight state cue while idle, chasing, attacking or returning. A selected target ring remains separate from the attack warning.
+- Close-range attacks now have a 450 ms warning wind-up with a pulsing red ring before damage is applied. Leaving attack range cancels the pending strike, giving the player a short reaction window to move away.
+- Attack cooldown and pending wind-up timers reset when changing zones and when a monster respawns, preventing stale timers from leaking across a new spawn lifecycle.
+- Values and visuals are provisional client-side behavior, not original KPAH combat timing or assets. Validation: `src/main.js` passed V8 syntax compilation after stripping module imports/exports; no browser timing test or Vite production build was run.
