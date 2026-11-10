@@ -70,9 +70,8 @@ def write_server_frame(connection: socket.socket, opcode: int, payload: bytes,
 def capture_session(connection: socket.socket, encoded_key: bytes,
                     max_packets: int = 3) -> list[dict[str, Any]]:
     connection.settimeout(10)
-    first, _ = read_client_frame(connection)
-    if first["opcode"] != -40 or first["payloadLength"] != 0:
-        raise ValueError("Expected initial empty C2S -40 transport probe")
+    # The client queues its empty -40 packet before the key exists; the writer
+    # holds it until this unencrypted server key frame arrives.
     write_server_frame(connection, -40, encode_handshake_payload(encoded_key))
     key = derive_xor_key(encoded_key)
     cursor = 0
