@@ -197,6 +197,14 @@ loadDisplaySettings();
 function syncDisplaySettings(){document.querySelectorAll('[data-setting]').forEach(input=>{input.checked=displaySettings[input.dataset.setting]!==false;});applyDisplaySettings();}
 function applyDisplaySettings(){const scene=game.scene.getScene('world');if(scene?.playerLabel)scene.playerLabel.setVisible(displaySettings.playerName);const coords=document.querySelector('.world-coords');if(coords)coords.style.display=displaySettings.coordinates?'':'none';const map=document.querySelector('.mini-map');if(map)map.style.display=displaySettings.minimap?'':'none';}
 document.querySelector('#window-content').addEventListener('change',event=>{const input=event.target.closest('[data-setting]');if(!input)return;displaySettings[input.dataset.setting]=input.checked;saveDisplaySettings();applyDisplaySettings();});
+document.querySelector('#window-content').addEventListener('input',event=>{
+  const input=event.target.closest('[data-shop-quantity-input]');
+  if(input)updateShopLineTotal(input.closest('[data-shop-item]'));
+});
+document.querySelector('#window-content').addEventListener('change',event=>{
+  const input=event.target.closest('[data-shop-quantity-input]');
+  if(input)updateShopLineTotal(input.closest('[data-shop-item]'));
+});
 document.querySelector('#window-content').addEventListener('click',event=>{if(!event.target.closest('[data-reset-display-settings]'))return;Object.assign(displaySettings,{playerName:true,coordinates:true,minimap:true});saveDisplaySettings();syncDisplaySettings();});
 document.querySelectorAll('[data-window]').forEach(b=>b.addEventListener('click',()=>openWindow(b.dataset.window)));
 document.querySelector('#window-close').addEventListener('click',closeWindow);
@@ -342,16 +350,27 @@ function renderPartyPanel(){
     :'';
   return '<div class="party-summary"><b>'+members.length+'/5 thành viên</b><span>'+(data.party?'Đội trưởng: Kiếm Khách':'Chưa có tổ đội')+'</span></div>'+partyHtml+pendingHtml+'<p class="panel-hint">Tổ đội là mô phỏng client offline; chưa có đồng bộ thành viên hoặc chia sẻ chiến đấu qua mạng.</p>';
 }
+function updateShopLineTotal(row){
+  if(!row)return;
+  const input=row.querySelector('[data-shop-quantity-input]');
+  const price=Number(row.dataset.shopPrice);
+  if(!input||!Number.isFinite(price))return;
+  const quantity=Math.max(1,Math.min(99,Math.floor(Number(input.value)||1)));
+  input.value=String(quantity);
+  const total=row.querySelector('.shop-line-total');
+  if(total)total.textContent='Tổng: '+(price*quantity).toLocaleString('vi-VN')+' Xu';
+}
+
 function renderShopPanel(){
   const data=shopState.snapshot();
-  const items=data.items.map(item=>`<article class="shop-item-live">
+  const items=data.items.map(item=>`<article class="shop-item-live" data-shop-item="${item.id}" data-shop-price="${item.price}">
     <span class="shop-item-icon">${item.icon}</span>
-    <div class="shop-item-copy"><b>${escapeHtml(item.name)}</b><small>${escapeHtml(item.description)}</small></div>
-    <div class="shop-item-buy"><small>${item.price.toLocaleString('vi-VN')} Xu</small><button type="button" data-shop-buy="${item.id}">Mua ×1</button></div>
+    <div class="shop-item-copy"><b>${escapeHtml(item.name)}</b><small>${escapeHtml(item.description)}</small><small class="shop-line-total">Tổng: ${item.price.toLocaleString('vi-VN')} Xu</small></div>
+    <div class="shop-item-buy"><small>${item.price.toLocaleString('vi-VN')} Xu / món</small><div class="shop-quantity"><button type="button" data-shop-quantity="-1" aria-label="Giảm số lượng">−</button><input type="number" inputmode="numeric" min="1" max="99" value="1" data-shop-quantity-input aria-label="Số lượng mua ${escapeHtml(item.name)}"><button type="button" data-shop-quantity="1" aria-label="Tăng số lượng">+</button></div><button type="button" data-shop-buy="${item.id}">Mua</button></div>
   </article>`).join('');
   return `<div class="shop-wallet">Số dư hiện tại <b>${data.currency.toLocaleString('vi-VN')} Xu</b></div>
     <div class="shop-list-live">${items}</div>
-    <p class="panel-hint">Cửa hàng offline dùng dữ liệu minh họa. Giao dịch chỉ thay đổi Xu và hành trang trên trình duyệt này.</p>`;
+    <p class="panel-hint">Có thể mua tối đa 99 món mỗi giao dịch. Kiểm tra số dư và sức chứa hành trang trước khi xác nhận. Đây là cửa hàng demo offline.</p>`;
 }
 
 function renderQuestPanel(){
@@ -648,9 +667,22 @@ document.querySelector('#window-content').addEventListener('click',event=>{
     else if(result?.message)toast(result.message);
     return;
   }
+  const quantityButton=event.target.closest('[data-shop-quantity]');
+  if(quantityButton){
+    const row=quantityButton.closest('[data-shop-item]');
+    const input=row?.querySelector('[data-shop-quantity-input]');
+    if(input){
+      const next=Math.max(1,Math.min(99,(Number(input.value)||1)+Number(quantityButton.dataset.shopQuantity)));
+      input.value=String(next);
+      updateShopLineTotal(row);
+    }
+    return;
+  }
   const purchase=event.target.closest('[data-shop-buy]')?.dataset.shopBuy;
   if(purchase){
-    const result=shopState.buy(purchase,1);
+    const row=event.target.closest('[data-shop-item]');
+    const quantity=Math.max(1,Math.min(99,Math.floor(Number(row?.querySelector('[data-shop-quantity-input]')?.value)||1)));
+    const result=shopState.buy(purchase,quantity);
     toast(result.message);
     updateCharacterHud();
     document.querySelector('#window-content').innerHTML=renderShopPanel();
