@@ -494,7 +494,7 @@
           "type": "utf"
         },
         {
-          "name": "clientName",
+          "name": "clientParameter",
           "type": "utf"
         },
         {
@@ -502,15 +502,15 @@
           "type": "utf"
         },
         {
-          "name": "clientVersion",
+          "name": "clientProperty1",
           "type": "utf"
         },
         {
-          "name": "midletVendor",
+          "name": "clientProperty2",
           "type": "utf"
         },
         {
-          "name": "midletName",
+          "name": "clientProperty3",
           "type": "utf"
         },
         {
