@@ -56,7 +56,7 @@ ROLE_RULES = [
         (r"sleep|currenttimemillis|schedule", 2, "timing or scheduling reference")]),
 ]
 
-def collect_text(item: dict[str, Any], outgoing: list[dict[str, Any]], incoming: list[dict[str, Any]]) -> str:
+def collect_text(item: dict[str, Any], outgoing: list[dict[str, Any]], incoming: list[dict[str, Any]], field_refs: list[dict[str, Any]], type_refs: list[dict[str, Any]]) -> str:
     pieces = [
         str(item.get("className", "")), str(item.get("superClass", "")),
         " ".join(map(str, item.get("interfaces", []))),
@@ -64,7 +64,9 @@ def collect_text(item: dict[str, Any], outgoing: list[dict[str, Any]], incoming:
         " ".join(str(field.get("descriptor", "")) for field in item.get("fields", [])),
         " ".join(str(method.get("name", "")) + " " + str(method.get("descriptor", "")) for method in item.get("methods", [])),
         " ".join(str(edge.get("to", "")) for edge in outgoing),
-        " ".join(str(edge.get("from", "")) for edge in incoming)]
+        " ".join(str(edge.get("from", "")) for edge in incoming),
+        " ".join(str(edge.get("to", "")) for edge in field_refs),
+        " ".join(str(edge.get("to", "")) for edge in type_refs)]
     return "\n".join(pieces).casefold()
 
 def main() -> int:
@@ -76,11 +78,17 @@ def main() -> int:
     args = parser.parse_args()
     data = json.loads(args.report.read_text(encoding="utf-8"))
     classes, graph = data.get("classes"), data.get("callGraph")
+    field_graph = data.get("fieldReferenceGraph", [])
+    type_graph = data.get("typeReferenceGraph", [])
     if not isinstance(classes, list) or not isinstance(graph, list):
         parser.error("Analysis report must contain classes[] and callGraph[]")
+    if not isinstance(field_graph, list) or not isinstance(type_graph, list):
+        parser.error("Reference graphs must be arrays")
     by_name = {str(item.get("className")): item for item in classes if isinstance(item, dict)}
     outgoing: dict[str, list[dict[str, Any]]] = defaultdict(list)
     incoming: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    field_refs_by_class: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    type_refs_by_class: dict[str, list[dict[str, Any]]] = defaultdict(list)
     def owning_class(method_reference: str) -> str:
         # Match the longest known class-name prefix so package-qualified names
         # such as game.GameMidlet are not truncated at the package separator.
@@ -93,15 +101,29 @@ def main() -> int:
             target_class = owning_class(str(edge.get("to", "")))
             outgoing[source_class].append(edge)
             incoming[target_class].append(edge)
+    for edge in field_graph:
+        if isinstance(edge, dict):
+            field_refs_by_class[owning_class(str(edge.get("from", "")))].append(edge)
+    for edge in type_graph:
+        if isinstance(edge, dict):
+            source_class = owning_class(str(edge.get("from", "")))
+            target_name = str(edge.get("to", ""))
+            target_class = target_name if target_name in by_name else owning_class(target_name)
+            type_refs_by_class[source_class].append({**edge, "targetClass": target_class})
     results = []
     for name, item in by_name.items():
         out_edges, in_edges = outgoing[name], incoming[name]
-        corpus = collect_text(item, out_edges, in_edges)
+        field_edges, type_edges = field_refs_by_class[name], type_refs_by_class[name]
+        corpus = collect_text(item, out_edges, in_edges, field_edges, type_edges)
         callee_counts = Counter(owning_class(str(edge.get("to", ""))) for edge in out_edges)
         caller_counts = Counter(owning_class(str(edge.get("from", ""))) for edge in in_edges)
+        field_owner_counts = Counter(owning_class(str(edge.get("to", ""))) for edge in field_edges)
+        type_owner_counts = Counter(str(edge.get("targetClass", "")) for edge in type_edges)
         related_classes = {
-            "callees": [{"className": key, "calls": count} for key, count in callee_counts.most_common(12) if key != name],
-            "callers": [{"className": key, "calls": count} for key, count in caller_counts.most_common(12) if key != name],
+            "callees": [{"className": key, "references": count} for key, count in callee_counts.most_common(12) if key != name],
+            "callers": [{"className": key, "references": count} for key, count in caller_counts.most_common(12) if key != name],
+            "fieldOwners": [{"className": key, "references": count} for key, count in field_owner_counts.most_common(12) if key != name],
+            "typeReferences": [{"className": key, "references": count} for key, count in type_owner_counts.most_common(12) if key and key != name],
         }
         string_samples = [
             value for value in item.get("stringConstants", [])
@@ -125,6 +147,7 @@ def main() -> int:
             "className": name, "status": status, "verifiedAnchorDescription": anchor,
             "methodCount": len(item.get("methods", [])),
             "outgoingCallCount": len(out_edges), "incomingCallCount": len(in_edges),
+            "fieldReferenceCount": len(field_edges), "typeReferenceCount": len(type_edges),
             "superClass": item.get("superClass"),
             "interfaces": item.get("interfaces", []),
             "fields": [{"name": x.get("name"), "descriptor": x.get("descriptor")} for x in item.get("fields", [])[:20]],
@@ -156,8 +179,10 @@ def main() -> int:
         if not item["roleCandidates"]:
             lines.append("| " + item["className"] + " | " + item["status"] + " | — | — | — | — | — |")
         related = ", ".join(
-            [x["className"] + " (" + str(x["calls"]) + ")" for x in item["relatedClasses"]["callees"][:4]] +
-            [x["className"] + " ← " + str(x["calls"]) for x in item["relatedClasses"]["callers"][:4]])
+            [x["className"] + " (" + str(x["references"]) + ")" for x in item["relatedClasses"]["callees"][:3]] +
+            [x["className"] + " ← " + str(x["references"]) for x in item["relatedClasses"]["callers"][:3]] +
+            [x["className"] + " [field]" for x in item["relatedClasses"]["fieldOwners"][:2]] +
+            [x["className"] + " [type]" for x in item["relatedClasses"]["typeReferences"][:2]])
         samples = "; ".join(item["stringEvidenceSamples"][:5]).replace("|", "\\|")
         for candidate in item["roleCandidates"][:3]:
             evidence = "; ".join(e["evidence"] for e in candidate["evidence"])
