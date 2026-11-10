@@ -32,6 +32,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Latest implementation
 
+- B1/B2 dependency evidence increment: the bytecode analyzer now exports field-reference edges (`getfield`/`putfield`/static variants) and type-reference edges (class operands), in addition to method call edges. The class-role review tool consumes these graphs and includes field-owner/type-reference summaries while excluding external JDK packages from the internal class map. This improves the review evidence but does not yet establish the semantic names of unverified classes.
+
 - B2 refinement: role-candidate output now includes superclass/interfaces, field summaries, filtered string evidence samples and ranked caller/callee class references. Package-qualified class names are matched using the longest known class prefix so graph ownership is not truncated at the package separator.
 
 - WBS B2 increment: added `tools/suggest_class_roles.py` and `npm run suggest:class-roles`. It ranks nine semantic role families from constant strings, inheritance/interfaces, member signatures and call-graph references; preserves 16 previously verified class anchors and outputs a JSON/Markdown review queue. It does not rename classes. The real role map remains pending until the analyzer is run against original JAR class files.
