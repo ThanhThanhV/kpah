@@ -70,6 +70,10 @@ npm run verify:assets
 
 `tools/verify_asset_manifest.py` kiểm tra SHA-256 của từng tài nguyên đã giải mã, xác nhận `assetVersion` có thể tái tạo từ manifest và đối chiếu hash JAR nguồn nếu truyền `--jar`. Lệnh trả mã lỗi khác 0 nếu thiếu file, sai hash, trùng output path hoặc manifest bị sửa không đồng bộ. Đây là bước kiểm tra dữ liệu asset, chưa thay thế CI build/test toàn dự án.
 
+## Auth và character protocol
+
+Đặc tả source-backed cho server list, login opcode 1, registration opcode 39, roster opcode 13, select/delete/restore và create character opcode 14: [protocol-auth-character.md](./docs/reverse-engineering/protocol-auth-character.md).
+
 ## Catalog opcode C2S/S2C
 
 `tools/extract_protocol_catalog.py` đọc CFR source `jy.java` và `ka.java`, xuất opcode writer phía client, thứ tự `write*`, số lần enqueue, cùng dispatcher case và `read*`/dispatch target phía server. Chạy `npm run catalog:protocol` sau khi CFR decompile; CI tự sinh JSON/Markdown và đính kèm artifact.
