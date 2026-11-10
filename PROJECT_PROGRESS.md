@@ -119,6 +119,11 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - The quest journal supports status filters, objective progress bars, reward previews, claim actions and a pending-reward navigation indicator.
 - Added wallet synchronization to the HUD. The quest catalog, NPC objective, training-wolf target and reward values are illustrative local data, not verified original KPAH content or server transactions.
 
+## Latest client increment — merchant purchase quantities
+
+- Merchant rows now allow selecting a purchase quantity from 1 to 99 with increment/decrement controls and a live line total. The purchase handler clamps the value again before calling the existing shop transaction, so direct input edits cannot bypass the limit.
+- Each successful transaction still uses the existing wallet/inventory capacity checks and updates the character HUD. This remains a demo catalog and browser-local transaction, not an original server shop implementation.
+
 ## Latest client increment — character-specific saves
 
 - Split browser save data by stable local character ID instead of sharing one progression record across every roster entry. Each character now has an independent save key for stats, level, wallet, inventory/equipment, quests, skill progression/loadout, social state, guild and mailbox.
