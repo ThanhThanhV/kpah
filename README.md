@@ -149,3 +149,10 @@ Mobile viewport handling: the app synchronizes its shell and modal height to `vi
 The world map panel now renders a live schematic from the current zone's world coordinates: player location, NPCs and alive monsters. NPC pins open their existing interaction flow; monster pins select the combat target, with a distinct marker for elite monsters and the current target. The panel remains based on demo zone data, not original KPAH map resources.
 
 The live world map now keeps its player marker synchronized while the character moves. Monster markers follow their current world positions, reflect the selected target, disappear on defeat and return after respawn; the living-monster count updates while the panel is open. DOM synchronization is throttled to 100 ms.
+
+## World movement and obstacle collision
+
+- The illustrative village, forest and cave scenes now register collision geometry alongside the structures, trees and rock formations they draw.
+- Tap-to-move, directional controls and combat approach movement resolve their travel path against that geometry, stopping at the last walkable point instead of passing through solid scenery.
+- Collision geometry is deliberately limited to the current procedural demo scenery. It is not original KPAH collision data, and the world still needs source-derived map boundaries and obstacle masks.
+- Collision resolution samples the requested path at short intervals; it is a lightweight client-side approximation pending a verified tile/collision map.
