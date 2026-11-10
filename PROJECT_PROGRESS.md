@@ -32,6 +32,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Latest implementation
 
+- B16 initialization data slice: documented global config opcode 1 (skill metadata, profession lookup tables, tile blobs and character-part data), selected-character snapshot 3, shop/catalog 15 and inventory/skill/auxiliary state 16, including runtime destinations and optional sections. Exact business meaning of several lookup arrays, full part/tile binary schemas and server packet order remain open.
+
 - B13 client formula slice: documented actor speed step (`cT`, default 3) and distance-based increments, sequential X-then-Y movement, click-to-move tile waypoint/collision checks, 250 ms C2S coordinate sends, and floating damage/MISS text drift/30-tick expiry. Jump physics and damage/crit formula remain unverified.
 
 - B12 client lifecycle slice: documented MIDlet/resource bootstrap, server selection, login form, socket opening, XOR handshake, roster/create/select, loading/map transition, world screen, connection failure, 20-second connect timeout, reader disconnect and reset callbacks. Confirmed `km.q` owns the active screen while `km.s` is the persistent world state. No auto-reconnect loop was found; opcode 1/3 initialization and server session semantics remain open.
