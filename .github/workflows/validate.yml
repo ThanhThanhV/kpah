@@ -98,3 +98,32 @@ jobs:
             exit 1
           fi
           echo 'Asset manifest verifier correctly rejected a modified file'
+
+  analyze-original-jar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Extract original JAR and class files
+        run: python tools/extract_kpah_jar.py KPAH_278.jar --include-classes --class-output tools/reports/class-files
+      - name: Verify extracted asset hashes
+        run: python tools/verify_asset_manifest.py public/assets/kpah-original --jar KPAH_278.jar
+      - name: Analyze original Java classes
+        run: python tools/analyze_class_files.py tools/reports/class-files --output tools/reports/kpah-class-analysis.json
+      - name: Build evidence-ranked class role map
+        run: python tools/suggest_class_roles.py tools/reports/kpah-class-analysis.json --json tools/reports/class-role-candidates.json --markdown tools/reports/class-role-candidates.md
+      - name: Upload reverse-engineering reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: kpah-original-jar-analysis
+          path: |
+            tools/reports/kpah-class-analysis.json
+            tools/reports/class-role-candidates.json
+            tools/reports/class-role-candidates.md
+            public/assets/kpah-original/archive-manifest.json
+          if-no-files-found: error
+          retention-days: 14
