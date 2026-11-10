@@ -32,6 +32,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Latest implementation
 
+- WBS C9 increment: the extractor now records SHA-256 for the source JAR, each archive entry and each decoded packed resource; it derives a content fingerprint (`assetVersion`) and the shared browser asset loader appends it to asset URLs for cache-busting. The extractor has not yet been run against the original JAR in this execution environment.
+
 - Added Resource Viewer for PNG assets listed in archive-manifest.json.
 - Added original profession preview gallery in character creation, sourced from five .wps packs:
 - Added a configurable sprite-sheet inspector: choose any decoded PNG, set rows/columns/FPS, step through frames or play a preview. Invalid grids that do not divide the image evenly are now rejected in the UI, and playback/navigation are disabled until a valid multi-frame grid is selected. This is an analysis tool, not yet the in-game animation system.
