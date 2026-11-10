@@ -216,3 +216,8 @@ Living monsters in the current offline demo zone now periodically attack when th
 ## Monster aggro and pursuit
 
 In the offline demo world, living monsters acquire the player within a local radius, approach at a bounded speed and attack at close range using per-monster cooldowns. Monster coordinates are shared by the Phaser views and world-map markers. Pursuit steps are blocked by the current procedural scenery collision shapes; there is no navigation mesh, verified original KPAH AI or server-authoritative combat yet. All aggro and movement tuning remains provisional demo behavior.
+
+
+## Monster leash and spawn recovery
+
+Local monsters now keep their original spawn coordinates and a small AI state. They chase within the demo aggro radius, attack at close range, and return toward their spawn when the player leaves the leash. Respawn restores the spawn position and idle state. Pursuit and return movement try axis-aligned alternatives when a direct step is blocked by the current procedural scenery. This is client-side steering with illustrative values, not original KPAH AI or navigation data.
