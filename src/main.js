@@ -891,7 +891,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.lastMonsterAiAt=0;}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;}
   create(){
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
@@ -1056,6 +1056,8 @@ class WorldScene extends Phaser.Scene {
     const elite=monster.type==='pack-leader';
     const color=elite?0x8c4c46:0x777d55;
     const targetRing=this.add.ellipse(0,13,48,21,0xf1c96b,.08).setStrokeStyle(2,0xf1c96b,.9).setVisible(false);
+    const attackRing=this.add.ellipse(0,13,58,27,0xd94b3e,.12).setStrokeStyle(3,0xff6655,.95).setVisible(false);
+    const aiMarker=this.add.text(0,-57,'',{fontFamily:'Arial',fontSize:'15px',fontStyle:'bold',color:'#ffd18b',stroke:'#241e19',strokeThickness:3}).setOrigin(.5);
     const shadow=this.add.ellipse(0,13,30,8,0x10130f,.4);
     const body=this.add.ellipse(0,0,elite?31:25,18,color).setStrokeStyle(2,0x30291f);
     const head=this.add.circle(elite?13:10,-8,elite?9:7,0xa99a72).setStrokeStyle(2,0x30291f);
@@ -1064,7 +1066,7 @@ class WorldScene extends Phaser.Scene {
     const label=this.add.text(0,-42,monster.name+' · Lv.'+monster.level,{fontFamily:'Arial',fontSize:elite?'11px':'10px',color:elite?'#ffd18b':'#f2e8c9',stroke:'#241e19',strokeThickness:3}).setOrigin(.5);
     const bar=this.add.rectangle(0,-31,34,4,0x241b19).setOrigin(.5);
     const fill=this.add.rectangle(-16,-31,30,2,0xb94d3e).setOrigin(0,.5);
-    c.add([targetRing,shadow,body,head,ear,eye,label,bar,fill]);
+    c.add([targetRing,attackRing,shadow,body,head,ear,eye,label,bar,fill,aiMarker]);
     c.setDepth(monster.y);
     c.setSize(42,54).setInteractive(new Phaser.Geom.Rectangle(-22,-27,44,54),Phaser.Geom.Rectangle.Contains);
     c.on('pointerdown',(pointer,localX,localY,event)=>{
@@ -1073,6 +1075,8 @@ class WorldScene extends Phaser.Scene {
     });
     c.setData('hpFill',fill);
     c.setData('targetRing',targetRing);
+    c.setData('attackRing',attackRing);
+    c.setData('aiMarker',aiMarker);
     return c;
   }
   syncGroundDrops(){
@@ -1102,6 +1106,11 @@ class WorldScene extends Phaser.Scene {
       if(fill)fill.width=Math.max(0,30*state.hp/state.maxHp);
       const ring=entry.view.getData('targetRing');
       if(ring)ring.setVisible(state.alive&&state.id===worldState.selectedId);
+      const attackRing=entry.view.getData('attackRing');
+      const winding=this.monsterAttackWindupAt.has(state.id);
+      if(attackRing){attackRing.setVisible(state.alive&&winding);attackRing.setAlpha(winding?0.45+0.45*Math.sin(Date.now()/65):0.12);}
+      const aiMarker=entry.view.getData('aiMarker');
+      if(aiMarker){aiMarker.setText(state.aiState==='chasing'?'!':state.aiState==='attacking'?'⚠':state.aiState==='returning'?'↩':'');aiMarker.setColor(state.aiState==='attacking'?'#ff7668':state.aiState==='returning'?'#b8d7ff':'#ffd18b');}
     }
     if(revived.length){
       const selected=worldEntityState.snapshot().selected;
@@ -1247,10 +1256,20 @@ class WorldScene extends Phaser.Scene {
             }
             continue;
           }
-          if(distance>attackReach||distance>aggroRange)continue;
+          if(distance>attackReach||distance>aggroRange){
+            this.monsterAttackWindupAt.delete(monster.id);
+            continue;
+          }
           const lastAttack=this.monsterAttackAt.get(monster.id);
           if(lastAttack===undefined){this.monsterAttackAt.set(monster.id,now);continue;}
-          if(now-lastAttack<2400)continue;
+          const windupAt=this.monsterAttackWindupAt.get(monster.id);
+          if(windupAt===undefined){
+            if(now-lastAttack<2400)continue;
+            this.monsterAttackWindupAt.set(monster.id,now);
+            continue;
+          }
+          if(now-windupAt<450)continue;
+          this.monsterAttackWindupAt.delete(monster.id);
           this.monsterAttackAt.set(monster.id,now);
           const before=characterState.snapshot().hp;
           characterState.receiveDamage(monster.damage);
