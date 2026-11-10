@@ -198,3 +198,8 @@ The character-selection roster reads each character's own browser save and shows
 ## Per-character world location
 
 Each character's browser-local save now includes the current world zone. Switching between characters restores their individual zone, and entering a restored zone places the player at its entry point while rebuilding that zone's demo NPCs, monsters and ground drops. Zone travel and checkpoint respawn save the new location. Player coordinates and live monster state are not persisted yet.
+
+
+## Exact character location resume
+
+Per-character browser saves now also store the player's world coordinates. On character selection, the zone is rebuilt and the saved coordinates are passed through the current obstacle-aware movement resolver before restoring the player and camera. Older saves without coordinates remain compatible and use the zone entry point. The client flushes the save on page hide and when the tab becomes hidden. This is still local browser persistence, not server-side character position synchronization.
