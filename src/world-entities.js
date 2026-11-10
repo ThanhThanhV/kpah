@@ -36,6 +36,16 @@ export function createWorldEntityState(random = Math.random, initialMap = 'villa
     selectedId=id;
     return {ok:true,monster:copy(monster)};
   }
+  function selectNext(direction=1) {
+    const living=monsters.filter(item=>item.alive);
+    if(!living.length){selectedId=null;return {ok:false,message:'Không còn mục tiêu sống trong khu vực.'};}
+    const currentIndex=living.findIndex(item=>item.id===selectedId);
+    const step=direction<0?-1:1;
+    const nextIndex=currentIndex<0?(step>0?0:living.length-1):(currentIndex+step+living.length)%living.length;
+    const monster=living[nextIndex];
+    selectedId=monster.id;
+    return {ok:true,monster:copy(monster),index:nextIndex,total:living.length};
+  }
   function damage(id,amount,now=Date.now()) {
     const monster=monsters.find(item=>item.id===id&&item.alive);
     if(!monster)return {ok:false,defeated:false,damage:0};
@@ -74,5 +84,5 @@ export function createWorldEntityState(random = Math.random, initialMap = 'villa
     return true;
   }
   function get(id) { return copy(monsters.find(item=>item.id===id)||null); }
-  return {snapshot,select,damage,update,get,move,setAiState,setMap};
+  return {snapshot,select,selectNext,damage,update,get,move,setAiState,setMap};
 }
