@@ -178,3 +178,8 @@ Each locally created character now has an independent browser save, keyed by its
 ## Merchant quantity selection
 
 The offline merchant now supports buying between 1 and 99 units per transaction. Each item row has decrement/increment controls, a numeric quantity field and a live total price. The value is clamped again at purchase time; the existing shop state checks wallet balance and inventory capacity before completing the transaction. Catalog entries and prices remain demo data.
+
+
+## Character logout and deletion
+
+Leaving the world saves the active local character before returning to the login overlay. Deleting a roster entry also clears that character's separate browser save after validating its local ID, preventing orphaned local progression. These actions affect only this browser's demo data and do not call the original game server.
