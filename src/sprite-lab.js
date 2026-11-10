@@ -198,6 +198,7 @@ export function renderSpriteLab(root, assets) {
     firstFrameInput.value = '0';
     lastFrameInput.value = String(Math.max(0,total-1));
     copyButton.disabled = true;
+    saveButton.disabled = true;
     mappingOutput.textContent = 'Lưới đã thay đổi. Hãy tạo lại mapping.';
     count.textContent = '0 / ' + total;
     $('sprite-prev').disabled = !valid || total < 2;
@@ -264,6 +265,7 @@ export function renderSpriteLab(root, assets) {
       $('sprite-play').disabled = true;
       slider.disabled = true;
       copyButton.disabled = true;
+      saveButton.disabled = true;
       return;
     }
     loadAsset();
@@ -275,8 +277,8 @@ export function renderSpriteLab(root, assets) {
   colsInput.addEventListener('change',updateGrid);
   rowsInput.addEventListener('change',updateGrid);
   for (const input of [animationKeyInput,firstFrameInput,lastFrameInput,fpsInput,repeatInput,frameSequenceInput]) {
-    input.addEventListener('input',() => { copyButton.disabled = true; });
-    input.addEventListener('change',() => { copyButton.disabled = true; });
+    input.addEventListener('input',() => { copyButton.disabled = true; saveButton.disabled = true; });
+    input.addEventListener('change',() => { copyButton.disabled = true; saveButton.disabled = true; });
   }
   $('sprite-export').addEventListener('click',() => {
     const item = visibleImages[Number(imageSelect.value)] || visibleImages[0];
@@ -304,6 +306,7 @@ export function renderSpriteLab(root, assets) {
     const textureKey = 'kpah_' + key.replace(/[^a-zA-Z0-9_-]/g,'_');
     const mapping = {
       source: { archive:item.archive, path:item.path, output:item.output, width:item.width || image.naturalWidth, height:item.height || image.naturalHeight },
+      layout: { columns:Number(colsInput.value), rows:Number(rowsInput.value), frameWidth, frameHeight, totalFrames:total },
       load: {
         key:textureKey,
         url:new URL(assetUrl(item.output),document.baseURI).href,
