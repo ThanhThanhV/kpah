@@ -221,3 +221,8 @@ In the offline demo world, living monsters acquire the player within a local rad
 ## Monster leash and spawn recovery
 
 Local monsters now keep their original spawn coordinates and a small AI state. They chase within the demo aggro radius, attack at close range, and return toward their spawn when the player leaves the leash. Respawn restores the spawn position and idle state. Pursuit and return movement try axis-aligned alternatives when a direct step is blocked by the current procedural scenery. This is client-side steering with illustrative values, not original KPAH AI or navigation data.
+
+
+## Monster attack telegraph
+
+Local monster AI states have distinct overhead cues. Close-range attacks now show a pulsing warning ring for 450 ms before applying damage; moving out of attack range cancels the pending strike. Cooldown and wind-up state are reset on zone changes and respawns. This is provisional offline combat feedback, not a verified original KPAH mechanic.
