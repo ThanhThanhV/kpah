@@ -29,6 +29,7 @@ style.textContent = `
 .roster-progress span{display:grid;gap:2px;color:#b8a58a;font-size:8px;text-align:center}
 .roster-progress b{color:#f0d49b;font-size:9px;font-variant-numeric:tabular-nums}
 .roster-progress.roster-new{display:block;color:#a99a82;font-size:8px;text-align:left}
+.roster-location{display:flex;justify-content:space-between;gap:8px;margin-top:5px;color:#c4b28f;font-size:8px;flex-wrap:wrap}
 .roster-saved-at{display:block;margin-top:6px;color:#8e9d83;font-size:7px;text-align:right}
 
 .character-roster-card.selected{border-color:#e3c17d;background:#49382f}
@@ -151,8 +152,12 @@ function readCharacterPreview(characterId){
     const experience=Number.isFinite(Number(character.experience))?Math.max(0,Math.floor(Number(character.experience))):0;
     const next=Number.isFinite(Number(character.nextLevelExperience))?Math.max(1,Math.floor(Number(character.nextLevelExperience))):1;
     const inventory=Array.isArray(character.inventory)?character.inventory.length:0;
+    const zoneNames={village:'Làng Sói Trắng',forest:'Rừng Trúc',cave:'Hang Đá Đen'};
+    const zone=typeof parsed.zone==='string'&&zoneNames[parsed.zone]?zoneNames[parsed.zone]:'Chưa xác định';
+    const position=parsed.worldPosition&&Number.isFinite(parsed.worldPosition.x)&&Number.isFinite(parsed.worldPosition.y)
+      ?{x:Math.round(parsed.worldPosition.x),y:Math.round(parsed.worldPosition.y)}:null;
     const savedAt=typeof parsed.savedAt==='string'&&Number.isFinite(Date.parse(parsed.savedAt))?new Date(parsed.savedAt):null;
-    return {level,currency,experience,next,inventory,savedAt};
+    return {level,currency,experience,next,inventory,zone,position,savedAt};
   }catch{return null;}
 }
 function formatRosterDate(date){
@@ -167,7 +172,7 @@ function renderCharacterRoster(){
   if(!characterRoster.some(c=>c.id===selectedCharacterId))selectedCharacterId=characterRoster[0]?.id||null;
   list.innerHTML=characterRoster.length?characterRoster.map(c=>{
     const progress=readCharacterPreview(c.id);
-    const detail=progress?`<div class="roster-progress"><span>Cấp <b>${progress.level}</b></span><span>EXP <b>${progress.experience.toLocaleString('vi-VN')} / ${progress.next.toLocaleString('vi-VN')}</b></span><span>Xu <b>${progress.currency.toLocaleString('vi-VN')}</b></span><span>Túi đồ <b>${progress.inventory}/30</b></span></div><small class="roster-saved-at">${formatRosterDate(progress.savedAt)}</small>`:'<div class="roster-progress roster-new">Nhân vật mới · Chưa có tiến trình lưu</div>';
+    const detail=progress?`<div class="roster-progress"><span>Cấp <b>${progress.level}</b></span><span>EXP <b>${progress.experience.toLocaleString('vi-VN')} / ${progress.next.toLocaleString('vi-VN')}</b></span><span>Xu <b>${progress.currency.toLocaleString('vi-VN')}</b></span><span>Túi đồ <b>${progress.inventory}/30</b></span></div><div class="roster-location"><span>◈ ${escapeRosterText(progress.zone)}</span><span>${progress.position?`Tọa độ ${progress.position.x}, ${progress.position.y}`:'Vị trí mặc định'}</span></div><small class="roster-saved-at">${formatRosterDate(progress.savedAt)}</small>`:'<div class="roster-progress roster-new">Nhân vật mới · Chưa có tiến trình lưu</div>';
     return `<article class="character-roster-card ${c.id===selectedCharacterId?'selected':''}">
       <button class="roster-select" data-select-character="${c.id}">
         <span class="roster-avatar">${professionIcons[c.className]}</span>
