@@ -210,7 +210,18 @@ document.querySelectorAll('[data-window]').forEach(b=>b.addEventListener('click'
 document.querySelector('#window-close').addEventListener('click',closeWindow);
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.querySelector('#game-window').classList.contains('open'))closeWindow();});
 document.querySelector('#modal-backdrop').addEventListener('click',closeWindow);
-document.querySelector('#logout').addEventListener('click',()=>window.dispatchEvent(new Event('kpah:logout')));
+document.querySelector('#logout').addEventListener('click',()=>{
+  saveGameProgress();
+  activeCharacterId=null;
+  localSave=createLocalSave('kpah.game-save.v1.unselected');
+  window.dispatchEvent(new Event('kpah:logout'));
+});
+window.addEventListener('kpah:character-deleted',event=>{
+  const id=event.detail?.id;
+  if(typeof id!=='string'||!/^local-[a-z0-9-]{1,40}$/.test(id))return;
+  if(activeCharacterId===id){activeCharacterId=null;localSave=createLocalSave('kpah.game-save.v1.unselected');}
+  createLocalSave('kpah.game-save.v1.'+id).clear();
+});
 const chatChannelSelect=document.querySelector('#chat-channel-select');
 const chatLines=document.querySelector('#chat-lines');
 const chatChannelNames={world:'Thế giới',guild:'Bang hội',private:'Riêng',system:'Hệ thống'};
