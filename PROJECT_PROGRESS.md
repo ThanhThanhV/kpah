@@ -9,12 +9,12 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 | Phase | Scope | Progress | Basis |
 |---|---|---:|---|
 | P0 | Foundation and original resources (5 tasks) | 41% | Resource extraction, geometry hints, source-pack family taxonomy/filtering, camera/entity runtime, explicit sprite-sheet loading and animation helpers exist; original map data, tile mapping and verified character animation mappings remain unimplemented. |
-| P1 | Reconstructed client/gameplay (10 tasks) | 38% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel, zone-specific NPC quest interactions and checkpoint respawn are implemented; original map data, real animation and server combat remain unimplemented. |
+| P1 | Reconstructed client/gameplay (10 tasks) | 38.5% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel, zone-specific NPC quest interactions and checkpoint respawn are implemented; original map data, real animation and server combat remain unimplemented. |
 | P2 | Game systems (10 tasks) | 39.5% | Character/inventory/equipment, skill progression, quest progression, local world hunting, merchant purchases, guild contribution and mailbox rewards now share wallet/inventory state; local friends/party and guild systems are present, with browser-local saves for character progression, inventory/equipment, quests and learned skill configuration. All content remains client-side demo data. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 1.5% | Initial mobile viewport compatibility only; performance, reconnect, security and deployment work remain pending. |
 
-**Overall estimate: about 25.4%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 25.5%** (weighted average of the 41 roadmap items).
 
 - Mobile viewport compatibility: synchronize shell and modal height to `visualViewport` (falling back to `innerHeight`) so the visible layout can adapt when the virtual keyboard opens; chat inputs use 16px text to avoid iOS focus zoom. Real-device testing remains pending.
 
@@ -225,3 +225,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Tapping an NPC pin invokes the existing NPC interaction flow; tapping a monster pin selects that monster as the combat target and refreshes the map selection state.
 - The map panel still uses the current demo zone definitions; this is not original KPAH map data or a reconstructed original map texture.
 - Validation: JavaScript syntax passed; isolated renderer smoke test confirmed escaped NPC labels, NPC/monster/player pins, target state and zone travel controls. No browser interaction or Vite build was run.
+
+## Live world-map marker synchronization
+
+- The player marker now follows movement while the map panel remains open, synchronized against the same Phaser world coordinates.
+- Alive monster markers update their position and selected state; defeated monsters are hidden and the live monster count is refreshed.
+- When a monster respawns, the map panel rebuilds its marker list so the new living monster can be selected.
+- Marker DOM updates are throttled to 100 ms rather than rebuilt every render frame.
+- Validation: main module JavaScript syntax passed; static checks verified player/monster marker hooks, throttling, defeated-monster visibility, selected state, live count and respawn refresh. No browser/device test or Vite build was run.
