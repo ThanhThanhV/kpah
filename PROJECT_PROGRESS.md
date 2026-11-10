@@ -81,6 +81,14 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - Slot five uses an HP consumable from the same inventory state used by the character panel.
 - This is a client-side vertical slice with illustrative skill names, values and formulas. It is not a verified recreation of KPAH skill data, balance, effects, PvE rules or server authority.
 
+## P1 — Character selection roster
+
+- Replaced the placeholder profession picker on the character-selection screen with a three-slot character roster, matching the original client's documented maximum of three character previews.
+- Characters created in the offline client are saved locally in the browser; the roster supports selecting an existing character, creating up to three entries, and deleting an entry after confirmation.
+- The selected character's name, profession, gender and hair selection are passed through the existing client events when entering the world. No account identity, server-side character list, or character restoration service is implied.
+- The roster validates stored records, ignores malformed entries, escapes user-provided text before rendering, and handles unavailable/corrupt local storage without crashing.
+- This is a client-side reconstruction of the selection flow; exact original portrait composition and server character operations remain pending.
+
 ## P1 — Multi-zone world and travel
 
 - Added three connected client-side zones: Làng Sói Trắng, Rừng Trúc and Hang Đá Đen. Each zone has its own palette/environment treatment, entry/exit coordinates, NPC list, monster spawn points, recommended level and travel connections.
@@ -111,7 +119,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - The quest journal supports status filters, objective progress bars, reward previews, claim actions and a pending-reward navigation indicator.
 - Added wallet synchronization to the HUD. The quest catalog, NPC objective, training-wolf target and reward values are illustrative local data, not verified original KPAH content or server transactions.
 
-## Validation limitations
+## Latest client increment — character roster\n\n- Rebuilt the post-login character-selection step as a maximum-three-character roster instead of the previous five-profession shortcut. Existing local characters can be selected, new characters can be created while a slot is free, and entries can be deleted with confirmation.\n- Character roster data is isolated under its own versioned localStorage key and does not store login credentials. It remains browser-local demo data and is not connected to an account or server.\n- Verified the committed source contains the three-slot limit, roster rendering, selection/deletion handlers, and the existing character-selected event. Full browser interaction and mobile-device checks have not been run.\n\n## Validation limitations
 
 - Ran JavaScript syntax parsing and state-level smoke checks for quest acceptance, NPC objective progress, monster-kill progress, reward claiming, experience/currency grants and inventory item rewards. These checks do not replace browser interaction testing or a production build. The world-entity/combat, multi-zone travel, ground-loot and social integrations have not yet been browser-tested or run through a production build.
 
