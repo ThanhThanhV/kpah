@@ -4,16 +4,22 @@ const signed = n => n > 127 ? n - 256 : n;
 function checkOpcode(opcode) { if (!Number.isInteger(opcode) || opcode < -128 || opcode > 255) throw new RangeError("opcode"); return opcode & 255; }
 function checkCursor(cursor) { if (!Number.isSafeInteger(cursor) || cursor < 0) throw new RangeError("cursor"); }
 export function deriveXorKey(encoded) {
-  const key = bytes(encoded); if (!key.length) throw new RangeError("Empty XOR key");
-  const out = key.slice(); for (let i = 1; i < out.length; i += 1) out[i] ^= out[i - 1]; return out;
+  const key = bytes(encoded);
+  if (!key.length) throw new RangeError("Empty XOR key");
+  const out = key.slice();
+  for (let i = 1; i < out.length; i += 1) out[i] ^= out[i - 1];
+  return out;
 }
 export function decodeHandshakeKey(payload) {
-  const p = bytes(payload); if (!p.length) throw new RangeError("Empty handshake");
-  const n = signed(p[0]); if (n <= 0 || p.length !== n + 1) throw new RangeError("Invalid handshake key length");
+  const p = bytes(payload);
+  if (!p.length) throw new RangeError("Empty handshake");
+  const n = signed(p[0]);
+  if (n <= 0 || p.length !== n + 1) throw new RangeError("Invalid handshake key length");
   return deriveXorKey(p.slice(1));
 }
 export function encodeHandshakePayload(encodedKey) {
-  const key = bytes(encodedKey); if (!key.length || key.length > 127) throw new RangeError("Handshake key length");
+  const key = bytes(encodedKey);
+  if (!key.length || key.length > 127) throw new RangeError("Handshake key length");
   return Uint8Array.from([key.length, ...key]);
 }
 export function xorStream(input, key = null, cursor = 0) {
@@ -50,18 +56,15 @@ export function encodeServerFrame(opcode, payload, key = null, cursor = 0, longL
 }
 export function decodeServerFrame(frame, key = null, cursor = 0) {
   const raw = bytes(frame); if (!raw.length) throw new RangeError("Empty S2C frame");
-  const first = xorStream(raw.slice(0, 1), key, cursor); let p = first.cursor;
-  const longLength = key != null && first.data[0] === 128; let opcode, length, offset;
+  const first = xorStream(raw.slice(0, 1), key, cursor); let p = first.cursor, opcode, length, offset, longLength = key != null && first.data[0] === 128;
   if (longLength) {
     if (raw.length < 6) throw new RangeError("Truncated S2C long header");
-    const h = xorStream(raw.slice(1, 6), key, p); p = h.cursor;
-    opcode = h.data[0]; length = h.data[1] * 0x1000000 + h.data[2] * 0x10000 + h.data[3] * 256 + h.data[4]; offset = 6;
+    const h = xorStream(raw.slice(1, 6), key, p); p = h.cursor; opcode = h.data[0];
+    length = h.data[1] * 0x1000000 + h.data[2] * 0x10000 + h.data[3] * 256 + h.data[4]; offset = 6;
   } else {
     if (raw.length < 3) throw new RangeError("Truncated S2C short header");
-    const h = xorStream(raw.slice(1, 3), key, p); p = h.cursor;
-    opcode = first.data[0]; length = h.data[0] * 256 + h.data[1]; offset = 3;
+    const h = xorStream(raw.slice(1, 3), key, p); p = h.cursor; opcode = first.data[0]; length = h.data[0] * 256 + h.data[1]; offset = 3;
   }
   if (raw.length !== offset + length) throw new RangeError("S2C length mismatch");
-  const body = xorStream(raw.slice(offset), key, p);
-  return { opcode: signed(opcode), payload: body.data, cursor: body.cursor, longLength };
+  const body = xorStream(raw.slice(offset), key, p); return { opcode: signed(opcode), payload: body.data, cursor: body.cursor, longLength };
 }
