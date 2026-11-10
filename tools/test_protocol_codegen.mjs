@@ -22,7 +22,9 @@ assert.deepEqual(decodePayload("C2S", "FARM_PLOT_ACTION", farm), { action: 1, pl
 
 const writer = new PacketWriter().writeUTF("\u0000KPAH tiếng Việt 😀");
 const bytes = writer.toUint8Array();
-assert.deepEqual([...bytes.slice(0, 4)], [0, 0, 0xc0, 0x80]);
+assert.equal(bytes[0], 0);
+assert.equal(bytes[1], bytes.length - 2);
+assert.deepEqual([...bytes.slice(2, 4)], [0xc0, 0x80]);
 const reader = new PacketReader(bytes);
 assert.equal(reader.readUTF(), "\u0000KPAH tiếng Việt 😀");
 assert.equal(reader.remaining(), 0);
