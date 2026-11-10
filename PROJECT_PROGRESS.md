@@ -32,6 +32,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Latest implementation
 
+- WBS B2 increment: added `tools/suggest_class_roles.py` and `npm run suggest:class-roles`. It ranks nine semantic role families from constant strings, inheritance/interfaces, member signatures and call-graph references; preserves 16 previously verified class anchors and outputs a JSON/Markdown review queue. It does not rename classes. The real role map remains pending until the analyzer is run against original JAR class files.
+
 - WBS C9 follow-up: added `tools/verify_asset_manifest.py` and `npm run verify:assets` to verify decoded-file SHA-256 values, recompute `assetVersion`, and optionally compare the source JAR hash. Synthetic-manifest smoke test passed for both intact and tampered assets. Class bytecode extraction is isolated under `tools/reports/class-files/`, outside `public/`.
 
 - WBS B1 increment: added a Python Java class-file indexer that reads constant pools, class/method metadata, disassembles common JVM bytecode including switch/wide instructions, counts opcodes and builds method call edges. Supports string and opcode filtering. `py_compile`, a `javac`-generated synthetic class smoke test and `invokevirtual` filter passed; class files are extracted to `tools/reports/class-files/` rather than `public/`; the original 782-class JAR scan is pending because the JAR is not mounted in this execution environment.
