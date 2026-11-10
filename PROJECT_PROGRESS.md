@@ -119,6 +119,13 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - The quest journal supports status filters, objective progress bars, reward previews, claim actions and a pending-reward navigation indicator.
 - Added wallet synchronization to the HUD. The quest catalog, NPC objective, training-wolf target and reward values are illustrative local data, not verified original KPAH content or server transactions.
 
+## Latest client increment — per-character world location resume
+
+- The active zone is now stored in the same versioned save as that character's inventory, quests and skills.
+- Switching characters restores their saved zone independently; characters without a zone save start in Làng Sói Trắng. The scene places the player at that zone's entry point and rebuilds the zone entities, NPCs and drops.
+- Successful zone travel and checkpoint respawn save the resulting location. This is browser-local resume only; player coordinates and monster state are not yet persisted, and the map/zone definitions remain demo data.
+- JavaScript syntax and targeted source checks passed, including zone save/restore, scene restoration, entry-point placement and save-on-travel/respawn. No browser run or production build was performed.
+
 ## Latest client increment — character roster save previews
 
 - The character-selection screen now reads each roster entry's own versioned save key and displays level, current/next-level EXP, Xu, occupied inventory slots and last-save time.
