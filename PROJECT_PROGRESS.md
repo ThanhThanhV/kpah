@@ -32,6 +32,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Latest implementation
 
+- Reverse-engineering CI extension: added a separate `analyze-original-jar` job. It extracts the committed `KPAH_278.jar`, isolates class files outside `public/`, verifies decoded asset hashes, analyzes all extracted classes, generates evidence-ranked class-role reports, and uploads the JSON/Markdown reports plus manifest as a 14-day artifact. The new job's first run is pending; no original-JAR scan result is claimed yet.
+
 - CI refinement: validation workflow now groups runs by workflow and ref and cancels superseded runs, preventing multiple long builds from piling up after consecutive main commits.
 
 - WBS A3/C9 increment: added `.github/workflows/validate.yml` to run the Vite production build, Python compileall, a Java fixture bytecode-analysis/class-role smoke test, and synthetic asset-manifest integrity/tamper checks on pushes to main, pull requests and manual dispatch. Workflow is committed but its GitHub Actions run has not yet been observed; this is validation CI, not staging deployment or full original-JAR extraction.
