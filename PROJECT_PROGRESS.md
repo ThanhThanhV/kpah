@@ -32,6 +32,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Latest implementation
 
+- WBS B1 increment: added a Python Java class-file indexer that reads constant pools, class/method metadata, disassembles common JVM bytecode including switch/wide instructions, counts opcodes and builds method call edges. Supports string and opcode filtering. `py_compile`, a `javac`-generated synthetic class smoke test and `invokevirtual` filter passed; the original 782-class JAR scan is pending because the JAR is not mounted in this execution environment.
+
 - WBS C9 increment: the extractor now records SHA-256 for the source JAR, each archive entry and each decoded packed resource; it derives a content fingerprint (`assetVersion`) and the shared browser asset loader appends it to asset URLs for cache-busting. The extractor has not yet been run against the original JAR in this execution environment.
 
 - Added Resource Viewer for PNG assets listed in archive-manifest.json.
