@@ -119,6 +119,13 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - The quest journal supports status filters, objective progress bars, reward previews, claim actions and a pending-reward navigation indicator.
 - Added wallet synchronization to the HUD. The quest catalog, NPC objective, training-wolf target and reward values are illustrative local data, not verified original KPAH content or server transactions.
 
+## Latest client increment — saved location in character roster
+
+- Character cards now show the saved zone and approximate X/Y coordinates alongside level, EXP, Xu, inventory occupancy and last-save time.
+- The roster only recognizes the three zone IDs currently defined in the demo map. Unknown/missing zones and legacy saves without coordinates display safe fallback labels; malformed coordinate values are not rendered.
+- This completes the visible resume loop: the roster previews where a character was last saved, and selecting that character restores the saved zone and obstacle-checked position.
+- JavaScript syntax and targeted static checks passed. Browser/mobile interaction and production build remain untested.
+
 ## Latest client increment — exact per-character world-position resume
 
 - Per-character saves now include the player's world X/Y coordinates as well as the current zone.
