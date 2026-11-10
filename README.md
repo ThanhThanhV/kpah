@@ -183,3 +183,8 @@ The offline merchant now supports buying between 1 and 99 units per transaction.
 ## Character logout and deletion
 
 Leaving the world saves the active local character before returning to the login overlay. Deleting a roster entry also clears that character's separate browser save after validating its local ID, preventing orphaned local progression. These actions affect only this browser's demo data and do not call the original game server.
+
+
+## Equipment and inventory details
+
+The equipment panel shows equipped item names, attribute bonuses, and the character's effective strength, stamina, agility and spirit. Current/max HP and MP are displayed alongside them. Inventory cards show equipment bonuses or HP/MP restoration values for consumables. Equipping, unequipping and consuming items continue to update shared local character state. All item definitions and values remain demo data pending verified original-game mappings.
