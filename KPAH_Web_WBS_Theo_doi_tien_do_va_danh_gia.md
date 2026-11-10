@@ -38,6 +38,26 @@
 | H – QA, bảo mật, cân bằng | | 75 |
 | I – Hạ tầng và vận hành | | 43 |
 
+## 1.1. Bản chuẩn theo dõi tiến độ
+
+**Đây là tài liệu WBS chuẩn của dự án.** Từ ngày 10/11/2026, mọi báo cáo tiến độ và thứ tự triển khai phải đối chiếu task ID trong file này; không dùng phần trăm của roadmap 41 mục cũ để thay thế.
+
+| Trạng thái baseline | Số lượng |
+|---|---:|
+| Task đã nghiệm thu đầy đủ theo tiêu chí WBS | 0/118 |
+| Task đã có một phần triển khai/prototype được xác minh | 17/118 |
+| Task chưa có triển khai được ghi nhận | 101/118 |
+
+> 0 task nghiệm thu không có nghĩa repo chưa có sản phẩm. Các phần demo/local/prototype đã được ghi trong cột **Tình trạng hiện tại**, nhưng chưa đạt toàn bộ tiêu chí WBS (đặc biệt là nguồn dữ liệu gốc, server-authoritative, persistence và kiểm thử).
+
+**Quy ước trạng thái**
+- `[ ]` + `Chưa triển khai`: chưa có bằng chứng triển khai.
+- `[ ]` + `Một phần`: đã có prototype hoặc một số hạng mục con; chưa đạt Definition of Done.
+- `[x]`: chỉ dùng khi toàn bộ phạm vi và tiêu chí nghiệm thu của task đã được kiểm chứng.
+- Khi task thay đổi, cập nhật cùng lúc cột **Tình trạng hiện tại**, checkbox nếu đủ điều kiện, và nhật ký commit/bằng chứng ở cuối file.
+
+**Nguyên tắc triển khai:** ưu tiên hoàn tất các phụ thuộc R1/P0 theo thứ tự có thể kiểm chứng; không giả định dữ liệu gameplay/asset chưa được xác minh. Client, reverse engineering và asset tooling được tiếp tục trước. Trước khi bắt đầu triển khai backend/gateway, sẽ có checkpoint riêng để chốt protocol, transport TCP/WebSocket, persistence và stack BE theo WBS.
+
 ## 2. Cách cập nhật
 
 - Đổi `[ ]` thành `[x]` chỉ khi nghiệm thu đạt đúng cột sản phẩm/tiêu chí; task làm dở vẫn để `[ ]` và ghi rõ trạng thái.
