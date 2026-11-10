@@ -63,18 +63,22 @@ Các vector dưới đây dùng key giả lập, không phải key production. C
 | S2C encrypted short | opcode `2A`, body `AA BB`, receive cursor 1 | `1A 00 12 9A BB`; cursor về 0 |
 | S2C encrypted long | opcode `35`, body `01 02 03`, receive cursor 2 | `80 25 30 00 10 33 01 12 33`; cursor về 2 |
 
-Chạy kiểm tra:
+Chạy kiểm tra tham chiếu và codegen:
 
 ```bash
 npm run test:protocol
+npm run check:transport-generated
+npm run test:transport-codegen
 ```
 
 ## Mã tham chiếu và giới hạn
 
 CI đã chạy self-test thành công cho codec tham chiếu (key derivation, C2S, S2C short/long và cursor wrap). Xem thêm [protocol-auth-character.md](./protocol-auth-character.md) cho login, server list và character payloads.
 
-- `tools/kpah_protocol_reference.py` cung cấp key derivation, XOR stream, C2S frame encoder/decoder và S2C frame encoder/decoder để tái lập test vectors.
-- Đây là codec tham chiếu để kiểm tra byte layout, chưa phải socket client/server và chưa triển khai WebSocket gateway.
+- `tools/kpah_protocol_reference.py` là oracle Python độc lập để tái lập test vectors.
+- `src/protocol/generated/transport-codec.js` và `TransportCodec.java` được sinh từ `protocol/protocol.yaml`; cung cấp handshake key derivation, XOR stream, C2S encoder/decoder, S2C short/long encoder/decoder.
+- Mỗi hàm mã hóa/giải mã trả cursor tiếp theo; ứng dụng phải duy trì hai cursor riêng cho send và receive. Không tạo singleton cursor trong codec, tránh state ẩn và giúp test/replay deterministic.
+- Các codec Java/JS và Python reference chỉ xử lý byte layout; chưa phải socket client/server và chưa triển khai WebSocket gateway.
 - Đã xác minh framing trong client decompile; chưa có capture mạng thật hoặc server source để đối chiếu tương tác với server production.
 - Các packet opcode nghiệp vụ, schema payload, xác thực và trạng thái server được theo dõi riêng trong B4–B16.
 
