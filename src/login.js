@@ -22,6 +22,15 @@ style.textContent = `
 .character-roster{display:grid;gap:8px;margin:0 0 12px;max-height:min(42vh,330px);overflow:auto}
 .character-roster-empty{padding:18px 12px;border:1px dashed #70593d;background:#211c23;color:#b9a88e;font-size:10px;line-height:1.7}
 .character-roster-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px;background:#28222a;border:1px solid #5a4937}
+.character-roster-card{grid-template-columns:minmax(0,1fr) auto}
+.character-roster-card .roster-identity{min-width:0}
+.roster-progress-wrap{grid-column:1/-1;padding:7px 8px 2px;border-top:1px solid #66513a55}
+.roster-progress{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.roster-progress span{display:grid;gap:2px;color:#b8a58a;font-size:8px;text-align:center}
+.roster-progress b{color:#f0d49b;font-size:9px;font-variant-numeric:tabular-nums}
+.roster-progress.roster-new{display:block;color:#a99a82;font-size:8px;text-align:left}
+.roster-saved-at{display:block;margin-top:6px;color:#8e9d83;font-size:7px;text-align:right}
+
 .character-roster-card.selected{border-color:#e3c17d;background:#49382f}
 .character-roster-card .roster-select{display:flex;align-items:center;gap:10px;min-width:0;text-align:left;background:none;border:0;color:#e5d2ac}
 .character-roster-card .roster-avatar{width:38px;height:42px;display:grid;place-items:center;flex:none;border:1px solid #8d7048;background:#1a171d;color:#e0bd7a;font-size:22px}
@@ -129,19 +138,45 @@ function saveCharacterRoster(){
   try{localStorage.setItem(CHARACTER_STORAGE_KEY,JSON.stringify(characterRoster));return true;}
   catch{return false;}
 }
+function readCharacterPreview(characterId){
+  try{
+    const raw=localStorage.getItem('kpah.game-save.v1.'+characterId);
+    if(!raw)return null;
+    const parsed=JSON.parse(raw);
+    if(parsed?.version!==1||!parsed.state||typeof parsed.state!=='object')return null;
+    const character=parsed.state.character;
+    if(!character||typeof character!=='object')return null;
+    const level=Number.isFinite(Number(character.level))?Math.max(1,Math.floor(Number(character.level))):1;
+    const currency=Number.isFinite(Number(character.currency))?Math.max(0,Math.floor(Number(character.currency))):0;
+    const experience=Number.isFinite(Number(character.experience))?Math.max(0,Math.floor(Number(character.experience))):0;
+    const next=Number.isFinite(Number(character.nextLevelExperience))?Math.max(1,Math.floor(Number(character.nextLevelExperience))):1;
+    const inventory=Array.isArray(character.inventory)?character.inventory.length:0;
+    const savedAt=typeof parsed.savedAt==='string'&&Number.isFinite(Date.parse(parsed.savedAt))?new Date(parsed.savedAt):null;
+    return {level,currency,experience,next,inventory,savedAt};
+  }catch{return null;}
+}
+function formatRosterDate(date){
+  if(!date)return 'Chưa có bản lưu';
+  return 'Lưu lần cuối '+date.toLocaleString('vi-VN',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
 function renderCharacterRoster(){
   const list=cover.querySelector('#character-roster');
   const enter=cover.querySelector('#enter-world');
   const create=cover.querySelector('#open-create-character');
   if(!list||!enter||!create)return;
   if(!characterRoster.some(c=>c.id===selectedCharacterId))selectedCharacterId=characterRoster[0]?.id||null;
-  list.innerHTML=characterRoster.length?characterRoster.map(c=>`<article class="character-roster-card ${c.id===selectedCharacterId?'selected':''}">
-    <button class="roster-select" data-select-character="${c.id}">
-      <span class="roster-avatar">${professionIcons[c.className]}</span>
-      <span><b>${escapeRosterText(c.name)}</b><small>${escapeRosterText(c.className)} · ${escapeRosterText(c.gender||'Nam')}</small></span>
-    </button>
-    <button class="roster-delete" data-delete-character="${c.id}" aria-label="Xóa ${escapeRosterText(c.name)}">XÓA</button>
-  </article>`).join(''):'<div class="character-roster-empty">Chưa có nhân vật nào. Hãy tạo nhân vật mới để bắt đầu hành trình.</div>';
+  list.innerHTML=characterRoster.length?characterRoster.map(c=>{
+    const progress=readCharacterPreview(c.id);
+    const detail=progress?`<div class="roster-progress"><span>Cấp <b>${progress.level}</b></span><span>EXP <b>${progress.experience.toLocaleString('vi-VN')} / ${progress.next.toLocaleString('vi-VN')}</b></span><span>Xu <b>${progress.currency.toLocaleString('vi-VN')}</b></span><span>Túi đồ <b>${progress.inventory}/30</b></span></div><small class="roster-saved-at">${formatRosterDate(progress.savedAt)}</small>`:'<div class="roster-progress roster-new">Nhân vật mới · Chưa có tiến trình lưu</div>';
+    return `<article class="character-roster-card ${c.id===selectedCharacterId?'selected':''}">
+      <button class="roster-select" data-select-character="${c.id}">
+        <span class="roster-avatar">${professionIcons[c.className]}</span>
+        <span class="roster-identity"><b>${escapeRosterText(c.name)}</b><small>${escapeRosterText(c.className)} · ${escapeRosterText(c.gender||'Nam')}</small></span>
+      </button>
+      <button class="roster-delete" data-delete-character="${c.id}" aria-label="Xóa ${escapeRosterText(c.name)}">XÓA</button>
+      <div class="roster-progress-wrap">${detail}</div>
+    </article>`;
+  }).join(''):'<div class="character-roster-empty">Chưa có nhân vật nào. Hãy tạo nhân vật mới để bắt đầu hành trình.</div>';
   enter.disabled=!selectedCharacterId;
   create.disabled=characterRoster.length>=MAX_CHARACTERS;
   create.textContent=characterRoster.length>=MAX_CHARACTERS?'ĐÃ ĐỦ 3/3 NHÂN VẬT':`TẠO NHÂN VẬT MỚI · ${characterRoster.length}/3`;
