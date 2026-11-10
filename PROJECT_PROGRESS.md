@@ -119,6 +119,13 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - The quest journal supports status filters, objective progress bars, reward previews, claim actions and a pending-reward navigation indicator.
 - Added wallet synchronization to the HUD. The quest catalog, NPC objective, training-wolf target and reward values are illustrative local data, not verified original KPAH content or server transactions.
 
+## Latest client increment — character roster save previews
+
+- The character-selection screen now reads each roster entry's own versioned save key and displays level, current/next-level EXP, Xu, occupied inventory slots and last-save time.
+- New characters are clearly distinguished from characters with an existing save. Malformed JSON, unsupported save versions, missing state and invalid timestamps fall back safely to the no-save presentation.
+- This reads only the browser-local save for that character; it does not imply server-side account data or remote character status. The UI remains capped at the original three-character roster.
+- JavaScript syntax and targeted static checks passed. Browser/mobile interaction and Vite production build have not been run.
+
 ## Latest client increment — equipment and inventory presentation
 
 - Equipment slots now resolve equipped item names and show attribute bonuses where available. The equipment panel displays current HP/MP and all four effective attributes, including equipment bonuses.
