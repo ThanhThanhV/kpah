@@ -90,6 +90,10 @@ Packet schemas đã trace cho C2S skill cast opcode 51, S2C damage opcode 6/9/10
 
 Source-backed packet schemas cho movement opcode 4, map transition opcode 12, entity spawn/update opcode 4 S2C, player snapshot opcode 5, entity snapshot opcode 7 và despawn opcode 8: [protocol-world-map.md](./docs/reverse-engineering/protocol-world-map.md).
 
+## Client lifecycle và state machine
+
+Luồng MIDlet startup → resource bootstrap → server select → login/transport handshake → character roster/create/select → loading → world map, cùng disconnect/timeout/reset: [client-state-machine.md](./docs/reverse-engineering/client-state-machine.md).
+
 ## Auth và character protocol
 
 Đặc tả source-backed cho server list, login opcode 1, registration opcode 39, roster opcode 13, select/delete/restore và create character opcode 14: [protocol-auth-character.md](./docs/reverse-engineering/protocol-auth-character.md).
