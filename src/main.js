@@ -14,6 +14,18 @@ import { createGuildState } from './guild-state.js';
 import { createMailState } from './mail-state.js';
 import { createLocalSave } from './local-save.js';
 
+// Keep the game shell inside the actually visible mobile viewport, including
+// browsers that do not resize 100dvh consistently when the virtual keyboard opens.
+function syncVisibleViewportHeight() {
+  const height = window.visualViewport?.height || window.innerHeight;
+  if (Number.isFinite(height) && height > 0) {
+    document.documentElement.style.setProperty('--app-height', Math.round(height) + 'px');
+  }
+}
+syncVisibleViewportHeight();
+window.addEventListener('resize',syncVisibleViewportHeight,{passive:true});
+window.visualViewport?.addEventListener('resize',syncVisibleViewportHeight,{passive:true});
+
 const app = document.querySelector('#app');
 app.innerHTML = `
   <main class="shell">
