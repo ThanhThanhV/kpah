@@ -32,6 +32,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Latest implementation
 
+- B9 social protocol slice: documented chat C2S/S2C opcodes -5/-18, friend request/accept/reject 101, friend removal -6, friend roster 103, generic invitation -11, and guild profile/kick/announcement/chat/ranking/reward -10/-12/-13/-17/-18/-19/-20. Traced `sj`, `mj`, `ka`, `jy` and callbacks `mn/mo/kh/ki`; friend roster field semantics and full party/guild lifecycle remain open.
+
 - B8 NPC/menu/quest slice: documented entity speech opcode 27, help/information -24, world message -26, quest collection -64, quest detail/objectives -30/-31 and generic accept/reject prompt -32. Traced quest model `cy`, menu `tb`, world state `mj` and prompt callbacks `kk/kc`. NPC action trees and reward schema remain open.
 
 - B7 inventory/equipment/trade slice: documented material/recipe list opcode 73, equipment list 76, trade/market panel 94, market listing request/response 92 and item update/remove 95. Traced item models `bo`, `be`, `de` and client collections `xg.E`, `ca.N/O/P`. NPC shop purchase, use-item, equip/unequip, upgrade/refine and warehouse flows remain open.
