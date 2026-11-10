@@ -188,3 +188,8 @@ Leaving the world saves the active local character before returning to the login
 ## Equipment and inventory details
 
 The equipment panel shows equipped item names, attribute bonuses, and the character's effective strength, stamina, agility and spirit. Current/max HP and MP are displayed alongside them. Inventory cards show equipment bonuses or HP/MP restoration values for consumables. Equipping, unequipping and consuming items continue to update shared local character state. All item definitions and values remain demo data pending verified original-game mappings.
+
+
+## Character roster progress preview
+
+The character-selection roster reads each character's own browser save and shows level, current/next EXP, Xu, occupied inventory slots and the last local save time. Characters without a save are labelled as new. The reader validates the save version and payload and safely falls back if local data is malformed. The roster remains a three-character local demo and does not display server-side character status.
