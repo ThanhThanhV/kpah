@@ -156,3 +156,10 @@ The live world map now keeps its player marker synchronized while the character 
 - Tap-to-move, directional controls and combat approach movement resolve their travel path against that geometry, stopping at the last walkable point instead of passing through solid scenery.
 - Collision geometry is deliberately limited to the current procedural demo scenery. It is not original KPAH collision data, and the world still needs source-derived map boundaries and obstacle masks.
 - Collision resolution samples the requested path at short intervals; it is a lightweight client-side approximation pending a verified tile/collision map.
+
+
+## Obstacle-aware path sliding
+
+- Improved the local movement resolver: when a direct diagonal path meets a registered obstacle, it also tests horizontal-first and vertical-first routes and selects the valid route that advances furthest.
+- This allows the character to slide around the edge of demo scenery instead of always stopping at the first blocked sample. All routes still respect the existing obstacle geometry and walk bounds.
+- This remains a lightweight client-side path approximation; it is not a full navigation mesh or source-derived KPAH pathfinding system.
