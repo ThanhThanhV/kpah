@@ -48,6 +48,12 @@ npm run suggest:class-roles
 `tools/suggest_class_roles.py` tạo danh sách class theo vai trò ứng viên (transport, packet, resource loader, rendering, input, screen, world entity, persistence và thread lifecycle), dựa trên chuỗi hằng, superclass/interface, method/field signature, call graph, field-reference graph và type-reference graph. Báo cáo kèm string evidence và caller/callee/class-reference để review. Kết quả có cả JSON và Markdown để review.
 
 Tool giữ riêng các anchor đã xác minh từ quá trình đọc JAR (ví dụ `km`, `uj`, `ro`, `mj`, `ba`) và đánh dấu các gợi ý khác là giả thuyết cần kiểm tra. Điểm số chỉ dùng để xếp hàng review, tuyệt đối không tự đổi tên class hoặc kết luận nghiệp vụ.
+## CI validation
+
+GitHub Actions workflow `.github/workflows/validate.yml` runs on pushes to `main`, pull requests and manual dispatch. It installs the browser client dependencies and runs the Vite production build, compiles the Python tools, compiles a small Java 8-compatible fixture and smoke-tests the bytecode analyzer/class-role report, then verifies a synthetic asset manifest and confirms that a modified asset is rejected.
+
+This workflow validates the toolchain with synthetic fixtures; it does not claim that the original JAR has been extracted/analyzed, nor does it deploy a staging environment. Check the Actions tab for the actual run result after each push.
+
 ## Kiểm tra tính toàn vẹn tài nguyên
 
 Sau khi trích xuất, chạy:
