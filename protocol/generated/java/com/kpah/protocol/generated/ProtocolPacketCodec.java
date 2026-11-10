@@ -8,19 +8,19 @@ public final class ProtocolPacketCodec {
     private record Field(String name, Type type) {}
     private static final Map<String, List<Field>> SCHEMAS = new LinkedHashMap<>();
     static {
-        schemas.put("C2S_OPEN_ARTIFACT_PANEL", List.of(new Field("sentinel", Type.I16)));
-        schemas.put("C2S_FARM_PANEL_ACTION", List.of(new Field("action", Type.U8), new Field("index", Type.U8)));
-        schemas.put("C2S_REFINE_ITEM", List.of(new Field("action", Type.U8), new Field("itemId", Type.U8)));
-        schemas.put("C2S_GUILD_CHAT", List.of(new Field("message", Type.UTF)));
-        schemas.put("C2S_REMOVE_FRIEND", List.of(new Field("friendName", Type.UTF)));
-        schemas.put("C2S_CHAT", List.of(new Field("channel", Type.UTF), new Field("message", Type.UTF)));
-        schemas.put("C2S_SESSION_INIT", List.of(new Field("protocolVersion", Type.U8)));
-        schemas.put("C2S_LOGIN", List.of(new Field("gameId", Type.UTF), new Field("password", Type.UTF), new Field("clientParameter", Type.UTF), new Field("platform", Type.UTF), new Field("clientProperty1", Type.UTF), new Field("clientProperty2", Type.UTF), new Field("clientProperty3", Type.UTF), new Field("reserved", Type.U8), new Field("screenWidth", Type.U16), new Field("featureFlag", Type.I8), new Field("serverFlag", Type.U8)));
-        schemas.put("C2S_MOVE", List.of(new Field("x", Type.I16), new Field("y", Type.I16)));
-        schemas.put("C2S_SELECT_CHARACTER", List.of(new Field("subcommand", Type.U8), new Field("characterId", Type.I32)));
-        schemas.put("C2S_CREATE_CHARACTER", List.of(new Field("name", Type.UTF), new Field("field1", Type.U8), new Field("field2", Type.U8), new Field("field3", Type.U8), new Field("field4", Type.U8), new Field("serverFlag", Type.U8)));
-        schemas.put("C2S_USE_ITEM", List.of(new Field("itemId", Type.I32)));
-        schemas.put("C2S_FARM_PLOT_ACTION", List.of(new Field("action", Type.U8), new Field("plotId", Type.U8)));
+        SCHEMAS.put("C2S_OPEN_ARTIFACT_PANEL", List.of(new Field("sentinel", Type.I16)));
+        SCHEMAS.put("C2S_FARM_PANEL_ACTION", List.of(new Field("action", Type.U8), new Field("index", Type.U8)));
+        SCHEMAS.put("C2S_REFINE_ITEM", List.of(new Field("action", Type.U8), new Field("itemId", Type.U8)));
+        SCHEMAS.put("C2S_GUILD_CHAT", List.of(new Field("message", Type.UTF)));
+        SCHEMAS.put("C2S_REMOVE_FRIEND", List.of(new Field("friendName", Type.UTF)));
+        SCHEMAS.put("C2S_CHAT", List.of(new Field("channel", Type.UTF), new Field("message", Type.UTF)));
+        SCHEMAS.put("C2S_SESSION_INIT", List.of(new Field("protocolVersion", Type.U8)));
+        SCHEMAS.put("C2S_LOGIN", List.of(new Field("gameId", Type.UTF), new Field("password", Type.UTF), new Field("clientParameter", Type.UTF), new Field("platform", Type.UTF), new Field("clientProperty1", Type.UTF), new Field("clientProperty2", Type.UTF), new Field("clientProperty3", Type.UTF), new Field("reserved", Type.U8), new Field("screenWidth", Type.U16), new Field("featureFlag", Type.I8), new Field("serverFlag", Type.U8)));
+        SCHEMAS.put("C2S_MOVE", List.of(new Field("x", Type.I16), new Field("y", Type.I16)));
+        SCHEMAS.put("C2S_SELECT_CHARACTER", List.of(new Field("subcommand", Type.U8), new Field("characterId", Type.I32)));
+        SCHEMAS.put("C2S_CREATE_CHARACTER", List.of(new Field("name", Type.UTF), new Field("field1", Type.U8), new Field("field2", Type.U8), new Field("field3", Type.U8), new Field("field4", Type.U8), new Field("serverFlag", Type.U8)));
+        SCHEMAS.put("C2S_USE_ITEM", List.of(new Field("itemId", Type.I32)));
+        SCHEMAS.put("C2S_FARM_PLOT_ACTION", List.of(new Field("action", Type.U8), new Field("plotId", Type.U8)));
     }
     public static byte[] encode(String command, Map<String, ?> values) throws IOException {
         List<Field> fields = requireSchema(command);
