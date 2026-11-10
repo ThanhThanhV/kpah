@@ -1243,7 +1243,7 @@ class WorldScene extends Phaser.Scene {
               const valid=candidates.find(point=>!blocked(point));
               if(valid)worldEntityState.move(monster.id,valid.x,valid.y);
             }else if(monster.aiState==='returning'){
-              monster.aiState='idle';
+              worldEntityState.setAiState(monster.id,'idle');
             }
             continue;
           }
