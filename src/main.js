@@ -1215,17 +1215,17 @@ class WorldScene extends Phaser.Scene {
           let destination=null,speed=monster.type==='pack-leader'?48:38;
           if(distance<=aggroRange&&distance>attackReach){
             destination={x:playerPosition.x,y:playerPosition.y};
-            monster.aiState='chasing';
+            worldEntityState.setAiState(monster.id,'chasing');
           }else if(distance<=attackReach&&distance<=aggroRange){
-            monster.aiState='attacking';
-          }else if(monster.aiState==='chasing'||monster.aiState==='attacking'||homeDistance>8){
+            worldEntityState.setAiState(monster.id,'attacking');
+          }else if(['chasing','attacking','returning'].includes(monster.aiState)||homeDistance>8){
             if(distance>leashRange||homeDistance>8){
               destination={x:monster.homeX,y:monster.homeY};
               speed=30;
-              monster.aiState='returning';
+              worldEntityState.setAiState(monster.id,'returning');
             }
           }else{
-            monster.aiState='idle';
+            worldEntityState.setAiState(monster.id,'idle');
           }
           if(destination){
             const targetDx=destination.x-monster.x,targetDy=destination.y-monster.y;
