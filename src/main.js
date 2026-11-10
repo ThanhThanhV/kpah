@@ -891,7 +891,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.lastMonsterAiAt=0;}
   create(){
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
@@ -1096,6 +1096,7 @@ class WorldScene extends Phaser.Scene {
       const state=states.find(item=>item.id===entry.id);
       if(!state)continue;
       entry.view.setVisible(state.alive);
+      entry.view.setPosition(state.x,state.y);
       entry.view.setDepth(state.y);
       const fill=entry.view.getData('hpFill');
       if(fill)fill.width=Math.max(0,30*state.hp/state.maxHp);
@@ -1197,26 +1198,46 @@ class WorldScene extends Phaser.Scene {
     if(!this.playerSprite||characterState.snapshot().hp<=0)return;
     const {x,y}=this.playerSprite;
     const now=Date.now();
-    // Nearby living monsters apply periodic contact damage in the offline world.
-    // Damage/cadence are provisional demo values, not original KPAH server rules.
+    // Demo monster AI: acquire the player, close distance, then attack on cooldown.
+    // Aggro range, movement speed, attack reach and cadence are provisional client values.
     const playerHp=characterState.snapshot().hp;
     if(playerHp>0){
-      const playerPosition={x:this.playerSprite.x,y:this.playerSprite.y};
-      for(const monster of worldEntityState.snapshot().monsters){
-        if(!monster.alive)continue;
-        const distance=Phaser.Math.Distance.Between(playerPosition.x,playerPosition.y,monster.x,monster.y);
-        if(distance>110)continue;
-        const lastAttack=this.monsterAttackAt.get(monster.id);
-        if(lastAttack===undefined){this.monsterAttackAt.set(monster.id,now);continue;}
-        if(now-lastAttack<2400)continue;
-        this.monsterAttackAt.set(monster.id,now);
-        const before=characterState.snapshot().hp;
-        characterState.receiveDamage(monster.damage);
-        const dealt=before-characterState.snapshot().hp;
-        if(dealt>0){
-          showCombatFeedback({healing:0,damage:0},null,dealt);
-          updateCharacterHud();
-          if(characterState.snapshot().hp<=0){showDeathOverlay();break;}
+      if(!this.lastMonsterAiAt||now-this.lastMonsterAiAt>=80){
+        const delta=Math.min(0.16,(now-(this.lastMonsterAiAt||now))/1000);
+        this.lastMonsterAiAt=now;
+        const playerPosition={x:this.playerSprite.x,y:this.playerSprite.y};
+        for(const monster of worldEntityState.snapshot().monsters){
+          if(!monster.alive)continue;
+          const dx=playerPosition.x-monster.x,dy=playerPosition.y-monster.y;
+          const distance=Math.hypot(dx,dy);
+          if(distance>230||distance<0.001)continue;
+          const attackReach=58;
+          if(distance>attackReach){
+            const speed=monster.type==='pack-leader'?48:38;
+            const step=Math.min(distance-attackReach,speed*delta);
+            const nextX=monster.x+dx/distance*step;
+            const nextY=monster.y+dy/distance*step;
+            const next={x:nextX,y:nextY};
+            const blocked=this.worldObstacles.some(obstacle=>{
+              if(obstacle.type==='circle')return Phaser.Math.Distance.Between(next.x,next.y,obstacle.x,obstacle.y)<=obstacle.radius+9;
+              if(obstacle.type==='rect')return next.x>=obstacle.x-9&&next.x<=obstacle.x+obstacle.width+9&&next.y>=obstacle.y-9&&next.y<=obstacle.y+obstacle.height+9;
+              return false;
+            });
+            if(!blocked)worldEntityState.move(monster.id,nextX,nextY);
+            continue;
+          }
+          const lastAttack=this.monsterAttackAt.get(monster.id);
+          if(lastAttack===undefined){this.monsterAttackAt.set(monster.id,now);continue;}
+          if(now-lastAttack<2400)continue;
+          this.monsterAttackAt.set(monster.id,now);
+          const before=characterState.snapshot().hp;
+          characterState.receiveDamage(monster.damage);
+          const dealt=before-characterState.snapshot().hp;
+          if(dealt>0){
+            showCombatFeedback({healing:0,damage:0},null,dealt);
+            updateCharacterHud();
+            if(characterState.snapshot().hp<=0){showDeathOverlay();break;}
+          }
         }
       }
     }
