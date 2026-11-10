@@ -147,3 +147,5 @@ The extractor also tags decoded entries with a source-pack family (for example e
 Mobile viewport handling: the app synchronizes its shell and modal height to `visualViewport` when available, falls back to `innerHeight`, and uses 16px chat input text to avoid automatic focus zoom on iOS. Real-device validation is still required.
 
 The world map panel now renders a live schematic from the current zone's world coordinates: player location, NPCs and alive monsters. NPC pins open their existing interaction flow; monster pins select the combat target, with a distinct marker for elite monsters and the current target. The panel remains based on demo zone data, not original KPAH map resources.
+
+The live world map now keeps its player marker synchronized while the character moves. Monster markers follow their current world positions, reflect the selected target, disappear on defeat and return after respawn; the living-monster count updates while the panel is open. DOM synchronization is throttled to 100 ms.
