@@ -141,6 +141,7 @@ function activateCharacterProgress(characterId,identity){
       localSave.save(legacy);
     }
   }
+  worldMapState.setCurrent(savedGame?.zone||'village');
   if(savedGame){
     characterState.restore(savedGame.character);
     questState.restore(savedGame.quests);
@@ -174,7 +175,7 @@ deathOverlay.querySelector('#respawn-button').addEventListener('click',respawnPl
 function saveGameProgress(){
   if(!activeCharacterId)return false;
   const skills=skillCombat.snapshot();
-  return localSave.save({character:characterState.snapshot(),quests:questState.snapshot(),skills:{skills:skills.skills.map(skill=>({id:skill.id,level:skill.level})),skillPoints:skills.skillPoints,loadout:skills.loadout},social:socialState.snapshot(),guild:guildState.snapshot(),mail:mailState.snapshot()});
+  return localSave.save({character:characterState.snapshot(),zone:worldMapState.snapshot().current.id,quests:questState.snapshot(),skills:{skills:skills.skills.map(skill=>({id:skill.id,level:skill.level})),skillPoints:skills.skillPoints,loadout:skills.loadout},social:socialState.snapshot(),guild:guildState.snapshot(),mail:mailState.snapshot()});
 }
 
 function openWindow(key){
@@ -869,6 +870,7 @@ window.addEventListener('kpah:character-selected',event=>{
   document.querySelectorAll('.hero-name').forEach(el=>el.textContent=safeName);
   document.querySelectorAll('#chat-lines strong').forEach(el=>{if(el.textContent==='Kiếm Khách')el.textContent=safeName;});
   const scene=game.scene.getScene('world');
+  if(scene?.restoreZone)scene.restoreZone(worldMapState.snapshot().current.id);
   if(scene?.playerLabel)scene.playerLabel.setText(safeName);
   const heading=document.querySelector('.character-details h2');
   if(heading)heading.textContent=safeName;
@@ -879,9 +881,11 @@ window.addEventListener('kpah:character-selected',event=>{
 class WorldScene extends Phaser.Scene {
   constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];}
   create(){
-    this.drawZone(worldMapState.snapshot().current);
+    const initialZone=worldMapState.snapshot().current;
+    this.player={x:initialZone.entry.x,y:initialZone.entry.y};
+    this.drawZone(initialZone);
     this.playerSprite=this.add.container(this.player.x,this.player.y);const shadow=this.add.ellipse(0,19,28,9,0x111510,0.35);const cape=this.add.triangle(0,2,0,-2,-17,20,13,20,0x9b3f32);const body=this.add.rectangle(0,0,17,25,0xd5d0b9).setStrokeStyle(2,0x42372b);const head=this.add.circle(0,-17,8,0xe0b88d).setStrokeStyle(2,0x42372b);const hair=this.add.triangle(0,-23,-8,-16,0,-31,9,-15,0x29232a);const sword=this.add.rectangle(13,-3,4,27,0xd6d8d1).setAngle(25).setStrokeStyle(1,0x514d48);this.playerSprite.add([shadow,cape,body,head,hair,sword]);setWorldEntityDepth(this.playerSprite);
-    this.playerLabel=this.add.text(480,282,'Kiếm Khách',{fontFamily:'Arial',fontSize:'12px',color:'#fff3c6',stroke:'#34251d',strokeThickness:3}).setOrigin(.5).setDepth(999);
+    this.playerLabel=this.add.text(this.player.x,this.player.y-52,'Kiếm Khách',{fontFamily:'Arial',fontSize:'12px',color:'#fff3c6',stroke:'#34251d',strokeThickness:3}).setOrigin(.5).setDepth(999);
     this.destinationMarker=this.add.circle(0,0,12,0xf4d58c,0.18)
       .setStrokeStyle(2,0xf4d58c,0.9).setDepth(500).setVisible(false);
     this.destinationPulse=this.tweens.add({
@@ -984,6 +988,23 @@ class WorldScene extends Phaser.Scene {
     this.cameras.main.centerOn(checkpoint.entry.x,checkpoint.entry.y);
     syncCombatTarget(worldEntityState.snapshot().selected);
     renderWorldTarget();
+    saveGameProgress();
+    return true;
+  }
+  restoreZone(zoneId){
+    const zone=worldMapState.setCurrent(zoneId);
+    if(!zone)return false;
+    if(!this.playerSprite)return true;
+    if(pendingMonsterApproachTimer!==null){clearTimeout(pendingMonsterApproachTimer);pendingMonsterApproachTimer=null;pendingMonsterApproach=false;}
+    this.tweens.killTweensOf(this.playerSprite);
+    this.clearZone();
+    this.playerSprite.setPosition(zone.entry.x,zone.entry.y);
+    this.playerLabel?.setPosition(zone.entry.x,zone.entry.y-52);
+    this.drawZone(zone);
+    this.cameras.main.setBounds(0,0,this.worldBounds.width,this.worldBounds.height);
+    this.cameras.main.centerOn(zone.entry.x,zone.entry.y);
+    syncCombatTarget(worldEntityState.snapshot().selected);
+    renderWorldTarget();
     return true;
   }
   changeZone(zoneId){
@@ -1001,6 +1022,7 @@ class WorldScene extends Phaser.Scene {
     this.cameras.main.centerOn(zone.entry.x,zone.entry.y);
     syncCombatTarget(worldEntityState.snapshot().selected);
     renderWorldTarget();
+    saveGameProgress();
     return result;
   }
   createMonsterViews(){
