@@ -171,7 +171,7 @@ function enterWorld(){
   if(!character)return;
   const location=document.querySelector('.server span b');
   if(location)location.textContent=selectedServer;
-  window.dispatchEvent(new CustomEvent('kpah:character-selected',{detail:{name:character.name,className:character.className,gender:character.gender,hair:character.hair,server:selectedServer}}));
+  window.dispatchEvent(new CustomEvent('kpah:character-selected',{detail:{id:character.id,name:character.name,className:character.className,gender:character.gender,hair:character.hair,server:selectedServer}}));
   cover.remove();
 }
 cover.querySelector('#enter-world').addEventListener('click',enterWorld);
