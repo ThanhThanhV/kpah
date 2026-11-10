@@ -891,7 +891,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();}
   create(){
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
@@ -1197,6 +1197,29 @@ class WorldScene extends Phaser.Scene {
     if(!this.playerSprite||characterState.snapshot().hp<=0)return;
     const {x,y}=this.playerSprite;
     const now=Date.now();
+    // Nearby living monsters apply periodic contact damage in the offline world.
+    // Damage/cadence are provisional demo values, not original KPAH server rules.
+    const playerHp=characterState.snapshot().hp;
+    if(playerHp>0){
+      const playerPosition={x:this.playerSprite.x,y:this.playerSprite.y};
+      for(const monster of worldEntityState.snapshot().monsters){
+        if(!monster.alive)continue;
+        const distance=Phaser.Math.Distance.Between(playerPosition.x,playerPosition.y,monster.x,monster.y);
+        if(distance>110)continue;
+        const lastAttack=this.monsterAttackAt.get(monster.id);
+        if(lastAttack===undefined){this.monsterAttackAt.set(monster.id,now);continue;}
+        if(now-lastAttack<2400)continue;
+        this.monsterAttackAt.set(monster.id,now);
+        const before=characterState.snapshot().hp;
+        characterState.receiveDamage(monster.damage);
+        const dealt=before-characterState.snapshot().hp;
+        if(dealt>0){
+          showCombatFeedback({healing:0,damage:0},null,dealt);
+          updateCharacterHud();
+          if(characterState.snapshot().hp<=0){showDeathOverlay();break;}
+        }
+      }
+    }
     if(!this.lastMapPinSyncAt||now-this.lastMapPinSyncAt>=100){
       this.lastMapPinSyncAt=now;
       this.syncWorldMapPins(x,y);
