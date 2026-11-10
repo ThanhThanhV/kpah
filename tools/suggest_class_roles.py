@@ -95,6 +95,10 @@ def main() -> int:
         matches = [name for name in by_name if method_reference.startswith(name + ".")]
         return max(matches, key=len) if matches else method_reference.rsplit(".", 1)[0]
 
+    def known_referenced_class(member_reference: str) -> str:
+        matches = [name for name in by_name if member_reference.startswith(name + ".")]
+        return max(matches, key=len) if matches else ""
+
     for edge in graph:
         if isinstance(edge, dict):
             source_class = owning_class(str(edge.get("from", "")))
@@ -108,8 +112,9 @@ def main() -> int:
         if isinstance(edge, dict):
             source_class = owning_class(str(edge.get("from", "")))
             target_name = str(edge.get("to", ""))
-            target_class = target_name if target_name in by_name else owning_class(target_name)
-            type_refs_by_class[source_class].append({**edge, "targetClass": target_class})
+            target_class = target_name if target_name in by_name else ""
+            if target_class:
+                type_refs_by_class[source_class].append({**edge, "targetClass": target_class})
     results = []
     for name, item in by_name.items():
         out_edges, in_edges = outgoing[name], incoming[name]
@@ -117,7 +122,9 @@ def main() -> int:
         corpus = collect_text(item, out_edges, in_edges, field_edges, type_edges)
         callee_counts = Counter(owning_class(str(edge.get("to", ""))) for edge in out_edges)
         caller_counts = Counter(owning_class(str(edge.get("from", ""))) for edge in in_edges)
-        field_owner_counts = Counter(owning_class(str(edge.get("to", ""))) for edge in field_edges)
+        field_owner_counts = Counter(
+            owner for owner in (known_referenced_class(str(edge.get("to", ""))) for edge in field_edges) if owner
+        )
         type_owner_counts = Counter(str(edge.get("targetClass", "")) for edge in type_edges)
         related_classes = {
             "callees": [{"className": key, "references": count} for key, count in callee_counts.most_common(12) if key != name],
