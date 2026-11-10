@@ -124,6 +124,9 @@ def extract_outbound(java_file: Path) -> list[dict[str, Any]]:
         creations = list(PACKET_CREATE_RE.finditer(body))
         for index, match in enumerate(creations):
             expression = (match.group(1) if match.group(1) is not None else match.group(2)).strip()
+            # Two-argument acu constructors are used by the receive parser, not outbound builders.
+            if "," in expression:
+                continue
             normalized = re.sub(r"^\(byte\)\s*", "", expression).strip()
             numeric_match = re.fullmatch(r"-?\d+", normalized)
             opcode = int(normalized) if numeric_match else None
@@ -132,6 +135,7 @@ def extract_outbound(java_file: Path) -> list[dict[str, Any]]:
             variable_match = re.search(r"\bacu\s+([A-Za-z_$][\w$]*)\s*=\s*$", body[max(0, match.start() - 100):match.start()])
             variable = variable_match.group(1) if variable_match else None
             send_calls = len(re.findall(r"\.a\(\s*" + re.escape(variable) + r"\s*\)", segment)) if variable else len(re.findall(r"\.a\(\s*acu\d*\s*\)", segment))
+            send_calls += len(re.findall(r"\.a\(\s*new\s+acu\(\s*" + re.escape(expression) + r"\s*\)\s*\)", segment))
             records.append({
                 "method": method["name"],
                 "signature": method["signature"],
