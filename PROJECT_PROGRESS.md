@@ -32,6 +32,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Latest implementation
 
+- B12 client lifecycle slice: documented MIDlet/resource bootstrap, server selection, login form, socket opening, XOR handshake, roster/create/select, loading/map transition, world screen, connection failure, 20-second connect timeout, reader disconnect and reset callbacks. Confirmed `km.q` owns the active screen while `km.s` is the persistent world state. No auto-reconnect loop was found; opcode 1/3 initialization and server session semantics remain open.
+
 - B11 C2S coverage increment: `tools/extract_protocol_catalog.py` now scans every CFR `.java` file for constant or dynamic `jy.b(...)` and direct `new acu(...)` packet builders, recording source file/line, opcode expression, payload write order and send-call count. It distinguishes factory/helper declarations that do not enqueue a packet. CI run and wrapper-caller linking are pending.
 
 - B9 social protocol slice: documented chat C2S/S2C opcodes -5/-18, friend request/accept/reject 101, friend removal -6, friend roster 103, generic invitation -11, and guild profile/kick/announcement/chat/ranking/reward -10/-12/-13/-17/-18/-19/-20. Traced `sj`, `mj`, `ka`, `jy` and callbacks `mn/mo/kh/ki`; friend roster field semantics and full party/guild lifecycle remain open.
