@@ -314,3 +314,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Monster attacks stop when the player is knocked out. The existing checkpoint respawn flow restores the character in the safe village and rebuilds the active zone state.
 - Attack range, cadence and damage reuse the current demo monster definitions and remain provisional client-side values. This does not claim original KPAH aggro, attack animation, targeting or damage formulas.
 - Validation: the updated src/main.js passed a V8 syntax compilation check after removing static imports. No browser interaction, timing test or Vite production build was run.
+
+
+## P1 — Monster aggro and pursuit
+
+- Living demo monsters now acquire the player inside a 230-world-unit radius and move toward the player at a bounded, time-step-based speed. Pack leaders use a slightly faster provisional speed.
+- Monsters stop at close range and use their individual damage values on a per-monster cooldown. Their updated coordinates are written to the shared world-entity state, so the scene views, world-map pins and combat target positions use the same location.
+- Monster movement respects the current demo obstacle shapes by rejecting a blocked movement step. It does not yet implement pathfinding around obstacles, original monster AI states, attack animations or server-authoritative combat.
+- Validation: main.js and world-entities.js passed V8 syntax compilation after removing static imports and export declarations. No browser timing/interaction test or Vite production build was run.
