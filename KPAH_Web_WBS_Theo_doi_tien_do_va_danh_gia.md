@@ -45,8 +45,8 @@
 | Trạng thái baseline | Số lượng |
 |---|---:|
 | Task đã nghiệm thu đầy đủ theo tiêu chí WBS | 0/118 |
-| Task đã có một phần triển khai/prototype được xác minh | 29/118 |
-| Task chưa có triển khai được ghi nhận | 89/118 |
+| Task đã có một phần triển khai/prototype được xác minh | 30/118 |
+| Task chưa có triển khai được ghi nhận | 88/118 |
 
 > 0 task nghiệm thu không có nghĩa repo chưa có sản phẩm. Các phần demo/local/prototype đã được ghi trong cột **Tình trạng hiện tại**, nhưng chưa đạt toàn bộ tiêu chí WBS (đặc biệt là nguồn dữ liệu gốc, server-authoritative, persistence và kiểm thử).
 
@@ -96,7 +96,7 @@
 | [ ] | B13 | R2 | P1 | Đặc tả công thức phía client | Ghi lại tốc độ, quãng nhảy, hiển thị sát thương, tính toán dự đoán phía client | B6 | RE | 4 | Một phần – đã trace actor step `cT` default 3 và tăng theo khoảng cách (>30/+1, >50/+2, >70/+3, >100/+4), trục X/Y tuần tự, click-to-move waypoint, C2S coordinate throttle 250ms và floating damage/MISS lifetime 30 ticks; jump physics và damage/crit formula chưa xác minh |
 | [ ] | B14 | R1 | P0 | Codegen Java/TS từ protocol.yaml | Sinh enum Cmd, lớp request/response, reader/writer cho cả hai ngôn ngữ; kiểm tra lệch bằng test vector | B3 | RE | 6 | Chưa triển khai theo WBS |
 | [ ] | B15 | R1 | P0 | Replay harness: jar gốc chạy với server mock | Dựng server mock WS<->TCP đóng gói đúng khung, cho jar gốc trên emulator nói chuyện để kiểm chứng đặc tả | B14 | RE | 5 | Chưa triển khai theo WBS |
-| [ ] | B16 | R1 | P0 | Danh mục dữ liệu server phải gửi lúc đăng nhập | Phân tích các lệnh khởi tạo (1, 3, 5, 15, 16...): tile, part, item, skill, map; chốt server phải gửi gì và định dạng | B4 | RE | 4 | Chưa triển khai theo WBS |
+| [ ] | B16 | R1 | P0 | Danh mục dữ liệu server phải gửi lúc đăng nhập | Phân tích các lệnh khởi tạo (1, 3, 5, 15, 16...): tile, part, item, skill, map; chốt server phải gửi gì và định dạng | B4 | RE | 4 | Một phần – đã trace global config opcode 1 (skill metadata, profession tables, tile blobs, part data), character snapshot 3, shop/catalog 15 và inventory/skill extension 16; đã xác định runtime destinations và optional sections; chưa chốt server send order, toàn bộ field semantics và binary part/tile schema |
 
 ### Nhóm C — Tài nguyên và dữ liệu
 
@@ -615,6 +615,7 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 | 2026-11-10 | A3 / C9 | Thêm `.github/workflows/validate.yml`: CI trên push/PR/main chạy npm build, Python compileall, compile Java fixture rồi smoke-test bytecode analyzer + class-role mapper, tạo manifest tổng hợp và xác nhận verifier phát hiện file bị sửa | `b38a2f6`, `4b11a7d` | Workflow có concurrency group, tự hủy run cũ khi có commit mới; workflow đã push; chưa có kết quả run từ GitHub Actions tại thời điểm cập nhật; chưa tự động giải nén JAR gốc hoặc deploy staging |
 | 2026-11-10 | C9 | Thêm verifier kiểm tra SHA-256 từng tài nguyên giải mã, tái tạo `assetVersion`, tùy chọn đối chiếu JAR nguồn; tách class output khỏi public assets | `02ea560`, `8999b31`, `7dcf7e9` | Verifier smoke test PASS với manifest tổng hợp; chấp nhận file nguyên vẹn và từ chối file bị sửa; chưa chạy trên bộ asset gốc do JAR không có trong môi trường thực thi |
 | 2026-11-10 | B2 | Thêm `tools/suggest_class_roles.py`, xuất JSON/Markdown review queue cho 9 nhóm vai trò; giữ riêng 16 anchor đã biết; sửa phân tích owner của call graph để không cắt sai tên class có package | `484e59a`, `d4be9ea`, `c297663`, `63745d5`, `9b59f7b`, `886e494`, `b92489b` | Đã rà soát logic và tích hợp command/docs; chưa tạo role map thực tế do thiếu output phân tích từ JAR gốc; heuristic không tự rename class |
+| 2026-11-10 | B16 | Tạo `docs/reverse-engineering/protocol-initialization-data.md`: schema opcode 1 global configuration/skill/profession/tile/part data; opcode 3 selected character snapshot; opcode 15 shop/catalog; opcode 16 inventory/skill/auxiliary state | `00d95fd`, `2e2d5eb` | Trace runtime destinations `z/ca/mj/ku/hd/bo/bk`; field semantics của lookup tables và thứ tự packet init cần capture/review thêm |
 | 2026-11-10 | B13 | Tạo `docs/reverse-engineering/client-motion-and-damage.md`: actor movement step/thresholds, X-then-Y movement, tile waypoint/collision checks, 250ms C2S position send, floating damage/MISS drift and expiry | `d61cfda`, `f570be5` | Trace `z/ca/mj/km/hf`; jump/fall physics, cT dynamic modifiers and damage/crit formula remain unverified |
 | 2026-11-10 | B12 | Tạo `docs/reverse-engineering/client-state-machine.md`: MIDlet/resource bootstrap, server selector, login, TCP handshake, character roster/create/select, loading/map transition, world screen, connect failure, 20s timeout, reader disconnect và reset callbacks | `2f787ce`, `6abf17f` | Trace `GameMidlet/km/kv/uj/ro/rq/lj/ls/li/mj/acv/acy/acw/acx/ka/qb/qc`; chưa đặc tả đầy đủ init payload opcode 1/3 hoặc server session lifecycle |
 | 2026-11-10 | B11 | Mở rộng `tools/extract_protocol_catalog.py` quét mọi CFR `.java`, nhận diện constant/dynamic opcode từ `jy.b(...)` và `new acu(...)`, ghi source file/line, write order, send-call count và phân biệt packet factory không gửi | `d876127` | Chưa có kết quả CI cho phiên bản all-source scanner; catalog hiện chưa nối toàn bộ call sites của wrapper method về opcode |
