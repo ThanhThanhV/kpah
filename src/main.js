@@ -251,8 +251,8 @@ function renderWorldMapPanel(){
   const player=scene?.playerSprite;
   const percent=(value,max)=>Math.max(0,Math.min(100,value/max*100));
   const npcPins=data.current.npcs.map(npc=>`<button type="button" class="world-map-pin npc" style="left:${percent(npc.x,960)}%;top:${percent(npc.y,560)}%" data-map-npc="${escapeHtml(npc.name)}" title="${escapeHtml(npc.name)}"><i>◆</i><small>${escapeHtml(npc.name)}</small></button>`).join('');
-  const monsterPins=monsters.filter(monster=>monster.alive).map(monster=>`<button type="button" class="world-map-pin monster ${monster.type==='pack-leader'?'elite':''} ${monster.id===worldEntityState.snapshot().selectedId?'selected':''}" style="left:${percent(monster.x,960)}%;top:${percent(monster.y,560)}%" data-map-target="${escapeHtml(monster.id)}" title="${escapeHtml(monster.name)}"><i>♞</i></button>`).join('');
-  const playerPin=player?`<span class="world-map-pin player" style="left:${percent(player.x,960)}%;top:${percent(player.y,560)}%" title="Vị trí của bạn"><i>●</i><small>Bạn</small></span>`:'';
+  const monsterPins=monsters.filter(monster=>monster.alive).map(monster=>`<button type="button" class="world-map-pin monster ${monster.type==='pack-leader'?'elite':''} ${monster.id===worldEntityState.snapshot().selectedId?'selected':''}" style="left:${percent(monster.x,960)}%;top:${percent(monster.y,560)}%" data-map-target="${escapeHtml(monster.id)}" data-map-monster-pin="${escapeHtml(monster.id)}" title="${escapeHtml(monster.name)}"><i>♞</i></button>`).join('');
+  const playerPin=player?`<span class="world-map-pin player" data-map-player-pin style="left:${percent(player.x,960)}%;top:${percent(player.y,560)}%" title="Vị trí của bạn"><i>●</i><small>Bạn</small></span>`:'';
   const cards=data.zones.map(zone=>{
     const current=zone.id===data.current.id;
     const connected=data.current.connections.includes(zone.id);
@@ -264,7 +264,7 @@ function renderWorldMapPanel(){
       <button type="button" data-zone-travel="${zone.id}" ${current||!connected||locked?'disabled':''}>${current?'Hiện tại':'Di chuyển'}</button>
     </article>`;
   }).join('');
-  return `<div class="world-map-summary"><b>${escapeHtml(data.current.name)}</b><span>${data.current.kindLabel} · Cấp đề xuất ${data.current.recommendedLevel} · ${monsters.filter(item=>item.alive).length} quái còn sống</span></div>
+  return `<div class="world-map-summary"><b>${escapeHtml(data.current.name)}</b><span>${data.current.kindLabel} · Cấp đề xuất ${data.current.recommendedLevel} · <b data-map-alive-count>${monsters.filter(item=>item.alive).length}</b> quái còn sống</span></div>
     <div class="world-map-field ${data.current.kind}">
       <div class="world-map-field-path"></div>
       ${npcPins}${monsterPins}${playerPin}
@@ -972,6 +972,9 @@ class WorldScene extends Phaser.Scene {
     if(revived.length){
       const selected=worldEntityState.snapshot().selected;
       if(selected){syncCombatTarget(selected);renderWorldTarget();}
+      if(document.querySelector('#window-title').textContent==='Bản đồ thế giới'){
+        document.querySelector('#window-content').innerHTML=renderWorldMapPanel();
+      }
     }
   }
   configureCamera(){
@@ -1007,10 +1010,35 @@ class WorldScene extends Phaser.Scene {
       }
     });
   }
+  syncWorldMapPins(playerX,playerY){
+    const content=document.querySelector('#window-content');
+    if(document.querySelector('#window-title').textContent!=='Bản đồ thế giới'||!content)return;
+    const playerPin=content.querySelector('[data-map-player-pin]');
+    if(playerPin){
+      playerPin.style.left=(playerX/this.worldBounds.width*100)+'%';
+      playerPin.style.top=(playerY/this.worldBounds.height*100)+'%';
+    }
+    const state=worldEntityState.snapshot();
+    for(const pin of content.querySelectorAll('[data-map-monster-pin]')){
+      const monster=state.monsters.find(item=>item.id===pin.dataset.mapMonsterPin);
+      pin.hidden=!monster||!monster.alive;
+      if(!monster)continue;
+      pin.style.left=(monster.x/this.worldBounds.width*100)+'%';
+      pin.style.top=(monster.y/this.worldBounds.height*100)+'%';
+      pin.classList.toggle('selected',monster.id===state.selectedId);
+    }
+    const count=content.querySelector('[data-map-alive-count]');
+    if(count)count.textContent=String(state.monsters.filter(item=>item.alive).length);
+  }
   update(){
     this.syncMonsterViews();
     if(!this.playerSprite||characterState.snapshot().hp<=0)return;
     const {x,y}=this.playerSprite;
+    const now=Date.now();
+    if(!this.lastMapPinSyncAt||now-this.lastMapPinSyncAt>=100){
+      this.lastMapPinSyncAt=now;
+      this.syncWorldMapPins(x,y);
+    }
     const nearbyDrop=groundDropState.nearest(x,y,38);
     if(nearbyDrop){
       const now=Date.now();
