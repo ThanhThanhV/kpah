@@ -62,7 +62,6 @@ export function encodeServerFrame(opcode, payload, key = null, cursor = 0, longL
   const body = bytes(payload); let header;
   if (longLength) {
     if (key == null) throw new Error("Long S2C header requires encrypted mode");
-    if (body.length > 0xffffffff) throw new RangeError("S2C payload exceeds u32");
     header = Uint8Array.from([128, checkOpcode(opcode), body.length >>> 24, body.length >>> 16 & 255, body.length >>> 8 & 255, body.length & 255]);
   } else {
     if (body.length > 65535) throw new RangeError("Short S2C payload exceeds u16");
