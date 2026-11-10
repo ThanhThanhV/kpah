@@ -1,0 +1,1979 @@
+{
+  "protocol": "KPAH",
+  "version": "2.7.8",
+  "format": "JSON subset of YAML 1.2; the generator intentionally uses only the Python standard library.",
+  "transport": {
+    "c2s": {
+      "header": [
+        {
+          "name": "opcode",
+          "type": "i8"
+        },
+        {
+          "name": "payloadLength",
+          "type": "u16be"
+        },
+        {
+          "name": "payload",
+          "type": "bytes"
+        }
+      ],
+      "maxPayloadBytes": 65535
+    },
+    "s2c": {
+      "shortHeader": [
+        {
+          "name": "opcode",
+          "type": "i8"
+        },
+        {
+          "name": "payloadLength",
+          "type": "u16be"
+        },
+        {
+          "name": "payload",
+          "type": "bytes"
+        }
+      ],
+      "encryptedLongHeader": [
+        {
+          "name": "marker",
+          "value": 128
+        },
+        {
+          "name": "opcode",
+          "type": "i8"
+        },
+        {
+          "name": "payloadLength",
+          "type": "u32be"
+        },
+        {
+          "name": "payload",
+          "type": "bytes"
+        }
+      ]
+    },
+    "xor": {
+      "handshakeOpcode": -40,
+      "keyLength": "i8",
+      "keyEncoding": "prefix-xor",
+      "separateSendReceiveCursors": true
+    }
+  },
+  "commands": [
+    {
+      "name": "TRANSPORT_KEY_ACK",
+      "opcode": -40,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_76",
+      "opcode": -76,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_69",
+      "opcode": -69,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_68",
+      "opcode": -68,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OPEN_ARTIFACT_PANEL",
+      "opcode": -67,
+      "direction": "C2S",
+      "payload": [
+        {
+          "name": "sentinel",
+          "type": "i16"
+        }
+      ],
+      "evidence": "verified-client-writer"
+    },
+    {
+      "name": "FARM_PANEL_ACTION",
+      "opcode": -66,
+      "direction": "C2S",
+      "payload": [
+        {
+          "name": "action",
+          "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u8"
+        }
+      ],
+      "evidence": "verified-client-writer"
+    },
+    {
+      "name": "OP_NEG_65",
+      "opcode": -65,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_64",
+      "opcode": -64,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_63",
+      "opcode": -63,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_62",
+      "opcode": -62,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_61",
+      "opcode": -61,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_59",
+      "opcode": -59,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_57",
+      "opcode": -57,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_53",
+      "opcode": -53,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_52",
+      "opcode": -52,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_51",
+      "opcode": -51,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_49",
+      "opcode": -49,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_48",
+      "opcode": -48,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_47",
+      "opcode": -47,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_45",
+      "opcode": -45,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_41",
+      "opcode": -41,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_37",
+      "opcode": -37,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_36",
+      "opcode": -36,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_35",
+      "opcode": -35,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_34",
+      "opcode": -34,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_33",
+      "opcode": -33,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_32",
+      "opcode": -32,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_31",
+      "opcode": -31,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_30",
+      "opcode": -30,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_28",
+      "opcode": -28,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_27",
+      "opcode": -27,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "REFINE_ITEM",
+      "opcode": -25,
+      "direction": "C2S",
+      "payload": [
+        {
+          "name": "action",
+          "type": "u8"
+        },
+        {
+          "name": "itemId",
+          "type": "u8"
+        }
+      ],
+      "evidence": "verified-client-writer"
+    },
+    {
+      "name": "OP_NEG_24",
+      "opcode": -24,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_23",
+      "opcode": -23,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_22",
+      "opcode": -22,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_21",
+      "opcode": -21,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_20",
+      "opcode": -20,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_19",
+      "opcode": -19,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "GUILD_CHAT",
+      "opcode": -18,
+      "direction": "C2S",
+      "payload": [
+        {
+          "name": "message",
+          "type": "utf"
+        }
+      ],
+      "evidence": "verified-client-writer"
+    },
+    {
+      "name": "OP_NEG_17",
+      "opcode": -17,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_16",
+      "opcode": -16,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_15",
+      "opcode": -15,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_14",
+      "opcode": -14,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_13",
+      "opcode": -13,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_12",
+      "opcode": -12,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "INVITATION_RESPONSE",
+      "opcode": -11,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_10",
+      "opcode": -10,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_9",
+      "opcode": -9,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_8",
+      "opcode": -8,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_7",
+      "opcode": -7,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "REMOVE_FRIEND",
+      "opcode": -6,
+      "direction": "C2S",
+      "payload": [
+        {
+          "name": "friendName",
+          "type": "utf"
+        }
+      ],
+      "evidence": "verified-client-writer"
+    },
+    {
+      "name": "CHAT",
+      "opcode": -5,
+      "direction": "C2S",
+      "payload": [
+        {
+          "name": "channel",
+          "type": "utf"
+        },
+        {
+          "name": "message",
+          "type": "utf"
+        }
+      ],
+      "evidence": "verified-client-writer"
+    },
+    {
+      "name": "SESSION_INIT",
+      "opcode": -1,
+      "direction": "C2S",
+      "payload": [
+        {
+          "name": "protocolVersion",
+          "type": "u8"
+        }
+      ],
+      "evidence": "verified-client-writer"
+    },
+    {
+      "name": "LOGIN",
+      "opcode": 1,
+      "direction": "C2S",
+      "payload": [
+        {
+          "name": "gameId",
+          "type": "utf"
+        },
+        {
+          "name": "password",
+          "type": "utf"
+        },
+        {
+          "name": "clientName",
+          "type": "utf"
+        },
+        {
+          "name": "platform",
+          "type": "utf"
+        },
+        {
+          "name": "clientVersion",
+          "type": "utf"
+        },
+        {
+          "name": "midletVendor",
+          "type": "utf"
+        },
+        {
+          "name": "midletName",
+          "type": "utf"
+        },
+        {
+          "name": "reserved",
+          "type": "u8"
+        },
+        {
+          "name": "screenWidth",
+          "type": "u16"
+        },
+        {
+          "name": "featureFlag",
+          "type": "i8"
+        },
+        {
+          "name": "serverFlag",
+          "type": "u8"
+        }
+      ],
+      "evidence": "verified-client-writer"
+    },
+    {
+      "name": "MOVE",
+      "opcode": 4,
+      "direction": "C2S",
+      "payload": [
+        {
+          "name": "x",
+          "type": "i16"
+        },
+        {
+          "name": "y",
+          "type": "i16"
+        }
+      ],
+      "evidence": "verified-client-writer"
+    },
+    {
+      "name": "OP_5",
+      "opcode": 5,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_6",
+      "opcode": 6,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_7",
+      "opcode": 7,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_9",
+      "opcode": 9,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_12",
+      "opcode": 12,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "SELECT_CHARACTER",
+      "opcode": 13,
+      "direction": "C2S",
+      "payload": [
+        {
+          "name": "subcommand",
+          "type": "u8"
+        },
+        {
+          "name": "characterId",
+          "type": "i32"
+        }
+      ],
+      "evidence": "verified-client-writer"
+    },
+    {
+      "name": "CREATE_CHARACTER",
+      "opcode": 14,
+      "direction": "C2S",
+      "payload": [
+        {
+          "name": "name",
+          "type": "utf"
+        },
+        {
+          "name": "field1",
+          "type": "u8"
+        },
+        {
+          "name": "field2",
+          "type": "u8"
+        },
+        {
+          "name": "field3",
+          "type": "u8"
+        },
+        {
+          "name": "field4",
+          "type": "u8"
+        },
+        {
+          "name": "serverFlag",
+          "type": "u8"
+        }
+      ],
+      "evidence": "verified-client-writer"
+    },
+    {
+      "name": "OP_18",
+      "opcode": 18,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_19",
+      "opcode": 19,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_21",
+      "opcode": 21,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_22",
+      "opcode": 22,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_23",
+      "opcode": 23,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_24",
+      "opcode": 24,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_27",
+      "opcode": 27,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_28",
+      "opcode": 28,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_29",
+      "opcode": 29,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_31",
+      "opcode": 31,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_34",
+      "opcode": 34,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_36",
+      "opcode": 36,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_39",
+      "opcode": 39,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "USE_ITEM",
+      "opcode": 48,
+      "direction": "C2S",
+      "payload": [
+        {
+          "name": "itemId",
+          "type": "i32"
+        }
+      ],
+      "evidence": "verified-client-writer"
+    },
+    {
+      "name": "OP_49",
+      "opcode": 49,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_50",
+      "opcode": 50,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_51",
+      "opcode": 51,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_61",
+      "opcode": 61,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_62",
+      "opcode": 62,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_66",
+      "opcode": 66,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_67",
+      "opcode": 67,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_68",
+      "opcode": 68,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_69",
+      "opcode": 69,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_70",
+      "opcode": 70,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_71",
+      "opcode": 71,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_72",
+      "opcode": 72,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_74",
+      "opcode": 74,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_75",
+      "opcode": 75,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_76",
+      "opcode": 76,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_77",
+      "opcode": 77,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_78",
+      "opcode": 78,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_79",
+      "opcode": 79,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_81",
+      "opcode": 81,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_82",
+      "opcode": 82,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_85",
+      "opcode": 85,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_86",
+      "opcode": 86,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_87",
+      "opcode": 87,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_88",
+      "opcode": 88,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_92",
+      "opcode": 92,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_94",
+      "opcode": 94,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_95",
+      "opcode": 95,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_100",
+      "opcode": 100,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_101",
+      "opcode": 101,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_104",
+      "opcode": 104,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_106",
+      "opcode": 106,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_107",
+      "opcode": 107,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_108",
+      "opcode": 108,
+      "direction": "C2S",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "FARM_PLOT_ACTION",
+      "opcode": 109,
+      "direction": "C2S",
+      "payload": [
+        {
+          "name": "action",
+          "type": "u8"
+        },
+        {
+          "name": "plotId",
+          "type": "u8"
+        }
+      ],
+      "evidence": "verified-client-writer"
+    },
+    {
+      "name": "OP_NEG_76",
+      "opcode": -76,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_75",
+      "opcode": -75,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_74",
+      "opcode": -74,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_73",
+      "opcode": -73,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_71",
+      "opcode": -71,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_70",
+      "opcode": -70,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_69",
+      "opcode": -69,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_68",
+      "opcode": -68,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "ARTIFACT_PANEL_DATA",
+      "opcode": -67,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "FARM_PANEL_DATA",
+      "opcode": -66,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_65",
+      "opcode": -65,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_64",
+      "opcode": -64,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_63",
+      "opcode": -63,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_62",
+      "opcode": -62,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_61",
+      "opcode": -61,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_60",
+      "opcode": -60,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "FARM_PLOT_SNAPSHOT",
+      "opcode": -59,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_57",
+      "opcode": -57,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_56",
+      "opcode": -56,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_55",
+      "opcode": -55,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_53",
+      "opcode": -53,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_52",
+      "opcode": -52,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_51",
+      "opcode": -51,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_50",
+      "opcode": -50,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_49",
+      "opcode": -49,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_48",
+      "opcode": -48,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_47",
+      "opcode": -47,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_46",
+      "opcode": -46,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_43",
+      "opcode": -43,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_42",
+      "opcode": -42,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_41",
+      "opcode": -41,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_39",
+      "opcode": -39,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_38",
+      "opcode": -38,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_37",
+      "opcode": -37,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_36",
+      "opcode": -36,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_35",
+      "opcode": -35,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_34",
+      "opcode": -34,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_33",
+      "opcode": -33,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_32",
+      "opcode": -32,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_31",
+      "opcode": -31,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_30",
+      "opcode": -30,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_29",
+      "opcode": -29,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_28",
+      "opcode": -28,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_27",
+      "opcode": -27,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_26",
+      "opcode": -26,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_24",
+      "opcode": -24,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_22",
+      "opcode": -22,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_20",
+      "opcode": -20,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "RANKING_DATA",
+      "opcode": -19,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_18",
+      "opcode": -18,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_17",
+      "opcode": -17,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_13",
+      "opcode": -13,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_12",
+      "opcode": -12,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_11",
+      "opcode": -11,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_10",
+      "opcode": -10,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_9",
+      "opcode": -9,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_8",
+      "opcode": -8,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_7",
+      "opcode": -7,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_NEG_5",
+      "opcode": -5,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_0",
+      "opcode": 0,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "GLOBAL_CONFIGURATION",
+      "opcode": 1,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_2",
+      "opcode": 2,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "CHARACTER_SNAPSHOT",
+      "opcode": 3,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_4",
+      "opcode": 4,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_5",
+      "opcode": 5,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_6",
+      "opcode": 6,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_7",
+      "opcode": 7,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_8",
+      "opcode": 8,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_9",
+      "opcode": 9,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_10",
+      "opcode": 10,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_11",
+      "opcode": 11,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "MAP_DATA",
+      "opcode": 12,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "CHARACTER_ROSTER",
+      "opcode": 13,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_14",
+      "opcode": 14,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "SHOP_CATALOG",
+      "opcode": 15,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "CHARACTER_INVENTORY_SKILLS",
+      "opcode": 16,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_17",
+      "opcode": 17,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_18",
+      "opcode": 18,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_19",
+      "opcode": 19,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_20",
+      "opcode": 20,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_21",
+      "opcode": 21,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_22",
+      "opcode": 22,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_23",
+      "opcode": 23,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_24",
+      "opcode": 24,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_25",
+      "opcode": 25,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_26",
+      "opcode": 26,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_27",
+      "opcode": 27,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_28",
+      "opcode": 28,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_30",
+      "opcode": 30,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_32",
+      "opcode": 32,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_33",
+      "opcode": 33,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_34",
+      "opcode": 34,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_35",
+      "opcode": 35,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_36",
+      "opcode": 36,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_37",
+      "opcode": 37,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_38",
+      "opcode": 38,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_39",
+      "opcode": 39,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_48",
+      "opcode": 48,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_49",
+      "opcode": 49,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_50",
+      "opcode": 50,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_51",
+      "opcode": 51,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_52",
+      "opcode": 52,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_54",
+      "opcode": 54,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_56",
+      "opcode": 56,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_57",
+      "opcode": 57,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_58",
+      "opcode": 58,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_59",
+      "opcode": 59,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_60",
+      "opcode": 60,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_61",
+      "opcode": 61,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_62",
+      "opcode": 62,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_64",
+      "opcode": 64,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_65",
+      "opcode": 65,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_66",
+      "opcode": 66,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_67",
+      "opcode": 67,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_68",
+      "opcode": 68,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_69",
+      "opcode": 69,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_71",
+      "opcode": 71,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_72",
+      "opcode": 72,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_73",
+      "opcode": 73,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_76",
+      "opcode": 76,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_77",
+      "opcode": 77,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_78",
+      "opcode": 78,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_80",
+      "opcode": 80,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_81",
+      "opcode": 81,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_82",
+      "opcode": 82,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_83",
+      "opcode": 83,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_85",
+      "opcode": 85,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_86",
+      "opcode": 86,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_87",
+      "opcode": 87,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_89",
+      "opcode": 89,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_90",
+      "opcode": 90,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_91",
+      "opcode": 91,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_92",
+      "opcode": 92,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_94",
+      "opcode": 94,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_95",
+      "opcode": 95,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_100",
+      "opcode": 100,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_101",
+      "opcode": 101,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_102",
+      "opcode": 102,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_103",
+      "opcode": 103,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_104",
+      "opcode": 104,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_105",
+      "opcode": 105,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    },
+    {
+      "name": "OP_106",
+      "opcode": 106,
+      "direction": "S2C",
+      "payload": "opaque",
+      "evidence": "dispatcher-only"
+    }
+  ]
+}
