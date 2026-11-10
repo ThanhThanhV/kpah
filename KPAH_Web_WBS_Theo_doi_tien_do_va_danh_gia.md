@@ -110,7 +110,7 @@
 | [ ] | C6 | R1 | P0 | Convert tile, .type, dữ liệu map | t.png (16x3712) thành tileset; .type thành bảng va chạm/loại ô; map thành JSON | C1 | RE | 5 | Chưa triển khai theo WBS |
 | [ ] | C7 | R1 | P0 | Bitmap font và tiếng Việt | Chuyển arial11/fbv sang bitmap font; kiểm tra bộ dấu tiếng Việt, fallback web font | C1 | CL | 3 | Chưa triển khai theo WBS |
 | [ ] | C8 | R3 | P2 | Chọn hoặc mua âm thanh mới (jar không có) | Chọn nhạc nền, SFX đánh/nhặt/UI từ nguồn có giấy phép; nén OGG | A2 | PM | 3 | Chưa triển khai theo WBS |
-| [ ] | C9 | R1 | P0 | Pipeline build asset tự động, versioning | Một lệnh chạy toàn bộ converter, xuất manifest có hash để cache-busting | C2 | OPS | 3 | Một phần – có script extract và manifest; pipeline CI/hash/versioning chưa hoàn chỉnh |
+| [ ] | C9 | R1 | P0 | Pipeline build asset tự động, versioning | Một lệnh chạy toàn bộ converter, xuất manifest có hash để cache-busting | C2 | OPS | 3 | Một phần – extractor ghi SHA-256 cho JAR, từng entry và tài nguyên giải mã; tạo assetVersion fingerprint, loader tự thêm query version để cache-busting. CI/build pipeline và atlas manifest còn thiếu |
 | [ ] | C10 | R1 | P0 | Thiết kế game tối thiểu (GDD) | Công thức sát thương, phòng thủ, EXP, đường cong level, drop, thông số cơ bản cho 5 hệ; viết dưới dạng bảng tham số | B13 | SV | 10 | Chưa triển khai theo WBS |
 | [ ] | C11 | R1 | P0 | Soạn dữ liệu tĩnh bộ 1: lõi chơi | 5 hệ, skill cơ bản, ~30 item, ~10 mob, 3 map, NPC/shop khởi đầu | C10 | SV | 8 | Chưa triển khai theo WBS |
 | [ ] | C12 | R3 | P1 | Soạn dữ liệu tĩnh bộ 2: nội dung chính | Thêm item/mob/map, chuỗi nhiệm vụ, boss, tàu/vé, ngựa | C11 | SV | 12 | Chưa triển khai theo WBS |
@@ -605,6 +605,13 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 | 104 | 0x68 | 38 | byte byte | 2 | 'LOI CHO NAY NE ' | acu.b mj.d | ứng viên đơn giản |
 | 105 | 0x69 | 392 | byte byte byte short UTF byte short short byte short UTF | 11 |  | acu.b | cần xác nhận (có vòng lặp/rẽ nhánh) |
 | 106 | 0x6A | 8 |  | 0 |  | mj.a | rỗng/không đọc payload |
+
+## 15. Nhật ký cập nhật WBS
+
+| Ngày | Task | Thay đổi | Commit | Bằng chứng / giới hạn |
+|---|---|---|---|---|
+| 2026-11-10 | A3 / theo dõi dự án | Đưa WBS Markdown thành nguồn tiến độ chuẩn; README và PROJECT_PROGRESS dẫn về file này | `84242be` | Đã xác minh file và các liên kết trên `main` |
+| 2026-11-10 | C9 | Thêm SHA-256 cho file JAR nguồn, từng entry và từng tài nguyên giải mã; tạo `assetVersion` từ fingerprint nội dung; asset loader thêm `?v=` vào URL để tránh cache ảnh cũ | `b7de9f6` | Đã kiểm tra nội dung commit trên GitHub; chưa chạy extractor trên JAR thật trong phiên này vì JAR không có trong môi trường thực thi |
 
 ## 14. Hướng dẫn đọc sheet `Đọc trước`
 
