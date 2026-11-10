@@ -70,6 +70,10 @@ npm run verify:assets
 
 `tools/verify_asset_manifest.py` kiểm tra SHA-256 của từng tài nguyên đã giải mã, xác nhận `assetVersion` có thể tái tạo từ manifest và đối chiếu hash JAR nguồn nếu truyền `--jar`. Lệnh trả mã lỗi khác 0 nếu thiếu file, sai hash, trùng output path hoặc manifest bị sửa không đồng bộ. Đây là bước kiểm tra dữ liệu asset, chưa thay thế CI build/test toàn dự án.
 
+## Combat, skill và buff protocol
+
+Packet schemas đã trace cho C2S skill cast opcode 51, S2C damage opcode 6/9/10/83/106 và effect/buff events `-74/-71/-73`: [protocol-combat-skills.md](./docs/reverse-engineering/protocol-combat-skills.md). Các công thức damage và buff stacking chưa được suy diễn từ packet.
+
 ## Map, movement và world entity protocol
 
 Source-backed packet schemas cho movement opcode 4, map transition opcode 12, entity spawn/update opcode 4 S2C, player snapshot opcode 5, entity snapshot opcode 7 và despawn opcode 8: [protocol-world-map.md](./docs/reverse-engineering/protocol-world-map.md).
