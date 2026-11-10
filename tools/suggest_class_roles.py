@@ -2,7 +2,7 @@
 """Suggest semantic roles for obfuscated KPAH classes from bytecode evidence."""
 from __future__ import annotations
 import argparse, json, re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -97,6 +97,18 @@ def main() -> int:
     for name, item in by_name.items():
         out_edges, in_edges = outgoing[name], incoming[name]
         corpus = collect_text(item, out_edges, in_edges)
+        callee_counts = Counter(owning_class(str(edge.get("to", ""))) for edge in out_edges)
+        caller_counts = Counter(owning_class(str(edge.get("from", ""))) for edge in in_edges)
+        related_classes = {
+            "callees": [{"className": key, "calls": count} for key, count in callee_counts.most_common(12) if key != name],
+            "callers": [{"className": key, "calls": count} for key, count in caller_counts.most_common(12) if key != name],
+        }
+        string_samples = [
+            value for value in item.get("stringConstants", [])
+            if isinstance(value, str) and re.search(
+                r"socket|http|https|\.sh|\.wp|\.png|login|server|character|map|npc|monster|skill|recordstore|canvas|command|guild",
+                value, re.IGNORECASE)
+        ][:12]
         candidates = []
         for role_id, label, rules in ROLE_RULES:
             score, evidence = 0, []
@@ -113,6 +125,11 @@ def main() -> int:
             "className": name, "status": status, "verifiedAnchorDescription": anchor,
             "methodCount": len(item.get("methods", [])),
             "outgoingCallCount": len(out_edges), "incomingCallCount": len(in_edges),
+            "superClass": item.get("superClass"),
+            "interfaces": item.get("interfaces", []),
+            "fields": [{"name": x.get("name"), "descriptor": x.get("descriptor")} for x in item.get("fields", [])[:20]],
+            "stringEvidenceSamples": string_samples,
+            "relatedClasses": related_classes,
             "roleCandidates": candidates})
     results.sort(key=lambda x: (0 if x["status"] == "verified-anchor" else 1,
         -max((c["score"] for c in x["roleCandidates"]), default=0), x["className"]))
@@ -133,15 +150,20 @@ def main() -> int:
         "- Heuristic hypotheses requiring review: " + str(output["hypothesisCount"]),
         "- Unclassified: " + str(output["unclassifiedCount"]), "",
         "> This is a review queue, not an automatic rename map. Validate each hypothesis against bytecode, callers/callees and original UI/resource behavior.", "",
-        "| Class | Status | Candidate role | Score | Evidence |",
-        "|---|---|---|---:|---|"]
+        "| Class | Status | Candidate role | Score | Evidence | Related classes | String samples |",
+        "|---|---|---|---:|---|---|---|"]
     for item in results:
         if not item["roleCandidates"]:
-            lines.append("| " + item["className"] + " | " + item["status"] + " | — | — | — |")
+            lines.append("| " + item["className"] + " | " + item["status"] + " | — | — | — | — | — |")
+        related = ", ".join(
+            [x["className"] + " (" + str(x["calls"]) + ")" for x in item["relatedClasses"]["callees"][:4]] +
+            [x["className"] + " ← " + str(x["calls"]) for x in item["relatedClasses"]["callers"][:4]])
+        samples = "; ".join(item["stringEvidenceSamples"][:5]).replace("|", "\\|")
         for candidate in item["roleCandidates"][:3]:
             evidence = "; ".join(e["evidence"] for e in candidate["evidence"])
             lines.append("| " + item["className"] + " | " + item["status"] + " | " +
-                candidate["label"] + " | " + str(candidate["score"]) + " | " + evidence + " |")
+                candidate["label"] + " | " + str(candidate["score"]) + " | " + evidence +
+                " | " + related + " | " + samples + " |")
     args.markdown.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("Classes: {0}; anchors: {1}; hypotheses: {2}; unclassified: {3}".format(
         len(results), output["verifiedAnchorCount"], output["hypothesisCount"], output["unclassifiedCount"]))
