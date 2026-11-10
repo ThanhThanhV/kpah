@@ -70,6 +70,12 @@ npm run verify:assets
 
 `tools/verify_asset_manifest.py` kiểm tra SHA-256 của từng tài nguyên đã giải mã, xác nhận `assetVersion` có thể tái tạo từ manifest và đối chiếu hash JAR nguồn nếu truyền `--jar`. Lệnh trả mã lỗi khác 0 nếu thiếu file, sai hash, trùng output path hoặc manifest bị sửa không đồng bộ. Đây là bước kiểm tra dữ liệu asset, chưa thay thế CI build/test toàn dự án.
 
+## Catalog opcode C2S/S2C
+
+`tools/extract_protocol_catalog.py` đọc CFR source `jy.java` và `ka.java`, xuất opcode writer phía client, thứ tự `write*`, số lần enqueue, cùng dispatcher case và `read*`/dispatch target phía server. Chạy `npm run catalog:protocol` sau khi CFR decompile; CI tự sinh JSON/Markdown và đính kèm artifact.
+
+Catalog hiện là bằng chứng cấu trúc, chưa gán tên nghiệp vụ cho mọi opcode. Một packet builder không gọi send queue được đánh dấu `not enqueued`, không tính nhầm thành lệnh gửi thực tế.
+
 ## Opcode catalog từ CFR
 
 Sau khi CFR decompile JAR, workflow chạy `tools/extract_protocol_catalog.py` trên `jy.java` và `ka.java`, trích danh sách C2S writer opcode cùng thứ tự `writeByte/writeShort/writeInt/writeUTF/writeBoolean`, và S2C dispatcher case cùng read operations/dispatch targets. JSON/Markdown catalog được đính kèm artifact CI.
