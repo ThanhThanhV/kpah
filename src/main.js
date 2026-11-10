@@ -115,6 +115,7 @@ deathOverlay.hidden=true;
 deathOverlay.innerHTML='<div class="death-card"><span class="death-mark">✦</span><h2>NHÂN VẬT ĐÃ GỤC</h2><p>Bạn sẽ hồi sinh tại Làng Sói Trắng, điểm hồi sinh an toàn.</p><button type="button" id="respawn-button">Hồi sinh</button></div>';
 app.appendChild(deathOverlay);
 let activeCharacterId=null;
+let restoredWorldPosition=null;
 let localSave=createLocalSave('kpah.game-save.v1.unselected');
 const legacyLocalSave=createLocalSave();
 function resetCharacterProgress(){
@@ -142,6 +143,9 @@ function activateCharacterProgress(characterId,identity){
     }
   }
   worldMapState.setCurrent(savedGame?.zone||'village');
+  const savedPosition=savedGame?.worldPosition;
+  restoredWorldPosition=savedPosition&&Number.isFinite(savedPosition.x)&&Number.isFinite(savedPosition.y)
+    ?{x:savedPosition.x,y:savedPosition.y}:null;
   if(savedGame){
     characterState.restore(savedGame.character);
     questState.restore(savedGame.quests);
@@ -175,7 +179,11 @@ deathOverlay.querySelector('#respawn-button').addEventListener('click',respawnPl
 function saveGameProgress(){
   if(!activeCharacterId)return false;
   const skills=skillCombat.snapshot();
-  return localSave.save({character:characterState.snapshot(),zone:worldMapState.snapshot().current.id,quests:questState.snapshot(),skills:{skills:skills.skills.map(skill=>({id:skill.id,level:skill.level})),skillPoints:skills.skillPoints,loadout:skills.loadout},social:socialState.snapshot(),guild:guildState.snapshot(),mail:mailState.snapshot()});
+  const scene=game.scene.getScene('world');
+  const worldPosition=scene?.playerSprite
+    ?{x:Math.round(scene.playerSprite.x*100)/100,y:Math.round(scene.playerSprite.y*100)/100}
+    :restoredWorldPosition;
+  return localSave.save({character:characterState.snapshot(),zone:worldMapState.snapshot().current.id,worldPosition,quests:questState.snapshot(),skills:{skills:skills.skills.map(skill=>({id:skill.id,level:skill.level})),skillPoints:skills.skillPoints,loadout:skills.loadout},social:socialState.snapshot(),guild:guildState.snapshot(),mail:mailState.snapshot()});
 }
 
 function openWindow(key){
@@ -211,6 +219,10 @@ document.querySelectorAll('[data-window]').forEach(b=>b.addEventListener('click'
 document.querySelector('#window-close').addEventListener('click',closeWindow);
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.querySelector('#game-window').classList.contains('open'))closeWindow();});
 document.querySelector('#modal-backdrop').addEventListener('click',closeWindow);
+window.addEventListener('pagehide',saveGameProgress);
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden')saveGameProgress();
+});
 document.querySelector('#logout').addEventListener('click',()=>{
   saveGameProgress();
   activeCharacterId=null;
@@ -870,7 +882,7 @@ window.addEventListener('kpah:character-selected',event=>{
   document.querySelectorAll('.hero-name').forEach(el=>el.textContent=safeName);
   document.querySelectorAll('#chat-lines strong').forEach(el=>{if(el.textContent==='Kiếm Khách')el.textContent=safeName;});
   const scene=game.scene.getScene('world');
-  if(scene?.restoreZone)scene.restoreZone(worldMapState.snapshot().current.id);
+  if(scene?.restoreZone)scene.restoreZone(worldMapState.snapshot().current.id,restoredWorldPosition);
   if(scene?.playerLabel)scene.playerLabel.setText(safeName);
   const heading=document.querySelector('.character-details h2');
   if(heading)heading.textContent=safeName;
@@ -991,7 +1003,7 @@ class WorldScene extends Phaser.Scene {
     saveGameProgress();
     return true;
   }
-  restoreZone(zoneId){
+  restoreZone(zoneId,preferredPosition=null){
     const zone=worldMapState.setCurrent(zoneId);
     if(!zone)return false;
     if(!this.playerSprite)return true;
@@ -1001,8 +1013,13 @@ class WorldScene extends Phaser.Scene {
     this.playerSprite.setPosition(zone.entry.x,zone.entry.y);
     this.playerLabel?.setPosition(zone.entry.x,zone.entry.y-52);
     this.drawZone(zone);
+    const requested=preferredPosition&&Number.isFinite(preferredPosition.x)&&Number.isFinite(preferredPosition.y)
+      ?preferredPosition:zone.entry;
+    const safePosition=this.resolveWalkDestination(requested.x,requested.y);
+    this.playerSprite.setPosition(safePosition.x,safePosition.y);
+    this.playerLabel?.setPosition(safePosition.x,safePosition.y-52);
     this.cameras.main.setBounds(0,0,this.worldBounds.width,this.worldBounds.height);
-    this.cameras.main.centerOn(zone.entry.x,zone.entry.y);
+    this.cameras.main.centerOn(safePosition.x,safePosition.y);
     syncCombatTarget(worldEntityState.snapshot().selected);
     renderWorldTarget();
     return true;
