@@ -1,6 +1,6 @@
 # KPAH Web reconstruction — progress snapshot
 
-Updated: 2026-11-09
+Updated: 2026-11-10
 
 This percentage is a task-weighted estimate against the agreed 41-item roadmap (P0–P4), not a line-of-code percentage. A task receives partial credit only for verified implementation; mock UI does not count as a completed gameplay/backend feature.
 
@@ -9,12 +9,12 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 | Phase | Scope | Progress | Basis |
 |---|---|---:|---|
 | P0 | Foundation and original resources (5 tasks) | 41% | Resource extraction, geometry hints, source-pack family taxonomy/filtering, camera/entity runtime, explicit sprite-sheet loading and animation helpers exist; original map data, tile mapping and verified character animation mappings remain unimplemented. |
-| P1 | Reconstructed client/gameplay (10 tasks) | 39.5% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel, zone-specific NPC quest interactions and checkpoint respawn are implemented; original map data, real animation and server combat remain unimplemented. |
+| P1 | Reconstructed client/gameplay (10 tasks) | 40% | Demo server/login/character flow, profession previews, player movement, NPC interactions, selectable monsters and three connected local zones with level-gated travel, zone-specific NPC quest interactions and checkpoint respawn are implemented; original map data, real animation and server combat remain unimplemented. |
 | P2 | Game systems (10 tasks) | 39.5% | Character/inventory/equipment, skill progression, quest progression, local world hunting, merchant purchases, guild contribution and mailbox rewards now share wallet/inventory state; local friends/party and guild systems are present, with browser-local saves for character progression, inventory/equipment, quests and learned skill configuration. All content remains client-side demo data. |
 | P3 | Backend and multiplayer (10 tasks) | 2.5% | Some original packet/opcode/socket behavior is documented; no agreed or implemented backend. |
 | P4 | Optimization and release (6 tasks) | 1.5% | Initial mobile viewport compatibility only; performance, reconnect, security and deployment work remain pending. |
 
-**Overall estimate: about 25.7%** (weighted average of the 41 roadmap items).
+**Overall estimate: about 25.8%** (weighted average of the 41 roadmap items).
 
 - Mobile viewport compatibility: synchronize shell and modal height to `visualViewport` (falling back to `innerHeight`) so the visible layout can adapt when the virtual keyboard opens; chat inputs use 16px text to avoid iOS focus zoom. Real-device testing remains pending.
 
@@ -306,3 +306,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 
 - Follow-up movement refinement: when the direct sampled path is blocked, the resolver evaluates horizontal-first and vertical-first alternatives and selects the route with the greatest valid progress. This improves wall sliding around the current demo obstacles without weakening collision checks. Source/static checks confirm both alternate routes use the same collision-tested trace function; no browser/device test or Vite build was run.
+
+
+## P1 — Nearby monster pressure and knockout integration
+
+- Living monsters now periodically attack when the player enters their local engagement radius. Each monster has an independent attack cooldown; the player receives damage through the shared character state, so HP bars, local save snapshots and the existing knockout overlay remain synchronized.
+- Monster attacks stop when the player is knocked out. The existing checkpoint respawn flow restores the character in the safe village and rebuilds the active zone state.
+- Attack range, cadence and damage reuse the current demo monster definitions and remain provisional client-side values. This does not claim original KPAH aggro, attack animation, targeting or damage formulas.
+- Validation: the updated src/main.js passed a V8 syntax compilation check after removing static imports. No browser interaction, timing test or Vite production build was run.
