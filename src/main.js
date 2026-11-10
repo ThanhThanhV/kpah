@@ -1210,22 +1210,44 @@ class WorldScene extends Phaser.Scene {
           if(!monster.alive)continue;
           const dx=playerPosition.x-monster.x,dy=playerPosition.y-monster.y;
           const distance=Math.hypot(dx,dy);
-          if(distance>230||distance<0.001)continue;
-          const attackReach=58;
-          if(distance>attackReach){
-            const speed=monster.type==='pack-leader'?48:38;
-            const step=Math.min(distance-attackReach,speed*delta);
-            const nextX=monster.x+dx/distance*step;
-            const nextY=monster.y+dy/distance*step;
-            const next={x:nextX,y:nextY};
-            const blocked=this.worldObstacles.some(obstacle=>{
-              if(obstacle.type==='circle')return Phaser.Math.Distance.Between(next.x,next.y,obstacle.x,obstacle.y)<=obstacle.radius+9;
-              if(obstacle.type==='rect')return next.x>=obstacle.x-9&&next.x<=obstacle.x+obstacle.width+9&&next.y>=obstacle.y-9&&next.y<=obstacle.y+obstacle.height+9;
-              return false;
-            });
-            if(!blocked)worldEntityState.move(monster.id,nextX,nextY);
+          const homeDistance=Math.hypot(monster.homeX-monster.x,monster.homeY-monster.y);
+          const aggroRange=230,leashRange=310,attackReach=58;
+          let destination=null,speed=monster.type==='pack-leader'?48:38;
+          if(distance<=aggroRange&&distance>attackReach){
+            destination={x:playerPosition.x,y:playerPosition.y};
+            monster.aiState='chasing';
+          }else if(distance<=attackReach&&distance<=aggroRange){
+            monster.aiState='attacking';
+          }else if(monster.aiState==='chasing'||monster.aiState==='attacking'||homeDistance>8){
+            if(distance>leashRange||homeDistance>8){
+              destination={x:monster.homeX,y:monster.homeY};
+              speed=30;
+              monster.aiState='returning';
+            }
+          }else{
+            monster.aiState='idle';
+          }
+          if(destination){
+            const targetDx=destination.x-monster.x,targetDy=destination.y-monster.y;
+            const targetDistance=Math.hypot(targetDx,targetDy);
+            const stopDistance=destination.x===monster.homeX&&destination.y===monster.homeY?4:attackReach;
+            if(targetDistance>stopDistance&&targetDistance>0.001){
+              const step=Math.min(targetDistance-stopDistance,speed*delta);
+              const next={x:monster.x+targetDx/targetDistance*step,y:monster.y+targetDy/targetDistance*step};
+              const blocked=point=>this.worldObstacles.some(obstacle=>{
+                if(obstacle.type==='circle')return Phaser.Math.Distance.Between(point.x,point.y,obstacle.x,obstacle.y)<=obstacle.radius+9;
+                if(obstacle.type==='rect')return point.x>=obstacle.x-9&&point.x<=obstacle.x+obstacle.width+9&&point.y>=obstacle.y-9&&point.y<=obstacle.y+obstacle.height+9;
+                return false;
+              });
+              const candidates=[next,{x:monster.x+(next.x-monster.x),y:monster.y},{x:monster.x,y:monster.y+(next.y-monster.y)}];
+              const valid=candidates.find(point=>!blocked(point));
+              if(valid)worldEntityState.move(monster.id,valid.x,valid.y);
+            }else if(monster.aiState==='returning'){
+              monster.aiState='idle';
+            }
             continue;
           }
+          if(distance>attackReach||distance>aggroRange)continue;
           const lastAttack=this.monsterAttackAt.get(monster.id);
           if(lastAttack===undefined){this.monsterAttackAt.set(monster.id,now);continue;}
           if(now-lastAttack<2400)continue;
