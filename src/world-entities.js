@@ -14,7 +14,7 @@ export function createWorldEntityState(random = Math.random, initialMap = 'villa
     const zone = getWorldZone(zoneId);
     return (zone?.spawns || []).map(point => {
       const type = MONSTER_TYPES.find(entry => entry.id === point.type);
-      return {...copy(type),...point,mapId:zoneId,hp:type.maxHp,alive:true,respawnAt:null};
+      return {...copy(type),...point,homeX:point.x,homeY:point.y,aiState:'idle',mapId:zoneId,hp:type.maxHp,alive:true,respawnAt:null};
     });
   }
   let selectedId = monsters[0]?.id || null;
