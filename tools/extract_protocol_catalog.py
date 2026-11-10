@@ -180,8 +180,10 @@ def main() -> int:
             "jy.java": hashlib.sha256(jy_file.read_bytes()).hexdigest(),
             "ka.java": hashlib.sha256(ka_file.read_bytes()).hexdigest(),
         },
-        "outboundWriterCount": len(outbound),
-        "outboundUniqueOpcodeCount": len({item["opcode"] for item in outbound}),
+        "outboundWriterDeclarationCount": len(outbound),
+        "outboundUnsentDeclarationCount": sum(item["sendCallCount"] == 0 for item in outbound),
+        "outboundUniqueDeclaredOpcodeCount": len({item["opcode"] for item in outbound}),
+        "outboundUniqueSentOpcodeCount": len({item["opcode"] for item in outbound if item["sendCallCount"] > 0}),
         "inboundCaseCount": len(inbound),
         "inboundUniqueOpcodeCount": len({item["opcode"] for item in inbound}),
         "outbound": outbound,
@@ -193,19 +195,21 @@ def main() -> int:
     args.json.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     lines = [
         "# KPAH protocol opcode catalog", "",
-        "- Outbound writer declarations: " + str(report["outboundWriterCount"]),
-        "- Unique C2S opcodes: " + str(report["outboundUniqueOpcodeCount"]),
+        "- Outbound writer declarations: " + str(report["outboundWriterDeclarationCount"]),
+        "- Unique C2S opcodes actually enqueued: " + str(report["outboundUniqueSentOpcodeCount"]),
+        "- Writer declarations not enqueued: " + str(report["outboundUnsentDeclarationCount"]),
         "- Inbound dispatcher cases: " + str(report["inboundCaseCount"]),
         "- Unique S2C opcodes: " + str(report["inboundUniqueOpcodeCount"]), "",
         "> Evidence extracted from CFR source. Opcode meaning and payload business semantics are not inferred.", "",
         "## Client to server writers", "",
-        "| Opcode | Method | Payload writes (source order) |",
-        "|---:|---|---|",
+        "| Opcode | Status | Method | Payload writes (source order) |",
+        "|---:|---|---|---|",
     ]
     for item in outbound:
         writes = "; ".join(operation["type"] + "(" + operation["argument"] + ")" for operation in item["payloadWrites"]) or "(empty payload)"
-        lines.append("| {0} / {1} | {2} | {3} |".format(
-            item["opcode"], item["opcodeHex"], item["signature"], writes.replace("|", "\\|")))
+        status = "not enqueued" if item["sendCallCount"] == 0 else "enqueued x" + str(item["sendCallCount"])
+        lines.append("| {0} / {1} | {2} | {3} | {4} |".format(
+            item["opcode"], item["opcodeHex"], status, item["signature"], writes.replace("|", "\\|")))
     lines.extend(["", "## Server to client dispatch", "",
         "| Opcode | Payload reads | Dispatch targets |",
         "|---:|---|---|"])
@@ -215,9 +219,9 @@ def main() -> int:
             ", ".join(item["readOperations"]) or "—",
             ", ".join(item["dispatchTargets"]) or "—"))
     args.markdown.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print("C2S writers: {0} ({1} opcodes); S2C cases: {2} ({3} opcodes)".format(
-        report["outboundWriterCount"], report["outboundUniqueOpcodeCount"],
-        report["inboundCaseCount"], report["inboundUniqueOpcodeCount"]))
+    print("C2S declarations: {0}; sent opcodes: {1}; unsent declarations: {2}; S2C cases: {3} ({4} unique opcodes)".format(
+        report["outboundWriterDeclarationCount"], report["outboundUniqueSentOpcodeCount"],
+        report["outboundUnsentDeclarationCount"], report["inboundCaseCount"], report["inboundUniqueOpcodeCount"]))
     print("JSON: " + str(args.json))
     print("Markdown: " + str(args.markdown))
     return 0
