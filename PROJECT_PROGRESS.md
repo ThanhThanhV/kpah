@@ -32,6 +32,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Latest implementation
 
+- B2 refinement: role-candidate output now includes superclass/interfaces, field summaries, filtered string evidence samples and ranked caller/callee class references. Package-qualified class names are matched using the longest known class prefix so graph ownership is not truncated at the package separator.
+
 - WBS B2 increment: added `tools/suggest_class_roles.py` and `npm run suggest:class-roles`. It ranks nine semantic role families from constant strings, inheritance/interfaces, member signatures and call-graph references; preserves 16 previously verified class anchors and outputs a JSON/Markdown review queue. It does not rename classes. The real role map remains pending until the analyzer is run against original JAR class files.
 
 - WBS C9 follow-up: added `tools/verify_asset_manifest.py` and `npm run verify:assets` to verify decoded-file SHA-256 values, recompute `assetVersion`, and optionally compare the source JAR hash. Synthetic-manifest smoke test passed for both intact and tampered assets. Class bytecode extraction is isolated under `tools/reports/class-files/`, outside `public/`.
