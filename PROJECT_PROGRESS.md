@@ -338,3 +338,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Close-range attacks now have a 450 ms warning wind-up with a pulsing red ring before damage is applied. Leaving attack range cancels the pending strike, giving the player a short reaction window to move away.
 - Attack cooldown and pending wind-up timers reset when changing zones and when a monster respawns, preventing stale timers from leaking across a new spawn lifecycle.
 - Values and visuals are provisional client-side behavior, not original KPAH combat timing or assets. Validation: `src/main.js` passed V8 syntax compilation after stripping module imports/exports; no browser timing test or Vite production build was run.
+
+
+## P1 — Keyboard target cycling
+
+- Added deterministic cycling through living monsters with **Tab** and reverse cycling with **Shift+Tab**. The selection wraps at either end and skips defeated monsters.
+- Keyboard selection uses the same target synchronization path as pointer/map selection, refreshing the target HUD, scene ring, combat target and open world-map marker state together.
+- The existing 1–5 action-slot shortcuts remain unchanged; editable fields and login overlays continue to suppress gameplay shortcuts.
+- This is client-side target selection only. It does not add server targeting or claim original KPAH key bindings.
