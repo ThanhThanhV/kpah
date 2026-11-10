@@ -32,6 +32,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Latest implementation
 
+- B4 auth/character protocol slice: added `docs/reverse-engineering/protocol-auth-character.md` with source-backed server-list HTTP/RMS format, login opcode 1 field order, pre-login opcode -1, registration opcode 39, character select/delete/restore subcommands on opcode 13, create-character opcode 14, roster response opcode 13 and registration response opcode 39. Caller methods `rq`, `lk`, `ln`, `lp`, `lv` were traced into `jy` writers and `ka` handlers. Response opcode 1/3 and gameplay payloads remain to be decoded.
+
 - B4 protocol extraction increment: `tools/extract_protocol_catalog.py` reads CFR `jy.java` and `ka.java` to produce a source-backed C2S writer/payload-field catalog and S2C dispatch/read catalog. First scan found 125 opcode declarations, 124 with actual send calls, 106 unique enqueued C2S opcodes, and 149 S2C cases (142 unique opcodes). One declaration (opcode 11) creates/closes a packet but never enqueues it, so it is explicitly excluded from sent-opcode counts. Business semantics remain to be annotated.
 
 - B3 protocol increment: CFR source confirmed the transport framing and handshake. Added a reference codec with synthetic test vectors for cumulative-XOR key derivation, C2S short frames, S2C short frames, encrypted 0x80 long-length frames and independent cursor wrap. Added `npm run test:protocol` and a GitHub Actions step; CI result is pending. No production server capture has been used.
