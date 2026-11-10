@@ -45,7 +45,7 @@ Sau khi có báo cáo bytecode, chạy:
 npm run suggest:class-roles
 ```
 
-`tools/suggest_class_roles.py` tạo danh sách class theo vai trò ứng viên (transport, packet, resource loader, rendering, input, screen, world entity, persistence và thread lifecycle), dựa trên chuỗi hằng, superclass/interface, method/field signature và call graph. Kết quả có cả JSON và Markdown để review.
+`tools/suggest_class_roles.py` tạo danh sách class theo vai trò ứng viên (transport, packet, resource loader, rendering, input, screen, world entity, persistence và thread lifecycle), dựa trên chuỗi hằng, superclass/interface, method/field signature, call graph, field-reference graph và type-reference graph. Báo cáo kèm string evidence và caller/callee/class-reference để review. Kết quả có cả JSON và Markdown để review.
 
 Tool giữ riêng các anchor đã xác minh từ quá trình đọc JAR (ví dụ `km`, `uj`, `ro`, `mj`, `ba`) và đánh dấu các gợi ý khác là giả thuyết cần kiểm tra. Điểm số chỉ dùng để xếp hàng review, tuyệt đối không tự đổi tên class hoặc kết luận nghiệp vụ.
 ## Kiểm tra tính toàn vẹn tài nguyên
@@ -67,7 +67,7 @@ python tools/extract_kpah_jar.py KPAH_278.jar --include-classes --class-output t
 npm run analyze:classes
 ```
 
-Class files được lưu riêng trong `tools/reports/class-files/`, không nằm trong `public/` và không được phục vụ cho trình duyệt. Tool `tools/analyze_class_files.py` đọc constant pool, class/interface/field/method metadata, giải mã bytecode cơ bản, đếm opcode và tạo call graph từ các lệnh invoke. Báo cáo mặc định ở `tools/reports/kpah-class-analysis.json`. Có thể lọc dấu vết bằng `--contains <chuỗi>` hoặc `--opcode <mnemonic|0xNN>` (lặp `--opcode` để kết hợp nhiều opcode); `--disassemble-all` xuất bytecode mọi method và có thể tạo JSON lớn.
+Class files được lưu riêng trong `tools/reports/class-files/`, không nằm trong `public/` và không được phục vụ cho trình duyệt. Tool `tools/analyze_class_files.py` đọc constant pool, class/interface/field/method metadata, giải mã bytecode cơ bản, đếm opcode, tạo call graph từ lệnh invoke, field-reference graph từ get/put field/static và type-reference graph từ class operands. Báo cáo mặc định ở `tools/reports/kpah-class-analysis.json`. Có thể lọc dấu vết bằng `--contains <chuỗi>` hoặc `--opcode <mnemonic|0xNN>` (lặp `--opcode` để kết hợp nhiều opcode); `--disassemble-all` xuất bytecode mọi method và có thể tạo JSON lớn.
 
 Tool chỉ lập chỉ mục bằng chứng bytecode, không tự đặt tên class obfuscated hoặc suy diễn ý nghĩa nghiệp vụ. Cần đối chiếu các call edge/string/opcode với JADX/CFR/Vineflower và kiểm tra thủ công trước khi đưa kết luận vào protocol/gameplay spec.
 
