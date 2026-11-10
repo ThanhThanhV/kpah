@@ -94,6 +94,10 @@ Source-backed packet schemas cho movement opcode 4, map transition opcode 12, en
 
 Đặc tả source-backed cho server list, login opcode 1, registration opcode 39, roster opcode 13, select/delete/restore và create character opcode 14: [protocol-auth-character.md](./docs/reverse-engineering/protocol-auth-character.md).
 
+## Quét toàn bộ C2S packet builders
+
+Opcode catalog scanner hiện duyệt toàn bộ CFR `.java` files, không chỉ `jy.java`; nó nhận diện `jy.b(...)` và `new acu(...)` với cả opcode hằng/biến, ghi source file/line, payload write order và số lần packet được enqueue. Các factory/helper không gửi được đánh dấu riêng. Cần nối caller của wrapper và rà soát dynamic opcode trước khi coi catalog là đầy đủ.
+
 ## Catalog opcode C2S/S2C
 
 `tools/extract_protocol_catalog.py` đọc CFR source `jy.java` và `ka.java`, xuất opcode writer phía client, thứ tự `write*`, số lần enqueue, cùng dispatcher case và `read*`/dispatch target phía server. Chạy `npm run catalog:protocol` sau khi CFR decompile; CI tự sinh JSON/Markdown và đính kèm artifact.
