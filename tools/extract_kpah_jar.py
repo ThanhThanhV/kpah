@@ -12,6 +12,7 @@ The original JAR remains the canonical evidence artifact.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import zipfile
 from collections import Counter
@@ -152,6 +153,7 @@ def main() -> None:
     if not args.jar.is_file():
         parser.error(f"JAR not found: {args.jar}")
 
+    source_sha256 = hashlib.sha256(args.jar.read_bytes()).hexdigest()
     args.output.mkdir(parents=True, exist_ok=True)
     entries = []
     decoded_entries = []
@@ -168,18 +170,19 @@ def main() -> None:
             # Validate before reading or creating any output path.
             safe_target(args.output, name)
             suffix = PurePosixPath(name).suffix.lower()
+            raw = archive.read(info)
             item = {
                 "path": name,
                 "size": info.file_size,
                 "compressedSize": info.compress_size,
                 "extension": suffix or "[no-extension]",
                 "isClass": suffix == ".class",
+                "sha256": hashlib.sha256(raw).hexdigest(),
             }
             entries.append(item)
             if suffix == ".class" and not args.include_classes:
                 continue
 
-            raw = archive.read(info)
             target = safe_target(args.output, name)
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(raw)
@@ -203,6 +206,7 @@ def main() -> None:
                         "packType": suffix,
                         "path": internal_name,
                         "size": len(internal_data),
+                        "sha256": hashlib.sha256(internal_data).hexdigest(),
                         "output": internal_target.relative_to(args.output).as_posix(),
                     }
                     dimensions = png_dimensions(internal_data)
@@ -222,8 +226,20 @@ def main() -> None:
                     decoded_entries.append(decoded_item)
 
     counts = Counter(item["extension"] for item in entries)
+    version_material = json.dumps({
+        "sourceSha256": source_sha256,
+        "files": [
+            (item["path"], item["sha256"]) for item in entries
+        ] + [
+            (item["output"], item["sha256"]) for item in decoded_entries
+        ],
+    }, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")
+    asset_version = hashlib.sha256(version_material).hexdigest()[:16]
     manifest = {
         "source": args.jar.name,
+        "hashAlgorithm": "SHA-256",
+        "sourceSha256": source_sha256,
+        "assetVersion": asset_version,
         "entryCount": len(entries),
         "extractedCount": extracted,
         "classCount": sum(1 for item in entries if item["isClass"]),
