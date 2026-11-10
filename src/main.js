@@ -246,6 +246,13 @@ function renderCharacterPanel(key){
 function renderWorldMapPanel(){
   const data=worldMapState.snapshot();
   const level=characterState.snapshot().level;
+  const scene=game.scene.getScene('world');
+  const monsters=worldEntityState.snapshot().monsters;
+  const player=scene?.playerSprite;
+  const percent=(value,max)=>Math.max(0,Math.min(100,value/max*100));
+  const npcPins=data.current.npcs.map(npc=>`<button type="button" class="world-map-pin npc" style="left:${percent(npc.x,960)}%;top:${percent(npc.y,560)}%" data-map-npc="${escapeHtml(npc.name)}" title="${escapeHtml(npc.name)}"><i>◆</i><small>${escapeHtml(npc.name)}</small></button>`).join('');
+  const monsterPins=monsters.filter(monster=>monster.alive).map(monster=>`<button type="button" class="world-map-pin monster ${monster.type==='pack-leader'?'elite':''} ${monster.id===worldEntityState.snapshot().selectedId?'selected':''}" style="left:${percent(monster.x,960)}%;top:${percent(monster.y,560)}%" data-map-target="${escapeHtml(monster.id)}" title="${escapeHtml(monster.name)}"><i>♞</i></button>`).join('');
+  const playerPin=player?`<span class="world-map-pin player" style="left:${percent(player.x,960)}%;top:${percent(player.y,560)}%" title="Vị trí của bạn"><i>●</i><small>Bạn</small></span>`:'';
   const cards=data.zones.map(zone=>{
     const current=zone.id===data.current.id;
     const connected=data.current.connections.includes(zone.id);
@@ -257,10 +264,16 @@ function renderWorldMapPanel(){
       <button type="button" data-zone-travel="${zone.id}" ${current||!connected||locked?'disabled':''}>${current?'Hiện tại':'Di chuyển'}</button>
     </article>`;
   }).join('');
-  return `<div class="world-map-summary"><b>${escapeHtml(data.current.name)}</b><span>${data.current.kindLabel} · Cấp đề xuất ${data.current.recommendedLevel}</span></div>
+  return `<div class="world-map-summary"><b>${escapeHtml(data.current.name)}</b><span>${data.current.kindLabel} · Cấp đề xuất ${data.current.recommendedLevel} · ${monsters.filter(item=>item.alive).length} quái còn sống</span></div>
+    <div class="world-map-field ${data.current.kind}">
+      <div class="world-map-field-path"></div>
+      ${npcPins}${monsterPins}${playerPin}
+      <span class="world-map-field-title">${escapeHtml(data.current.title)}</span>
+    </div>
+    <div class="world-map-legend"><span><i class="player">●</i> Bạn</span><span><i class="npc">◆</i> NPC</span><span><i class="monster">♞</i> Quái vật (chạm để chọn)</span></div>
     <div class="world-map-route"><span>◈</span><i></i><span>♧</span><i></i><span>◆</span></div>
     <div class="world-map-zone-list">${cards}</div>
-    <p class="panel-hint">Các khu vực và điều kiện di chuyển hiện là dữ liệu client minh họa. Cấp nhân vật hiện tại: ${level}.</p>`;
+    <p class="panel-hint">Sơ đồ vị trí dựa trên tọa độ của bản đồ demo hiện tại. Cấp nhân vật: ${level}.</p>`;
 }
 
 function renderGuildPanel(){
@@ -595,6 +608,10 @@ document.querySelector('#window-content').addEventListener('change',event=>{
   toast(result.message);updateActionBar();document.querySelector('#window-content').innerHTML=renderSkillPanel();
 });
 document.querySelector('#window-content').addEventListener('click',event=>{
+  const mapMonster=event.target.closest('[data-map-target]')?.dataset.mapTarget;
+  if(mapMonster){window.dispatchEvent(new CustomEvent('kpah:monster-select',{detail:{id:mapMonster}}));return;}
+  const mapNpc=event.target.closest('[data-map-npc]')?.dataset.mapNpc;
+  if(mapNpc){window.dispatchEvent(new CustomEvent('kpah:npc-interact',{detail:{name:mapNpc}}));return;}
   const destination=event.target.closest('[data-zone-travel]')?.dataset.zoneTravel;
   if(destination){
     const scene=game.scene.getScene('world');
@@ -682,6 +699,9 @@ window.addEventListener('kpah:monster-select',event=>{
   syncCombatTarget(result.monster);
   game.scene.getScene('world')?.syncMonsterViews();
   renderWorldTarget();
+  if(document.querySelector('#window-title').textContent==='Bản đồ thế giới'){
+    document.querySelector('#window-content').innerHTML=renderWorldMapPanel();
+  }
   toast('Đã chọn '+result.monster.name+'. Tiếp cận mục tiêu và sử dụng kỹ năng.');
 });
 window.addEventListener('kpah:npc-interact',event=>{
