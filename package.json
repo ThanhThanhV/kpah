@@ -16,7 +16,10 @@
     "generate:protocol": "python tools/generate_protocol.py",
     "check:protocol-generated": "python tools/generate_protocol.py --check",
     "test:protocol-codegen": "node tools/test_protocol_codegen.mjs",
-    "test:replay-harness": "python tools/kpah_replay_harness.py --self-test"
+    "test:replay-harness": "python tools/kpah_replay_harness.py --self-test",
+    "generate:transport": "python tools/generate_transport_codec.py",
+    "check:transport-generated": "python tools/generate_transport_codec.py --check",
+    "test:transport-codegen": "node tools/test_transport_codegen.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"
