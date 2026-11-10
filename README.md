@@ -70,6 +70,10 @@ npm run verify:assets
 
 `tools/verify_asset_manifest.py` kiểm tra SHA-256 của từng tài nguyên đã giải mã, xác nhận `assetVersion` có thể tái tạo từ manifest và đối chiếu hash JAR nguồn nếu truyền `--jar`. Lệnh trả mã lỗi khác 0 nếu thiếu file, sai hash, trùng output path hoặc manifest bị sửa không đồng bộ. Đây là bước kiểm tra dữ liệu asset, chưa thay thế CI build/test toàn dự án.
 
+## Chat, friends, party và guild protocol
+
+Source-backed notes cho chat -5/-18, friend request 101, friend removal -6, friend roster 103, invitation -11 và guild records/announcements/chat/ranking/reward -10/-12/-13/-17/-18/-19/-20: [protocol-social-guild-chat.md](./docs/reverse-engineering/protocol-social-guild-chat.md).
+
 ## NPC, menu và quest protocol
 
 Source-backed notes cho entity speech opcode 27, help text -24, world message -26, quest collection -64, objective/detail -30/-31 và confirmation prompt -32: [protocol-npc-quest-menu.md](./docs/reverse-engineering/protocol-npc-quest-menu.md).
