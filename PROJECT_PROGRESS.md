@@ -32,6 +32,8 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 ## Latest implementation
 
+- B10 R4 feature assessment: source-backed evidence now covers equipment refining actions (C2S -25), pet equipment/fusion UI, sacred-tree farming (C2S/S2C -66 and C2S 109), artifact panel (S2C -67), ranking (-19, already tracked in B9) and NPC boat-ticket dialogue. No adequate client evidence was found for horse/mount, arena or auction; `-62/-63` are the lucky-box mini-game, not arena. Detailed matrix and proposed B10.1–B10.8 split: `docs/reverse-engineering/advanced-features-r4.md`.
+
 - B16 initialization data slice: documented global config opcode 1 (skill metadata, profession lookup tables, tile blobs and character-part data), selected-character snapshot 3, shop/catalog 15 and inventory/skill/auxiliary state 16, including runtime destinations and optional sections. Exact business meaning of several lookup arrays, full part/tile binary schemas and server packet order remain open.
 
 - B13 client formula slice: documented actor speed step (`cT`, default 3) and distance-based increments, sequential X-then-Y movement, click-to-move tile waypoint/collision checks, 250 ms C2S coordinate sends, and floating damage/MISS text drift/30-tick expiry. Jump physics and damage/crit formula remain unverified.
