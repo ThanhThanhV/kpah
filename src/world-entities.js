@@ -61,6 +61,12 @@ export function createWorldEntityState(random = Math.random, initialMap = 'villa
     if(!monsters.some(item=>item.id===selectedId&&item.alive))selectedId=monsters.find(item=>item.alive)?.id||null;
     return revived;
   }
+  function move(id,x,y) {
+    const monster=monsters.find(item=>item.id===id&&item.alive);
+    if(!monster||!Number.isFinite(x)||!Number.isFinite(y))return false;
+    monster.x=x;monster.y=y;
+    return true;
+  }
   function get(id) { return copy(monsters.find(item=>item.id===id)||null); }
-  return {snapshot,select,damage,update,get,setMap};
+  return {snapshot,select,damage,update,get,move,setMap};
 }
