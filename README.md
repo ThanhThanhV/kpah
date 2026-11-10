@@ -163,3 +163,8 @@ The live world map now keeps its player marker synchronized while the character 
 - Improved the local movement resolver: when a direct diagonal path meets a registered obstacle, it also tests horizontal-first and vertical-first routes and selects the valid route that advances furthest.
 - This allows the character to slide around the edge of demo scenery instead of always stopping at the first blocked sample. All routes still respect the existing obstacle geometry and walk bounds.
 - This remains a lightweight client-side path approximation; it is not a full navigation mesh or source-derived KPAH pathfinding system.
+
+
+## Character selection roster
+
+After the offline login step, the character-selection screen displays up to three locally saved character entries. Select an existing character to enter the world, create another while a slot is available, or delete an entry after confirmation. The roster is stored separately in browser local storage and never stores the account password. This is a client-only convenience flow; it does not create, delete, restore or synchronize characters on the original game server.
