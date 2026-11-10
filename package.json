@@ -11,7 +11,8 @@
     "analyze:classes": "python tools/analyze_class_files.py tools/reports/class-files",
     "verify:assets": "python tools/verify_asset_manifest.py public/assets/kpah-original --jar KPAH_278.jar",
     "suggest:class-roles": "python tools/suggest_class_roles.py tools/reports/kpah-class-analysis.json",
-    "test:protocol": "python tools/kpah_protocol_reference.py --self-test"
+    "test:protocol": "python tools/kpah_protocol_reference.py --self-test",
+    "catalog:protocol": "python tools/extract_protocol_catalog.py tools/reports/cfr-source"
   },
   "dependencies": {
     "phaser": "^3.90.0"
