@@ -12,7 +12,10 @@
     "verify:assets": "python tools/verify_asset_manifest.py public/assets/kpah-original --jar KPAH_278.jar",
     "suggest:class-roles": "python tools/suggest_class_roles.py tools/reports/kpah-class-analysis.json",
     "test:protocol": "python tools/kpah_protocol_reference.py --self-test",
-    "catalog:protocol": "python tools/extract_protocol_catalog.py tools/reports/cfr-source"
+    "catalog:protocol": "python tools/extract_protocol_catalog.py tools/reports/cfr-source",
+    "generate:protocol": "python tools/generate_protocol.py",
+    "check:protocol-generated": "python tools/generate_protocol.py --check",
+    "test:protocol-codegen": "node tools/test_protocol_codegen.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"
