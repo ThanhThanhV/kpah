@@ -1,0 +1,96 @@
+name: Validate KPAH web client and reverse-engineering tools
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install client dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build client
+        run: npm run build
+      - name: Compile Python tooling
+        run: python -m compileall -q tools
+      - name: Smoke-test bytecode analyzer and class-role report
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/kpah-classes"
+          cat > "$RUNNER_TEMP/Smoke.java" <<'JAVA'
+          public class Smoke {
+            private static int count = 2;
+            public static String run(int mode) {
+              switch (mode) {
+                case 1: return "KPAH smoke" + helper();
+                case 2: return new StringBuilder().append(count).toString();
+                default: return "idle";
+              }
+            }
+            private static int helper() { return count + 1; }
+          }
+          JAVA
+          javac --release 8 -g -d "$RUNNER_TEMP/kpah-classes" "$RUNNER_TEMP/Smoke.java"
+          python tools/analyze_class_files.py "$RUNNER_TEMP/kpah-classes" --output "$RUNNER_TEMP/kpah-class-analysis.json" --contains KPAH
+          python tools/suggest_class_roles.py "$RUNNER_TEMP/kpah-class-analysis.json" --json "$RUNNER_TEMP/class-roles.json" --markdown "$RUNNER_TEMP/class-roles.md"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          report = json.loads((Path(os.environ['RUNNER_TEMP']) / 'kpah-class-analysis.json').read_text())
+          roles = json.loads((Path(os.environ['RUNNER_TEMP']) / 'class-roles.json').read_text())
+          assert report['parsedClassCount'] == 1, report
+          assert report['callEdgeCount'] > 0, report
+          assert report['fieldReferenceCount'] > 0, report
+          assert report['typeReferenceCount'] > 0, report
+          assert roles['classCount'] == 1, roles
+          assert roles['hypothesisCount'] + roles['unclassifiedCount'] + roles['verifiedAnchorCount'] == 1, roles
+          print('Bytecode analyzer and role report smoke tests passed')
+          PY
+      - name: Smoke-test asset manifest integrity verifier
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/kpah-assets/decoded"
+          printf 'synthetic asset' > "$RUNNER_TEMP/kpah-assets/decoded/demo.bin"
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          root = Path(os.environ['RUNNER_TEMP']) / 'kpah-assets'
+          source_hash = hashlib.sha256(b'synthetic jar').hexdigest()
+          entry_hash = hashlib.sha256(b'synthetic archive entry').hexdigest()
+          decoded_hash = hashlib.sha256((root / 'decoded/demo.bin').read_bytes()).hexdigest()
+          files = [('archive/entry.bin', entry_hash), ('decoded/demo.bin', decoded_hash)]
+          material = json.dumps({'sourceSha256': source_hash, 'files': files}, ensure_ascii=False, separators=(',', ':'), sort_keys=True).encode('utf-8')
+          version = hashlib.sha256(material).hexdigest()[:16]
+          manifest = {'hashAlgorithm': 'SHA-256', 'sourceSha256': source_hash, 'assetVersion': version,
+                      'entries': [{'path': files[0][0], 'sha256': entry_hash}],
+                      'decodedPackedEntries': [{'output': files[1][0], 'sha256': decoded_hash}]}
+          (root / 'archive-manifest.json').write_text(json.dumps(manifest), encoding='utf-8')
+          PY
+          python tools/verify_asset_manifest.py "$RUNNER_TEMP/kpah-assets"
+          printf 'tampered' > "$RUNNER_TEMP/kpah-assets/decoded/demo.bin"
+          if python tools/verify_asset_manifest.py "$RUNNER_TEMP/kpah-assets"; then
+            echo 'Verifier did not detect tampered asset' >&2
+            exit 1
+          fi
+          echo 'Asset manifest verifier correctly rejected a modified file'
