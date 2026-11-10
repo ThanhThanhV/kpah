@@ -93,7 +93,7 @@ const panelData = {
   ranking:{title:'Bảng xếp hạng',html:`<div class="tabs"><button class="chosen">Cấp độ</button><button>Chiến lực</button><button>Bang hội</button></div><div class="rank-list"><p>① <b>ThiênMệnh</b><span>Cấp 68</span></p><p>② <b>PhongVân</b><span>Cấp 27</span></p><p>③ <b>HỏaLong</b><span>Cấp 31</span></p></div>`},
   events:{title:'Sự kiện',html:`<div class="quest-card"><b>✦ Đua top tân thủ</b><p>Nhận thưởng khi đạt mốc cấp độ trong thời gian sự kiện.</p><small>Thời gian còn lại: 5 ngày 12 giờ</small></div><div class="quest-card"><b>✦ Săn boss cuối tuần</b><p>Đánh bại boss thế giới cùng những người chơi khác.</p></div>`},
   settings:{title:'Cài đặt hiển thị',html:`<div class="settings-list"><label for="setting-player-name">Hiển thị tên nhân vật <input id="setting-player-name" data-setting="playerName" type="checkbox" checked></label><label for="setting-coordinates">Hiển thị tọa độ <input id="setting-coordinates" data-setting="coordinates" type="checkbox" checked></label><label for="setting-minimap">Hiển thị bản đồ nhỏ <input id="setting-minimap" data-setting="minimap" type="checkbox" checked></label><p class="settings-note">Tùy chọn được lưu trên trình duyệt này. Âm thanh và hiệu ứng chiến đấu sẽ được bổ sung khi có runtime tương ứng.</p><button type="button" class="gold-button" data-reset-display-settings>Khôi phục mặc định</button></div>`},
-  help:{title:'Trợ giúp',html:`<div class="help-copy"><b>Điều khiển</b><p>Dùng cụm phím mũi tên để di chuyển nhân vật. Chọn kỹ năng ở thanh thao tác phía dưới để sử dụng. Nhấn E khi đứng gần vật phẩm rơi để nhặt.</p><b>Tương tác</b><p>Chạm vào NPC, người chơi hoặc quái vật trong bản đồ để xem các hành động khả dụng.</p></div>`},
+  help:{title:'Trợ giúp',html:`<div class="help-copy"><b>Điều khiển</b><p>Dùng cụm phím mũi tên để di chuyển nhân vật. Nhấn Tab / Shift+Tab để đổi mục tiêu quái vật; chọn kỹ năng ở thanh thao tác hoặc phím 1–5 để sử dụng. Nhấn E khi đứng gần vật phẩm rơi để nhặt.</p><b>Tương tác</b><p>Chạm vào NPC, người chơi hoặc quái vật trong bản đồ để xem các hành động khả dụng.</p></div>`},
   party:{title:'Tổ đội',html:`<div class="empty-state"><span>♙</span><b>Bạn chưa tham gia tổ đội</b><p>Tạo tổ đội hoặc nhận lời mời từ người chơi khác.</p><button class="gold-button">Tạo tổ đội</button></div>`},
   mail:{title:'Hòm thư',html:`<div class="empty-state"><span>✉</span><b>Hòm thư trống</b><p>Khi có thư mới, thư sẽ hiển thị tại đây.</p></div>`},
   shop:{title:'Cửa hàng',html:`<div class="tabs"><button class="chosen">Vật phẩm</button><button>Trang bị</button><button>Tiện ích</button></div><div class="shop-row"><span>🧪</span><b>Bình máu nhỏ</b><small>150 Xu</small><button>Mua</button></div><div class="shop-row"><span>🧴</span><b>Bình mana nhỏ</b><small>150 Xu</small><button>Mua</button></div>`}
@@ -679,6 +679,7 @@ window.addEventListener('keydown',event=>{
   const target=event.target;
   if(target instanceof HTMLElement&&(target.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(target.tagName)))return;
   if(event.key==='Tab'){
+    if(document.querySelector('#game-window').classList.contains('open'))return;
     event.preventDefault();
     const result=worldEntityState.selectNext(event.shiftKey?-1:1);
     if(!result.ok){toast(result.message);return;}
