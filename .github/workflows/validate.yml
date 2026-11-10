@@ -38,6 +38,8 @@ jobs:
         run: npm run build
       - name: Compile Python tooling
         run: python -m compileall -q tools
+      - name: Test protocol reference vectors
+        run: python tools/kpah_protocol_reference.py --self-test
       - name: Smoke-test bytecode analyzer and class-role report
         shell: bash
         run: |
