@@ -81,10 +81,18 @@ def main() -> int:
     by_name = {str(item.get("className")): item for item in classes if isinstance(item, dict)}
     outgoing: dict[str, list[dict[str, Any]]] = defaultdict(list)
     incoming: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    def owning_class(method_reference: str) -> str:
+        # Match the longest known class-name prefix so package-qualified names
+        # such as game.GameMidlet are not truncated at the package separator.
+        matches = [name for name in by_name if method_reference.startswith(name + ".")]
+        return max(matches, key=len) if matches else method_reference.rsplit(".", 1)[0]
+
     for edge in graph:
         if isinstance(edge, dict):
-            outgoing[str(edge.get("from", "")).split(".", 1)[0]].append(edge)
-            incoming[str(edge.get("to", "")).split(".", 1)[0]].append(edge)
+            source_class = owning_class(str(edge.get("from", "")))
+            target_class = owning_class(str(edge.get("to", "")))
+            outgoing[source_class].append(edge)
+            incoming[target_class].append(edge)
     results = []
     for name, item in by_name.items():
         out_edges, in_edges = outgoing[name], incoming[name]
