@@ -119,6 +119,14 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 - The quest journal supports status filters, objective progress bars, reward previews, claim actions and a pending-reward navigation indicator.
 - Added wallet synchronization to the HUD. The quest catalog, NPC objective, training-wolf target and reward values are illustrative local data, not verified original KPAH content or server transactions.
 
+## Latest client increment — exact per-character world-position resume
+
+- Per-character saves now include the player's world X/Y coordinates as well as the current zone.
+- Switching characters and re-entering the page restores the saved location; old saves without coordinates remain compatible and fall back to the zone entry point.
+- Restored coordinates are passed through the existing obstacle-aware movement resolver after the destination zone is rebuilt, preventing a stale save from placing the player inside demo scenery. The camera and name label are repositioned with the player.
+- The current location is flushed on page hide and when the tab becomes hidden, in addition to the existing saves on zone travel, respawn, logout and gameplay state updates.
+- Syntax and targeted static checks passed. Browser lifecycle, mobile interaction and production build have not been run.
+
 ## Latest client increment — per-character world location resume
 
 - The active zone is now stored in the same versioned save as that character's inventory, quests and skills.
