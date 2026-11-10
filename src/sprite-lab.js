@@ -7,7 +7,7 @@ style.textContent = `
 .sprite-lab-filter{display:grid;grid-template-columns:1fr 1fr;gap:6px}.sprite-lab-controls{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,64px);gap:6px}
 .sprite-lab-mapping{display:grid;grid-template-columns:minmax(0,1fr) 90px 90px 90px;gap:6px}
 .sprite-lab-mapping input,.sprite-lab-mapping select{min-width:0;width:100%;height:32px;padding:0 6px;background:#17141b;border:1px solid #66513b;color:#f0dfbd;font-size:10px}
-.sprite-lab-mapping .wide{grid-column:1/-1}.sprite-lab-export{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sprite-lab-mapping .wide{grid-column:1/-1}.sprite-lab-export{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sprite-lab-saved{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px}.sprite-lab-saved select{min-width:0;width:100%;height:32px;background:#17141b;border:1px solid #66513b;color:#f0dfbd;font-size:10px}
 .sprite-lab-export pre{flex:1;min-width:180px;max-height:120px;overflow:auto;padding:8px;background:#121015;color:#cbbd9e;font:9px/1.5 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
 .sprite-lab select,.sprite-lab input{min-width:0;width:100%;height:32px;padding:0 6px;background:#17141b;border:1px solid #66513b;color:#f0dfbd;font-size:10px}
 .sprite-lab-stage{min-height:180px;display:grid;place-items:center;background:repeating-conic-gradient(#302a2b 0% 25%,#211d22 0% 50%) 50%/16px 16px}
@@ -68,6 +68,13 @@ export function renderSpriteLab(root, assets) {
         <button type="button" id="sprite-copy" disabled>Sao chép JSON</button>
         <pre id="sprite-mapping-output">Chưa tạo mapping.</pre>
       </div>
+      <div class="sprite-lab-saved">
+        <select id="sprite-saved-mappings" aria-label="Mapping đã lưu"><option value="">Chưa có mapping đã lưu</option></select>
+        <button type="button" id="sprite-save-mapping" disabled>Lưu nháp</button>
+        <button type="button" id="sprite-load-mapping" disabled>Mở nháp</button>
+        <button type="button" id="sprite-delete-mapping" disabled>Xóa nháp</button>
+      </div>
+      <div class="sprite-lab-meta">Mapping nháp chỉ lưu trên trình duyệt hiện tại, không đồng bộ lên máy chủ hoặc GitHub.</div>
     </section>`;
 
   const $ = id => root.querySelector('#' + id);
@@ -84,6 +91,12 @@ export function renderSpriteLab(root, assets) {
   const frameSequenceInput = $('sprite-frame-sequence');
   const mappingOutput = $('sprite-mapping-output');
   const copyButton = $('sprite-copy');
+  const savedSelect = $('sprite-saved-mappings');
+  const saveButton = $('sprite-save-mapping');
+  const loadButton = $('sprite-load-mapping');
+  const deleteButton = $('sprite-delete-mapping');
+  const SAVED_MAPPINGS_KEY = 'kpah.sprite-mappings.v1';
+  let savedMappings = readSavedMappings();
   const slider = $('sprite-frame');
   const canvas = $('sprite-canvas');
   const ctx = canvas.getContext('2d');
@@ -98,6 +111,36 @@ export function renderSpriteLab(root, assets) {
   let total = 0;
   let playbackFrames = [];
   let playbackIndex = 0;
+
+  function readSavedMappings() {
+    try {
+      const value = JSON.parse(localStorage.getItem(SAVED_MAPPINGS_KEY) || '[]');
+      return Array.isArray(value) ? value.filter(item =>
+        item && typeof item.id === 'string' && typeof item.name === 'string' &&
+        item.mapping && item.mapping.source && item.mapping.animation
+      ).slice(0,100) : [];
+    } catch { return []; }
+  }
+
+  function persistSavedMappings() {
+    try {
+      localStorage.setItem(SAVED_MAPPINGS_KEY,JSON.stringify(savedMappings));
+      return true;
+    } catch {
+      meta.textContent = 'Không thể lưu mapping nháp: trình duyệt có thể đã tắt local storage hoặc hết dung lượng.';
+      return false;
+    }
+  }
+
+  function renderSavedMappings() {
+    const selected = savedSelect.value;
+    savedSelect.innerHTML = '<option value="">Chọn mapping đã lưu</option>' +
+      savedMappings.map(item => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`).join('');
+    if (savedMappings.some(item => item.id === selected)) savedSelect.value = selected;
+    const hasSelection = savedMappings.some(item => item.id === savedSelect.value);
+    loadButton.disabled = !hasSelection;
+    deleteButton.disabled = !hasSelection;
+  }
 
   function stop() {
     if (timer !== null) clearInterval(timer);
@@ -278,6 +321,40 @@ export function renderSpriteLab(root, assets) {
     };
     mappingOutput.textContent = JSON.stringify(mapping,null,2);
     copyButton.disabled = false;
+    saveButton.disabled = false;
+  });
+  saveButton.addEventListener('click',() => {
+    let mapping;
+    try { mapping = JSON.parse(mappingOutput.textContent); } catch { return; }
+    if (!mapping?.source?.output || !mapping?.animation?.key || !mapping?.load?.url) return;
+    const id = mapping.source.output + '::' + mapping.animation.key;
+    const name = mapping.animation.key + ' · ' + mapping.source.path;
+    const existing = savedMappings.findIndex(item => item.id === id);
+    const record = {id,name,mapping,savedAt:new Date().toISOString()};
+    if (existing >= 0) savedMappings[existing] = record;
+    else savedMappings.unshift(record);
+    savedMappings = savedMappings.slice(0,100);
+    if (persistSavedMappings()) {
+      renderSavedMappings();
+      savedSelect.value = id;
+      renderSavedMappings();
+      meta.textContent = 'Đã lưu mapping nháp trong trình duyệt hiện tại.';
+    }
+  });
+  savedSelect.addEventListener('change',renderSavedMappings);
+  loadButton.addEventListener('click',() => {
+    const record = savedMappings.find(item => item.id === savedSelect.value);
+    if (!record) return;
+    mappingOutput.textContent = JSON.stringify(record.mapping,null,2);
+    copyButton.disabled = false;
+    saveButton.disabled = false;
+    meta.textContent = 'Đã mở mapping nháp: ' + record.name;
+  });
+  deleteButton.addEventListener('click',() => {
+    const id = savedSelect.value;
+    if (!id) return;
+    savedMappings = savedMappings.filter(item => item.id !== id);
+    if (persistSavedMappings()) renderSavedMappings();
   });
   copyButton.addEventListener('click',async () => {
     const value = mappingOutput.textContent;
@@ -327,5 +404,6 @@ export function renderSpriteLab(root, assets) {
       draw();
     },1000/fps);
   });
+  renderSavedMappings();
   applyAssetFilters();
 }
