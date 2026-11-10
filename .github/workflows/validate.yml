@@ -44,6 +44,10 @@ jobs:
         run: npm run test:replay-harness
       - name: Verify generated protocol sources
         run: npm run check:protocol-generated
+      - name: Verify generated transport sources
+        run: npm run check:transport-generated
+      - name: Test generated transport codec
+        run: npm run test:transport-codegen
       - name: Test generated JavaScript protocol codec
         run: npm run test:protocol-codegen
       - name: Compile and smoke-test generated Java protocol codec
@@ -64,7 +68,17 @@ jobs:
               String text = String.valueOf((char) 0) + "Xin chào 😀";
               PacketReader reader = new PacketReader(new PacketWriter().writeUTF(text).toByteArray());
               if (!reader.readUTF().equals(text) || reader.remaining() != 0) throw new AssertionError("modified UTF-8");
-              System.out.println("Generated Java protocol codec: PASS");
+              byte[] key = TransportCodec.decodeHandshakeKey(new byte[]{3, 0x10, 0x20, 0x30});
+              if (!Arrays.equals(key, new byte[]{0x10, 0x30, 0x00})) throw new AssertionError("key derivation");
+              TransportCodec.EncodedFrame frame = TransportCodec.encodeClientFrame(1, new byte[]{1,2,3}, key, 0);
+              if (!Arrays.equals(frame.bytes(), new byte[]{0x11,0x30,0x03,0x11,0x32,0x03})) throw new AssertionError("C2S frame");
+              TransportCodec.DecodedFrame decodedFrame = TransportCodec.decodeClientFrame(frame.bytes(), key, 0);
+              if (decodedFrame.opcode() != 1 || !Arrays.equals(decodedFrame.payload(), new byte[]{1,2,3})) throw new AssertionError("C2S decode");
+              TransportCodec.EncodedFrame longFrame = TransportCodec.encodeServerFrame(0x35, new byte[]{1,2,3}, key, 2, true);
+              if (!Arrays.equals(longFrame.bytes(), new byte[]{(byte)0x80,0x25,0x30,0x00,0x10,0x33,0x01,0x12,0x33})) throw new AssertionError("S2C long frame");
+              TransportCodec.DecodedFrame longDecoded = TransportCodec.decodeServerFrame(longFrame.bytes(), key, 2);
+              if (longDecoded.opcode() != 0x35 || !longDecoded.longLength() || !Arrays.equals(longDecoded.payload(), new byte[]{1,2,3})) throw new AssertionError("S2C long decode");
+              System.out.println("Generated Java protocol and transport codecs: PASS");
             }
           }
           JAVA
