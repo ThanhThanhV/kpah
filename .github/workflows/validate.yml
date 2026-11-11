@@ -109,6 +109,20 @@ jobs:
                   || init.aY() != 123456 || init.aZ() != 654321
                   || !Arrays.equals(init.trailingBytes(), new byte[]{(byte)0xde}))
                 throw new AssertionError("opcode 16 mode 0 decode: " + init);
+              PacketWriter mode1Packet = new PacketWriter().writeU8(1).writeI16(1)
+                .writeI8(9).writeI16(1001).writeI16(22).writeI8(3).writeI8(4).writeI16(55).writeI16(66)
+                .writeI8(7).writeI8(8).writeI8(9).writeI8(10).writeI8(11).writeI8(12).writeI8(13).writeI8(14).writeI8(15)
+                .writeUTF("Sword").writeU16(65500).writeI8(2).writeU8(4).writeI16(-50).writeU8(8).writeI16(75).writeI8(16)
+                .writeI32(333).writeI32(444).writeU8(0xfa);
+              ProtocolInitializationCodec.Decoded mode1 = ProtocolInitializationCodec.decodeS2COpcode16(mode1Packet.toByteArray());
+              ProtocolInitializationCodec.InventoryItem mode1Item = mode1.items().get(0);
+              if (!mode1.decoded() || mode1.mode() != 1 || mode1.items().size() != 1
+                  || mode1Item.i() != 1001 || !mode1Item.d().equals("Sword") || mode1Item.w() != 65500
+                  || !mode1Item.stats().equals(List.of(new ProtocolInitializationCodec.InventoryStat(4, (short)-50),
+                                                       new ProtocolInitializationCodec.InventoryStat(8, (short)75)))
+                  || mode1.aY() != 333 || mode1.aZ() != 444
+                  || !Arrays.equals(mode1.trailingBytes(), new byte[]{(byte)0xfa}))
+                throw new AssertionError("opcode 16 mode 1 decode: " + mode1);
               ProtocolInitializationCodec.Decoded mode3 = ProtocolInitializationCodec.decodeS2COpcode16(
                 new PacketWriter().writeU8(3).writeI32(111).writeI8(3).writeI16(101).writeI16(202).writeI16(-303)
                   .writeI32(222).writeU8(0xbe).toByteArray());
@@ -120,7 +134,7 @@ jobs:
               if (opaqueInit.decoded() || opaqueInit.mode() != 1
                   || !Arrays.equals(opaqueInit.opaquePayload(), new byte[]{0x10, 0x20}))
                 throw new AssertionError("opcode 16 opaque mode preservation");
-              System.out.println("Generated Java protocol, transport, opcode 3 prefix and opcode 16 modes 0/3 codecs: PASS");
+              System.out.println("Generated Java protocol, transport, opcode 3 prefix and opcode 16 modes 0/1/3 codecs: PASS");
             }
           }
           JAVA
