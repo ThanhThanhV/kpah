@@ -31,7 +31,10 @@
     "test:opcode15": "node tools/test_opcode15_codec.mjs",
     "generate:opcode1": "python tools/generate_opcode1_codec.py",
     "check:opcode1": "python tools/generate_opcode1_codec.py --check",
-    "test:opcode1": "node tools/test_opcode1_codec.mjs"
+    "test:opcode1": "node tools/test_opcode1_codec.mjs",
+    "generate:opcode3-extension": "python tools/generate_opcode3_extension.py",
+    "check:opcode3-extension": "python tools/generate_opcode3_extension.py --check",
+    "test:opcode3-extension": "node tools/test_opcode3_extension.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"
