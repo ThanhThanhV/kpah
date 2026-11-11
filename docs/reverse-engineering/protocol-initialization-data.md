@@ -95,6 +95,25 @@ Some fields (`aY`, `aZ`) are currency/state counters; exact split between wallet
 
 The exact ordering of opcodes `3`, `12`, `16` and any additional initialization messages must be confirmed from a captured session; the client code only establishes their individual handlers and required destination objects.
 
+## Opcode 3 — typed prefix decoder
+
+The first 33 fields are now represented as an explicitly partial S2C prefix schema in `protocol/protocol.yaml` (`prefixSchemas`). The generated JavaScript and Java decoders read, in order:
+
+- Character ID/name, HP/MP current and maximum.
+- Profession/class bytes and the three numeric values `cV/cW/cX`.
+- Three short values `cP/cQ/cR`, two state bytes `da/cY`, and eight short slots retaining the original obfuscated destination names.
+- `dl`, `cb`, the byte-counted action mapping, `r`, then `aq/co/cp/cn/cT`.
+
+The decoder returns any remaining bytes as `trailingBytes`; it does not pretend the independently guarded optional/extension fields are understood. The command catalog still labels full opcode 3 payload as opaque. This prefix decoder is not a full packet schema and must not be used to construct server responses.
+
+Generator and checks:
+
+```bash
+npm run generate:prefix-protocol
+npm run check:prefix-protocol
+npm run test:prefix-protocol
+```
+
 ## B16 chưa hoàn tất
 
 - Chưa phân loại hết các lookup arrays trong opcode 1 hoặc gán semantic names cho toàn bộ numeric fields.
