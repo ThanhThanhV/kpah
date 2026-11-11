@@ -514,9 +514,9 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 ## B5 — S2C opcode 5 player snapshot decoder
 
-- Added the source-bounded opcode 5 decoder using the fixed z arrays: seven part bytes, seven part-slot shorts and five appearance shorts. It parses identity/position/HP/MP, profession/class, status and equipment fields, optional af, trade flag and the independently guarded extension groups.
+- Consolidated opcode 5 into the dedicated ProtocolOpcode5Codec, which guards on existing-entity availability and uses the fixed z arrays: seven part bytes, seven part-slot shorts and five ca shorts. It parses identity/position/HP/MP, profession/class, status, optional af, trade flag and all independently guarded extension groups, including the previously missing counted short/byte mapping.
 - Preserves co wire value and only exposes coNormalized when non-negative; negative co leaves existing runtime state unchanged. Optional groups retain their individual defaults and partial-read cursor behavior.
-- Added full JS vector and Java 21 smoke coverage. Opcode 5 decoder does not mutate world entities; it returns decoded state for a later runtime adapter. Validation pending.
+- Added full JS vector and Java 21 smoke coverage, including the entityExists=false guard and counted mapping. The decoder does not mutate world entities; it returns decoded state for a later runtime adapter. Validation pending.
 
 
 ## B16 — Opcode 5 world entity snapshot
@@ -531,3 +531,9 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 - Added shared source-bounded decoder for the fixed nine-field payload used by ka.java case 6 → mj.a(...) and case 9 → mj.b(...). Fields remain neutral (two IDs, byte, two ints, four bytes) because the runtime interpretation depends on whether the local actor is the source or target.
 - Added JS vectors and Java 21 smoke coverage for signed IDs/ints and byte order. Validation pending.
+
+
+## B5 — Opcode 5 mapping correction
+
+- The first opcode 5 world-state decoder duplicated the existing dedicated opcode5-codec module. Removed the duplicate from world-state-codec and retained one canonical implementation with the entity-exists guard.
+- The opcode 5 source handler includes a signed-byte counted short/byte mapping between triple C and bf. Added this missing group to both JavaScript and Java codecs and tests. Corrected the synthetic vector to include the aS byte before the five ca shorts; this fixes the prior shifted ca[4] assertion.
