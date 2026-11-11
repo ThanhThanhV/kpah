@@ -516,7 +516,7 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 - Consolidated opcode 5 into the dedicated ProtocolOpcode5Codec, which guards on existing-entity availability and uses the fixed z arrays: seven part bytes, seven part-slot shorts and five ca shorts. It parses identity/position/HP/MP, profession/class, status, optional af, trade flag and all independently guarded extension groups, including the previously missing counted short/byte mapping.
 - Preserves co wire value and only exposes coNormalized when non-negative; negative co leaves existing runtime state unchanged. Optional groups retain their individual defaults and partial-read cursor behavior.
-- Added full JS vector and Java 21 smoke coverage, including the entityExists=false guard and counted mapping. The decoder does not mutate world entities; it returns decoded state for a later runtime adapter. Validation pending.
+- Added full JS vector and Java 21 smoke coverage, including the entityExists=false guard, aS/ca alignment and counted mapping. CI run `42990823939` PASS: Vite build, opcode 5 generator check/test, world-state tests, all other protocol suites, Java 21 compile/smoke and CFR analysis. The decoder returns state without mutating world entities.
 
 
 ## B16 — Opcode 5 world entity snapshot
