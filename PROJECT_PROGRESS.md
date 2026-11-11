@@ -502,4 +502,4 @@ GitHub file updates were confirmed on main. The current environment did not run 
 ## Protocol codec — Java-compatible partial reads
 
 - Updated the generated JavaScript PacketReader so readU16/readI16/readI32/readI64/readUTF consume bytes incrementally like DataInputStream. This preserves cursor position after a truncated field and is required to reproduce opcode 3's independent try/catch groups.
-- Added tests for partial short/int/long/modified-UTF reads and remaining-byte counts. This affects all generated JavaScript decoders; run full protocol and initialization suites in CI.
+- Added JS tests for partial short/int/long/modified-UTF reads and Java smoke checks for partial int/UTF cursor consumption. CI run `42988161515` PASS: all generated-code checks, protocol/initialization/extension tests, Java 21 compile/smoke and CFR analysis.
