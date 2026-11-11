@@ -78,6 +78,16 @@ First byte is mode; handler creates `int[]` sized by global skill count `z.Z` an
 
 Some fields (`aY`, `aZ`) are currency/state counters; exact split between wallet, market balance and auxiliary points requires caller/UI trace. The mode-1 item model is `bo` and is assigned to `z.bx` for the inventory UI. The decoder keeps original field names where business semantics are not independently verified. Mode 2 builds two typed auxiliary collections in packet order; `mj.java` assigns their combined vector to `z.by`. `k.java` defines `a/b` as strings, `c/d/h` as bytes, `e` as short, `f` as long, and `g` as int. The first collection populates `h/c/b/a/d`; the second populates `h/b/a/g/d` and sets `f` to local receive time. `acf.java` renders `b + ' lv' + c` with `a` when `d == 0`; otherwise it calculates remaining minutes from `g` and `f`. `acg.java` renders the icon from `h + 7500`. The packet's short and some bytes are consumed into discarded temporary values, not stored on the final `k` instance. The decoder preserves those as explicitly discarded wire fields. Mode 3 values populate `ca.T` and are rendered with the `bq.d/e` item catalog. In `xg`, `aY` is displayed with the `l` suffix and participates in purchase affordability checks; `aZ` is displayed with the `lk` suffix. The exact business name of `aZ` remains unverified. The item model `bo` is shared with shop/trade packets but mode 1 has its own field order.
 
+## S2C opcode 15 — lazy item/pet-equipment payload
+
+CFR ka.java case 15 is discriminated by a leading signed byte:
+
+- Mode 0: target character ID (short), signed-byte item count, then item records. Each record consumes D/i/r/s/y/v/u/K/L/n/o/p/q/C, UTF d, unsigned-short w, and a signed-byte stat count followed by (unsigned-byte statId, short statValue) pairs. It then reads a signed byte, five shorts, an optional (UTF string, byte) pair guarded by a byte sentinel, and an optional l record guarded by another byte sentinel. The l record consumes a byte into a temporary object, then S short, M byte, Y UTF, V int; X is set to local receive time and U/T to zero.
+- Non-zero mode: target character ID, signed-byte item count; when count is nonnegative, item records use the same core fields but omit w and instead read the nested stat count directly after UTF d. The remainder of the packet is image bytes decoded by ku.b; frame count and image dimensions are derived from the decoded image and passed with the item vector.
+- mj.java overloads a(short, Vector, byte, byte, String, l, short[], byte) and a(short, Vector, Image, byte, int, int, byte) apply the respective branches to the target character. The first updates the target's item vector and associated counters/optional l entity; the second updates its pet-equipment image and frame metadata. This links opcode 15 to character item/pet-equipment presentation, not the opcode 16 inventory collections.
+
+The decoder has not yet been generated for opcode 15. Its optional fields and non-zero image branch should remain separate variants; do not collapse them into a single guessed item schema.
+
 ## Related initialization packets
 
 - S2C opcode `5`: full player/entity snapshot for a character already present in world; it reuses many of opcode 3's `z` fields but is not the selected-character bootstrap packet.
