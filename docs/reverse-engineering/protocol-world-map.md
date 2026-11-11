@@ -45,19 +45,21 @@ Handler lặp đến khi hết payload. Mỗi record:
 
 ### Opcode 5 — player/character state snapshot
 
-Handler tìm player `z` theo short ID đã tồn tại trong world. Phần prefix bắt buộc:
+The generated decoder requires the source-defined fixed array sizes from z: bF/bH are seven entries and ca is five entries. The packet starts with an existing entity ID (short), UTF name, X/Y shorts, current/max HP and MP ints, profession/class bytes, seven part bytes, seven part-slot shorts, then r/s/cW/cX/cY/da, co wire byte, cp/cn/cT, i/db, optional af when i != -1, aS, five ca shorts, bM boolean, the trade-panel boolean, t/u bytes and ak boolean.
 
-1. short entity ID
-2. UTF character name
-3. short X, short Y
-4. int current HP, int max HP
-5. int current MP, int max MP
-6. byte + byte state/class flags
-7. raw part/appearance byte array có độ dài lấy từ cấu hình entity hiện tại
-8. một short cho mỗi part slot
-9. short/byte status, appearance, equipment and action fields tiếp theo
+The co byte is retained as coWire; the client normalizes co to coWire - 1 only when coWire >= 0. A negative co byte leaves the existing entity value unchanged, so the decoder returns coNormalized=null in that case.
 
-Phía sau còn nhiều extension field được đọc trong các `try/catch` riêng; cần phân tích sâu trước khi đóng băng schema đầy đủ. Handler không tạo player mới nếu entity ID chưa có.
+After the required body, each optional group has its own catch/default behavior:
+
+- short + byte, defaults -1/-1
+- short + byte + short, defaults -1/-1/-1
+- three shorts, defaults -1/-1/-1
+- signed-byte count followed by repeated short + byte pairs; negative count or truncated data skips applying this mapping
+- short bf, default -1
+- byte bi + short bn + byte bj + byte bk, defaults -1/-1/0/0
+- byte bm + short bo + byte bl, defaults -1/-1/0
+
+The handler only applies this packet when the world is active and the target entity already exists. It recalculates derived entity state with z.L(), updates the world through mj.a(z), and may open the trade panel based on the packet boolean. The decoder returns the data and does not itself mutate a world entity or open UI.
 
 ### Opcode 7 — entity state snapshot
 
