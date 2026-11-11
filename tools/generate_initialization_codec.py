@@ -53,6 +53,32 @@ export function decodeS2CInitialization(opcode, payload) {
   if (!schema) throw new Error("No verified mode schema for S2C opcode " + opcode);
   const reader = new PacketReader(payload);
   const mode = reader.readU8();
+  if (mode === 1) {
+    const itemCount = reader.readI16();
+    const items = [];
+    for (let i = 0; i < itemCount; i += 1) {
+      const item = {
+        discardedTypeByte: reader.readI8(),
+        i: reader.readI16(), r: reader.readI16(), s: reader.readI8(), y: reader.readI8(),
+        v: reader.readI16(), u: reader.readI16(), D: reader.readI8(), I: reader.readI8(),
+        J: reader.readI8(), K: reader.readI8(), n: reader.readI8(), o: reader.readI8(),
+        p: reader.readI8(), q: reader.readI8(), C: reader.readI8(), d: reader.readUTF(),
+        w: reader.readU16()
+      };
+      const statCount = reader.readI8();
+      item.stats = [];
+      for (let j = 0; j < statCount; j += 1) {
+        item.stats.push({ statId: reader.readU8(), statValue: reader.readI16() });
+      }
+      item.h = reader.readI8();
+      items.push(item);
+    }
+    const aY = reader.readI32();
+    const aZ = reader.readI32();
+    const trailingBytes = new Uint8Array(reader.remaining());
+    for (let i = 0; i < trailingBytes.length; i += 1) trailingBytes[i] = reader.readU8();
+    return { mode, decoded: true, itemCount, items, aY, aZ, trailingBytes };
+  }
   if (mode === 3) {
     const aY = reader.readI32();
     const count = reader.readI8();
@@ -90,11 +116,42 @@ import java.util.*;
 public final class ProtocolInitializationCodec {
     private ProtocolInitializationCodec() {}
     public record SkillValue(int skillIndex, int skillValue) {}
+    public record InventoryStat(int statId, short statValue) {}
+    public record InventoryItem(byte discardedTypeByte, short i, short r, byte s, byte y, short v, short u,
+                                 byte D, byte I, byte J, byte K, byte n, byte o, byte p, byte q, byte C,
+                                 String d, int w, List<InventoryStat> stats, byte h) {}
     public record Decoded(int mode, boolean decoded, Long currency, List<SkillValue> skills,
-                          Integer aY, Integer aZ, byte[] opaquePayload, byte[] trailingBytes, short[] values) {}
+                          Integer aY, Integer aZ, byte[] opaquePayload, byte[] trailingBytes,
+                          short[] values, List<InventoryItem> items) {}
     public static Decoded decodeS2COpcode16(byte[] payload) throws IOException {
         PacketReader in = new PacketReader(payload);
         int mode = in.readU8();
+        if (mode == 1) {
+            short itemCount = in.readI16();
+            List<InventoryItem> items = new ArrayList<>();
+            for (int i = 0; i < itemCount; i++) {
+                byte discardedTypeByte = in.readI8();
+                short itemI = in.readI16(), itemR = in.readI16();
+                byte itemS = in.readI8(), itemY = in.readI8();
+                short itemV = in.readI16(), itemU = in.readI16();
+                byte itemD = in.readI8(), itemIFlag = in.readI8(), itemJ = in.readI8(), itemK = in.readI8();
+                byte itemN = in.readI8(), itemO = in.readI8(), itemP = in.readI8(), itemQ = in.readI8(), itemC = in.readI8();
+                String description = in.readUTF();
+                int value = in.readU16();
+                byte statCount = in.readI8();
+                List<InventoryStat> stats = new ArrayList<>();
+                for (int j = 0; j < statCount; j++) stats.add(new InventoryStat(in.readU8(), in.readI16()));
+                byte itemH = in.readI8();
+                items.add(new InventoryItem(discardedTypeByte, itemI, itemR, itemS, itemY, itemV, itemU,
+                    itemD, itemIFlag, itemJ, itemK, itemN, itemO, itemP, itemQ, itemC,
+                    description, value, List.copyOf(stats), itemH));
+            }
+            int aY = in.readI32();
+            int aZ = in.readI32();
+            byte[] trailing = new byte[in.remaining()];
+            for (int i = 0; i < trailing.length; i++) trailing[i] = (byte) in.readU8();
+            return new Decoded(mode, true, null, List.of(), aY, aZ, new byte[0], trailing, new short[0], List.copyOf(items));
+        }
         if (mode == 3) {
             int aY = in.readI32();
             int count = in.readI8();
@@ -104,12 +161,12 @@ public final class ProtocolInitializationCodec {
             int aZ = in.readI32();
             byte[] trailing = new byte[in.remaining()];
             for (int i = 0; i < trailing.length; i++) trailing[i] = (byte) in.readU8();
-            return new Decoded(mode, true, null, List.of(), aY, aZ, new byte[0], trailing, values);
+            return new Decoded(mode, true, null, List.of(), aY, aZ, new byte[0], trailing, values, List.of());
         }
         if (mode != 0) {
             byte[] opaque = new byte[in.remaining()];
             for (int i = 0; i < opaque.length; i++) opaque[i] = (byte) in.readU8();
-            return new Decoded(mode, false, null, List.of(), null, null, opaque, new byte[0], new short[0]);
+            return new Decoded(mode, false, null, List.of(), null, null, opaque, new byte[0], new short[0], List.of());
         }
         long currency = in.readI64();
         int count = in.readU8();
@@ -121,7 +178,7 @@ public final class ProtocolInitializationCodec {
         int aZ = in.readI32();
         byte[] trailing = new byte[in.remaining()];
         for (int i = 0; i < trailing.length; i++) trailing[i] = (byte) in.readU8();
-        return new Decoded(mode, true, currency, List.copyOf(skills), aY, aZ, new byte[0], trailing, new short[0]);
+        return new Decoded(mode, true, currency, List.copyOf(skills), aY, aZ, new byte[0], trailing, new short[0], List.of());
     }
 }
 '''
