@@ -23,6 +23,42 @@ public final class ProtocolWorldStateCodec {
             entities.add(new Entity(kind,template,id,x,y,state,extra,subtype,marker,active));}
         return new Opcode4(List.copyOf(entities),readRemaining(in));
     }
+    public record PairA(short shortValue, byte byteValue) {}
+    public record TripleB(short shortValue1, byte byteValue, short shortValue2) {}
+    public record TripleC(short shortValue1, short shortValue2, short shortValue3) {}
+    public record MappingPair(short shortValue, byte byteValue) {}
+    public record GroupD(byte bi, short bn, byte bj, byte bk) {}
+    public record GroupE(byte bm, short bo, byte bl) {}
+    public record PlayerSnapshot(short entityId, String name, short x, short y, int currentHp, int maxHp,
+        int currentMp, int maxMp, byte professionCode, byte skillClassIndex, byte[] partBytes, short[] partSlots,
+        short r, byte s, short cW, short cX, byte cY, byte da, byte coWire, Integer coNormalized,
+        byte cp, byte cn, byte cT, short i, byte db, Byte af, byte aS, short[] appearanceSlots,
+        boolean bM, boolean openTradeUi, byte t, byte u, boolean ak, PairA pairA, TripleB tripleB,
+        TripleC tripleC, List<MappingPair> mappingPairs, boolean mappingApplied, String mappingError,
+        short bf, GroupD groupD, GroupE groupE, byte[] trailingBytes) {}
+    public static PlayerSnapshot decodeS2COpcode5(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);
+        short id=in.readI16(); String name=in.readUTF(); short x=in.readI16(),y=in.readI16();
+        int hp=in.readI32(),maxHp=in.readI32(),mp=in.readI32(),maxMp=in.readI32();
+        byte profession=in.readI8(),skillClass=in.readI8(); byte[] parts=new byte[7];for(int n=0;n<7;n++)parts[n]=(byte)in.readU8();
+        short[] partSlots=new short[7];for(int n=0;n<7;n++)partSlots[n]=in.readI16();
+        short r=in.readI16();byte s=in.readI8();short cW=in.readI16(),cX=in.readI16();byte cY=in.readI8(),da=in.readI8(),co=in.readI8();
+        Integer coNormalized=co>=0?co-1:null;byte cp=in.readI8(),cn=in.readI8(),cT=in.readI8();short i=in.readI16();byte db=in.readI8();
+        Byte af=i!=-1?in.readI8():null;byte aS=in.readI8();short[] appearance=new short[5];for(int n=0;n<5;n++)appearance[n]=in.readI16();
+        boolean bM=in.readBool(),trade=in.readBool();byte t=in.readI8(),u=in.readI8();boolean ak=in.readBool();
+        PairA a=new PairA((short)-1,(byte)-1);try{a=new PairA(in.readI16(),in.readI8());}catch(Exception ignored){}
+        TripleB b=new TripleB((short)-1,(byte)-1,(short)-1);try{b=new TripleB(in.readI16(),in.readI8(),in.readI16());}catch(Exception ignored){}
+        TripleC c=new TripleC((short)-1,(short)-1,(short)-1);try{c=new TripleC(in.readI16(),in.readI16(),in.readI16());}catch(Exception ignored){}
+        List<MappingPair> mapping=new ArrayList<>();boolean mappingApplied=false;String mappingError=null;
+        try{int count=in.readI8();if(count<0)throw new IOException("Negative opcode 5 mapping count");for(int n=0;n<count;n++)mapping.add(new MappingPair(in.readI16(),in.readI8()));mappingApplied=true;}
+        catch(Exception ex){mappingError=ex.getMessage()==null?ex.getClass().getSimpleName():ex.getMessage();}
+        short bf=-1;try{bf=in.readI16();}catch(Exception ignored){}
+        GroupD d=new GroupD((byte)-1,(short)-1,(byte)0,(byte)0);try{d=new GroupD(in.readI8(),in.readI16(),in.readI8(),in.readI8());}catch(Exception ignored){}
+        GroupE e=new GroupE((byte)-1,(short)-1,(byte)0);try{e=new GroupE(in.readI8(),in.readI16(),in.readI8());}catch(Exception ignored){}
+        byte[] trailing=new byte[in.remaining()];for(int n=0;n<trailing.length;n++)trailing[n]=(byte)in.readU8();
+        return new PlayerSnapshot(id,name,x,y,hp,maxHp,mp,maxMp,profession,skillClass,parts,partSlots,r,s,cW,cX,cY,da,co,
+            coNormalized,cp,cn,cT,i,db,af,aS,appearance,bM,trade,t,u,ak,a,b,c,List.copyOf(mapping),mappingApplied,mappingError,bf,d,e,trailing);
+    }
     public static Opcode8 decodeS2COpcode8(byte[] payload) throws IOException {
         PacketReader in=new PacketReader(payload);List<Short> ids=new ArrayList<>();while(in.remaining()>0)ids.add(in.readI16());
         return new Opcode8(List.copyOf(ids),readRemaining(in));
