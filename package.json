@@ -22,7 +22,10 @@
     "test:transport-codegen": "node tools/test_transport_codegen.mjs",
     "generate:prefix-protocol": "python tools/generate_prefix_protocol.py",
     "check:prefix-protocol": "python tools/generate_prefix_protocol.py --check",
-    "test:prefix-protocol": "node tools/test_prefix_protocol.mjs"
+    "test:prefix-protocol": "node tools/test_prefix_protocol.mjs",
+    "generate:initialization-protocol": "python tools/generate_initialization_codec.py",
+    "check:initialization-protocol": "python tools/generate_initialization_codec.py --check",
+    "test:initialization-protocol": "node tools/test_initialization_codec.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"
