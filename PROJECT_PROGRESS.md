@@ -447,3 +447,10 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Added generated JavaScript and Java decoders for both collection layouts, preserving the source read order and marking discarded values explicitly rather than assigning guessed meanings.
 - Added synthetic JS and Java vectors for both record types, UTF fields, signed `g`, common counters, and opaque tail bytes. Negative collection counts are rejected. Unknown mode values remain opaque.
 - CI run `42981960004` PASS: Vite build, generated initialization-codec consistency, JavaScript tests, local TCP replay harness, and Java 21 compile/smoke tests.
+
+
+## B16 — Opcode 15 source trace expansion
+
+- Revisited CFR `ka.java` case 15 and both `mj.java` overloads. Subtype 0 is a character-targeted item/context update with a `bo` list, five short metadata values, optional UTF/byte data and optional `l` record; the non-zero subtype carries a character-targeted item list plus a packed image payload used for pet-equipment presentation.
+- Traced `l.java`, `bo.java`, `bk.java`, and `xg.java` consumer fields. Optional records are sentinel-guarded; the non-zero branch's image bytes are decoded as an image atlas and frame dimensions are calculated from the image and frame count.
+- Updated `protocol-initialization-data.md` with exact read order and runtime destinations. No opcode 15 decoder has been generated yet; preserve subtype variants and opaque image data until dedicated tests are added.
