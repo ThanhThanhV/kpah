@@ -1975,5 +1975,147 @@
       "payload": "opaque",
       "evidence": "dispatcher-only"
     }
+  ],
+  "prefixSchemas": [
+    {
+      "name": "CHARACTER_SNAPSHOT_PREFIX",
+      "direction": "S2C",
+      "opcode": 3,
+      "evidence": "CFR handler ka.java -> current player ca/z; only fixed prefix through cT is typed; remaining independently guarded extension fields are returned opaque",
+      "fields": [
+        {
+          "name": "characterId",
+          "type": "i16"
+        },
+        {
+          "name": "characterName",
+          "type": "utf"
+        },
+        {
+          "name": "currentHp",
+          "type": "i32"
+        },
+        {
+          "name": "maxHp",
+          "type": "i32"
+        },
+        {
+          "name": "currentMp",
+          "type": "i32"
+        },
+        {
+          "name": "maxMp",
+          "type": "i32"
+        },
+        {
+          "name": "professionCode",
+          "type": "i8"
+        },
+        {
+          "name": "skillClassIndex",
+          "type": "i8"
+        },
+        {
+          "name": "cV",
+          "type": "i32"
+        },
+        {
+          "name": "cW",
+          "type": "i32"
+        },
+        {
+          "name": "cX",
+          "type": "i32"
+        },
+        {
+          "name": "cP",
+          "type": "i16"
+        },
+        {
+          "name": "cQ",
+          "type": "i16"
+        },
+        {
+          "name": "cR",
+          "type": "i16"
+        },
+        {
+          "name": "da",
+          "type": "i8"
+        },
+        {
+          "name": "cY",
+          "type": "i8"
+        },
+        {
+          "name": "slot_aU",
+          "type": "i16"
+        },
+        {
+          "name": "slot_aE",
+          "type": "i16"
+        },
+        {
+          "name": "slot_aG",
+          "type": "i16"
+        },
+        {
+          "name": "slot_aF",
+          "type": "i16"
+        },
+        {
+          "name": "slot_aH",
+          "type": "i16"
+        },
+        {
+          "name": "slot_aI",
+          "type": "i16"
+        },
+        {
+          "name": "slot_aC",
+          "type": "i16"
+        },
+        {
+          "name": "slot_aD",
+          "type": "i16"
+        },
+        {
+          "name": "dl",
+          "type": "i32"
+        },
+        {
+          "name": "cb",
+          "type": "i16"
+        },
+        {
+          "name": "actionMapping",
+          "type": "u8bytes"
+        },
+        {
+          "name": "r",
+          "type": "i16"
+        },
+        {
+          "name": "aq",
+          "type": "i8"
+        },
+        {
+          "name": "co",
+          "type": "i8"
+        },
+        {
+          "name": "cp",
+          "type": "i8"
+        },
+        {
+          "name": "cn",
+          "type": "i8"
+        },
+        {
+          "name": "cT",
+          "type": "i8"
+        }
+      ]
+    }
   ]
 }
