@@ -525,3 +525,9 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Covers known-entity guard, ordered identity/position/combat/appearance/state fields, conditional af, five short ca values, presence flag, and six independently guarded tail groups.
 - Unknown entity behavior is explicit: only the entity ID is consumed and the remainder is returned untouched. No entity is synthesized.
 - Added full synthetic packet, unknown-entity vector, generator consistency and Java 21 smoke test. CI validation pending.
+
+
+## B5 — S2C combat event opcodes 6 and 9
+
+- Added shared source-bounded decoder for the fixed nine-field payload used by ka.java case 6 → mj.a(...) and case 9 → mj.b(...). Fields remain neutral (two IDs, byte, two ints, four bytes) because the runtime interpretation depends on whether the local actor is the source or target.
+- Added JS vectors and Java 21 smoke coverage for signed IDs/ints and byte order. Validation pending.
