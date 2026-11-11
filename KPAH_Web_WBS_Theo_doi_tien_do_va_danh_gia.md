@@ -724,3 +724,15 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Opcode 21: inventory item update with unsigned-short value, signed-byte stat count and pairs, optional final byte defaulting to constructor value zero. Consumer merges item state into active lists/panels.
 - CI run `42993708570` PASS: Vite build, generator consistency, JavaScript tests, Java 21 compile/smoke and original-JAR analysis.
 - Các gói chỉ được decode; chưa có BE/session authoritative để apply reward/inventory. Không tăng % tổng dự án vì chưa tính lại trọng số WBS.
+
+
+### B5 — S2C opcodes 27, 28, 30, 32 and 33: character feedback/progression
+
+- **Trạng thái: Một phần (wire decoder + consumer trace + synthetic tests + CI PASS).**
+- Opcode 27: entity ID + UTF text; consumer displays overhead message and appends player chat log.
+- Opcode 28: item ID; consumer removes sold inventory item and credits proceeds.
+- Opcode 30: character ID, experience short and gain int; consumer updates XP field and floating feedback.
+- Opcode 32: character ID + signed-byte-counted UTF/int resource records; local character has extra byte+short trailer. Consumer recognizes hp/mp/bp/sp. Decoder takes explicit local-character condition and rejects negative count.
+- Opcode 33: character ID, level byte and two ints; consumer updates level and HP/MP values and triggers level-up effects.
+- CI run `42994113670` PASS: Vite build, generator checks, JS protocol tests, Java 21 compile/smoke and original-JAR analysis.
+- Chưa áp dụng authoritative character progression/state; không tăng % tổng dự án do chưa tính lại trọng số WBS.

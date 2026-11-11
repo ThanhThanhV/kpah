@@ -569,3 +569,12 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode 21 preserves unsigned-short `w`, signed-byte stat count, unsigned-byte stat IDs, signed-short stat values, and optional `C` byte with constructor default zero. Negative stat counts produce zero records, matching the source loop.
 - Added schema/generator validation, JS vectors and Java 21 smoke tests. CI run `42993708570` SUCCESS: Vite build, all generator checks, all JS protocol tests, Java 21 compile/smoke and original-JAR analysis.
 - Decoders remain parse-only; no server-authoritative inventory mutation, currency award, or live session was implemented. Overall weighted project percentage unchanged pending WBS recalculation; BE remains deferred.
+
+
+## B5 — S2C opcodes 27, 28, 30, 32 and 33 — CI PASS
+
+- Added JavaScript/Java decoders for overhead chat bubble (27), inventory sale confirmation (28), experience update (30), keyed character resource update (32) and level-up state (33).
+- Opcode 32 parses a signed-byte-counted UTF-key/int-value list and requires an explicit `isLocalCharacter` input to parse the extra byte+short trailer only for the local character. Negative counts are rejected.
+- Consumer traces confirm opcode 27 updates overhead text/world chat; 28 removes the sold inventory item and credits proceeds; 30 updates experience and displays XP gain; 32 updates hp/mp/bp/sp fields; 33 updates level and HP/MP state.
+- Added packet schemas, generator consistency, JS vectors (including local/non-local opcode 32), and Java 21 smoke tests. CI run `42994113670` SUCCESS: Vite build, all generated-code checks, all JS protocol suites, Java 21 compile/smoke and original-JAR analysis.
+- Decoders remain parse-only; they do not apply authoritative inventory, currency, XP, level or resource changes. Overall weighted project percentage unchanged pending WBS recalculation; BE remains deferred.
