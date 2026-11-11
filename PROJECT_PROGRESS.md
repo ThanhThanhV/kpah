@@ -489,11 +489,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 - Added packetSchemas declaration for the observed S2C opcode 1 section order and generated JavaScript/Java decoders.
 - Decoder covers skill definitions, five profession slot counts and catalogs, optional unlock IDs/5x5x4 matrices, neutral global bytes, stat labels, hotline, paired lookup rows, quest objective catalog, external URL, named tile blobs and best-effort part-data records.
-- Preserves signed/unsigned count behavior, the literal available()>0 optional-block guard, and the final part-data catch without claiming semantics for unresolved arrays. Synthetic JS vector covers the complete section order; Java 21 smoke vector is added to CI. Validation pending.
+- Preserves signed/unsigned count behavior, the literal available()>0 optional-block guard, and the final part-data catch without claiming semantics for unresolved arrays. Synthetic JS vector covers the complete section order; Java 21 smoke vector covers skill metadata, profession slot counts, matrices, labels, lookups, quest catalog, tiles and part data. CI run `42987425414` PASS: Vite build, all codegen checks, JS tests, Java 21 compile/smoke and CFR analysis.
 
 
 ## B16 — Opcode 3 optional extension decoder
 
 - Added a separate JavaScript/Java decoder for the bytes following the fixed 33-field opcode 3 prefix. It models the main character extension, three optional numeric groups, counted short/byte mapping + UTF, bf and final state groups.
 - Each group has its own catch/default behavior, matching the source's no-rewind cursor semantics. The mapping group returns its raw text and does not invent the semantics of kw.a parsing.
-- Added full and truncated synthetic vectors, generator/schema consistency and Java 21 smoke coverage. Validation pending.
+- Added full and truncated synthetic vectors, generator/schema consistency and Java 21 smoke coverage. CI run `42987425414` PASS: Vite build, opcode 3 extension codegen/test, Java 21 compile/smoke and original-JAR CFR analysis.
