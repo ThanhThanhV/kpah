@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
 import { decodeS2CInitialization, INITIALIZATION_MODE_SCHEMAS } from "../src/protocol/generated/initialization-codec.js";
 
-assert.equal(INITIALIZATION_MODE_SCHEMAS.length, 1);
+assert.equal(INITIALIZATION_MODE_SCHEMAS.length, 2);
 const currency = 9_007_199_254_740_993n;
 const payload = new PacketWriter()
   .writeU8(0)
