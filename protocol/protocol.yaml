@@ -1989,6 +1989,16 @@
           "type": "i64"
         }
       ],
+      "commonFields": [
+        {
+          "name": "aY",
+          "type": "i32"
+        },
+        {
+          "name": "aZ",
+          "type": "i32"
+        }
+      ],
       "records": {
         "countName": "skillCount",
         "countType": "u8",
