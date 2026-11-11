@@ -72,11 +72,11 @@ First byte is mode; handler creates `int[]` sized by global skill count `z.Z` an
 | Mode | Data read |
 |---:|---|
 | `0` | long currency; unsigned-byte count; each record: unsigned-byte skill index + int skill value; then common `aY` int and `aZ` int; updates `ca.S[index].a` and skill value array |
-| `1` | short item count; each item `bo` includes type, ID, property shorts/bytes, UTF description, unsigned-short value and stat pairs; then character currency/state int |
-| `2` | two byte-counted collections of `k` records containing short IDs, byte flags, UTF text, optional int value and timestamps |
-| `3` | byte count followed by short array, stored as `ca.T` |
+| `1` | signed short item count; each `bo` item consumes a type byte, item/property shorts and bytes, UTF description, unsigned-short value, signed-byte stat count with `(unsigned-byte statId, short statValue)` pairs, then a final byte; common `aY` and `aZ` ints follow the mode-specific section |
+| `2` | common `aY` int; first signed-byte-counted `k` collection (`short`, discarded byte, two bytes, two UTF strings, byte); second signed-byte-counted `k` collection (`short`, discarded byte, byte, UTF, discarded byte, UTF, int, byte); common `aZ` int |
+| `3` | common `aY` int; signed-byte count followed by short array stored as `ca.T`; common `aZ` int |
 
-Some fields (`aY`, `aZ`) are currency/state counters; exact split between wallet, market balance and auxiliary points requires caller/UI trace. The item model `bo` is shared with shop/trade packets but mode 1 has its own field order.
+Some fields (`aY`, `aZ`) are currency/state counters; exact split between wallet, market balance and auxiliary points requires caller/UI trace. The mode-1 item model is `bo` and is assigned to `z.bx` for the inventory UI. Mode 2 records are assigned to `z.by`; mode 3 values populate `ca.T` and are rendered with the `bq.d/e` item catalog. In `xg`, `aY` is displayed with the `l` suffix and participates in purchase affordability checks; `aZ` is displayed with the `lk` suffix. The exact business name of `aZ` remains unverified. The item model `bo` is shared with shop/trade packets but mode 1 has its own field order.
 
 ## Related initialization packets
 
