@@ -469,7 +469,7 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Generated JavaScript and Java decoders preserve the subtype-specific item layouts: subtype 0 includes unsigned-short w; non-zero subtype omits w and reads frame count followed by the remaining image bytes.
 - Subtype 0 parses aS, five short values, optional UTF/byte data and optional l context. The byte assigned to a discarded temporary l object is named discardedTypeByte, not misrepresented as a field on the retained context.
 - Matched the original signed-count loops: negative subtype-0 item/stat counts result in zero iterations; negative non-zero item count skips the character update and preserves the remaining bytes.
-- Added generator consistency checks, JavaScript vectors and Java 21 smoke coverage. CI verification is pending.
+- Added exact-layout generator checks, JavaScript vectors and Java 21 smoke coverage. CI run `42985722022` PASS: Vite build, all generated-code consistency checks, opcode 15 JS vectors, Java 21 compile/smoke (including both item layouts and optional context), replay harness, and original-JAR CFR analysis.
 
 
 ## B16 — Opcode 1 lookup consumer trace
