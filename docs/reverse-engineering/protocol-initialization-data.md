@@ -124,7 +124,7 @@ The verified mode-0 layout is now represented in `protocol/protocol.yaml` (`mode
 4. Repeated records: unsigned-byte skill index, signed 32-bit skill value.
 5. Common signed 32-bit fields `aY` and `aZ`, read by the handler for every mode.
 
-The decoder preserves the full 64-bit currency value (JavaScript `BigInt`; Java `long`) and returns skill records in wire order and preserves `aY`/`aZ` as numeric fields without guessing their business meaning. Any bytes after the verified fields are returned as an opaque tail. Modes 1–3 are deliberately returned as opaque payloads after the mode byte; their schemas are not inferred from this implementation. The full opcode 16 command remains opaque in the general command catalog.
+The decoder preserves the full 64-bit currency value (JavaScript `BigInt`; Java `long`) and returns skill records in wire order and preserves `aY`/`aZ` as numeric fields without guessing their business meaning. Any bytes after the verified fields are returned as an opaque tail. Modes 1 and 2 are deliberately returned as opaque payloads after the mode byte. Mode 3 is separately decoded from its verified signed-byte count and short array; it is not mixed into the mode-0 schema. The full opcode 16 command remains opaque in the general command catalog.
 
 Generator and checks:
 
