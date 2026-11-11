@@ -54,6 +54,10 @@ jobs:
         run: npm run check:initialization-protocol
       - name: Test generated initialization codec
         run: npm run test:initialization-protocol
+      - name: Verify generated opcode 15 codec
+        run: npm run check:opcode15
+      - name: Test generated opcode 15 codec
+        run: npm run test:opcode15
       - name: Test generated transport codec
         run: npm run test:transport-codegen
       - name: Test generated JavaScript protocol codec
@@ -102,6 +106,21 @@ jobs:
               PacketWriter initPacket = new PacketWriter().writeU8(0).writeI64(9_007_199_254_740_993L)
                 .writeU8(2).writeU8(3).writeI32(-1200).writeU8(8).writeI32(250000)
                 .writeI32(123456).writeI32(654321).writeU8(0xde);
+              PacketWriter shop15 = new PacketWriter().writeI8(0).writeI16(321).writeI8(0)
+                .writeI8(2).writeI16(1).writeI16(2).writeI16(3).writeI16(4).writeI16(5)
+                .writeI8(-1).writeI8(-1);
+              ProtocolOpcode15Codec.Decoded shopDecoded = ProtocolOpcode15Codec.decode(shop15.toByteArray());
+              if (!shopDecoded.accepted() || shopDecoded.subtype() != 0 || shopDecoded.targetCharacterId() != 321
+                  || shopDecoded.items().size() != 0 || shopDecoded.shopMode() != 2
+                  || !Arrays.equals(shopDecoded.shortValues(), new short[]{1,2,3,4,5})
+                  || shopDecoded.optionalText() != null || shopDecoded.optionalContext() != null)
+                throw new AssertionError("opcode 15 subtype 0 decode: " + shopDecoded);
+              PacketWriter pet15 = new PacketWriter().writeI8(1).writeI16(654).writeI8(0).writeI8(3).writeU8(0x89).writeU8(0x50);
+              ProtocolOpcode15Codec.Decoded petDecoded = ProtocolOpcode15Codec.decode(pet15.toByteArray());
+              if (!petDecoded.accepted() || petDecoded.subtype() != 1 || petDecoded.targetCharacterId() != 654
+                  || petDecoded.frameCount() != 3 || petDecoded.frameMode() != 3
+                  || !Arrays.equals(petDecoded.imageBytes(), new byte[]{(byte)0x89,0x50}))
+                throw new AssertionError("opcode 15 pet image decode: " + petDecoded);
               ProtocolInitializationCodec.Decoded init = ProtocolInitializationCodec.decodeS2COpcode16(initPacket.toByteArray());
               if (!init.decoded() || init.mode() != 0 || init.currency() != 9_007_199_254_740_993L
                   || !init.skills().equals(List.of(new ProtocolInitializationCodec.SkillValue(3, -1200),
