@@ -2013,6 +2013,33 @@
           }
         ]
       }
+    },
+    {
+      "name": "CHARACTER_INVENTORY_MODE_1",
+      "direction": "S2C",
+      "opcode": 16,
+      "mode": 1,
+      "evidence": "CFR ka.java case 16: signed short item count; each bo record has a discarded type byte, shorts/bytes, UTF description, unsigned-short value, signed-byte stat count with unsigned-byte ID + short value pairs, and final byte; common aY/aZ ints",
+      "fields": [
+        {
+          "name": "itemCount",
+          "type": "i16"
+        },
+        {
+          "name": "items",
+          "type": "bo-records"
+        }
+      ],
+      "commonFields": [
+        {
+          "name": "aY",
+          "type": "i32"
+        },
+        {
+          "name": "aZ",
+          "type": "i32"
+        }
+      ]
     }
   ],
   "prefixSchemas": [
