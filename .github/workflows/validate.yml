@@ -46,6 +46,10 @@ jobs:
         run: npm run check:protocol-generated
       - name: Verify generated transport sources
         run: npm run check:transport-generated
+      - name: Verify generated S2C prefix sources
+        run: npm run check:prefix-protocol
+      - name: Test generated S2C prefix codec
+        run: npm run test:prefix-protocol
       - name: Test generated transport codec
         run: npm run test:transport-codegen
       - name: Test generated JavaScript protocol codec
@@ -78,7 +82,19 @@ jobs:
               if (!Arrays.equals(longFrame.bytes(), new byte[]{(byte)0x80,0x25,0x30,0x00,0x10,0x33,0x01,0x12,0x33})) throw new AssertionError("S2C long frame");
               TransportCodec.DecodedFrame longDecoded = TransportCodec.decodeServerFrame(longFrame.bytes(), key, 2);
               if (longDecoded.opcode() != 0x35 || !longDecoded.longLength() || !Arrays.equals(longDecoded.payload(), new byte[]{1,2,3})) throw new AssertionError("S2C long decode");
-              System.out.println("Generated Java protocol and transport codecs: PASS");
+              PacketWriter snapshot = new PacketWriter().writeI16(321).writeUTF("Hero")
+                .writeI32(100).writeI32(120).writeI32(40).writeI32(60)
+                .writeI8(2).writeI8(4).writeI32(11).writeI32(12).writeI32(13)
+                .writeI16(21).writeI16(22).writeI16(23).writeI8(1).writeI8(0);
+              for (int i=0;i<8;i++) snapshot.writeI16(30+i);
+              snapshot.writeI32(99).writeI16(7).writeU8(3).writeU8(4).writeU8(5).writeU8(6).writeI16(8);
+              snapshot.writeI8(9).writeI8(10).writeI8(11).writeI8(12).writeI8(17).writeU8(3).writeU8(0xaa).writeU8(0xbb).writeU8(0xcc);
+              ProtocolPrefixCodec.DecodedPrefix prefix = ProtocolPrefixCodec.decodeS2C(3, snapshot.toByteArray());
+              if (!prefix.fields().get("characterName").equals("Hero") || !prefix.fields().get("currentHp").equals(100)
+                  || !Arrays.equals((byte[])prefix.fields().get("actionMapping"), new byte[]{4,5,6})
+                  || prefix.trailingBytes().length != 0 || prefix.decodedPrefixBytes() != snapshot.toByteArray().length)
+                throw new AssertionError("opcode 3 prefix decode: " + prefix);
+              System.out.println("Generated Java protocol, transport and S2C prefix codecs: PASS");
             }
           }
           JAVA
