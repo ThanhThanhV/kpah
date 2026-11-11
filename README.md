@@ -358,3 +358,8 @@ Local monster AI states have distinct overhead cues. Close-range attacks now sho
 ## Keyboard target selection
 
 Press **Tab** to select the next living monster or **Shift+Tab** to select the previous one. Selection wraps through the current zone's living monsters and updates the world target HUD, ground ring, combat target and open world map. The existing 1–5 action-bar shortcuts are unchanged. These are web-client controls, not verified original KPAH key bindings.
+
+
+### S2C opcode 17 entity action/effect decoder
+
+The generated world-state codec includes S2C opcode 17, based on the original client's event handler and consumer. It parses the event header, counted effect records and optional trailer bytes in Java and JavaScript. The first short and effect fields remain neutral where CFR output is inconsistent or semantics are not yet verified. Run `npm run check:world-state` and `npm run test:world-state`; CI also compiles and smoke-tests the Java vector. This decoder does not apply combat damage or render effects.

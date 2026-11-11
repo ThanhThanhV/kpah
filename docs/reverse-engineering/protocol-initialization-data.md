@@ -266,3 +266,26 @@ npm run test:initialization-protocol
 - Chưa có live packet capture để xác nhận server send order, optional-field versioning và error/retry behavior.
 - Opcode 16 modes 0–3 đã có decoder source-bounded; opcode 15 subtype 0 và non-zero có decoder riêng. Tiếp theo: trace lookup/catalog consumers và xác minh cấu trúc ảnh atlas thực tế bằng payload/assets hợp lệ; chưa có live packet capture.
 
+
+
+## S2C opcode 17 — entity action/effect event
+
+CFR source path: `ka.java:case17`, `kl.java`, `jz.java`, and consumer `mj.a(kl)`.
+
+Wire order decoded by the generated JavaScript/Java codec:
+
+1. First signed short, retained as `firstShortWireValue`. CFR shows this read assigned to a temporary `new kl()`, while the consumer later reads `kl.a`; this assignment is a decompiler anomaly and is **not** silently repaired in the schema.
+2. Second signed short, target entity ID: `mj.a(kl)` resolves `kl.b` with `mj.n(short)`.
+3. Event byte, signed int value, display byte.
+4. Signed-byte effect count, followed by records: type byte + four signed shorts. Each record is passed to the effect factory and positioned relative to the resolved target entity.
+5. Optional repeat-count byte (default 1), optional consumed/discarded byte, optional mode byte (default 0). Each is read only when bytes remain.
+
+The consumer uses the first short as an entity lookup key and the second as the target lookup key; because CFR's constructor/assignment output for the first field is inconsistent with that consumer, the decoder exposes the first value neutrally and this mapping remains pending bytecode verification. The integer value is used by the client damage/feedback path; the codec retains its neutral name. Effect coordinates/parameters also remain neutral.
+
+A negative effect count causes the original signed-byte array allocation to fail inside the handler's catch; the generated decoder rejects it explicitly rather than fabricating an empty event. The decoder only parses bytes and does not mutate entities, apply damage, or instantiate visual effects.
+
+```bash
+npm run generate:world-state
+npm run check:world-state
+npm run test:world-state
+```

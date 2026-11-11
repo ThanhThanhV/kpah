@@ -16,3 +16,16 @@ const map=decodeS2COpcode12(new PacketWriter().writeI16(1).writeI16(2).writeI16(
 assert.equal(map.hfK,4);assert.equal(map.label,"Forest");assert.equal(map.hasMapData,true);assert.deepEqual([...map.mapData],[0xaa,0xbb]);
 const noMap=decodeS2COpcode12(new PacketWriter().writeI16(1).writeI16(2).writeI16(3).writeI8(4).writeI16(5).writeUTF("Town").writeBool(false).toUint8Array());assert.equal(noMap.mapData,null);
 console.log("Generated S2C world-state codec: PASS (spawn/update, despawn, map transition)");
+
+const actionEvent=decodeS2COpcode17(new PacketWriter().writeI16(101).writeI16(202).writeI8(3).writeI32(450)
+ .writeI8(2).writeI8(2)
+ .writeI8(7).writeI16(1).writeI16(2).writeI16(3).writeI16(4)
+ .writeI8(8).writeI16(-1).writeI16(-2).writeI16(-3).writeI16(-4)
+ .writeI8(3).writeI8(99).writeI8(5).toUint8Array());
+assert.equal(actionEvent.firstShortWireValue,101);assert.equal(actionEvent.targetEntityId,202);
+assert.equal(actionEvent.eventByte,3);assert.equal(actionEvent.value,450);assert.equal(actionEvent.displayByte,2);
+assert.deepEqual(actionEvent.effects,[{type:7,valueA:1,valueB:2,valueC:3,valueD:4},{type:8,valueA:-1,valueB:-2,valueC:-3,valueD:-4}]);
+assert.equal(actionEvent.repeatCount,3);assert.equal(actionEvent.discardedByte,99);assert.equal(actionEvent.modeByte,5);
+const actionNoTail=decodeS2COpcode17(new PacketWriter().writeI16(1).writeI16(2).writeI8(3).writeI32(4).writeI8(5).writeI8(0).toUint8Array());
+assert.equal(actionNoTail.repeatCount,1);assert.equal(actionNoTail.discardedByte,null);assert.equal(actionNoTail.modeByte,0);
+assert.throws(()=>decodeS2COpcode17(new PacketWriter().writeI16(1).writeI16(2).writeI8(3).writeI32(4).writeI8(5).writeI8(-1).toUint8Array()),/Negative opcode 17 effect count/);

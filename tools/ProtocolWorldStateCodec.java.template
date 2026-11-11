@@ -44,3 +44,20 @@ public final class ProtocolWorldStateCodec {
         return new Opcode12(first,second,third,hfK,fourth,label,has,map,error,readRemaining(in));
     }
 }
+
+    public record Effect(int type, short valueA, short valueB, short valueC, short valueD) {}
+    public record Opcode17(short firstShortWireValue, short targetEntityId, byte eventByte, int value,
+                           byte displayByte, List<Effect> effects, byte repeatCount,
+                           Byte discardedByte, byte modeByte, byte[] trailingBytes) {}
+    public static Opcode17 decodeS2COpcode17(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);
+        short first=in.readI16(),target=in.readI16();byte event=in.readI8();int value=in.readI32();
+        byte display=in.readI8();int count=in.readI8();
+        if(count<0)throw new IOException("Negative opcode 17 effect count");
+        List<Effect> effects=new ArrayList<>();
+        for(int i=0;i<count;i++)effects.add(new Effect(in.readI8(),in.readI16(),in.readI16(),in.readI16(),in.readI16()));
+        byte repeat=1;if(in.remaining()>0)repeat=in.readI8();
+        Byte discarded=null;if(in.remaining()>0)discarded=in.readI8();
+        byte mode=0;if(in.remaining()>0)mode=in.readI8();
+        return new Opcode17(first,target,event,value,display,List.copyOf(effects),repeat,discarded,mode,readRemaining(in));
+    }

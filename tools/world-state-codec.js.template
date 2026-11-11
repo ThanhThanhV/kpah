@@ -52,3 +52,27 @@ export function decodeS2COpcode12(payload) {
   const trailingBytes = readRemaining(reader);
   return { first, second, third, hfK, fourth, label, hasMapData, mapData, mapDataError, trailingBytes };
 }
+
+export function decodeS2COpcode17(payload) {
+  const reader = new PacketReader(payload);
+  const firstShortWireValue = reader.readI16();
+  const targetEntityId = reader.readI16();
+  const eventByte = reader.readI8();
+  const value = reader.readI32();
+  const displayByte = reader.readI8();
+  const effectCount = reader.readI8();
+  if (effectCount < 0) throw new RangeError("Negative opcode 17 effect count");
+  const effects = [];
+  for (let i = 0; i < effectCount; i += 1) {
+    effects.push({ type: reader.readI8(), valueA: reader.readI16(), valueB: reader.readI16(),
+      valueC: reader.readI16(), valueD: reader.readI16() });
+  }
+  let repeatCount = 1;
+  if (reader.remaining() > 0) repeatCount = reader.readI8();
+  let discardedByte = null;
+  if (reader.remaining() > 0) discardedByte = reader.readI8();
+  let modeByte = 0;
+  if (reader.remaining() > 0) modeByte = reader.readI8();
+  return { firstShortWireValue, targetEntityId, eventByte, value, displayByte, effects,
+    repeatCount, discardedByte, modeByte, trailingBytes: readRemaining(reader) };
+}
