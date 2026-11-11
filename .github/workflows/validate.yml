@@ -279,6 +279,19 @@ jobs:
                   || drop61.effectFieldByte() != -2 || drop61.effectShortE() != 13
                   || warehouse78.warehouseItemId() != 901)
                 throw new AssertionError("S2C opcode 61/78 inventory drop/sale events");
+              ProtocolWorldStateCodec.Opcode23 variant230 = ProtocolWorldStateCodec.decodeS2COpcode23(
+                new PacketWriter().writeI8(0).writeI8(3).writeU8(1).writeU8(2).writeU8(255).toByteArray());
+              ProtocolWorldStateCodec.Opcode23 variant231 = ProtocolWorldStateCodec.decodeS2COpcode23(
+                new PacketWriter().writeI8(1).writeI8(-1).writeI16(2).writeI16(10).writeI16(11).toByteArray());
+              ProtocolWorldStateCodec.Opcode23 variant232 = ProtocolWorldStateCodec.decodeS2COpcode23(
+                new PacketWriter().writeI8(2).writeI8(1).writeI8(3).writeI16(50).writeI16(-2)
+                  .writeI8(-4).writeI8(5).writeI16(6).writeI16(7).toByteArray());
+              ProtocolWorldStateCodec.Opcode23 variant234 = ProtocolWorldStateCodec.decodeS2COpcode23(
+                new PacketWriter().writeI8(4).writeI8(2).writeU8(8).writeU8(9).writeI8(-1).writeI8(3).toByteArray());
+              if (variant230.subtype0Bytes().length != 3 || variant231.itemIds().get(1) != 11
+                  || variant231.modeByte() != 2 || variant232.subtype2Items().get(0).normalizedValue() != 254
+                  || variant234.subtype4Trailer()[0] != -1)
+                throw new AssertionError("S2C opcode 23 inventory context variants");
               PacketWriter extension3 = new PacketWriter().writeI16(123).writeI8(0).writeBool(true).writeBool(false)
                 .writeI8(1).writeI8(2).writeI8(3).writeI16(4).writeI32(5).writeI16(6).writeI32(7).writeUTF("title").writeBool(true)
                 .writeI16(11).writeI8(12).writeI16(21).writeI8(22).writeI16(23).writeI16(31).writeI16(32).writeI16(33)

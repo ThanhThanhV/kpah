@@ -383,3 +383,8 @@ Added source-traced codecs for overhead chat (27), inventory sale confirmation (
 ### S2C inventory drop and warehouse sale events
 
 Added bytecode-backed parsing for opcode 61 (inventory item dropped to the world with its effect parameters) and opcode 78 (warehouse item sale confirmation). Both are parse-only; the inventory/economy side effects remain application responsibilities.
+
+
+### S2C opcode 23 inventory/equipment variants
+
+Added a branch-aware decoder for all five opcode 23 subtypes: raw byte list, catalog-backed item IDs, partial item records, static-catalog selection and shop-tab payload. Signed count behavior and the subtype-1 default mode are covered by JS and Java synthetic vectors.

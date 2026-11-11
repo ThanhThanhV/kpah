@@ -2737,6 +2737,22 @@
       "sections": [
         "warehouse-item-id"
       ]
+    },
+    {
+      "name": "INVENTORY_CONTEXT_VARIANTS",
+      "direction": "S2C",
+      "opcode": 23,
+      "evidenceSource": "ka.java:case23",
+      "evidence": "Subtype byte selects one of five branches: subtype 0 is a byte-counted raw byte list; subtype 1 is a signed-byte category followed by a signed-short item-ID list and optional mode byte default 2; subtype 2 is a signed-byte-counted partial bo item list; subtype 3 has no payload; subtype 4 is a signed-byte-counted byte list followed by two trailer bytes. Consumer calls populate item/equipment context or open shop UI.",
+      "sections": [
+        "subtype",
+        "subtype-0-byte-list",
+        "subtype-1-category-and-item-ids",
+        "subtype-1-optional-mode-byte",
+        "subtype-2-partial-item-records",
+        "subtype-3-empty",
+        "subtype-4-byte-list-and-two-trailer-bytes"
+      ]
     }
   ],
   "extensionSchemas": [

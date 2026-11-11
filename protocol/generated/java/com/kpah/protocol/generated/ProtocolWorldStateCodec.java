@@ -143,4 +143,38 @@ public final class ProtocolWorldStateCodec {
         PacketReader in=new PacketReader(payload);return new Opcode78(in.readI16(),readRemaining(in));
     }
 
+    public record VariantItem(byte itemType, short itemId, short rawValue, int normalizedValue,
+                              byte fieldSByte, byte fieldYByte, short fieldV, short fieldU) {}
+    public record Opcode23(byte subtype, byte[] subtype0Bytes, Byte categoryByte, Short itemCount,
+                           List<Short> itemIds, Byte modeByte, List<VariantItem> subtype2Items,
+                           byte[] subtype4Bytes, byte[] subtype4Trailer, byte[] trailingBytes) {}
+    public static Opcode23 decodeS2COpcode23(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte subtype=in.readI8();
+        byte[] raw0=null,raw4=null,trailer4=null;Byte category=null,mode=null;Short countValue=null;
+        List<Short> ids=new ArrayList<>();List<VariantItem> items=new ArrayList<>();
+        if(subtype==0){
+            int count=in.readI8();if(count<0)throw new IOException("Negative opcode 23 subtype 0 count");
+            raw0=new byte[count];for(int i=0;i<count;i++)raw0[i]=(byte)in.readU8();
+        }else if(subtype==1){
+            category=in.readI8();short count=in.readI16();countValue=count;
+            for(int i=0;i<count;i++)ids.add(in.readI16());
+            mode=in.remaining()>0?in.readI8():(byte)2;
+        }else if(subtype==2){
+            int count=in.readI8();countValue=(short)count;
+            for(int i=0;i<count;i++){
+                byte type=in.readI8();short item=in.readI16(),raw=in.readI16();
+                int normalized=raw<0?raw+256:raw;
+                items.add(new VariantItem(type,item,raw,normalized,in.readI8(),in.readI8(),in.readI16(),in.readI16()));
+            }
+        }else if(subtype==3){
+            // No payload in this branch.
+        }else if(subtype==4){
+            int count=in.readI8();if(count<0)throw new IOException("Negative opcode 23 subtype 4 count");
+            raw4=new byte[count];for(int i=0;i<count;i++)raw4[i]=(byte)in.readU8();
+            trailer4=new byte[]{(byte)in.readI8(),(byte)in.readI8()};
+        }
+        return new Opcode23(subtype,raw0,category,countValue,List.copyOf(ids),mode,List.copyOf(items),
+            raw4,trailer4,readRemaining(in));
+    }
+
 }

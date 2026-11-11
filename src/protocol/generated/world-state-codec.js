@@ -158,3 +158,40 @@ export function decodeS2COpcode78(payload) {
   const reader = new PacketReader(payload);
   return { warehouseItemId: reader.readI16(), trailingBytes: readRemaining(reader) };
 }
+
+export function decodeS2COpcode23(payload) {
+  const reader = new PacketReader(payload);
+  const subtype = reader.readI8();
+  const result = { subtype, subtype0Bytes: null, categoryByte: null, itemCount: null,
+    itemIds: [], modeByte: null, subtype2Items: [], subtype4Bytes: null, subtype4Trailer: null };
+  if (subtype === 0) {
+    const count = reader.readI8();
+    if (count < 0) throw new RangeError("Negative opcode 23 subtype 0 count");
+    result.subtype0Bytes = new Uint8Array(count);
+    for (let i = 0; i < count; i += 1) result.subtype0Bytes[i] = reader.readU8();
+  } else if (subtype === 1) {
+    result.categoryByte = reader.readI8();
+    result.itemCount = reader.readI16();
+    for (let i = 0; i < result.itemCount; i += 1) result.itemIds.push(reader.readI16());
+    result.modeByte = reader.remaining() > 0 ? reader.readI8() : 2;
+  } else if (subtype === 2) {
+    result.itemCount = reader.readI8();
+    for (let i = 0; i < result.itemCount; i += 1) {
+      const itemType = reader.readI8(), itemId = reader.readI16(), rawValue = reader.readI16();
+      result.subtype2Items.push({ itemType, itemId, rawValue,
+        normalizedValue: rawValue < 0 ? rawValue + 256 : rawValue,
+        fieldSByte: reader.readI8(), fieldYByte: reader.readI8(),
+        fieldV: reader.readI16(), fieldU: reader.readI16() });
+    }
+  } else if (subtype === 3) {
+    // The source handler invokes the consumer without reading any branch payload.
+  } else if (subtype === 4) {
+    const count = reader.readI8();
+    if (count < 0) throw new RangeError("Negative opcode 23 subtype 4 count");
+    result.subtype4Bytes = new Uint8Array(count);
+    for (let i = 0; i < count; i += 1) result.subtype4Bytes[i] = reader.readU8();
+    result.subtype4Trailer = [reader.readI8(), reader.readI8()];
+  }
+  result.trailingBytes = readRemaining(reader);
+  return result;
+}

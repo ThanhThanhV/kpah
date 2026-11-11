@@ -341,3 +341,16 @@ The opcode 32 decoder requires the caller to supply whether the packet targets t
 - **Opcode 78:** one signed-short warehouse item ID. Consumer `mj.h(id)` decrements the matching storage item quantity and credits the sale proceeds when the stack reaches zero.
 
 The generated codecs retain the five effect values with neutral names; they do not invent frame/resource mappings or apply inventory/currency mutations.
+
+
+## S2C opcode 23 — inventory/equipment context variants
+
+The first signed byte selects one of five source branches in `ka.java:case23`:
+
+- **Subtype 0:** signed-byte length + raw byte list. The consumer rebuilds the local `z` item context from these byte IDs and requests the corresponding server context.
+- **Subtype 1:** signed-byte category/template selector, signed-short item count, then item IDs as signed shorts. The consumer derives display/category fields from the static item catalog (not transmitted in this packet). An optional mode byte follows; the static default is 2 when absent.
+- **Subtype 2:** signed-byte item count; each partial item record is type byte, item ID short, raw short value (negative values are increased by 256 before assignment), signed bytes `s/y`, then shorts `v/u`. The consumer installs this vector as the active item list.
+- **Subtype 3:** no payload; the consumer builds a list from the static catalog entries whose availability flag is true.
+- **Subtype 4:** signed-byte count, that many bytes, then two trailer bytes. The consumer uses this byte array to open the three shop-tab actions.
+
+Counts preserve the original signed-byte behavior. Negative subtype 0/4 lengths fail array construction/indexing; negative subtype 2 counts execute zero loop iterations. Subtype 1's signed-short count likewise produces zero iterations when negative. Derived catalog fields and UI side effects are intentionally outside the decoder.
