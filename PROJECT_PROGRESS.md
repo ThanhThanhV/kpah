@@ -421,3 +421,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 
 - Source refinement: CFR `ka.java` opcode 16 case reads two additional signed 32-bit values into `km.s.t.aY` and `km.s.t.aZ` after mode-specific sections. The mode-0 decoder and both-language smoke vectors now parse these common fields explicitly; business semantics remain unnamed.
+
+
+## B16 — Opcode 16 mode 3 decoder
+
+- Traced CFR ka.java case 16 and xg.java inventory rendering: mode 3 reads common aY counter, signed-byte count, short array into ca.T, then common aZ; the array is displayed against bq.d/e catalog entries.
+- Extended the generated JavaScript/Java initialization decoder for mode 3. It preserves signed short values, validates negative counts, parses common counters and retains any tail bytes.
+- Modes 1 and 2 remain opaque; no inferred item/auxiliary record schema is claimed.
+- Added JavaScript and Java synthetic vectors for mode 3 and retained mode 0 64-bit currency/skill tests.
