@@ -78,15 +78,43 @@ First byte is mode; handler creates `int[]` sized by global skill count `z.Z` an
 
 Some fields (`aY`, `aZ`) are currency/state counters; exact split between wallet, market balance and auxiliary points requires caller/UI trace. The mode-1 item model is `bo` and is assigned to `z.bx` for the inventory UI. The decoder keeps original field names where business semantics are not independently verified. Mode 2 builds two typed auxiliary collections in packet order; `mj.java` assigns their combined vector to `z.by`. `k.java` defines `a/b` as strings, `c/d/h` as bytes, `e` as short, `f` as long, and `g` as int. The first collection populates `h/c/b/a/d`; the second populates `h/b/a/g/d` and sets `f` to local receive time. `acf.java` renders `b + ' lv' + c` with `a` when `d == 0`; otherwise it calculates remaining minutes from `g` and `f`. `acg.java` renders the icon from `h + 7500`. The packet's short and some bytes are consumed into discarded temporary values, not stored on the final `k` instance. The decoder preserves those as explicitly discarded wire fields. Mode 3 values populate `ca.T` and are rendered with the `bq.d/e` item catalog. In `xg`, `aY` is displayed with the `l` suffix and participates in purchase affordability checks; `aZ` is displayed with the `lk` suffix. The exact business name of `aZ` remains unverified. The item model `bo` is shared with shop/trade packets but mode 1 has its own field order.
 
-## S2C opcode 15 — lazy item/pet-equipment payload
+## S2C opcode 15 — shop context and pet-equipment atlas
 
-CFR ka.java case 15 is discriminated by a leading signed byte:
+CFR evidence: ka.java case 15 and the two destination overloads in mj.java.
 
-- Mode 0: target character ID (short), signed-byte item count, then item records. Each record consumes D/i/r/s/y/v/u/K/L/n/o/p/q/C, UTF d, unsigned-short w, and a signed-byte stat count followed by (unsigned-byte statId, short statValue) pairs. It then reads a signed byte, five shorts, an optional (UTF string, byte) pair guarded by a byte sentinel, and an optional l record guarded by another byte sentinel. The l record consumes a byte into a temporary object, then S short, M byte, Y UTF, V int; X is set to local receive time and U/T to zero.
-- Non-zero mode: target character ID, signed-byte item count; when count is nonnegative, item records use the same core fields but omit w and instead read the nested stat count directly after UTF d. The remainder of the packet is image bytes decoded by ku.b; frame count and image dimensions are derived from the decoded image and passed with the item vector.
-- mj.java overloads a(short, Vector, byte, byte, String, l, short[], byte) and a(short, Vector, Image, byte, int, int, byte) apply the respective branches to the target character. The first updates the target's item vector and associated counters/optional l entity; the second updates its pet-equipment image and frame metadata. This links opcode 15 to character item/pet-equipment presentation, not the opcode 16 inventory collections.
+The first signed byte is the subtype; the next fields are always target character ID (short) and signed-byte item count. The item record is read in this exact order:
 
-The decoder has not yet been generated for opcode 15. Its optional fields and non-zero image branch should remain separate variants; do not collapse them into a single guessed item schema.
+- itemType:i8, i:i16, r:i16, s:i8, y:i8, v:i16, u:i16
+- K:i8, L:i8, n:i8, o:i8, p:i8, q:i8, C:i8, d:UTF
+- For subtype 0 only: w:u16
+- Signed-byte stat count, then repeated statId:u8, statValue:i16
+
+Subtype 0 (shop/context variant):
+
+1. Read the item list above. bo.F is set locally and bo.x is initialized to client receive time; neither is transmitted.
+2. Read byte aS, then five shorts (ca array).
+3. Read optionalTextSentinel. If it is not -1, read UTF text and one byte (am).
+4. Read optionalContextSentinel. If it is not -1, consume one byte, one short (l.S), one byte (l.M), UTF (l.Y) and int (l.V). CFR shows the first byte assigned to a newly constructed, otherwise discarded l object, so it is retained as discardedTypeByte rather than falsely assigned to the context instance. The client initializes l.X to receive time, l.U/l.T to zero and l.g to 12.
+5. mj.a(short, Vector, byte, byte, String, l, short[], byte) applies the list and context to the selected/local character or matching remote character.
+
+Any non-zero subtype (pet-equipment image variant):
+
+1. Read the same item record but without w; the signed-byte stat count follows UTF d directly.
+2. If the signed item count is negative, the original handler exits this branch without updating the character; remaining bytes are not interpreted. The decoder preserves them as unparsedBytes.
+3. Otherwise read signed-byte frame count; every remaining byte is the packed image passed to ku.b. The client decodes the image, gets its width and height, calculates frame height as image height divided by frame count, and chooses layout code 3 when frame count is 3, otherwise 6.
+4. mj.a(short, Vector, Image, byte, int, int, byte) stores the image, frame count, calculated dimensions and layout code on the target character and opens the pet-equipment panel for a remote target.
+
+Signed item/stat counts follow the original loops: a negative subtype-0 item count or negative stat count produces zero loop iterations; a negative non-zero subtype item count skips the update branch. The decoder does not reinterpret image bytes or guess image dimensions before actual image decoding.
+
+The schema and generated decoders are in protocol/protocol.yaml (variantSchemas), src/protocol/generated/opcode15-codec.js and ProtocolOpcode15Codec.java. Tests cover both branches, field order, optional sentinels, negative counts, UTF, stats and opaque image bytes.
+
+Generator and checks:
+
+```bash
+npm run generate:opcode15
+npm run check:opcode15
+npm run test:opcode15
+```
 
 ## Related initialization packets
 
@@ -149,5 +177,5 @@ npm run test:initialization-protocol
 - Chưa phân loại hết các lookup arrays trong opcode 1 hoặc gán semantic names cho toàn bộ numeric fields.
 - Chưa xác định toàn bộ skill metadata mapping, profession growth curves, item templates, tile/object catalogs và part binary schema.
 - Chưa có live packet capture để xác nhận server send order, optional-field versioning và error/retry behavior.
-- Đã có decoder mode 0 của opcode 16; mode 1–3 vẫn opaque. Tiếp theo: trace `cv`, `ia`, `hd`, `bo`, `bk`, `ku` consumers; map các field inventory/item tới UI/runtime reader và tạo bảng required/optional cho protocol spec.
+- Opcode 16 modes 0–3 đã có decoder source-bounded; opcode 15 subtype 0 và non-zero đã có decoder riêng. Tiếp theo: trace lookup/catalog consumers và xác minh cấu trúc ảnh atlas thực tế bằng payload/assets hợp lệ; chưa có live packet capture.
 
