@@ -22,6 +22,11 @@ def outputs():
             raise ValueError("Mode decoder currently supports S2C only")
         if schema["fields"] != [{"name": "currency", "type": "i64"}]:
             raise ValueError("Unsupported verified fixed fields")
+        if schema.get("commonFields") != [
+            {"name": "aY", "type": "i32"},
+            {"name": "aZ", "type": "i32"},
+        ]:
+            raise ValueError("Unsupported verified common opcode 16 fields")
         records = schema["records"]
         if records["countType"] != "u8" or records["fields"] != [
             {"name": "skillIndex", "type": "u8"},
@@ -49,9 +54,11 @@ export function decodeS2CInitialization(opcode, payload) {
   for (let i = 0; i < skillCount; i += 1) {
     skills.push({ skillIndex: reader.readU8(), skillValue: reader.readI32() });
   }
+  const aY = reader.readI32();
+  const aZ = reader.readI32();
   const trailingBytes = new Uint8Array(reader.remaining());
   for (let i = 0; i < trailingBytes.length; i += 1) trailingBytes[i] = reader.readU8();
-  return { mode, decoded: true, currency, skills, trailingBytes };
+  return { mode, decoded: true, currency, skills, aY, aZ, trailingBytes };
 }
 '''.replace("__SCHEMAS__", js_schemas)
 
@@ -63,14 +70,14 @@ public final class ProtocolInitializationCodec {
     private ProtocolInitializationCodec() {}
     public record SkillValue(int skillIndex, int skillValue) {}
     public record Decoded(int mode, boolean decoded, Long currency, List<SkillValue> skills,
-                          byte[] opaquePayload, byte[] trailingBytes) {}
+                          Integer aY, Integer aZ, byte[] opaquePayload, byte[] trailingBytes) {}
     public static Decoded decodeS2COpcode16(byte[] payload) throws IOException {
         PacketReader in = new PacketReader(payload);
         int mode = in.readU8();
         if (mode != 0) {
             byte[] opaque = new byte[in.remaining()];
             for (int i = 0; i < opaque.length; i++) opaque[i] = (byte) in.readU8();
-            return new Decoded(mode, false, null, List.of(), opaque, new byte[0]);
+            return new Decoded(mode, false, null, List.of(), null, null, opaque, new byte[0]);
         }
         long currency = in.readI64();
         int count = in.readU8();
@@ -78,9 +85,11 @@ public final class ProtocolInitializationCodec {
         for (int i = 0; i < count; i++) {
             skills.add(new SkillValue(in.readU8(), in.readI32()));
         }
+        int aY = in.readI32();
+        int aZ = in.readI32();
         byte[] trailing = new byte[in.remaining()];
         for (int i = 0; i < trailing.length; i++) trailing[i] = (byte) in.readU8();
-        return new Decoded(mode, true, currency, List.copyOf(skills), new byte[0], trailing);
+        return new Decoded(mode, true, currency, List.copyOf(skills), aY, aZ, new byte[0], trailing);
     }
 }
 '''
