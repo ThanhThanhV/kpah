@@ -35,6 +35,9 @@
     "generate:opcode3-extension": "python tools/generate_opcode3_extension.py",
     "check:opcode3-extension": "python tools/generate_opcode3_extension.py --check",
     "test:opcode3-extension": "node tools/test_opcode3_extension.mjs",
+    "generate:opcode5": "python tools/generate_opcode5_codec.py",
+    "check:opcode5": "python tools/generate_opcode5_codec.py --check",
+    "test:opcode5": "node tools/test_opcode5_codec.mjs",
     "generate:world-state": "python tools/generate_world_state_codec.py",
     "check:world-state": "python tools/generate_world_state_codec.py --check",
     "test:world-state": "node tools/test_world_state_codec.mjs"
