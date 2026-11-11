@@ -45,12 +45,13 @@ export class PacketReader {
   require(n) { if (this.offset + n > this.bytes.length) throw new RangeError("Truncated packet"); }
   readU8() { this.require(1); return this.bytes[this.offset++]; }
   readI8() { const n = this.readU8(); return n > 127 ? n - 256 : n; }
-  readU16() { this.require(2); const n = this.bytes[this.offset] * 256 + this.bytes[this.offset + 1]; this.offset += 2; return n; }
+  // Match java.io.DataInputStream: failed multi-byte reads consume bytes already read.
+  readU16() { return this.readU8() * 256 + this.readU8(); }
   readI16() { const n = this.readU16(); return n > 32767 ? n - 65536 : n; }
-  readI32() { this.require(4); const n = this.bytes[this.offset] * 0x1000000 + (this.bytes[this.offset + 1] << 16) + (this.bytes[this.offset + 2] << 8) + this.bytes[this.offset + 3]; this.offset += 4; return n | 0; }
-  readI64() { this.require(8); let n = 0n; for (let i = 0; i < 8; i += 1) n = (n << 8n) | BigInt(this.bytes[this.offset++]); return BigInt.asIntN(64, n); }
+  readI32() { const n = this.readU8() * 0x1000000 + (this.readU8() << 16) + (this.readU8() << 8) + this.readU8(); return n | 0; }
+  readI64() { let n = 0n; for (let i = 0; i < 8; i += 1) n = (n << 8n) | BigInt(this.readU8()); return BigInt.asIntN(64, n); }
   readBool() { return this.readU8() !== 0; }
-  readUTF() { const n = this.readU16(); this.require(n); const value = modifiedUtf8Decode(this.bytes.slice(this.offset, this.offset + n)); this.offset += n; return value; }
+  readUTF() { const n = this.readU16(); const bytes = new Uint8Array(n); for (let i = 0; i < n; i += 1) bytes[i] = this.readU8(); return modifiedUtf8Decode(bytes); }
   remaining() { return this.bytes.length - this.offset; }
 }
 const WRITE = {u8:"writeU8",i8:"writeI8",u16:"writeU16",i16:"writeI16",i32:"writeI32",i64:"writeI64",bool:"writeBool",utf:"writeUTF"};
