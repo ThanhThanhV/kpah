@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
-import { decodeS2COpcode4, decodeS2COpcode5, decodeS2COpcode8, decodeS2COpcode12 } from "../src/protocol/generated/world-state-codec.js";
+import { decodeS2COpcode4, decodeS2COpcode5, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode12 } from "../src/protocol/generated/world-state-codec.js";
 const spawn=new PacketWriter().writeI8(1).writeU8(7).writeI16(123).writeI16(456).writeI16(789).writeI8(2)
  .writeI32(-99).writeI8(4).writeI8(5).writeBool(false)
  .writeI8(0).writeU8(8).writeI16(124).writeI16(500).writeI16(600).writeI8(1).writeI32(77).writeI8(6).writeBool(true).toUint8Array();
@@ -31,6 +31,10 @@ assert.equal(playerDecoded.groupE.bl,60);assert.deepEqual([...playerDecoded.trai
 const playerDefaults=decodeS2COpcode5(playerBase(-1).toUint8Array());
 assert.equal(playerDefaults.coNormalized,null);assert.deepEqual(playerDefaults.pairA,{shortValue:-1,byteValue:-1});
 assert.equal(playerDefaults.mappingApplied,false);assert.equal(playerDefaults.bf,-1);assert.equal(playerDefaults.groupD.bi,-1);
+const combat6=decodeS2COpcode6(new PacketWriter().writeI16(10).writeI16(20).writeI8(3).writeI32(400).writeI32(900).writeI8(1).writeI8(2).writeI8(3).writeI8(4).toUint8Array());
+assert.deepEqual(combat6,{firstEntityId:10,secondEntityId:20,actionByte:3,valueA:400,valueB:900,flagA:1,flagB:2,flagC:3,flagD:4,trailingBytes:new Uint8Array()});
+const combat9=decodeS2COpcode9(new PacketWriter().writeI16(-10).writeI16(20).writeI8(4).writeI32(-400).writeI32(800).writeI8(5).writeI8(6).writeI8(7).writeI8(8).toUint8Array());
+assert.equal(combat9.firstEntityId,-10);assert.equal(combat9.valueA,-400);assert.equal(combat9.flagD,8);
 const despawn=decodeS2COpcode8(new PacketWriter().writeI16(10).writeI16(-20).toUint8Array());assert.deepEqual(despawn.entityIds,[10,-20]);
 const map=decodeS2COpcode12(new PacketWriter().writeI16(1).writeI16(2).writeI16(3).writeI8(4).writeI16(5).writeUTF("Forest").writeBool(true).writeU8(0xaa).writeU8(0xbb).toUint8Array());
 assert.equal(map.hfK,4);assert.equal(map.label,"Forest");assert.equal(map.hasMapData,true);assert.deepEqual([...map.mapData],[0xaa,0xbb]);
