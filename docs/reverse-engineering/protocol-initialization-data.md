@@ -112,6 +112,14 @@ Immediately after the prefix:
 
 The client calls km.s.j() after these groups. These are not all-or-nothing optional fields: each try/catch has its own defaults and the input cursor is not rewound after a partially consumed group. The current generated opcode 3 decoder intentionally returns this area as opaque trailing bytes; do not decode it as one fixed block until each consumer and truncation behavior is tested.
 
+The independently guarded extension groups now also have a separate generated decoder. It accepts only the trailing bytes returned by the opcode 3 fixed-prefix decoder; it does not accept a full opcode 3 packet. It reproduces the per-group fallback values and does not rewind the reader after a partially consumed group. The counted mapping group exposes its short/byte pairs and raw UTF string; it does not invent the semantics of kw.a's parsed mapping.
+
+```bash
+npm run generate:opcode3-extension
+npm run check:opcode3-extension
+npm run test:opcode3-extension
+```
+
 ## S2C opcode 15 — shop/catalog payloads
 
 First byte is subtype:
