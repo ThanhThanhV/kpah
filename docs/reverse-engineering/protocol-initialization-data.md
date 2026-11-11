@@ -73,6 +73,24 @@ Handler writes into the current player `km.s.t` (`ca extends z`). Confirmed pref
 
 Several trailing field groups are read inside independent `try/catch` blocks and default to `-1` when absent. Do not serialize them as mandatory fields until server-version behavior is confirmed.
 
+### Opcode 3 — optional character extension groups
+
+The typed prefix decoder stops after the 33 fixed fields ending at cT. CFR ka.java then continues inside independently guarded reads; the handler does not expose one contiguous, fully required extension schema.
+
+Immediately after the prefix:
+
+1. Read short i. If i != -1, read byte af. If the resulting current-player af is 0, read a boolean into global z.ae.
+2. Read boolean bM; bytes e, t and u; short cd; int cc; short ce; int dm; UTF dn; boolean ak.
+3. Optional pair A: short + byte, passed to the current character's a(short,int) method. If either read fails, both local values default to -1.
+4. Optional triple B: short + byte + short, passed to a(int,int,int); defaults are -1/-1/-1 on read failure.
+5. Optional triple C: three shorts, passed to a(short,short,short); defaults are -1/-1/-1 on read failure.
+6. Optional mapping: signed-byte count, repeated short + byte pairs, then UTF text. The pair arrays are passed to the character; the UTF text is parsed with kw.a(text, "@") into xg.n. Any failure is swallowed by this group's catch.
+7. Optional short bf; defaults to -1 on read failure.
+8. After the main character block, a separately guarded group reads byte bi, short bn, byte bj, byte bk; fallback values are -1, -1, 0, 0.
+9. A final separately guarded group reads byte bm, short bo, byte bl; fallback values are -1, -1, 0.
+
+The client calls km.s.j() after these groups. These are not all-or-nothing optional fields: each try/catch has its own defaults and the input cursor is not rewound after a partially consumed group. The current generated opcode 3 decoder intentionally returns this area as opaque trailing bytes; do not decode it as one fixed block until each consumer and truncation behavior is tested.
+
 ## S2C opcode 15 — shop/catalog payloads
 
 First byte is subtype:
