@@ -34,7 +34,10 @@
     "test:opcode1": "node tools/test_opcode1_codec.mjs",
     "generate:opcode3-extension": "python tools/generate_opcode3_extension.py",
     "check:opcode3-extension": "python tools/generate_opcode3_extension.py --check",
-    "test:opcode3-extension": "node tools/test_opcode3_extension.mjs"
+    "test:opcode3-extension": "node tools/test_opcode3_extension.mjs",
+    "generate:world-state": "python tools/generate_world_state_codec.py",
+    "check:world-state": "python tools/generate_world_state_codec.py --check",
+    "test:world-state": "node tools/test_world_state_codec.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"
