@@ -87,12 +87,13 @@ jobs:
                 .writeI8(2).writeI8(4).writeI32(11).writeI32(12).writeI32(13)
                 .writeI16(21).writeI16(22).writeI16(23).writeI8(1).writeI8(0);
               for (int i=0;i<8;i++) snapshot.writeI16(30+i);
-              snapshot.writeI32(99).writeI16(7).writeU8(3).writeU8(4).writeU8(5).writeU8(6).writeI16(8);
-              snapshot.writeI8(9).writeI8(10).writeI8(11).writeI8(12).writeI8(17).writeU8(3).writeU8(0xaa).writeU8(0xbb).writeU8(0xcc);
+              snapshot.writeI32(99).writeI16(7).writeU8(3).writeU8(0xaa).writeU8(0xbb).writeU8(0xcc).writeI16(8);
+              snapshot.writeI8(9).writeI8(10).writeI8(11).writeI8(12).writeI8(17).writeU8(3).writeU8(0xde).writeU8(0xad);
               ProtocolPrefixCodec.DecodedPrefix prefix = ProtocolPrefixCodec.decodeS2C(3, snapshot.toByteArray());
               if (!prefix.fields().get("characterName").equals("Hero") || !prefix.fields().get("currentHp").equals(100)
-                  || !Arrays.equals((byte[])prefix.fields().get("actionMapping"), new byte[]{4,5,6})
-                  || prefix.trailingBytes().length != 0 || prefix.decodedPrefixBytes() != snapshot.toByteArray().length)
+                  || !Arrays.equals((byte[])prefix.fields().get("actionMapping"), new byte[]{(byte)0xaa,(byte)0xbb,(byte)0xcc})
+                  || !Arrays.equals(prefix.trailingBytes(), new byte[]{3,(byte)0xde,(byte)0xad})
+                  || prefix.decodedPrefixBytes() != snapshot.toByteArray().length - 3)
                 throw new AssertionError("opcode 3 prefix decode: " + prefix);
               System.out.println("Generated Java protocol, transport and S2C prefix codecs: PASS");
             }
