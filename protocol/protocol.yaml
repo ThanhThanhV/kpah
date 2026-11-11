@@ -2562,7 +2562,7 @@
       "name": "WORLD_ENTITY_ACTION_EVENT",
       "direction": "S2C",
       "opcode": 17,
-      "evidenceSource": "ka.java:case17; kl.java; jz.java; mj.java:a(kl)",
+      "evidenceSource": "ka.java:case17",
       "evidence": "Reads two signed shorts, one byte, one int, one byte, a signed-byte-counted list of effect records (byte + four shorts), then up to three individually guarded bytes. The first short is consumed into a temporary kl in CFR output while mj.a(kl) later reads kl.a; keep it as a neutral wire field pending bytecode verification.",
       "sections": [
         "first-short-wire-value",
