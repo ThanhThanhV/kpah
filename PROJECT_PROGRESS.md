@@ -510,3 +510,10 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Added source-bounded JavaScript/Java decoders for S2C opcode 4 spawn/update records, opcode 8 despawn ID lists and opcode 12 map transitions/map-data bytes.
 - Opcode 4 preserves per-field defaults and kind-1-only subtype behavior; opcode 12 keeps the four shorts neutral. Opcode 7 remains intentionally untyped because CFR assigns the first short to a temporary ce object while mj.a(ce) later looks up ce.a; bytecode verification is required before naming that field.
 - Added JS synthetic vectors and Java 21 smoke coverage. CI run `42988786876` PASS: Vite build, world-state generator consistency, JS vectors, Java 21 compile/smoke and CFR analysis.
+
+
+## B5 — S2C opcode 5 player snapshot decoder
+
+- Added the source-bounded opcode 5 decoder using the fixed z arrays: seven part bytes, seven part-slot shorts and five appearance shorts. It parses identity/position/HP/MP, profession/class, status and equipment fields, optional af, trade flag and the independently guarded extension groups.
+- Preserves co wire value and only exposes coNormalized when non-negative; negative co leaves existing runtime state unchanged. Optional groups retain their individual defaults and partial-read cursor behavior.
+- Added full JS vector and Java 21 smoke coverage. Opcode 5 decoder does not mutate world entities; it returns decoded state for a later runtime adapter. Validation pending.
