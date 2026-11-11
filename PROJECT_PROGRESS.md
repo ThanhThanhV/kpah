@@ -537,3 +537,14 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 - The first opcode 5 world-state decoder duplicated the existing dedicated opcode5-codec module. Removed the duplicate from world-state-codec and retained one canonical implementation with the entity-exists guard.
 - The opcode 5 source handler includes a signed-byte counted short/byte mapping between triple C and bf. Added this missing group to both JavaScript and Java codecs and tests. Corrected the synthetic vector to include the aS byte before the five ca shorts; this fixes the prior shifted ca[4] assertion.
+
+
+## B5 — S2C opcode 17 entity action/effect event — CI PASS
+
+- Added the source-bounded opcode 17 JavaScript/Java decoder to the generated world-state codec.
+- Parses the event header, signed-byte effect count, effect records (type byte + four shorts), and optional repeat/discarded/mode bytes.
+- Keeps the first short neutral because CFR's temporary-object assignment conflicts with the consumer's use of kl.a; exact mapping remains open pending bytecode verification. Target ID is supported by the consumer lookup of kl.b.
+- JS vectors cover populated and absent optional tails, negative effect count and signed effect values. Java 21 smoke test covers the event header, effect record and optional trailer.
+- CI run `42992393021` SUCCESS: Vite production build, Python tooling, all generated-code checks, JS protocol suites, Java 21 compile/smoke tests and original-JAR analysis. No live server, packet capture, browser gameplay test or backend behavior was validated.
+- The earlier runs failed first because generated world-state files were stale and then because the schema evidence marker did not match the generator's exact source marker; both were corrected before the passing run.
+- Overall weighted project percentage is unchanged; no WBS weights were recalculated. BE stage remains deferred.

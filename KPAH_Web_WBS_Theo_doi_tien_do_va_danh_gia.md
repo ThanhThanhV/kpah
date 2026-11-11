@@ -694,3 +694,13 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 | 2026-11-11 | B16 | Decoder opcode 5 world entity snapshot Java/JS; kiểm soát entity đã tồn tại, trường vị trí/combat/appearance/state, điều kiện af và các nhóm tail optional | 64294c3, 79e6b47, a370fb1, 39e7c4c, 2244f30, 4ad4bc4, a7c5485, 7e39316, 2472ab0 | Có source contract, generator, test vector full/unknown entity và Java smoke; chờ CI. Không tự tạo entity khi ID chưa có trong world. |
 
 | 2026-11-11 | B5 | Bổ sung decoder combat event S2C opcode 6 và 9 (2 short + byte + 2 int + 4 byte), giữ field trung tính theo đúng wire order | `70dddb0`, `2980989`, `024ce11`, `5b99517`, `a802c0b`, `b7a17ef` | Có generator Java/JS, vector và Java smoke; chờ CI. |
+
+
+### B5 — S2C opcode 17 entity action/effect event
+
+- **Trạng thái: Một phần (decoder + kiểm thử tổng hợp + CI PASS).** CFR trace: `ka.java:case17`, `kl.java`, `jz.java`, `mj.a(kl)`.
+- Java/JS codec parse first short (neutral), target entity ID, event byte, int value, display byte, signed-byte effect count, repeated effect records (byte + four shorts), và tối đa ba byte trailer có điều kiện.
+- First short chưa chốt mapping: CFR thể hiện gán vào temporary `new kl()`, nhưng consumer lại đọc `kl.a`. Không tự sửa lỗi decompiler; cần bytecode gốc/packet capture để xác minh. Target ID được xác nhận từ consumer lookup `mj.n(kl.b)`.
+- Negative count được reject; các trường effect giữ neutral. Decoder không áp damage hay render VFX.
+- CI run `42992393021` PASS: Vite build, toàn bộ generator consistency, JS protocol tests, Java 21 compile/smoke và original-JAR analysis.
+- Không tăng % tổng dự án ở increment này vì chưa tính lại trọng số WBS; BE chưa bắt đầu.
