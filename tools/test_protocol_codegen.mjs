@@ -32,5 +32,18 @@ assert.equal(reader.remaining(), 0);
 assert.throws(() => encodePayload("C2S", "OP_NEG_76", {}), /No verified payload schema/);
 assert.throws(() => decodePayload("C2S", "REFINE_ITEM", new Uint8Array([10, 17, 0])), /trailing/i);
 assert.throws(() => new PacketReader(new Uint8Array([0])).readU16(), /Truncated/);
+const partialShort = new PacketReader(new Uint8Array([0x12]));
+assert.throws(() => partialShort.readU16(), /Truncated/);
+assert.equal(partialShort.remaining(), 0);
+const partialInt = new PacketReader(new Uint8Array([0x01,0x02]));
+assert.throws(() => partialInt.readI32(), /Truncated/);
+assert.equal(partialInt.remaining(), 0);
+const partialLong = new PacketReader(new Uint8Array([0x01,0x02,0x03]));
+assert.throws(() => partialLong.readI64(), /Truncated/);
+assert.equal(partialLong.remaining(), 0);
+const partialUtf = new PacketReader(new Uint8Array([0,3,65,66]));
+assert.throws(() => partialUtf.readUTF(), /Truncated/);
+assert.equal(partialUtf.remaining(), 0);
+
 
 console.log("Generated JavaScript protocol codec: PASS (catalog, payload vectors, modified UTF-8, bounds)");
