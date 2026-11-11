@@ -115,10 +115,24 @@ jobs:
                   || !Arrays.equals(shopDecoded.shortValues(), new short[]{1,2,3,4,5})
                   || shopDecoded.optionalText() != null || shopDecoded.optionalContext() != null)
                 throw new AssertionError("opcode 15 subtype 0 decode: " + shopDecoded);
+              PacketWriter shopItem15 = new PacketWriter().writeI8(0).writeI16(321).writeI8(1)
+                .writeI8(7).writeI16(1001).writeI16(22).writeI8(3).writeI8(4).writeI16(55).writeI16(66)
+                .writeI8(8).writeI8(9).writeI8(10).writeI8(11).writeI8(12).writeI8(13).writeI8(14)
+                .writeUTF("Armor").writeU16(60000).writeI8(1).writeU8(4).writeI16(-50)
+                .writeI8(2).writeI16(101).writeI16(102).writeI16(103).writeI16(104).writeI16(105)
+                .writeI8(-1).writeI8(2).writeI8(2).writeI16(201).writeI8(3).writeUTF("Expiry").writeI32(1440);
+              ProtocolOpcode15Codec.Decoded shopItemDecoded = ProtocolOpcode15Codec.decode(shopItem15.toByteArray());
+              if (shopItemDecoded.items().size() != 1 || shopItemDecoded.items().get(0).i() != 1001
+                  || !shopItemDecoded.items().get(0).d().equals("Armor") || shopItemDecoded.items().get(0).w() != 60000
+                  || shopItemDecoded.items().get(0).stats().get(0).statValue() != -50
+                  || shopItemDecoded.optionalContext() == null
+                  || !shopItemDecoded.optionalContext().text().equals("Expiry")
+                  || shopItemDecoded.optionalContext().discardedTypeByte() != 2)
+                throw new AssertionError("opcode 15 subtype 0 item/context decode: " + shopItemDecoded);
               PacketWriter pet15 = new PacketWriter().writeI8(1).writeI16(654).writeI8(0).writeI8(3).writeU8(0x89).writeU8(0x50);
               ProtocolOpcode15Codec.Decoded petDecoded = ProtocolOpcode15Codec.decode(pet15.toByteArray());
               if (!petDecoded.accepted() || petDecoded.subtype() != 1 || petDecoded.targetCharacterId() != 654
-                  || petDecoded.frameCount() != 3 || petDecoded.frameMode() != 3
+                  || petDecoded.frameCount() != 3 || petDecoded.atlasLayoutCode() != 3
                   || !Arrays.equals(petDecoded.imageBytes(), new byte[]{(byte)0x89,0x50}))
                 throw new AssertionError("opcode 15 pet image decode: " + petDecoded);
               ProtocolInitializationCodec.Decoded init = ProtocolInitializationCodec.decodeS2COpcode16(initPacket.toByteArray());
