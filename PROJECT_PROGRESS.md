@@ -410,3 +410,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 
 - B16 follow-up: added a typed, evidence-bounded prefix decoder for S2C opcode 3 in `protocol/protocol.yaml`. JavaScript and Java generated decoders parse the fixed prefix through `cT`, including the length-prefixed action mapping, and preserve all remaining extension bytes as opaque `trailingBytes`. The full opcode 3 command remains opaque; this is deliberately not represented as a complete schema. CI now checks generator determinism and both runtime decoders.
+
+
+## B16 — Opcode 16 mode 0 decoder
+
+- Added `modeSchemas` to `protocol/protocol.yaml` for the source-verified S2C opcode 16 mode 0 layout: signed 64-bit currency, unsigned-byte record count, then repeated unsigned-byte skill index + signed 32-bit skill value.
+- Added `tools/generate_initialization_codec.py` and generated JavaScript/Java decoders. JavaScript retains currency as `BigInt`; Java retains it as `long`. Both preserve trailing bytes.
+- Modes 1–3 remain opaque after their mode byte. This increment does not claim a full opcode 16 decoder or server-side state integration.
+- Added JavaScript vectors for >2^53 currency, signed skill values, repeated records, opaque modes and truncation; CI also compiles and smoke-tests the generated Java decoder.
