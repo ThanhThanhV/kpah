@@ -8,7 +8,7 @@ const subtype0Payload = new PacketWriter().writeI8(0).writeI16(321).writeI8(1)
   .writeUTF("Áo thử").writeU16(60000).writeI8(2).writeU8(4).writeI16(-50).writeU8(8).writeI16(75)
   .writeI8(2).writeI16(101).writeI16(102).writeI16(103).writeI16(104).writeI16(105)
   .writeI8(1).writeUTF("Dòng phụ").writeI8(6)
-  .writeI8(2).writeI16(201).writeI8(3).writeUTF("Thời hạn").writeI32(1440)
+  .writeI8(2).writeI8(2).writeI16(201).writeI8(3).writeUTF("Thời hạn").writeI32(1440)
   .writeU8(0xaa).toUint8Array();
 const subtype0 = decodeS2COpcode15(subtype0Payload);
 assert.equal(subtype0.subtype, 0);
@@ -40,8 +40,7 @@ const imageBytes = Uint8Array.from([0x89,0x50,0x4e,0x47,0x00,0xff,0x80]);
 const subtype1Payload = new PacketWriter().writeI8(1).writeI16(654).writeI8(1)
   .writeI8(9).writeI16(2001).writeI16(32).writeI8(5).writeI8(6).writeI16(77).writeI16(88)
   .writeI8(1).writeI8(2).writeI8(3).writeI8(4).writeI8(5).writeI8(6).writeI8(7)
-  .writeUTF("Thú").writeI8(1).writeU8(12).writeI16(345).writeI8(3)
-  .writeU8(4).writeU8(5).writeU8(6).toUint8Array();
+  .writeUTF("Thú").writeI8(1).writeU8(12).writeI16(345).writeI8(3).toUint8Array();
 const combined = new Uint8Array(subtype1Payload.length + imageBytes.length);
 combined.set(subtype1Payload); combined.set(imageBytes, subtype1Payload.length);
 const subtype1 = decodeS2COpcode15(combined);
