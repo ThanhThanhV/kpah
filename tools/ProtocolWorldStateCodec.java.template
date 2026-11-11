@@ -43,7 +43,6 @@ public final class ProtocolWorldStateCodec {
         try{has=in.readBool();if(has)map=readRemaining(in);}catch(Exception ex){error=ex.getMessage()==null?ex.getClass().getSimpleName():ex.getMessage();}
         return new Opcode12(first,second,third,hfK,fourth,label,has,map,error,readRemaining(in));
     }
-}
 
     public record Effect(int type, short valueA, short valueB, short valueC, short valueD) {}
     public record Opcode17(short firstShortWireValue, short targetEntityId, byte eventByte, int value,
@@ -61,3 +60,4 @@ public final class ProtocolWorldStateCodec {
         byte mode=0;if(in.remaining()>0)mode=in.readI8();
         return new Opcode17(first,target,event,value,display,List.copyOf(effects),repeat,discarded,mode,readRemaining(in));
     }
+}
