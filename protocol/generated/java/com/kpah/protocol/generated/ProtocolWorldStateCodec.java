@@ -59,6 +59,15 @@ public final class ProtocolWorldStateCodec {
         return new PlayerSnapshot(id,name,x,y,hp,maxHp,mp,maxMp,profession,skillClass,parts,partSlots,r,s,cW,cX,cY,da,co,
             coNormalized,cp,cn,cT,i,db,af,aS,appearance,bM,trade,t,u,ak,a,b,c,List.copyOf(mapping),mappingApplied,mappingError,bf,d,e,trailing);
     }
+    public record CombatEvent(short firstEntityId, short secondEntityId, byte actionByte, int valueA, int valueB,
+                               byte flagA, byte flagB, byte flagC, byte flagD, byte[] trailingBytes) {}
+    private static CombatEvent decodeCombatEvent(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);
+        return new CombatEvent(in.readI16(),in.readI16(),in.readI8(),in.readI32(),in.readI32(),
+            in.readI8(),in.readI8(),in.readI8(),in.readI8(),readRemaining(in));
+    }
+    public static CombatEvent decodeS2COpcode6(byte[] payload) throws IOException { return decodeCombatEvent(payload); }
+    public static CombatEvent decodeS2COpcode9(byte[] payload) throws IOException { return decodeCombatEvent(payload); }
     public static Opcode8 decodeS2COpcode8(byte[] payload) throws IOException {
         PacketReader in=new PacketReader(payload);List<Short> ids=new ArrayList<>();while(in.remaining()>0)ids.add(in.readI16());
         return new Opcode8(List.copyOf(ids),readRemaining(in));
