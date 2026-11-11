@@ -667,7 +667,7 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 | 2026-11-11 | B16 | Hiệu chỉnh decoder opcode 16 mode 0 theo CFR `ka.java`: parse thêm hai trường int chung `aY/aZ`, giữ nguyên ý nghĩa nghiệp vụ chưa xác minh | `4aee2a7`, `eb83ada`, `b74737f`, `b323a4a`, `fa2084c`, `72b4129` | Đã bổ sung test JS/Java và cập nhật docs; chờ CI xác nhận. |
 
 
-| 2026-11-11 | B16 | Mở rộng decoder opcode 16: bổ sung mode 3 (aY, signed-byte count, short array ca.T, aZ); xác minh UI tiêu thụ qua catalog bq.d/e; mode 1–2 vẫn opaque | `da017e2`, `42399fa`, `8a07f0c`, `46d990d`, `dc4d58e`, `1f12ef5`, `1fdf1f5` | Đã thêm vector JS/Java và cập nhật docs; chờ CI xác minh. |
+| 2026-11-11 | B16 | Mở rộng decoder opcode 16: bổ sung mode 3 (aY, signed-byte count, short array ca.T, aZ); xác minh UI tiêu thụ qua catalog bq.d/e; mode 1–2 vẫn opaque | `da017e2`, `42399fa`, `8a07f0c`, `46d990d`, `dc4d58e`, `1f12ef5`, `1fdf1f5` | CI run `42974710824` PASS cho mode 3 (build, codegen, JS tests, Java 21 smoke); mode 1 tiếp tục được bổ sung và có run riêng. |
 
 
 | 2026-11-11 | B16 | Bổ sung decoder opcode 16 mode 1: parse item list bo, các trường thuộc tính, UTF description, value u16, nested stat pairs và aY/aZ; mode 2 vẫn opaque | `49fd952`, `4694018`, `3c69b12`, `20a7085`, `01a9003`, `fe344af`, `f9c3b1a` | Đã thêm vector JavaScript/Java; chờ CI xác minh. |
