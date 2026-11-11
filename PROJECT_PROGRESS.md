@@ -418,3 +418,6 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Added `tools/generate_initialization_codec.py` and generated JavaScript/Java decoders. JavaScript retains currency as `BigInt`; Java retains it as `long`. Both preserve trailing bytes.
 - Modes 1–3 remain opaque after their mode byte. This increment does not claim a full opcode 16 decoder or server-side state integration.
 - Added JavaScript vectors for >2^53 currency, signed skill values, repeated records, opaque modes and truncation; CI also compiles and smoke-tests the generated Java decoder.
+
+
+- Source refinement: CFR `ka.java` opcode 16 case reads two additional signed 32-bit values into `km.s.t.aY` and `km.s.t.aZ` after mode-specific sections. The mode-0 decoder and both-language smoke vectors now parse these common fields explicitly; business semantics remain unnamed.
