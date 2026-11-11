@@ -453,7 +453,7 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 - Revisited CFR `ka.java` case 15 and both `mj.java` overloads. Subtype 0 is a character-targeted item/context update with a `bo` list, five short metadata values, optional UTF/byte data and optional `l` record; the non-zero subtype carries a character-targeted item list plus a packed image payload used for pet-equipment presentation.
 - Traced `l.java`, `bo.java`, `bk.java`, and `xg.java` consumer fields. Optional records are sentinel-guarded; the non-zero branch's image bytes are decoded as an image atlas and frame dimensions are calculated from the image and frame count.
-- Updated `protocol-initialization-data.md` with exact read order and runtime destinations. No opcode 15 decoder has been generated yet; preserve subtype variants and opaque image data until dedicated tests are added.
+- Updated `protocol-initialization-data.md` with exact read order and runtime destinations. Generated JavaScript and Java opcode 15 decoders now cover subtype 0 shop/context data and non-zero pet-equipment image data. Dedicated synthetic vectors cover both item layouts, stat records, sentinels, negative counts and opaque image bytes; actual atlas decoding/dimensions remain in the image runtime.
 
 
 ## B5 — World entity movement source trace
@@ -461,3 +461,12 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Traced `cd.a(ce)`, `cd.b()`, `cd.c(x,y)`, `cd.y()` and `ca.b()` in CFR. Remote snapshots set target M/N; local actor snapshots set current l/m. Per-template movement speed is `ku.T[R].c`; movement steps one axis at a time, prioritizes X, then Y, and sets facing cO 0–3.
 - Documented the distinction between C2S movement requests and S2C entity snapshots, plus the client-side movement throttle and collision checks.
 - This is reverse-engineering evidence/documentation only; no server-authoritative network interpolation is connected to the demo runtime yet.
+
+
+## B16 — Opcode 15 typed variants
+
+- Added protocol YAML variant declarations with explicit wire-order layouts for subtype 0 and the non-zero image branch.
+- Generated JavaScript and Java decoders preserve the subtype-specific item layouts: subtype 0 includes unsigned-short w; non-zero subtype omits w and reads frame count followed by the remaining image bytes.
+- Subtype 0 parses aS, five short values, optional UTF/byte data and optional l context. The byte assigned to a discarded temporary l object is named discardedTypeByte, not misrepresented as a field on the retained context.
+- Matched the original signed-count loops: negative subtype-0 item/stat counts result in zero iterations; negative non-zero item count skips the character update and preserves the remaining bytes.
+- Added generator consistency checks, JavaScript vectors and Java 21 smoke coverage. CI verification is pending.
