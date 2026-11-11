@@ -21,11 +21,17 @@ def outputs():
         if schema["direction"] != "S2C":
             raise ValueError("Mode decoder currently supports S2C only")
         mode = int(schema["mode"])
-        if schema.get("commonFields") != [
-            {"name": "aY", "type": "i32"},
-            {"name": "aZ", "type": "i32"},
-        ]:
-            raise ValueError("Unsupported verified common opcode 16 fields")
+        if mode in (0, 1):
+            if schema.get("commonFields") != [
+                {"name": "aY", "type": "i32"},
+                {"name": "aZ", "type": "i32"},
+            ]:
+                raise ValueError("Unsupported verified common opcode 16 fields")
+        elif mode == 2:
+            if schema.get("fields") != [{"name": "aY", "type": "i32"}] or schema.get("commonFields") != [
+                {"name": "aZ", "type": "i32"}
+            ]:
+                raise ValueError("Unsupported mode 2 common fields")
         if mode == 0:
             if schema["fields"] != [{"name": "currency", "type": "i64"}]:
                 raise ValueError("Unsupported mode 0 fixed fields")
