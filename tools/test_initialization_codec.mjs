@@ -59,8 +59,8 @@ assert.equal(mode3.aZ, 222);
 assert.deepEqual([...mode3.trailingBytes], [0xbe]);
 assert.throws(() => decodeS2CInitialization(16, Uint8Array.from([3, 0,0,0,0, 255])), /Negative opcode 16 mode 3 item count/);
 
-const opaque = decodeS2CInitialization(16, Uint8Array.from([1, 0x10, 0x20]));
-assert.equal(opaque.mode, 1);
+const opaque = decodeS2CInitialization(16, Uint8Array.from([2, 0x10, 0x20]));
+assert.equal(opaque.mode, 2);
 assert.equal(opaque.decoded, false);
 assert.deepEqual([...opaque.opaquePayload], [0x10, 0x20]);
 assert.throws(() => decodeS2CInitialization(15, new Uint8Array()), /No verified mode schema/);
