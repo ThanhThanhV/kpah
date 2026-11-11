@@ -1982,7 +1982,7 @@
       "direction": "S2C",
       "opcode": 16,
       "mode": 0,
-      "evidence": "CFR opcode 16 handler: mode byte, readLong currency, unsigned-byte skill count, repeated unsigned-byte skill index + int skill value; modes 1 and 2 remain opaque; mode 3 is decoded as a short array",
+      "evidence": "CFR opcode 16 handler: mode byte, readLong currency, unsigned-byte skill count, repeated unsigned-byte skill index + int skill value, then common aY/aZ ints; modes 1/2/3 have separate mode-specific decoders.",
       "fields": [
         {
           "name": "currency",
