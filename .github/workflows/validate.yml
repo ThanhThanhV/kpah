@@ -58,6 +58,10 @@ jobs:
         run: npm run check:opcode15
       - name: Test generated opcode 15 codec
         run: npm run test:opcode15
+      - name: Verify generated opcode 1 codec
+        run: npm run check:opcode1
+      - name: Test generated opcode 1 codec
+        run: npm run test:opcode1
       - name: Test generated transport codec
         run: npm run test:transport-codegen
       - name: Test generated JavaScript protocol codec
@@ -146,6 +150,31 @@ jobs:
                   || petDecoded.frameCount() != 3 || petDecoded.atlasLayoutCode() != 3
                   || !Arrays.equals(petDecoded.imageBytes(), new byte[]{(byte)0x89,0x50}))
                 throw new AssertionError("opcode 15 pet image decode: " + petDecoded);
+              PacketWriter global1 = new PacketWriter().writeI8(2).writeI16(1200).writeU8(1)
+                .writeU8(31).writeUTF("Skill A").writeUTF("Desc A").writeI16(900).writeBool(true);
+              for (int value : new int[]{2,3,4,5,6}) global1.writeI8(value);
+              for (int i=0;i<5;i++) global1.writeI8(0);
+              global1.writeI16(77).writeU8(1).writeU8(5);
+              for (int i=0;i<100;i++) global1.writeI8((i%9)-4);
+              global1.writeI8(11).writeI8(12).writeI8(13).writeI8(14)
+                .writeI8(1).writeUTF("Attack").writeI8(6).writeUTF("1800")
+                .writeI8(1).writeI8(2).writeI32(300).writeI8(3).writeI32(400)
+                .writeI8(1).writeI8(4).writeUTF("Collect").writeUTF("https://example.invalid/help")
+                .writeI8(2).writeI16(3).writeU8(1).writeU8(2).writeU8(3)
+                .writeI16(2).writeU8(4).writeU8(5).writeI8(7).writeI8(1).writeI16(3).writeU8(8).writeU8(9).writeU8(10);
+              ProtocolOpcode1Codec.Decoded globalDecoded = ProtocolOpcode1Codec.decode(global1.toByteArray());
+              if (globalDecoded.movementStep() != 3 || globalDecoded.boatTicketPrice() != 1200
+                  || globalDecoded.skills().size() != 1 || !globalDecoded.skills().get(0).name().equals("Skill A")
+                  || !globalDecoded.professionSkillSlotCounts().equals(List.of((byte)2,(byte)3,(byte)4,(byte)5,(byte)6))
+                  || globalDecoded.optionalBlock().auxiliaryShort() != 77
+                  || globalDecoded.optionalBlock().matrices()[4][4][3] != ((99%9)-4)
+                  || !globalDecoded.statLabels().get(0).name().equals("Attack")
+                  || globalDecoded.pairedLookupRows().get(0).rightInt() != 400
+                  || !globalDecoded.questObjectives().get(0).name().equals("Collect")
+                  || !globalDecoded.tileBlobs().get(1).key().equals("t_thanh")
+                  || !Arrays.equals(globalDecoded.partData().get(0).data(), new byte[]{8,9,10})
+                  || globalDecoded.partDataError() != null || globalDecoded.trailingBytes().length != 0)
+                throw new AssertionError("opcode 1 global configuration decode: " + globalDecoded);
               ProtocolInitializationCodec.Decoded init = ProtocolInitializationCodec.decodeS2COpcode16(initPacket.toByteArray());
               if (!init.decoded() || init.mode() != 0 || init.currency() != 9_007_199_254_740_993L
                   || !init.skills().equals(List.of(new ProtocolInitializationCodec.SkillValue(3, -1200),
