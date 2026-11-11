@@ -100,11 +100,13 @@ jobs:
                   || prefix.decodedPrefixBytes() != snapshot.toByteArray().length - 3)
                 throw new AssertionError("opcode 3 prefix decode: " + prefix);
               PacketWriter initPacket = new PacketWriter().writeU8(0).writeI64(9_007_199_254_740_993L)
-                .writeU8(2).writeU8(3).writeI32(-1200).writeU8(8).writeI32(250000).writeU8(0xde);
+                .writeU8(2).writeU8(3).writeI32(-1200).writeU8(8).writeI32(250000)
+                .writeI32(123456).writeI32(654321).writeU8(0xde);
               ProtocolInitializationCodec.Decoded init = ProtocolInitializationCodec.decodeS2COpcode16(initPacket.toByteArray());
               if (!init.decoded() || init.mode() != 0 || init.currency() != 9_007_199_254_740_993L
                   || !init.skills().equals(List.of(new ProtocolInitializationCodec.SkillValue(3, -1200),
                                                     new ProtocolInitializationCodec.SkillValue(8, 250000)))
+                  || init.aY() != 123456 || init.aZ() != 654321
                   || !Arrays.equals(init.trailingBytes(), new byte[]{(byte)0xde}))
                 throw new AssertionError("opcode 16 mode 0 decode: " + init);
               ProtocolInitializationCodec.Decoded opaqueInit = ProtocolInitializationCodec.decodeS2COpcode16(new byte[]{1, 0x10, 0x20});
