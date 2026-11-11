@@ -497,3 +497,9 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Added a separate JavaScript/Java decoder for the bytes following the fixed 33-field opcode 3 prefix. It models the main character extension, three optional numeric groups, counted short/byte mapping + UTF, bf and final state groups.
 - Each group has its own catch/default behavior, matching the source's no-rewind cursor semantics. The mapping group returns its raw text and does not invent the semantics of kw.a parsing.
 - Added full and truncated synthetic vectors, generator/schema consistency and Java 21 smoke coverage. CI run `42987425414` PASS: Vite build, opcode 3 extension codegen/test, Java 21 compile/smoke and original-JAR CFR analysis.
+
+
+## Protocol codec — Java-compatible partial reads
+
+- Updated the generated JavaScript PacketReader so readU16/readI16/readI32/readI64/readUTF consume bytes incrementally like DataInputStream. This preserves cursor position after a truncated field and is required to reproduce opcode 3's independent try/catch groups.
+- Added tests for partial short/int/long/modified-UTF reads and remaining-byte counts. This affects all generated JavaScript decoders; run full protocol and initialization suites in CI.
