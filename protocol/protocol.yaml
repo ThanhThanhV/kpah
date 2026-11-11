@@ -2040,6 +2040,23 @@
           "type": "i32"
         }
       ]
+    },
+    {
+      "name": "CHARACTER_AUXILIARY_MODE_2",
+      "direction": "S2C",
+      "opcode": 16,
+      "mode": 2,
+      "evidence": "CFR ka.java case 16: common aY int; signed-byte count and k records (discarded short, discarded byte, h byte, c byte, b UTF, a UTF, d byte); second signed-byte count and k records (discarded short, discarded byte, h byte, b UTF, discarded byte, a UTF, g int, d byte); common aZ int. mj.java assigns second vector to z.by.",
+      "fields": [
+        {"name": "aY", "type": "i32"}
+      ],
+      "groups": [
+        {"name": "firstCollection", "countType": "i8", "record": "k-first"},
+        {"name": "secondCollection", "countType": "i8", "record": "k-second"}
+      ],
+      "commonFields": [
+        {"name": "aZ", "type": "i32"}
+      ]
     }
   ],
   "prefixSchemas": [
