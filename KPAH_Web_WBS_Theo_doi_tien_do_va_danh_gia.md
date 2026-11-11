@@ -689,7 +689,7 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 
 | 2026-11-11 | B5 | Tạo decoder Java/JS S2C opcode 4 entity spawn/update, opcode 8 despawn list và opcode 12 map transition/map bytes; giữ default của các optional read, đánh dấu opcode 7 chưa typed do mâu thuẫn CFR ce.a | `8557ee8`, `11fc781`, `92acc18`, `94d9142`, `0b3c9a4`, `190648e` | Có YAML, generator, test vector và Java smoke; CI run `42988786876` PASS. Opcode 7 chờ bytecode verification, không suy diễn entityId. |
 
-| 2026-11-11 | B5 | Bổ sung decoder S2C opcode 5 player/entity snapshot: fixed arrays 7 part bytes + 7 part shorts + 5 appearance shorts, HP/MP, trạng thái, trade flag và các optional groups | `765a6e9`, `263ff57`, `eb633d3`, `37da513`, `0a04715` | Có YAML, JS/Java codegen, vector đầy đủ và Java smoke; chờ CI. Decoder chỉ trả state, chưa mutate world. |
+| 2026-11-11 | B5 | Bổ sung decoder S2C opcode 5 player/entity snapshot: fixed arrays 7 part bytes + 7 part shorts + 5 appearance shorts, HP/MP, trạng thái, trade flag và các optional groups | `765a6e9`, `263ff57`, `eb633d3`, `37da513`, `0a04715` | Đã hợp nhất vào dedicated opcode5-codec (có entityExists guard), bổ sung counted short/byte mapping bị thiếu, sửa vector aS/ca; JS và Java smoke đang được xác minh. |
 
 | 2026-11-11 | B16 | Decoder opcode 5 world entity snapshot Java/JS; kiểm soát entity đã tồn tại, trường vị trí/combat/appearance/state, điều kiện af và các nhóm tail optional | 64294c3, 79e6b47, a370fb1, 39e7c4c, 2244f30, 4ad4bc4, a7c5485, 7e39316, 2472ab0 | Có source contract, generator, test vector full/unknown entity và Java smoke; chờ CI. Không tự tạo entity khi ID chưa có trong world. |
 
