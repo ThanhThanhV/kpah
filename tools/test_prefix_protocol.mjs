@@ -10,7 +10,7 @@ i16(321); utf("Hero"); i32(100); i32(120); i32(40); i32(60); u8(2); u8(4);
 i32(11); i32(12); i32(13); i16(21); i16(22); i16(23); u8(1); u8(0);
 for(let n=0;n<8;n++) i16(n+30);
 i32(99); i16(7); u8(3); u8(0xaa); u8(0xbb); u8(0xcc); i16(8);
-u8(9); u8(10); u8(11); u8(12); u8(17); // unknown optional tail
+u8(9); u8(10); u8(11); u8(12); u8(17); u8(3); u8(0xde); u8(0xad); // unknown optional tail
 const decoded=decodeS2CPrefix(3,Uint8Array.from(b));
 assert.equal(decoded.fields.characterId,321);
 assert.equal(decoded.fields.characterName,"Hero");
