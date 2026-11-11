@@ -114,7 +114,20 @@ jobs:
                 .writeI8(7).writeI8(8).writeI8(9).writeI8(10).writeI8(11).writeI8(12).writeI8(13).writeI8(14).writeI8(15)
                 .writeUTF("Sword").writeU16(65500).writeI8(2).writeU8(4).writeI16(-50).writeU8(8).writeI16(75).writeI8(16)
                 .writeI32(333).writeI32(444).writeU8(0xfa);
-              ProtocolInitializationCodec.Decoded mode1 = ProtocolInitializationCodec.decodeS2COpcode16(mode1Packet.toByteArray());
+              PacketWriter mode2Packet = new PacketWriter().writeU8(2).writeI32(123).writeI8(1)
+                .writeI16(101).writeI8(2).writeI8(3).writeI8(4).writeUTF("first-b").writeUTF("first-a").writeI8(5)
+                .writeI8(1).writeI16(201).writeI8(6).writeI8(7).writeUTF("second-b").writeI8(8)
+                .writeUTF("second-a").writeI32(-987).writeI8(9).writeI32(456).writeU8(0xca);
+              ProtocolInitializationCodec.Decoded mode2 = ProtocolInitializationCodec.decodeS2COpcode16(mode2Packet.toByteArray());
+              if (!mode2.decoded() || mode2.mode() != 2 || mode2.aY() != 123 || mode2.aZ() != 456
+                  || mode2.firstCollection().size() != 1 || !mode2.firstCollection().get(0).b().equals("first-b")
+                  || !mode2.firstCollection().get(0).a().equals("first-a")
+                  || mode2.secondCollection().size() != 1 || !mode2.secondCollection().get(0).b().equals("second-b")
+                  || !mode2.secondCollection().get(0).a().equals("second-a")
+                  || mode2.secondCollection().get(0).g() != -987
+                  || !Arrays.equals(mode2.trailingBytes(), new byte[]{(byte)0xca}))
+                throw new AssertionError("opcode 16 mode 2 decode: " + mode2);
+              PacketWriter mode1Packet = new PacketWriter().writeU8(1).writeI16(1)
               ProtocolInitializationCodec.InventoryItem mode1Item = mode1.items().get(0);
               if (!mode1.decoded() || mode1.mode() != 1 || mode1.items().size() != 1
                   || mode1Item.i() != 1001 || !mode1Item.d().equals("Sword") || mode1Item.w() != 65500
@@ -130,11 +143,11 @@ jobs:
                   || !Arrays.equals(mode3.values(), new short[]{101,202,-303})
                   || !Arrays.equals(mode3.trailingBytes(), new byte[]{(byte)0xbe}))
                 throw new AssertionError("opcode 16 mode 3 decode: " + mode3);
-              ProtocolInitializationCodec.Decoded opaqueInit = ProtocolInitializationCodec.decodeS2COpcode16(new byte[]{2, 0x10, 0x20});
-              if (opaqueInit.decoded() || opaqueInit.mode() != 2
+              ProtocolInitializationCodec.Decoded opaqueInit = ProtocolInitializationCodec.decodeS2COpcode16(new byte[]{4, 0x10, 0x20});
+              if (opaqueInit.decoded() || opaqueInit.mode() != 4
                   || !Arrays.equals(opaqueInit.opaquePayload(), new byte[]{0x10, 0x20}))
                 throw new AssertionError("opcode 16 opaque mode preservation");
-              System.out.println("Generated Java protocol, transport, opcode 3 prefix and opcode 16 modes 0/1/3 codecs: PASS");
+              System.out.println("Generated Java protocol, transport, opcode 3 prefix and opcode 16 modes 0/1/2/3 codecs: PASS");
             }
           }
           JAVA
