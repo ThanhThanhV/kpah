@@ -67,6 +67,17 @@ export function decodeS2COpcode5(payload) {
     appearanceSlots, bM, openTradeUi, t, u, ak, pairA, tripleB, tripleC, mappingPairs, mappingApplied,
     mappingError, bf, groupD, groupE, trailingBytes };
 }
+function decodeCombatEvent(payload) {
+  const reader = new PacketReader(payload);
+  return {
+    firstEntityId: reader.readI16(), secondEntityId: reader.readI16(), actionByte: reader.readI8(),
+    valueA: reader.readI32(), valueB: reader.readI32(), flagA: reader.readI8(),
+    flagB: reader.readI8(), flagC: reader.readI8(), flagD: reader.readI8(),
+    trailingBytes: readRemaining(reader)
+  };
+}
+export function decodeS2COpcode6(payload) { return decodeCombatEvent(payload); }
+export function decodeS2COpcode9(payload) { return decodeCombatEvent(payload); }
 export function decodeS2COpcode8(payload) {
   const reader = new PacketReader(payload), entityIds = [];
   while (reader.remaining() > 0) entityIds.push(reader.readI16());
