@@ -665,3 +665,6 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 
 
 | 2026-11-11 | B16 | Hiệu chỉnh decoder opcode 16 mode 0 theo CFR `ka.java`: parse thêm hai trường int chung `aY/aZ`, giữ nguyên ý nghĩa nghiệp vụ chưa xác minh | `4aee2a7`, `eb83ada`, `b74737f`, `b323a4a`, `fa2084c`, `72b4129` | Đã bổ sung test JS/Java và cập nhật docs; chờ CI xác nhận. |
+
+
+| 2026-11-11 | B16 | Mở rộng decoder opcode 16: bổ sung mode 3 (aY, signed-byte count, short array ca.T, aZ); xác minh UI tiêu thụ qua catalog bq.d/e; mode 1–2 vẫn opaque | `da017e2`, `42399fa`, `8a07f0c`, `46d990d`, `dc4d58e`, `1f12ef5`, `1fdf1f5` | Đã thêm vector JS/Java và cập nhật docs; chờ CI xác minh. |
