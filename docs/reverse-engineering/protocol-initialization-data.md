@@ -28,6 +28,27 @@ Handler đọc dữ liệu cấu hình dùng chung và kết thúc bằng `km.s.
 
 Optional sections are guarded by `available()>0` or local try/catch. The exact meaning of every lookup table is not fully resolved. The server's tile count is expected to fit the two named `km.M` slots observed in this client.
 
+### Opcode 1 — typed global configuration decoder
+
+A separate generated decoder now covers the handler's observed section order. It returns neutral field names where consumers are not known and preserves the part-data section's best-effort error behavior:
+
+1. Signed movement byte (also returns the client-effective value clamped to at least 3), ticket price short, unsigned-byte skill count and skill records (icon ID, UTF name, UTF description, cooldown short, enabled boolean). Skill point counters start at zero locally; opcode 16 later supplies the server values.
+2. Five signed profession slot-count bytes, followed by five profession catalogs. Each catalog uses a signed-byte count and records of one consumed byte, two UTF strings and an int. The consumed byte is exposed as discardedByte because CFR assigns it to a temporary ia instance.
+3. If any bytes remain after the five catalogs, parse the optional auxiliary short, unsigned-byte unlocked-ID list and 5×5×4 signed-byte matrices. This follows the literal available()>0 check in ka.java; it is not an independently length-framed section.
+4. Four global bytes; signed-byte stat-label count with UTF+byte records; support-hotline UTF; signed-byte paired-lookup count with byte/int/byte/int rows; signed-byte quest-objective count with byte+UTF records; external URL UTF.
+5. Signed-byte tile count and short-length-prefixed tile blobs. The only verified keys in km.M are t_hang and t_thanh, so the decoder rejects counts beyond those two keys rather than inventing names.
+6. One consumed part-data flag, then the best-effort signed-byte part count and short-length-prefixed blobs. ka.java clears hd.a and catches errors in this final section; the decoder returns successfully parsed records plus partDataError and any unconsumed tail.
+
+The generated decoder does not assign business meaning to the four global bytes, auxiliary matrix cells, paired lookup values or part-data bytes. The ia byte is explicitly marked discarded pending bytecode verification of the CFR temporary-object assignment.
+
+Generator and checks:
+
+```bash
+npm run generate:opcode1
+npm run check:opcode1
+npm run test:opcode1
+```
+
 ### Opcode 1 lookup consumers — deeper trace
 
 The cv records are skill definitions, not player-owned item records. The loader sets d to the array index, e to the skill icon/resource ID, g/h to name and description, c to the cooldown value and f to the enabled flag. The live state is held in a/b: the UI and validation compare a - b to show remaining upgrade points, and skill upgrade requests are bounded by that difference. The skill quick-slot renderer uses e as the icon and c for cooldown display.
