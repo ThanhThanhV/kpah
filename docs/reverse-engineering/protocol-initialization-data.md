@@ -73,7 +73,7 @@ First byte is mode; handler creates `int[]` sized by global skill count `z.Z` an
 |---:|---|
 | `0` | long currency; unsigned-byte count; each record: unsigned-byte skill index + int skill value; then common `aY` int and `aZ` int; updates `ca.S[index].a` and skill value array |
 | `1` | signed short item count; each `bo` item consumes a type byte, item/property shorts and bytes, UTF description, unsigned-short value, signed-byte stat count with `(unsigned-byte statId, short statValue)` pairs, then a final byte; common `aY` and `aZ` ints follow the mode-specific section |
-| `2` | common `aY` int; first signed-byte-counted `k` collection (`short`, discarded byte, two bytes, two UTF strings, byte); second signed-byte-counted `k` collection (`short`, discarded byte, byte, UTF, discarded byte, UTF, int, byte); common `aZ` int |
+| `2` | common `aY` int; first signed-byte-counted collection (`discarded short`, discarded byte, `h`, `c`, UTF `b`, UTF `a`, `d`); second signed-byte-counted collection (`discarded short`, discarded byte, `h`, UTF `b`, discarded byte, UTF `a`, int `g`, `d`); common `aZ` int |
 | `3` | common `aY` int; signed-byte count followed by short array stored as `ca.T`; common `aZ` int |
 
 Some fields (`aY`, `aZ`) are currency/state counters; exact split between wallet, market balance and auxiliary points requires caller/UI trace. The mode-1 item model is `bo` and is assigned to `z.bx` for the inventory UI. The decoder keeps original field names where business semantics are not independently verified. Mode 2 records are assigned to `z.by`; mode 3 values populate `ca.T` and are rendered with the `bq.d/e` item catalog. In `xg`, `aY` is displayed with the `l` suffix and participates in purchase affordability checks; `aZ` is displayed with the `lk` suffix. The exact business name of `aZ` remains unverified. The item model `bo` is shared with shop/trade packets but mode 1 has its own field order.
@@ -124,7 +124,7 @@ The verified mode-0 layout is now represented in `protocol/protocol.yaml` (`mode
 4. Repeated records: unsigned-byte skill index, signed 32-bit skill value.
 5. Common signed 32-bit fields `aY` and `aZ`, read by the handler for every mode.
 
-The decoder preserves the full 64-bit currency value (JavaScript `BigInt`; Java `long`) and returns skill records in wire order and preserves `aY`/`aZ` as numeric fields without guessing their business meaning. Any bytes after the verified fields are returned as an opaque tail. Mode 2 is deliberately returned as an opaque payload after the mode byte. Modes 0, 1 and 3 have separate source-bounded decoders; mode 3 is decoded from its verified signed-byte count and short array, not mixed into the mode-0 schema. The full opcode 16 command remains opaque in the general command catalog.
+The decoder preserves the full 64-bit currency value (JavaScript `BigInt`; Java `long`) and returns skill records in wire order and preserves `aY`/`aZ` as numeric fields without guessing their business meaning. Any bytes after the verified fields are returned as an opaque tail. All four observed mode branches (0–3) now have separate source-bounded decoders. Mode 2 parses both auxiliary collections using the exact `ka.java` read order and retains the common `aY`/`aZ` values; unknown mode values remain opaque. The full opcode 16 command remains opaque in the general command catalog.
 
 Generator and checks:
 
