@@ -130,8 +130,8 @@ jobs:
                   || !Arrays.equals(mode3.values(), new short[]{101,202,-303})
                   || !Arrays.equals(mode3.trailingBytes(), new byte[]{(byte)0xbe}))
                 throw new AssertionError("opcode 16 mode 3 decode: " + mode3);
-              ProtocolInitializationCodec.Decoded opaqueInit = ProtocolInitializationCodec.decodeS2COpcode16(new byte[]{1, 0x10, 0x20});
-              if (opaqueInit.decoded() || opaqueInit.mode() != 1
+              ProtocolInitializationCodec.Decoded opaqueInit = ProtocolInitializationCodec.decodeS2COpcode16(new byte[]{2, 0x10, 0x20});
+              if (opaqueInit.decoded() || opaqueInit.mode() != 2
                   || !Arrays.equals(opaqueInit.opaquePayload(), new byte[]{0x10, 0x20}))
                 throw new AssertionError("opcode 16 opaque mode preservation");
               System.out.println("Generated Java protocol, transport, opcode 3 prefix and opcode 16 modes 0/1/3 codecs: PASS");
