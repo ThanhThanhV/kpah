@@ -114,10 +114,29 @@ npm run check:prefix-protocol
 npm run test:prefix-protocol
 ```
 
+## Opcode 16 — typed mode 0 decoder
+
+The verified mode-0 layout is now represented in `protocol/protocol.yaml` (`modeSchemas`) and decoded by generated JavaScript and Java code:
+
+1. Mode byte (`0`).
+2. Signed Java `long` currency (`i64`, big-endian).
+3. Unsigned-byte skill record count.
+4. Repeated records: unsigned-byte skill index, signed 32-bit skill value.
+
+The decoder preserves the full 64-bit currency value (JavaScript `BigInt`; Java `long`) and returns skill records in wire order. Any bytes after the verified records are returned as an opaque tail. Modes 1–3 are deliberately returned as opaque payloads after the mode byte; their schemas are not inferred from this implementation. The full opcode 16 command remains opaque in the general command catalog.
+
+Generator and checks:
+
+```bash
+npm run generate:initialization-protocol
+npm run check:initialization-protocol
+npm run test:initialization-protocol
+```
+
 ## B16 chưa hoàn tất
 
 - Chưa phân loại hết các lookup arrays trong opcode 1 hoặc gán semantic names cho toàn bộ numeric fields.
 - Chưa xác định toàn bộ skill metadata mapping, profession growth curves, item templates, tile/object catalogs và part binary schema.
 - Chưa có live packet capture để xác nhận server send order, optional-field versioning và error/retry behavior.
-- Tiếp theo: trace `cv`, `ia`, `hd`, `bo`, `bk`, `ku` consumers; map mỗi field tới UI/runtime reader và tạo bảng required/optional cho protocol spec.
+- Đã có decoder mode 0 của opcode 16; mode 1–3 vẫn opaque. Tiếp theo: trace `cv`, `ia`, `hd`, `bo`, `bk`, `ku` consumers; map các field inventory/item tới UI/runtime reader và tạo bảng required/optional cho protocol spec.
 
