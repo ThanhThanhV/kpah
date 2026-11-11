@@ -50,6 +50,10 @@ jobs:
         run: npm run check:prefix-protocol
       - name: Test generated S2C prefix codec
         run: npm run test:prefix-protocol
+      - name: Verify generated initialization codec
+        run: npm run check:initialization-protocol
+      - name: Test generated initialization codec
+        run: npm run test:initialization-protocol
       - name: Test generated transport codec
         run: npm run test:transport-codegen
       - name: Test generated JavaScript protocol codec
@@ -95,7 +99,19 @@ jobs:
                   || !Arrays.equals(prefix.trailingBytes(), new byte[]{3,(byte)0xde,(byte)0xad})
                   || prefix.decodedPrefixBytes() != snapshot.toByteArray().length - 3)
                 throw new AssertionError("opcode 3 prefix decode: " + prefix);
-              System.out.println("Generated Java protocol, transport and S2C prefix codecs: PASS");
+              PacketWriter initPacket = new PacketWriter().writeU8(0).writeI64(9_007_199_254_740_993L)
+                .writeU8(2).writeU8(3).writeI32(-1200).writeU8(8).writeI32(250000).writeU8(0xde);
+              ProtocolInitializationCodec.Decoded init = ProtocolInitializationCodec.decodeS2COpcode16(initPacket.toByteArray());
+              if (!init.decoded() || init.mode() != 0 || init.currency() != 9_007_199_254_740_993L
+                  || !init.skills().equals(List.of(new ProtocolInitializationCodec.SkillValue(3, -1200),
+                                                    new ProtocolInitializationCodec.SkillValue(8, 250000)))
+                  || !Arrays.equals(init.trailingBytes(), new byte[]{(byte)0xde}))
+                throw new AssertionError("opcode 16 mode 0 decode: " + init);
+              ProtocolInitializationCodec.Decoded opaqueInit = ProtocolInitializationCodec.decodeS2COpcode16(new byte[]{1, 0x10, 0x20});
+              if (opaqueInit.decoded() || opaqueInit.mode() != 1
+                  || !Arrays.equals(opaqueInit.opaquePayload(), new byte[]{0x10, 0x20}))
+                throw new AssertionError("opcode 16 opaque mode preservation");
+              System.out.println("Generated Java protocol, transport, opcode 3 prefix and opcode 16 mode codecs: PASS");
             }
           }
           JAVA
