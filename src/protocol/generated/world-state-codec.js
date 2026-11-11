@@ -22,6 +22,51 @@ export function decodeS2COpcode4(payload) {
   }
   return { entities, trailingBytes: readRemaining(reader) };
 }
+export function decodeS2COpcode5(payload) {
+  const reader = new PacketReader(payload);
+  const entityId = reader.readI16(), name = reader.readUTF(), x = reader.readI16(), y = reader.readI16();
+  const currentHp = reader.readI32(), maxHp = reader.readI32(), currentMp = reader.readI32(), maxMp = reader.readI32();
+  const professionCode = reader.readI8(), skillClassIndex = reader.readI8();
+  const partBytes = new Uint8Array(7);
+  for (let i = 0; i < partBytes.length; i += 1) partBytes[i] = reader.readU8();
+  const partSlots = [];
+  for (let i = 0; i < 7; i += 1) partSlots.push(reader.readI16());
+  const r = reader.readI16(), s = reader.readI8(), cW = reader.readI16(), cX = reader.readI16();
+  const cY = reader.readI8(), da = reader.readI8(), coWire = reader.readI8();
+  const coNormalized = coWire >= 0 ? coWire - 1 : null;
+  const cp = reader.readI8(), cn = reader.readI8(), cT = reader.readI8();
+  const i = reader.readI16(), db = reader.readI8();
+  const af = i !== -1 ? reader.readI8() : null;
+  const aS = reader.readI8(), appearanceSlots = [];
+  for (let n = 0; n < 5; n += 1) appearanceSlots.push(reader.readI16());
+  const bM = reader.readBool(), openTradeUi = reader.readBool();
+  const t = reader.readI8(), u = reader.readI8(), ak = reader.readBool();
+  let pairA = { shortValue: -1, byteValue: -1 };
+  try { pairA = { shortValue: reader.readI16(), byteValue: reader.readI8() }; } catch {}
+  let tripleB = { shortValue1: -1, byteValue: -1, shortValue2: -1 };
+  try { tripleB = { shortValue1: reader.readI16(), byteValue: reader.readI8(), shortValue2: reader.readI16() }; } catch {}
+  let tripleC = { shortValue1: -1, shortValue2: -1, shortValue3: -1 };
+  try { tripleC = { shortValue1: reader.readI16(), shortValue2: reader.readI16(), shortValue3: reader.readI16() }; } catch {}
+  let mappingPairs = [], mappingApplied = false, mappingError = null;
+  try {
+    const count = reader.readI8();
+    if (count < 0) throw new RangeError("Negative opcode 5 mapping count");
+    for (let n = 0; n < count; n += 1) mappingPairs.push({ shortValue: reader.readI16(), byteValue: reader.readI8() });
+    mappingApplied = true;
+  } catch (error) { mappingError = error instanceof Error ? error.message : String(error); }
+  let bf = -1;
+  try { bf = reader.readI16(); } catch {}
+  let groupD = { bi: -1, bn: -1, bj: 0, bk: 0 };
+  try { groupD = { bi: reader.readI8(), bn: reader.readI16(), bj: reader.readI8(), bk: reader.readI8() }; } catch {}
+  let groupE = { bm: -1, bo: -1, bl: 0 };
+  try { groupE = { bm: reader.readI8(), bo: reader.readI16(), bl: reader.readI8() }; } catch {}
+  const trailingBytes = new Uint8Array(reader.remaining());
+  for (let n = 0; n < trailingBytes.length; n += 1) trailingBytes[n] = reader.readU8();
+  return { entityId, name, x, y, currentHp, maxHp, currentMp, maxMp, professionCode, skillClassIndex,
+    partBytes, partSlots, r, s, cW, cX, cY, da, coWire, coNormalized, cp, cn, cT, i, db, af, aS,
+    appearanceSlots, bM, openTradeUi, t, u, ak, pairA, tripleB, tripleC, mappingPairs, mappingApplied,
+    mappingError, bf, groupD, groupE, trailingBytes };
+}
 export function decodeS2COpcode8(payload) {
   const reader = new PacketReader(payload), entityIds = [];
   while (reader.remaining() > 0) entityIds.push(reader.readI16());
