@@ -439,3 +439,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 
 - Opcode 16 mode 3 validation: CI run 42974710824 SUCCESS (Vite build, generated initialization-codec consistency, JS tests and Java 21 compile/smoke). Mode 1 inventory decoder has been added after this run and is awaiting its own CI run.
+
+
+## B16 — Opcode 16 mode 2 auxiliary decoder
+
+- Re-read CFR `ka.java` case 16 and `mj.java` consumer: mode 2 starts with common `aY`, then two signed-byte-counted collections of `k` records, then common `aZ`; `mj.a(long,int[],Vector,Vector,int)` assigns the second vector to `z.by`.
+- Added generated JavaScript and Java decoders for both collection layouts, preserving the source read order and marking discarded values explicitly rather than assigning guessed meanings.
+- Added synthetic JS and Java vectors for both record types, UTF fields, signed `g`, common counters, and opaque tail bytes. Negative collection counts are rejected. Unknown mode values remain opaque.
+- Validation is pending on the CI run triggered by this change.
