@@ -5,8 +5,8 @@ public final class ProtocolOpcode5Codec {
  private ProtocolOpcode5Codec(){}
  public record PairA(short shortValue,byte byteValue){} public record TripleB(short shortValue1,byte byteValue,short shortValue2){}
  public record TripleC(short shortValue1,short shortValue2,short shortValue3){} public record GroupD(byte bi,short bn,byte bj,byte bk){}
- public record GroupE(byte bm,short bo,byte bl){}
- public record Optional(PairA pairA,TripleB tripleB,TripleC tripleC,short bf,GroupD groupD,GroupE groupE){}
+ public record GroupE(byte bm,short bo,byte bl){} public record MappingPair(short shortValue,byte byteValue){}
+ public record Optional(PairA pairA,TripleB tripleB,TripleC tripleC,List<MappingPair> mappingPairs,boolean mappingApplied,String mappingError,short bf,GroupD groupD,GroupE groupE){}
  public record Decoded(short entityId,boolean entityExists,String name,short x,short y,int[] combatState,byte[] actionBytes,
  byte[] appearanceBytes,short[] appearanceValues,short stateShort,byte stateByte,short[] stateShorts,byte[] stateBytes,
  Integer co,byte cp,byte cn,byte cT,short i,byte db,Byte af,byte aS,short[] ca,boolean bM,boolean presenceFlag,
@@ -20,9 +20,12 @@ public final class ProtocolOpcode5Codec {
  PairA a=new PairA((short)-1,(byte)-1);try{a=new PairA(r.readI16(),r.readI8());}catch(Exception ignored){}
  TripleB b=new TripleB((short)-1,(byte)-1,(short)-1);try{b=new TripleB(r.readI16(),r.readI8(),r.readI16());}catch(Exception ignored){}
  TripleC c=new TripleC((short)-1,(short)-1,(short)-1);try{c=new TripleC(r.readI16(),r.readI16(),r.readI16());}catch(Exception ignored){}
+ List<MappingPair> mapping=new ArrayList<>();boolean mappingApplied=false;String mappingError=null;
+ try{int count=r.readI8();if(count<0)throw new IOException("Negative opcode 5 mapping count");for(int n=0;n<count;n++)mapping.add(new MappingPair(r.readI16(),r.readI8()));mappingApplied=true;}
+ catch(Exception ex){mappingError=ex.getMessage()==null?ex.getClass().getSimpleName():ex.getMessage();}
  short bf=-1;try{bf=r.readI16();}catch(Exception ignored){}
  GroupD d=new GroupD((byte)-1,(short)-1,(byte)0,(byte)0);try{d=new GroupD(r.readI8(),r.readI16(),r.readI8(),r.readI8());}catch(Exception ignored){}
  GroupE e=new GroupE((byte)-1,(short)-1,(byte)0);try{e=new GroupE(r.readI8(),r.readI16(),r.readI8());}catch(Exception ignored){}
- return new Decoded(id,true,name,x,y,combat,actions,appearance,appearanceValues,stateShort,stateByte,stateShorts,stateBytes,co,cp,cn,cT,i,db,af,aS,ca,bM,presence,t,u,ak,new Optional(a,b,c,bf,d,e),bytes(r,r.remaining()));
+ return new Decoded(id,true,name,x,y,combat,actions,appearance,appearanceValues,stateShort,stateByte,stateShorts,stateBytes,co,cp,cn,cT,i,db,af,aS,ca,bM,presence,t,u,ak,new Optional(a,b,c,List.copyOf(mapping),mappingApplied,mappingError,bf,d,e),bytes(r,r.remaining()));
  }
 }
