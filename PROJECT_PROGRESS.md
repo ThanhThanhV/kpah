@@ -509,4 +509,4 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 - Added source-bounded JavaScript/Java decoders for S2C opcode 4 spawn/update records, opcode 8 despawn ID lists and opcode 12 map transitions/map-data bytes.
 - Opcode 4 preserves per-field defaults and kind-1-only subtype behavior; opcode 12 keeps the four shorts neutral. Opcode 7 remains intentionally untyped because CFR assigns the first short to a temporary ce object while mj.a(ce) later looks up ce.a; bytecode verification is required before naming that field.
-- Added JS synthetic vectors and Java 21 smoke coverage. Validation pending.
+- Added JS synthetic vectors and Java 21 smoke coverage. CI run `42988786876` PASS: Vite build, world-state generator consistency, JS vectors, Java 21 compile/smoke and CFR analysis.
