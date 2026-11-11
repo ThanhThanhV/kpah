@@ -34,7 +34,7 @@ const negativeStatPayload = new PacketWriter().writeI8(0).writeI16(1).writeI8(1)
   .writeI8(-1).writeI8(-1).toUint8Array();
 const negativeStat = decodeS2COpcode15(negativeStatPayload);
 assert.deepEqual(negativeStat.items[0].stats, []);
-assert.equal(negativeStat.shopMode, 0);
+assert.equal(negativeStat.aS, 0);
 
 const imageBytes = Uint8Array.from([0x89,0x50,0x4e,0x47,0x00,0xff,0x80]);
 const subtype1Payload = new PacketWriter().writeI8(1).writeI16(654).writeI8(1)
