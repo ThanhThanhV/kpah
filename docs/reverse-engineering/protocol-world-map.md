@@ -65,7 +65,7 @@ Handler đọc một record thành `ce`, rồi cập nhật entity `cd` có ID t
 
 | Field trong `ce` | Kiểu | Vai trò được xác nhận qua `cd.a(ce)` |
 |---|---|---|
-| `a` | short | entity ID |
+| `a` | short | intended entity lookup key in `mj.a(ce)`, but CFR shows the read assigned to a temporary `new ce()` rather than the retained record; unresolved pending bytecode verification |
 | `h` | unsigned byte | template/sprite type |
 | `b`, `c` | short, short | X, Y |
 | `e` | int | current HP |
