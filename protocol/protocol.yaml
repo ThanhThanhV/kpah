@@ -1976,6 +1976,35 @@
       "evidence": "dispatcher-only"
     }
   ],
+  "modeSchemas": [
+    {
+      "name": "CHARACTER_INVENTORY_SKILL_MODE_0",
+      "direction": "S2C",
+      "opcode": 16,
+      "mode": 0,
+      "evidence": "CFR opcode 16 handler: mode byte, readLong currency, unsigned-byte skill count, repeated unsigned-byte skill index + int skill value; other modes remain opaque",
+      "fields": [
+        {
+          "name": "currency",
+          "type": "i64"
+        }
+      ],
+      "records": {
+        "countName": "skillCount",
+        "countType": "u8",
+        "fields": [
+          {
+            "name": "skillIndex",
+            "type": "u8"
+          },
+          {
+            "name": "skillValue",
+            "type": "i32"
+          }
+        ]
+      }
+    }
+  ],
   "prefixSchemas": [
     {
       "name": "CHARACTER_SNAPSHOT_PREFIX",
