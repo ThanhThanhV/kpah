@@ -10,10 +10,10 @@ public final class ProtocolOpcode15Codec {
                        String d, Integer w, List<ShopStat> stats) {}
     public record OptionalContext(byte discardedTypeByte, short shortValue, byte byteValue, String text, int intValue) {}
     public record Decoded(byte subtype, boolean accepted, short targetCharacterId, int itemCount,
-                          List<Item> items, Byte shopMode, short[] shortValues,
+                          List<Item> items, Byte aS, short[] shortValues,
                           Byte optionalTextSentinel, String optionalText, byte optionalTextValue,
                           Byte optionalContextSentinel, OptionalContext optionalContext,
-                          byte frameCount, byte frameMode, byte[] imageBytes, byte[] unparsedBytes,
+                          byte frameCount, byte atlasLayoutCode, byte[] imageBytes, byte[] unparsedBytes,
                           byte[] trailingBytes) {}
     private static Item readItem(PacketReader in, boolean includeValue) throws IOException {
         byte type = in.readI8(); short i = in.readI16(), r = in.readI16();
@@ -32,14 +32,14 @@ public final class ProtocolOpcode15Codec {
         if (subtype == 0) {
             List<Item> items = new ArrayList<>();
             for (int i = 0; i < count; i++) items.add(readItem(in, true));
-            byte shopMode = in.readI8(); short[] shorts = new short[5];
+            byte aS = in.readI8(); short[] shorts = new short[5];
             for (int i = 0; i < shorts.length; i++) shorts[i] = in.readI16();
             byte textSentinel = in.readI8(); String text = null; byte textValue = 0;
             if (textSentinel != -1) { text = in.readUTF(); textValue = in.readI8(); }
             byte contextSentinel = in.readI8(); OptionalContext context = null;
             if (contextSentinel != -1) context = new OptionalContext(in.readI8(), in.readI16(), in.readI8(), in.readUTF(), in.readI32());
             byte[] trailing = new byte[in.remaining()]; for (int i=0;i<trailing.length;i++) trailing[i]=(byte)in.readU8();
-            return new Decoded(subtype,true,target,count,List.copyOf(items),shopMode,shorts,textSentinel,text,textValue,
+            return new Decoded(subtype,true,target,count,List.copyOf(items),aS,shorts,textSentinel,text,textValue,
                 contextSentinel,context,(byte)0,(byte)0,new byte[0],new byte[0],trailing);
         }
         if (count < 0) {
