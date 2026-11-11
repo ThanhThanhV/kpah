@@ -111,7 +111,7 @@ jobs:
                 .writeI8(-1).writeI8(-1);
               ProtocolOpcode15Codec.Decoded shopDecoded = ProtocolOpcode15Codec.decode(shop15.toByteArray());
               if (!shopDecoded.accepted() || shopDecoded.subtype() != 0 || shopDecoded.targetCharacterId() != 321
-                  || shopDecoded.items().size() != 0 || shopDecoded.shopMode() != 2
+                  || shopDecoded.items().size() != 0 || shopDecoded.aS() != 2
                   || !Arrays.equals(shopDecoded.shortValues(), new short[]{1,2,3,4,5})
                   || shopDecoded.optionalText() != null || shopDecoded.optionalContext() != null)
                 throw new AssertionError("opcode 15 subtype 0 decode: " + shopDecoded);
