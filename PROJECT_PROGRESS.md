@@ -429,3 +429,10 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Extended the generated JavaScript/Java initialization decoder for mode 3. It preserves signed short values, validates negative counts, parses common counters and retains any tail bytes.
 - Modes 1 and 2 remain opaque; no inferred item/auxiliary record schema is claimed.
 - Added JavaScript and Java synthetic vectors for mode 3 and retained mode 0 64-bit currency/skill tests.
+
+
+## B16 — Opcode 16 mode 1 inventory decoder
+
+- Traced CFR ka.java case 16 and the bo/bk item/stat structures. Mode 1 reads a signed-short item count, per-item property fields, UTF description, unsigned-short value, nested stat pairs and a trailing byte; then common aY/aZ counters.
+- Added source-bounded JavaScript/Java decoding into inventory item records while retaining original obfuscated field names where semantics are not verified. Mode 1 items are the inventory collection assigned to z.bx.
+- Added synthetic tests for signed item/stat values, modified UTF-8 description, unsigned-short value, nested stats, common counters and opaque tail bytes. Mode 2 remains opaque.
