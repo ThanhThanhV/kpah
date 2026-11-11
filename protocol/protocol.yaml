@@ -2048,14 +2048,28 @@
       "mode": 2,
       "evidence": "CFR ka.java case 16: common aY int; signed-byte count and k records (discarded short, discarded byte, h byte, c byte, b UTF, a UTF, d byte); second signed-byte count and k records (discarded short, discarded byte, h byte, b UTF, discarded byte, a UTF, g int, d byte); common aZ int. mj.java assigns second vector to z.by.",
       "fields": [
-        {"name": "aY", "type": "i32"}
+        {
+          "name": "aY",
+          "type": "i32"
+        }
       ],
       "groups": [
-        {"name": "firstCollection", "countType": "i8", "record": "k-first"},
-        {"name": "secondCollection", "countType": "i8", "record": "k-second"}
+        {
+          "name": "firstCollection",
+          "countType": "i8",
+          "record": "k-first"
+        },
+        {
+          "name": "secondCollection",
+          "countType": "i8",
+          "record": "k-second"
+        }
       ],
       "commonFields": [
-        {"name": "aZ", "type": "i32"}
+        {
+          "name": "aZ",
+          "type": "i32"
+        }
       ]
     }
   ],
@@ -2199,6 +2213,24 @@
           "type": "i8"
         }
       ]
+    }
+  ],
+  "variantSchemas": [
+    {
+      "name": "SHOP_CONTEXT_VARIANT_0",
+      "direction": "S2C",
+      "opcode": 15,
+      "subtype": 0,
+      "evidenceSource": "ka.java:case15",
+      "evidence": "Subtype 0: short target id; signed-byte count of bo records with w and stat pairs; shop mode byte; five shorts; optional UTF+byte and optional l-context record guarded by -1 sentinels."
+    },
+    {
+      "name": "PET_EQUIPMENT_IMAGE_NONZERO",
+      "direction": "S2C",
+      "opcode": 15,
+      "subtype": "nonzero",
+      "evidenceSource": "ka.java:case15",
+      "evidence": "Nonzero subtype: short target id; signed-byte item count; bo records omit w; signed-byte frame count; remaining packet bytes are passed to ku.b as an image atlas."
     }
   ]
 }
