@@ -103,10 +103,11 @@ Handler gọi `mj.a(short,short,short,short,String,byte[])` và cập nhật `hf
 
 ## Generated packet decoders — S2C opcode 4, 8 and 12
 
-The JavaScript and Java generated world-state codec now covers four packet handlers:
+The JavaScript and Java generated world-state codec now covers six packet handlers:
 
 - Opcode 4: repeated entity spawn/update records. Fields are kind (signed byte), template ID (unsigned byte), entity ID/X/Y (shorts), state byte, optional int (default -1), optional subtype byte for kind 1 only (default 0), optional marker byte (default -1), and optional boolean (default true). The optional reads are individually caught and preserve DataInputStream's partial-read cursor behavior.
 - Opcode 5: an existing player/entity snapshot with fixed seven-part and five-appearance arrays, normalized co state, a trade-panel flag and independently guarded extension groups.
+- Opcodes 6 and 9: fixed combat-event records containing two signed entity IDs, one byte, two ints and four bytes. They are kept under neutral wire names because the meaning of the fields depends on which side is the local player and on the receiving mj.a/mj.b branch.
 - Opcode 8: repeated signed-short entity IDs passed to mj.d(short) for removal.
 - Opcode 12: three leading shorts, optional byte hfK (default -1), fourth short, UTF label, optional boolean and remaining map bytes when true. The decoder keeps the four shorts neutral because their exact business meanings are not fully proven.
 
