@@ -2521,6 +2521,35 @@
       "opcode": 5,
       "evidenceSource": "ka.java:case5",
       "evidence": "Requires an existing world entity and reads a fixed player snapshot: short ID, UTF name, coordinates, HP/MP, profession/class, 7 part bytes + 7 part shorts, movement/status fields, 5 appearance shorts, then independently guarded optional numeric groups and final state groups."
+    },
+    {
+      "name": "WORLD_ENTITY_SNAPSHOT",
+      "direction": "S2C",
+      "opcode": 5,
+      "evidenceSource": "ka.java:case5; z.java fields",
+      "evidence": "Requires km.s.v; reads entity id and resolves an existing z instance, then updates a fixed ordered base snapshot, 7 appearance bytes, 7 short equipment values, 5 short stats, booleans and separately guarded extension groups. Unknown entity id consumes only the id and stops this handler.",
+      "sections": [
+        "entity-id-and-existing-entity-guard",
+        "name-and-position",
+        "four-int-combat-state",
+        "two-action-bytes",
+        "7-appearance-bytes",
+        "7-short-appearance-values",
+        "short-and-byte-state-fields",
+        "optional-co-byte-adjustment",
+        "cp-cn-ct-and-i-db",
+        "optional-af-if-i-not-minus-one",
+        "as-and-five-short-ca",
+        "bm-and-refresh",
+        "optional-presence-boolean-and-guild-side-effect",
+        "t-u-ak",
+        "optional-pair-a",
+        "optional-triple-b",
+        "optional-triple-c",
+        "bf-short",
+        "group-d-four-fields",
+        "group-e-three-fields"
+      ]
     }
   ],
   "extensionSchemas": [
