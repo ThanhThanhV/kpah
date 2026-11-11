@@ -109,11 +109,18 @@ jobs:
                   || init.aY() != 123456 || init.aZ() != 654321
                   || !Arrays.equals(init.trailingBytes(), new byte[]{(byte)0xde}))
                 throw new AssertionError("opcode 16 mode 0 decode: " + init);
+              ProtocolInitializationCodec.Decoded mode3 = ProtocolInitializationCodec.decodeS2COpcode16(
+                new PacketWriter().writeU8(3).writeI32(111).writeI8(3).writeI16(101).writeI16(202).writeI16(-303)
+                  .writeI32(222).writeU8(0xbe).toByteArray());
+              if (!mode3.decoded() || mode3.aY() != 111 || mode3.aZ() != 222
+                  || !Arrays.equals(mode3.values(), new short[]{101,202,-303})
+                  || !Arrays.equals(mode3.trailingBytes(), new byte[]{(byte)0xbe}))
+                throw new AssertionError("opcode 16 mode 3 decode: " + mode3);
               ProtocolInitializationCodec.Decoded opaqueInit = ProtocolInitializationCodec.decodeS2COpcode16(new byte[]{1, 0x10, 0x20});
               if (opaqueInit.decoded() || opaqueInit.mode() != 1
                   || !Arrays.equals(opaqueInit.opaquePayload(), new byte[]{0x10, 0x20}))
                 throw new AssertionError("opcode 16 opaque mode preservation");
-              System.out.println("Generated Java protocol, transport, opcode 3 prefix and opcode 16 mode codecs: PASS");
+              System.out.println("Generated Java protocol, transport, opcode 3 prefix and opcode 16 modes 0/3 codecs: PASS");
             }
           }
           JAVA
