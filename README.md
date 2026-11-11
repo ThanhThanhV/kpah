@@ -104,6 +104,8 @@ Mock TCP loopback server để kiểm tra handshake `-40`, XOR cursor và captur
 
 ## Server initialization data
 
+Typed source-bounded decoders now cover opcode 3's fixed prefix, opcode 15 shop/context and pet-equipment image variants, and opcode 16 modes 0–3. Run `npm run check:initialization-protocol`, `npm run test:initialization-protocol`, `npm run check:opcode15` and `npm run test:opcode15` to verify generated codecs. The image atlas bytes remain opaque until the client image decoder runs; this does not claim a complete server bootstrap schema.
+
 Schema notes for S2C global configuration opcode 1, selected-character snapshot 3, shop/catalog 15 and character inventory/skill extension 16: [protocol-initialization-data.md](./docs/reverse-engineering/protocol-initialization-data.md). Field consumers and optional sections are recorded separately from unresolved business semantics.
 
 ## Client movement và damage feedback
