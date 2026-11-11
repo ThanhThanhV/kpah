@@ -62,6 +62,10 @@ jobs:
         run: npm run check:opcode1
       - name: Test generated opcode 1 codec
         run: npm run test:opcode1
+      - name: Verify generated opcode 3 extension codec
+        run: npm run check:opcode3-extension
+      - name: Test generated opcode 3 extension codec
+        run: npm run test:opcode3-extension
       - name: Test generated transport codec
         run: npm run test:transport-codegen
       - name: Test generated JavaScript protocol codec
@@ -175,6 +179,25 @@ jobs:
                   || !Arrays.equals(globalDecoded.partData().get(0).data(), new byte[]{8,9,10})
                   || globalDecoded.partDataError() != null || globalDecoded.trailingBytes().length != 0)
                 throw new AssertionError("opcode 1 global configuration decode: " + globalDecoded);
+              PacketWriter extension3 = new PacketWriter().writeI16(123).writeI8(0).writeBool(true).writeBool(false)
+                .writeI8(1).writeI8(2).writeI8(3).writeI16(4).writeI32(5).writeI16(6).writeI32(7).writeUTF("title").writeBool(true)
+                .writeI16(11).writeI8(12).writeI16(21).writeI8(22).writeI16(23).writeI16(31).writeI16(32).writeI16(33)
+                .writeI8(2).writeI16(41).writeI8(42).writeI16(43).writeI8(44).writeUTF("a@b")
+                .writeI16(51).writeI8(61).writeI16(62).writeI8(63).writeI8(64).writeI8(71).writeI16(72).writeI8(73).writeU8(0xee);
+              ProtocolOpcode3ExtensionCodec.Decoded extensionDecoded = ProtocolOpcode3ExtensionCodec.decode(extension3.toByteArray());
+              if (extensionDecoded.main().i() != 123 || !extensionDecoded.main().globalAe()
+                  || extensionDecoded.pairA().shortValue() != 11
+                  || extensionDecoded.tripleB().shortValue2() != 23
+                  || extensionDecoded.tripleC().shortValue3() != 33
+                  || !extensionDecoded.mappingApplied() || !extensionDecoded.mapping().text().equals("a@b")
+                  || extensionDecoded.bf() != 51 || extensionDecoded.groupD().bk() != 64
+                  || extensionDecoded.groupE().bl() != 73
+                  || !Arrays.equals(extensionDecoded.trailingBytes(), new byte[]{(byte)0xee}))
+                throw new AssertionError("opcode 3 extension decode: " + extensionDecoded);
+              ProtocolOpcode3ExtensionCodec.Decoded emptyExtension = ProtocolOpcode3ExtensionCodec.decode(new byte[0]);
+              if (emptyExtension.main().error() == null || emptyExtension.pairA().shortValue() != -1
+                  || emptyExtension.groupD().bi() != -1 || emptyExtension.groupE().bl() != 0)
+                throw new AssertionError("opcode 3 extension fallback defaults: " + emptyExtension);
               ProtocolInitializationCodec.Decoded init = ProtocolInitializationCodec.decodeS2COpcode16(initPacket.toByteArray());
               if (!init.decoded() || init.mode() != 0 || init.currency() != 9_007_199_254_740_993L
                   || !init.skills().equals(List.of(new ProtocolInitializationCodec.SkillValue(3, -1200),
