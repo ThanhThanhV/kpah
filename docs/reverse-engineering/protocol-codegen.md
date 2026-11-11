@@ -4,6 +4,11 @@
 
 `protocol/protocol.yaml` là nguồn khai báo trung tâm cho command catalog và các payload schema đã được xác minh. File dùng cú pháp JSON subset hợp lệ của YAML 1.2 để generator đọc bằng Python standard library, không thêm dependency YAML.
 
+
+
+### Java-compatible partial-read behavior
+
+The generated JavaScript PacketReader now consumes multi-byte values incrementally, matching java.io.DataInputStream when a packet ends in the middle of a short, int, long or modified-UTF value. This matters for source handlers that catch individual read failures and continue with the next optional group: the cursor must remain at the same position in both languages. Synthetic tests assert both the truncation error and the bytes consumed before failure.
 ## Catalog hiện tại
 
 | Phạm vi | Số lượng | Ý nghĩa |
