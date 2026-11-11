@@ -224,6 +224,15 @@ jobs:
                   || playerSnapshot.groupD().bk() != 57 || playerSnapshot.groupE().bl() != 60
                   || !Arrays.equals(playerSnapshot.trailingBytes(), new byte[]{(byte)0xee}))
                 throw new AssertionError("S2C opcode 5 player snapshot decode: " + playerSnapshot);
+              ProtocolWorldStateCodec.CombatEvent combat6 = ProtocolWorldStateCodec.decodeS2COpcode6(
+                new PacketWriter().writeI16(10).writeI16(20).writeI8(3).writeI32(400).writeI32(900)
+                  .writeI8(1).writeI8(2).writeI8(3).writeI8(4).toByteArray());
+              ProtocolWorldStateCodec.CombatEvent combat9 = ProtocolWorldStateCodec.decodeS2COpcode9(
+                new PacketWriter().writeI16(-10).writeI16(20).writeI8(4).writeI32(-400).writeI32(800)
+                  .writeI8(5).writeI8(6).writeI8(7).writeI8(8).toByteArray());
+              if (combat6.firstEntityId() != 10 || combat6.valueA() != 400 || combat6.flagD() != 4
+                  || combat9.firstEntityId() != -10 || combat9.valueA() != -400 || combat9.flagD() != 8)
+                throw new AssertionError("S2C combat event opcode 6/9 decode");
               ProtocolWorldStateCodec.Opcode8 removed = ProtocolWorldStateCodec.decodeS2COpcode8(
                 new PacketWriter().writeI16(10).writeI16(-20).toByteArray());
               if (!removed.entityIds().equals(List.of((short)10,(short)-20)))
