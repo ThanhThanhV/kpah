@@ -470,3 +470,10 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Subtype 0 parses aS, five short values, optional UTF/byte data and optional l context. The byte assigned to a discarded temporary l object is named discardedTypeByte, not misrepresented as a field on the retained context.
 - Matched the original signed-count loops: negative subtype-0 item/stat counts result in zero iterations; negative non-zero item count skips the character update and preserves the remaining bytes.
 - Added generator consistency checks, JavaScript vectors and Java 21 smoke coverage. CI verification is pending.
+
+
+## B16 — Opcode 1 lookup consumer trace
+
+- Expanded the opcode 1 trace from raw field order to consumers: cv skill definition fields (index, icon/resource, name, description, cooldown, enabled, available/used upgrade points), z.bw profession-specific skill-slot count, and the five mj.A profession skill-description vectors.
+- Confirmed mj.aS is the boat ticket price, ku.ad maps item-stat IDs to display labels, bq.e/d supplies quest objective icon/name, GameMidlet.g is passed to platformRequest, named tile blobs are t_hang/t_thanh, and hd.a stores indexed character-part data.
+- Marked mj.Z, mj.ac/ad/ae/af, z.cy/cz/cA/cB and mj.bb/bc as populated but not semantically resolved from current CFR consumer scan. Flagged the ia icon byte assignment as a CFR/bytecode-review anomaly.
