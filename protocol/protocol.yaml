@@ -2470,5 +2470,29 @@
         ]
       }
     }
+  ],
+  "packetSchemas": [
+    {
+      "name": "GLOBAL_CLIENT_CONFIGURATION",
+      "direction": "S2C",
+      "opcode": 1,
+      "evidenceSource": "ka.java:case1",
+      "evidence": "CFR ka.java case 1 reads movement/ticket values, skill definitions, five profession slot counts and five skill catalogs; optional unlock/matrix section when bytes remain; four global bytes; stat labels, support hotline, paired lookups, quest objective catalog, external URL, named tile blobs and a best-effort part-data table.",
+      "sections": [
+        "movement+ticket",
+        "skill-definitions",
+        "profession-slot-counts",
+        "five-profession-skill-catalogs",
+        "optional-unlock-and-5x5-matrices",
+        "four-global-bytes",
+        "stat-label-catalog",
+        "support-hotline",
+        "paired-lookups",
+        "quest-objective-catalog",
+        "external-url",
+        "named-tile-blobs",
+        "part-data-table-best-effort"
+      ]
+    }
   ]
 }
