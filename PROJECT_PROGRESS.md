@@ -407,3 +407,6 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Synthetic cross-language vectors cover handshake, encrypted C2S, S2C short/long and cursor wrap. The APIs return the updated cursor; callers must maintain send and receive cursors independently.
 - CI run `42797122962`: SUCCESS. Vite production build, generated-source consistency, JavaScript transport tests, Java 21 compilation and transport smoke tests passed. The earlier stale-output failure was corrected by regenerating committed files from the canonical generator templates.
 - Scope remains protocol tooling only: no production network capture, live server, WebSocket gateway, or BE session has been implemented.
+
+
+- B16 follow-up: added a typed, evidence-bounded prefix decoder for S2C opcode 3 in `protocol/protocol.yaml`. JavaScript and Java generated decoders parse the fixed prefix through `cT`, including the length-prefixed action mapping, and preserve all remaining extension bytes as opaque `trailingBytes`. The full opcode 3 command remains opaque; this is deliberately not represented as a complete schema. CI now checks generator determinism and both runtime decoders.
