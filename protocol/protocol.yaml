@@ -2494,5 +2494,24 @@
         "part-data-table-best-effort"
       ]
     }
+  ],
+  "extensionSchemas": [
+    {
+      "name": "CHARACTER_SNAPSHOT_EXTENSION",
+      "direction": "S2C",
+      "opcode": 3,
+      "evidenceSource": "ka.java:case3",
+      "evidence": "CFR ka.java case 3 continues after the 33-field prefix. The main character block and each later optional group have separate try/catch defaults; input cursor is not rewound on partial read failures.",
+      "groups": [
+        "main-character-fields",
+        "pair-a",
+        "triple-b",
+        "triple-c",
+        "counted-short-byte-mapping-and-utf",
+        "bf-short",
+        "group-d-four-fields",
+        "group-e-three-fields"
+      ]
+    }
   ]
 }
