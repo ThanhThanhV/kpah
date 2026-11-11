@@ -483,3 +483,10 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 - Extended the CFR trace beyond the generated 33-field prefix. Documented the main character extension (i/af, bM/e/t/u, cd/cc/ce/dm/dn/ak), three separately guarded numeric groups, a counted short+byte mapping plus UTF metadata, bf, and the final two guarded state groups.
 - Recorded each group's fallback defaults and the important cursor behavior: catch blocks do not rewind after partial reads. The generated decoder continues to preserve this area as opaque trailing bytes until dedicated truncation/consumer tests are available.
+
+
+## B16 — Opcode 1 global configuration decoder
+
+- Added packetSchemas declaration for the observed S2C opcode 1 section order and generated JavaScript/Java decoders.
+- Decoder covers skill definitions, five profession slot counts and catalogs, optional unlock IDs/5x5x4 matrices, neutral global bytes, stat labels, hotline, paired lookup rows, quest objective catalog, external URL, named tile blobs and best-effort part-data records.
+- Preserves signed/unsigned count behavior, the literal available()>0 optional-block guard, and the final part-data catch without claiming semantics for unresolved arrays. Synthetic JS vector covers the complete section order; Java 21 smoke vector is added to CI. Validation pending.
