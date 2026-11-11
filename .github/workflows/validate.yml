@@ -199,6 +199,27 @@ jobs:
                   || worldEntities.entities().get(0).entityId() != 123 || worldEntities.entities().get(0).extraInt() != -99
                   || worldEntities.entities().get(0).kind1Subtype() != 4 || worldEntities.entities().get(0).active())
                 throw new AssertionError("S2C opcode 4 entity decode: " + worldEntities);
+              PacketWriter player5 = new PacketWriter().writeI16(123).writeUTF("Remote").writeI16(100).writeI16(200)
+                .writeI32(3000).writeI32(5000).writeI32(1000).writeI32(2000).writeI8(2).writeI8(3);
+              for (int i=1;i<=7;i++) player5.writeI8(i);
+              for (int i=10;i<=16;i++) player5.writeI16(i);
+              player5.writeI16(17).writeI8(18).writeI16(19).writeI16(20).writeI8(21).writeI8(22).writeI8(3)
+                .writeI8(23).writeI8(24).writeI8(25).writeI16(99).writeI8(26).writeI8(27).writeI8(28);
+              for (int i=30;i<=34;i++) player5.writeI16(i);
+              player5.writeBool(true).writeBool(false).writeI8(35).writeI8(36).writeBool(true)
+                .writeI16(41).writeI8(42).writeI16(43).writeI8(44).writeI16(45)
+                .writeI16(46).writeI16(47).writeI16(48).writeI8(2).writeI16(49).writeI8(50).writeI16(51).writeI8(52)
+                .writeI16(53).writeI8(54).writeI16(55).writeI8(56).writeI8(57).writeI8(58).writeI16(59).writeI8(60).writeU8(0xee);
+              ProtocolWorldStateCodec.PlayerSnapshot playerSnapshot = ProtocolWorldStateCodec.decodeS2COpcode5(player5.toByteArray());
+              if (playerSnapshot.entityId() != 123 || !playerSnapshot.name().equals("Remote")
+                  || playerSnapshot.partBytes().length != 7 || playerSnapshot.partSlots().length != 7
+                  || playerSnapshot.coNormalized() != 2 || playerSnapshot.af() != 27
+                  || playerSnapshot.appearanceSlots().length != 5 || playerSnapshot.openTradeUi()
+                  || playerSnapshot.pairA().shortValue() != 41 || playerSnapshot.tripleB().shortValue2() != 45
+                  || !playerSnapshot.mappingApplied() || playerSnapshot.bf() != 53
+                  || playerSnapshot.groupD().bk() != 57 || playerSnapshot.groupE().bl() != 60
+                  || !Arrays.equals(playerSnapshot.trailingBytes(), new byte[]{(byte)0xee}))
+                throw new AssertionError("S2C opcode 5 player snapshot decode: " + playerSnapshot);
               ProtocolWorldStateCodec.Opcode8 removed = ProtocolWorldStateCodec.decodeS2COpcode8(
                 new PacketWriter().writeI16(10).writeI16(-20).toByteArray());
               if (!removed.entityIds().equals(List.of((short)10,(short)-20)))
