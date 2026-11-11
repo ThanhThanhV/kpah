@@ -6,8 +6,35 @@ export function decodeS2CInitialization(opcode, payload) {
   if (!schema) throw new Error("No verified mode schema for S2C opcode " + opcode);
   const reader = new PacketReader(payload);
   const mode = reader.readU8();
+  if (mode === 2) {
+    const aY = reader.readI32();
+    const firstCount = reader.readI8();
+    if (firstCount < 0) throw new RangeError("Negative opcode 16 mode 2 first collection count");
+    const firstCollection = [];
+    for (let i = 0; i < firstCount; i += 1) {
+      firstCollection.push({
+        discardedShort: reader.readI16(), discardedByte: reader.readI8(),
+        h: reader.readI8(), c: reader.readI8(), b: reader.readUTF(), a: reader.readUTF(), d: reader.readI8()
+      });
+    }
+    const secondCount = reader.readI8();
+    if (secondCount < 0) throw new RangeError("Negative opcode 16 mode 2 second collection count");
+    const secondCollection = [];
+    for (let i = 0; i < secondCount; i += 1) {
+      secondCollection.push({
+        discardedShort: reader.readI16(), discardedByte: reader.readI8(),
+        h: reader.readI8(), b: reader.readUTF(), discardedMiddleByte: reader.readI8(),
+        a: reader.readUTF(), g: reader.readI32(), d: reader.readI8()
+      });
+    }
+    const aZ = reader.readI32();
+    const trailingBytes = new Uint8Array(reader.remaining());
+    for (let i = 0; i < trailingBytes.length; i += 1) trailingBytes[i] = reader.readU8();
+    return { mode, decoded: true, aY, firstCollection, secondCollection, aZ, trailingBytes };
+  }
   if (mode === 1) {
     const itemCount = reader.readI16();
+    if (itemCount < 0) throw new RangeError("Negative opcode 16 mode 1 item count");
     const items = [];
     for (let i = 0; i < itemCount; i += 1) {
       const item = {
@@ -19,6 +46,7 @@ export function decodeS2CInitialization(opcode, payload) {
         w: reader.readU16()
       };
       const statCount = reader.readI8();
+      if (statCount < 0) throw new RangeError("Negative opcode 16 mode 1 stat count");
       item.stats = [];
       for (let j = 0; j < statCount; j += 1) {
         item.stats.push({ statId: reader.readU8(), statValue: reader.readI16() });
