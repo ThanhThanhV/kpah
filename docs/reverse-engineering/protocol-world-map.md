@@ -99,6 +99,24 @@ Handler gọi `mj.a(short,short,short,short,String,byte[])` và cập nhật `hf
 - Facing/direction `cO`: `0` down, `1` up, `2` left, `3` right. The direction is updated when the selected axis moves. A snapshot for a remote actor therefore means “move toward target at template speed,” not “teleport to the received coordinate.”
 - Player-controlled `ca.b()` sends C2S opcode 4 using the current `l/m` coordinate after the movement-send throttle `mj.av`; collision and tile checks occur client-side before the request. This is distinct from S2C opcode 4 spawn/update records and S2C opcode 5 entity snapshots.
 
+## Generated packet decoders — S2C opcode 4, 8 and 12
+
+The JavaScript and Java generated world-state codec now covers three packet handlers:
+
+- Opcode 4: repeated entity spawn/update records. Fields are kind (signed byte), template ID (unsigned byte), entity ID/X/Y (shorts), state byte, optional int (default -1), optional subtype byte for kind 1 only (default 0), optional marker byte (default -1), and optional boolean (default true). The optional reads are individually caught and preserve DataInputStream's partial-read cursor behavior.
+- Opcode 8: repeated signed-short entity IDs passed to mj.d(short) for removal.
+- Opcode 12: three leading shorts, optional byte hfK (default -1), fourth short, UTF label, optional boolean and remaining map bytes when true. The decoder keeps the four shorts neutral because their exact business meanings are not fully proven.
+
+Opcode 7 is deliberately not included in the generated decoder yet. CFR renders the first short as assignment to new ce().a rather than the retained ce2.a, but mj.a(ce) later looks up cd using ce.a. Since the decompiled assignment and runtime consumer disagree, that first short's destination must be verified from bytecode before labeling it entityId or generating a typed record.
+
+Generator and checks:
+
+```bash
+npm run generate:world-state
+npm run check:world-state
+npm run test:world-state
+```
+
 ## World entity model đã xác nhận
 
 - `ca extends z`: player-controlled actor; gửi movement request opcode 4.
