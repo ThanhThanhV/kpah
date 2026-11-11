@@ -10,6 +10,7 @@ const payload = new PacketWriter()
   .writeU8(2)
   .writeU8(3).writeI32(-1200)
   .writeU8(8).writeI32(250000)
+  .writeI32(123456).writeI32(654321)
   .writeU8(0xde)
   .toUint8Array();
 const decoded = decodeS2CInitialization(16, payload);
@@ -20,6 +21,8 @@ assert.deepEqual(decoded.skills, [
   { skillIndex: 3, skillValue: -1200 },
   { skillIndex: 8, skillValue: 250000 },
 ]);
+assert.equal(decoded.aY, 123456);
+assert.equal(decoded.aZ, 654321);
 assert.deepEqual([...decoded.trailingBytes], [0xde]);
 
 const opaque = decodeS2CInitialization(16, Uint8Array.from([1, 0x10, 0x20]));
