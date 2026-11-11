@@ -6,6 +6,17 @@ export function decodeS2CInitialization(opcode, payload) {
   if (!schema) throw new Error("No verified mode schema for S2C opcode " + opcode);
   const reader = new PacketReader(payload);
   const mode = reader.readU8();
+  if (mode === 3) {
+    const aY = reader.readI32();
+    const count = reader.readI8();
+    if (count < 0) throw new RangeError("Negative opcode 16 mode 3 item count");
+    const values = [];
+    for (let i = 0; i < count; i += 1) values.push(reader.readI16());
+    const aZ = reader.readI32();
+    const trailingBytes = new Uint8Array(reader.remaining());
+    for (let i = 0; i < trailingBytes.length; i += 1) trailingBytes[i] = reader.readU8();
+    return { mode, decoded: true, aY, values, aZ, trailingBytes };
+  }
   if (mode !== schema.mode) {
     const opaquePayload = new Uint8Array(reader.remaining());
     for (let i = 0; i < opaquePayload.length; i += 1) opaquePayload[i] = reader.readU8();
