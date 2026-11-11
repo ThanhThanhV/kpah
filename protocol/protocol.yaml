@@ -2493,6 +2493,27 @@
         "named-tile-blobs",
         "part-data-table-best-effort"
       ]
+    },
+    {
+      "name": "ENTITY_SPAWN_UPDATE",
+      "direction": "S2C",
+      "opcode": 4,
+      "evidenceSource": "ka.java:case4",
+      "evidence": "Repeated records until payload exhausted: kind byte, template unsigned byte, entity ID/X/Y shorts, state byte, optional int default -1, optional kind-1 subtype byte default 0, optional marker byte default -1, optional boolean default true."
+    },
+    {
+      "name": "ENTITY_DESPAWN_LIST",
+      "direction": "S2C",
+      "opcode": 8,
+      "evidenceSource": "ka.java:case8",
+      "evidence": "Repeated signed short entity IDs until payload exhausted; each is passed to mj.d(short)."
+    },
+    {
+      "name": "MAP_TRANSITION",
+      "direction": "S2C",
+      "opcode": 12,
+      "evidenceSource": "ka.java:case12",
+      "evidence": "Three shorts, optional byte default -1, fourth short, UTF label, optional boolean; if true remaining bytes are map data; map handler receives the four shorts, label and nullable map bytes; optional byte becomes hf.k."
     }
   ],
   "extensionSchemas": [
