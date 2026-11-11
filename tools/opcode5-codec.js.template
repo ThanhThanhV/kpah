@@ -13,8 +13,11 @@ export function decodeS2COpcode5(payload,{entityExists=true}={}) {
  let pairA={shortValue:-1,byteValue:-1};try{pairA={shortValue:r.readI16(),byteValue:r.readI8()}}catch{}
  let tripleB={shortValue1:-1,byteValue:-1,shortValue2:-1};try{tripleB={shortValue1:r.readI16(),byteValue:r.readI8(),shortValue2:r.readI16()}}catch{}
  let tripleC={shortValue1:-1,shortValue2:-1,shortValue3:-1};try{tripleC={shortValue1:r.readI16(),shortValue2:r.readI16(),shortValue3:r.readI16()}}catch{}
+ let mappingPairs=[],mappingApplied=false,mappingError=null;
+ try{const count=r.readI8();if(count<0)throw new RangeError("Negative opcode 5 mapping count");for(let n=0;n<count;n++)mappingPairs.push({shortValue:r.readI16(),byteValue:r.readI8()});mappingApplied=true}
+ catch(error){mappingError=error instanceof Error?error.message:String(error)}
  let bf=-1;try{bf=r.readI16()}catch{}
  let groupD={bi:-1,bn:-1,bj:0,bk:0};try{groupD={bi:r.readI8(),bn:r.readI16(),bj:r.readI8(),bk:r.readI8()}}catch{}
  let groupE={bm:-1,bo:-1,bl:0};try{groupE={bm:r.readI8(),bo:r.readI16(),bl:r.readI8()}}catch{}
- v.optional={pairA,tripleB,tripleC,bf,groupD,groupE};v.trailingBytes=bytes(r,r.remaining());return v;
+ v.optional={pairA,tripleB,tripleC,mappingPairs,mappingApplied,mappingError,bf,groupD,groupE};v.trailingBytes=bytes(r,r.remaining());return v;
 }
