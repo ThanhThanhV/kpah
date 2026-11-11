@@ -147,3 +147,14 @@ export function decodeS2COpcode33(payload) {
   return { characterId: reader.readI16(), level: reader.readI8(), valueA: reader.readI32(),
     valueB: reader.readI32(), trailingBytes: readRemaining(reader) };
 }
+
+export function decodeS2COpcode61(payload) {
+  const reader = new PacketReader(payload);
+  return { characterId: reader.readI16(), itemId: reader.readI16(), effectType: reader.readI8(),
+    effectFieldByte: reader.readI8(), effectShortC: reader.readI16(), effectShortD: reader.readI16(),
+    effectShortE: reader.readI16(), trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcode78(payload) {
+  const reader = new PacketReader(payload);
+  return { warehouseItemId: reader.readI16(), trailingBytes: readRemaining(reader) };
+}

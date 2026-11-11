@@ -2711,6 +2711,32 @@
         "value-a",
         "value-b"
       ]
+    },
+    {
+      "name": "INVENTORY_ITEM_DROP_EVENT",
+      "direction": "S2C",
+      "opcode": 61,
+      "evidenceSource": "ka.java:case61",
+      "evidence": "Reads character ID short, inventory item ID short, then jz fields: signed byte a, signed byte b (stored in short), and three signed shorts c/d/e. Bytecode confirms all five fields are assigned to the retained jz instance. mj.a(characterId,itemId,jz) removes the item and creates a ground-effect visual.",
+      "sections": [
+        "character-id",
+        "inventory-item-id",
+        "effect-type-byte",
+        "effect-field-byte",
+        "effect-short-c",
+        "effect-short-d",
+        "effect-short-e"
+      ]
+    },
+    {
+      "name": "WAREHOUSE_ITEM_SALE",
+      "direction": "S2C",
+      "opcode": 78,
+      "evidenceSource": "ka.java:case78",
+      "evidence": "Reads one signed short item ID and calls mj.h(short), which decrements the matching warehouse/storage item quantity and credits sale proceeds when the quantity reaches zero.",
+      "sections": [
+        "warehouse-item-id"
+      ]
     }
   ],
   "extensionSchemas": [

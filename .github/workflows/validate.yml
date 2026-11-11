@@ -270,6 +270,15 @@ jobs:
                   || local32.localStateByte() != 4 || local32.localShortValue() != 50
                   || level33.level() != 12 || level33.valueB() != 2000)
                 throw new AssertionError("S2C opcode 27/28/30/32/33 character events");
+              ProtocolWorldStateCodec.Opcode61 drop61 = ProtocolWorldStateCodec.decodeS2COpcode61(
+                new PacketWriter().writeI16(321).writeI16(900).writeI8(7).writeI8(-2)
+                  .writeI16(11).writeI16(12).writeI16(13).toByteArray());
+              ProtocolWorldStateCodec.Opcode78 warehouse78 = ProtocolWorldStateCodec.decodeS2COpcode78(
+                new PacketWriter().writeI16(901).toByteArray());
+              if (drop61.characterId() != 321 || drop61.itemId() != 900 || drop61.effectType() != 7
+                  || drop61.effectFieldByte() != -2 || drop61.effectShortE() != 13
+                  || warehouse78.warehouseItemId() != 901)
+                throw new AssertionError("S2C opcode 61/78 inventory drop/sale events");
               PacketWriter extension3 = new PacketWriter().writeI16(123).writeI8(0).writeBool(true).writeBool(false)
                 .writeI8(1).writeI8(2).writeI8(3).writeI16(4).writeI32(5).writeI16(6).writeI32(7).writeUTF("title").writeBool(true)
                 .writeI16(11).writeI8(12).writeI16(21).writeI8(22).writeI16(23).writeI16(31).writeI16(32).writeI16(33)

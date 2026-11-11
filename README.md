@@ -378,3 +378,8 @@ Added source-traced decoders for partial ground-item pickup records, pickup rewa
 ### S2C character feedback and progression events
 
 Added source-traced codecs for overhead chat (27), inventory sale confirmation (28), experience update (30), keyed character resource update (32) and level-up state (33). Opcode 32 exposes its local-character-only trailer through an explicit decoder argument so the parser follows the original branch condition.
+
+
+### S2C inventory drop and warehouse sale events
+
+Added bytecode-backed parsing for opcode 61 (inventory item dropped to the world with its effect parameters) and opcode 78 (warehouse item sale confirmation). Both are parse-only; the inventory/economy side effects remain application responsibilities.

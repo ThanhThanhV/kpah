@@ -132,4 +132,15 @@ public final class ProtocolWorldStateCodec {
         return new Opcode33(in.readI16(),in.readI8(),in.readI32(),in.readI32(),readRemaining(in));
     }
 
+    public record Opcode61(short characterId, short itemId, byte effectType, byte effectFieldByte,
+                           short effectShortC, short effectShortD, short effectShortE, byte[] trailingBytes) {}
+    public static Opcode61 decodeS2COpcode61(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);
+        return new Opcode61(in.readI16(),in.readI16(),in.readI8(),in.readI8(),in.readI16(),in.readI16(),in.readI16(),readRemaining(in));
+    }
+    public record Opcode78(short warehouseItemId, byte[] trailingBytes) {}
+    public static Opcode78 decodeS2COpcode78(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new Opcode78(in.readI16(),readRemaining(in));
+    }
+
 }

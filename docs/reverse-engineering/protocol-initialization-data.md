@@ -333,3 +333,11 @@ Negative opcode-21 stat counts execute zero iterations, matching the original si
 - **Opcode 33:** character ID short, level byte, then two signed ints passed to the level-up consumer, which updates level and HP/MP state and triggers the level-up feedback.
 
 The opcode 32 decoder requires the caller to supply whether the packet targets the local character because the additional two fields are conditional on comparing the packet character ID with the current player ID. All codecs remain parse-only; inventory sale, XP, level and resource changes are not applied by these decoders.
+
+
+## S2C opcodes 61 and 78 — inventory drop and warehouse sale
+
+- **Opcode 61:** character ID short, inventory item ID short, then `jz` effect data: two signed bytes and three signed shorts. Bytecode confirms the first effect byte is written to the retained `jz.a` field (CFR had shown a temporary instance). Consumer `mj.a(characterId,itemId,jz)` removes the matching inventory item and creates a ground-effect entity from the five effect values.
+- **Opcode 78:** one signed-short warehouse item ID. Consumer `mj.h(id)` decrements the matching storage item quantity and credits the sale proceeds when the stack reaches zero.
+
+The generated codecs retain the five effect values with neutral names; they do not invent frame/resource mappings or apply inventory/currency mutations.
