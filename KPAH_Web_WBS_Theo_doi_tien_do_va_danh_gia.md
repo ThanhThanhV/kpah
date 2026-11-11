@@ -662,3 +662,6 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 
 
 | 2026-11-11 | B16 | Hoàn tất decoder prefix opcode 3 và bổ sung decoder có giới hạn cho opcode 16 mode 0; giữ mode 1–3 và extension bytes opaque; codegen Java/JS và test vectors | `a767c96`, `e648867`, `1f812f7`, `19de36b`, `48a324e`, `a5f1633`, `8de824d`, `5e30d13` | Opcode 3 prefix JavaScript/Java đã qua CI run `42973442687`; opcode 16 mode 0 đang chờ CI cho commit mới. B16 vẫn Một phần; chưa nâng số task nghiệm thu hoặc % tổng thể. |
+
+
+| 2026-11-11 | B16 | Hiệu chỉnh decoder opcode 16 mode 0 theo CFR `ka.java`: parse thêm hai trường int chung `aY/aZ`, giữ nguyên ý nghĩa nghiệp vụ chưa xác minh | `4aee2a7`, `eb83ada`, `b74737f`, `b323a4a`, `fa2084c`, `72b4129` | Đã bổ sung test JS/Java và cập nhật docs; chờ CI xác nhận. |
