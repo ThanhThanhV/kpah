@@ -66,6 +66,10 @@ jobs:
         run: npm run check:opcode3-extension
       - name: Test generated opcode 3 extension codec
         run: npm run test:opcode3-extension
+      - name: Verify generated world-state codec
+        run: npm run check:world-state
+      - name: Test generated world-state codec
+        run: npm run test:world-state
       - name: Test generated transport codec
         run: npm run test:transport-codegen
       - name: Test generated JavaScript protocol codec
@@ -188,6 +192,23 @@ jobs:
                   || !Arrays.equals(globalDecoded.partData().get(0).data(), new byte[]{8,9,10})
                   || globalDecoded.partDataError() != null || globalDecoded.trailingBytes().length != 0)
                 throw new AssertionError("opcode 1 global configuration decode: " + globalDecoded);
+              PacketWriter worldSpawn = new PacketWriter().writeI8(1).writeU8(7).writeI16(123).writeI16(456).writeI16(789).writeI8(2)
+                .writeI32(-99).writeI8(4).writeI8(5).writeBool(false);
+              ProtocolWorldStateCodec.Opcode4 worldEntities = ProtocolWorldStateCodec.decodeS2COpcode4(worldSpawn.toByteArray());
+              if (worldEntities.entities().size() != 1 || worldEntities.entities().get(0).kind() != 1
+                  || worldEntities.entities().get(0).entityId() != 123 || worldEntities.entities().get(0).extraInt() != -99
+                  || worldEntities.entities().get(0).kind1Subtype() != 4 || worldEntities.entities().get(0).active())
+                throw new AssertionError("S2C opcode 4 entity decode: " + worldEntities);
+              ProtocolWorldStateCodec.Opcode8 removed = ProtocolWorldStateCodec.decodeS2COpcode8(
+                new PacketWriter().writeI16(10).writeI16(-20).toByteArray());
+              if (!removed.entityIds().equals(List.of((short)10,(short)-20)))
+                throw new AssertionError("S2C opcode 8 despawn decode: " + removed);
+              ProtocolWorldStateCodec.Opcode12 mapTransition = ProtocolWorldStateCodec.decodeS2COpcode12(
+                new PacketWriter().writeI16(1).writeI16(2).writeI16(3).writeI8(4).writeI16(5).writeUTF("Forest")
+                  .writeBool(true).writeU8(0xaa).writeU8(0xbb).toByteArray());
+              if (mapTransition.hfK() != 4 || !mapTransition.label().equals("Forest")
+                  || !Arrays.equals(mapTransition.mapData(), new byte[]{(byte)0xaa,(byte)0xbb}))
+                throw new AssertionError("S2C opcode 12 map transition decode: " + mapTransition);
               PacketWriter extension3 = new PacketWriter().writeI16(123).writeI8(0).writeBool(true).writeBool(false)
                 .writeI8(1).writeI8(2).writeI8(3).writeI16(4).writeI32(5).writeI16(6).writeI32(7).writeUTF("title").writeBool(true)
                 .writeI16(11).writeI8(12).writeI16(21).writeI8(22).writeI16(23).writeI16(31).writeI16(32).writeI16(33)
