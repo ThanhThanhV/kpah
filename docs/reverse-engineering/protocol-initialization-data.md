@@ -71,7 +71,7 @@ First byte is mode; handler creates `int[]` sized by global skill count `z.Z` an
 
 | Mode | Data read |
 |---:|---|
-| `0` | long currency; unsigned-byte count; each record: unsigned-byte skill index + int skill value; updates `ca.S[index].a` and skill value array |
+| `0` | long currency; unsigned-byte count; each record: unsigned-byte skill index + int skill value; then common `aY` int and `aZ` int; updates `ca.S[index].a` and skill value array |
 | `1` | short item count; each item `bo` includes type, ID, property shorts/bytes, UTF description, unsigned-short value and stat pairs; then character currency/state int |
 | `2` | two byte-counted collections of `k` records containing short IDs, byte flags, UTF text, optional int value and timestamps |
 | `3` | byte count followed by short array, stored as `ca.T` |
@@ -122,8 +122,9 @@ The verified mode-0 layout is now represented in `protocol/protocol.yaml` (`mode
 2. Signed Java `long` currency (`i64`, big-endian).
 3. Unsigned-byte skill record count.
 4. Repeated records: unsigned-byte skill index, signed 32-bit skill value.
+5. Common signed 32-bit fields `aY` and `aZ`, read by the handler for every mode.
 
-The decoder preserves the full 64-bit currency value (JavaScript `BigInt`; Java `long`) and returns skill records in wire order. Any bytes after the verified records are returned as an opaque tail. Modes 1–3 are deliberately returned as opaque payloads after the mode byte; their schemas are not inferred from this implementation. The full opcode 16 command remains opaque in the general command catalog.
+The decoder preserves the full 64-bit currency value (JavaScript `BigInt`; Java `long`) and returns skill records in wire order and preserves `aY`/`aZ` as numeric fields without guessing their business meaning. Any bytes after the verified fields are returned as an opaque tail. Modes 1–3 are deliberately returned as opaque payloads after the mode byte; their schemas are not inferred from this implementation. The full opcode 16 command remains opaque in the general command catalog.
 
 Generator and checks:
 
