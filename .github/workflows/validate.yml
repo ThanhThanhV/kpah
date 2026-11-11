@@ -129,6 +129,17 @@ jobs:
                   || !shopItemDecoded.optionalContext().text().equals("Expiry")
                   || shopItemDecoded.optionalContext().discardedTypeByte() != 2)
                 throw new AssertionError("opcode 15 subtype 0 item/context decode: " + shopItemDecoded);
+              PacketWriter petItem15 = new PacketWriter().writeI8(2).writeI16(654).writeI8(1)
+                .writeI8(9).writeI16(2001).writeI16(32).writeI8(5).writeI8(6).writeI16(77).writeI16(88)
+                .writeI8(1).writeI8(2).writeI8(3).writeI8(4).writeI8(5).writeI8(6).writeI8(7)
+                .writeUTF("Pet").writeI8(1).writeU8(12).writeI16(345).writeI8(3).writeU8(0x89);
+              ProtocolOpcode15Codec.Decoded petItemDecoded = ProtocolOpcode15Codec.decode(petItem15.toByteArray());
+              if (petItemDecoded.items().size() != 1 || !petItemDecoded.items().get(0).d().equals("Pet")
+                  || petItemDecoded.items().get(0).w() != null
+                  || petItemDecoded.items().get(0).stats().get(0).statId() != 12
+                  || petItemDecoded.frameCount() != 3
+                  || !Arrays.equals(petItemDecoded.imageBytes(), new byte[]{(byte)0x89}))
+                throw new AssertionError("opcode 15 nonzero subtype item/image decode: " + petItemDecoded);
               PacketWriter pet15 = new PacketWriter().writeI8(1).writeI16(654).writeI8(0).writeI8(3).writeU8(0x89).writeU8(0x50);
               ProtocolOpcode15Codec.Decoded petDecoded = ProtocolOpcode15Codec.decode(pet15.toByteArray());
               if (!petDecoded.accepted() || petDecoded.subtype() != 1 || petDecoded.targetCharacterId() != 654
