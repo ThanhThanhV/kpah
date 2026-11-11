@@ -70,4 +70,34 @@ public final class ProtocolWorldStateCodec {
         return new Opcode7(entityId,templateId,x,y,currentHp,stateD,stateI,maxHp,opaque,readRemaining(in));
     }
 
+    public record Opcode18(short ownerCharacterId, byte sharedTypeByte, short fieldK, short itemId,
+                           short fieldR, byte fieldSByte, byte fieldYByte, short fieldU, short fieldV,
+                           byte[] trailingBytes) {}
+    public static Opcode18 decodeS2COpcode18(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);short owner=in.readI16();byte shared=in.readI8();
+        short fieldK=in.readI16(),item=in.readI16(),fieldR=in.readI16();byte fieldS=in.readI8(),fieldY=in.readI8();
+        short fieldU=in.readI16(),fieldV=in.readI16();
+        return new Opcode18(owner,shared,fieldK,item,fieldR,fieldS,fieldY,fieldU,fieldV,readRemaining(in));
+    }
+    public record Opcode19(short characterId, short groundItemId, int currencyOrItemIndex, short amount, byte[] trailingBytes) {}
+    public static Opcode19 decodeS2COpcode19(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);
+        return new Opcode19(in.readI16(),in.readI16(),in.readU8(),in.readI16(),readRemaining(in));
+    }
+    public record Opcode20(byte entityKind, short entityId, byte[] trailingBytes) {}
+    public static Opcode20 decodeS2COpcode20(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);
+        return new Opcode20(in.readI8(),in.readI16(),readRemaining(in));
+    }
+    public record Stat(int statId, short value) {}
+    public record Opcode21(short itemId, short fieldU, byte typeByteD, int unsignedValueW, int statCount,
+                           List<Stat> stats, byte fieldS, byte optionalFieldC, byte[] trailingBytes) {}
+    public static Opcode21 decodeS2COpcode21(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);short item=in.readI16(),fieldU=in.readI16();byte type=in.readI8();
+        int valueW=in.readU16(),count=in.readI8();List<Stat> stats=new ArrayList<>();
+        for(int i=0;i<count;i++)stats.add(new Stat(in.readU8(),in.readI16()));
+        byte fieldS=in.readI8(),fieldC=0;if(in.remaining()>0)fieldC=in.readI8();
+        return new Opcode21(item,fieldU,type,valueW,count,List.copyOf(stats),fieldS,fieldC,readRemaining(in));
+    }
+
 }

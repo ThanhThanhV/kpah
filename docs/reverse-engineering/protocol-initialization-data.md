@@ -310,3 +310,15 @@ This is an update for an entity already in the world, not an entity creation pac
 ## Opcode 17 — bytecode confirmation
 
 Bytecode for `ka.class` confirms the first short is written to the retained `kl.a` field (the `dup; astore_3; ... putfield kl.a` sequence). It is therefore the actor/source entity ID used by `mj.a(kl)`; the second short `kl.b` is the target entity ID. The generated codecs now expose `actorEntityId` and `targetEntityId`, replacing the earlier neutral first-short name.
+
+
+## S2C opcodes 18–21 — ground-item and inventory events
+
+These handlers are traced from CFR `ka.java` and cross-checked against `bo.java`, the `mj` consumers, and bytecode read order.
+
+- **Opcode 18 — ground-item pickup context:** owner character ID short, then a partial item record. One signed byte is assigned to both `bo.m` and `bo.D`; then `k/i/r` shorts, `s/y` signed bytes, and `u/v` shorts. `mj.a(ownerId, bo)` resolves the ground entity using `bo.k`; if the owner is the local character, it adds this item record to the local inventory. The codec preserves neutral field names where the partial item model is not fully transmitted.
+- **Opcode 19 — pickup reward:** character ID short, ground item entity ID short, unsigned-byte currency/item index, signed-short amount. The consumer updates local currency when the index is zero, otherwise the corresponding item counter; the ground pickup visual is removed/moved to the character.
+- **Opcode 20 — typed entity removal:** signed-byte entity kind followed by signed-short entity ID. The consumer removes the entity whose `j.g` and `j.h` match these values.
+- **Opcode 21 — inventory item update:** item ID short, `u` short, `D` byte, `w` unsigned short, signed-byte stat count and repeated unsigned-byte stat ID + signed-short value, `s` byte, optional `C` byte (constructor default 0). The consumer merges the item into current inventory/equipment/trade/shop collections and refreshes the active panel.
+
+Negative opcode-21 stat counts execute zero iterations, matching the original signed-byte loop. Opcode 21's optional `C` read only occurs when bytes remain; absent values preserve the constructor default of zero. Decoders parse only; they do not mutate inventory or award currency.

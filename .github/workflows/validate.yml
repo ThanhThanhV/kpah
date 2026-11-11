@@ -237,6 +237,22 @@ jobs:
                   || entity7.y() != 340 || entity7.currentHp() != 750 || entity7.stateByteD() != -2
                   || entity7.stateByteI() != 3 || entity7.maxHp() != 1000 || entity7.opaqueInt() != 987654)
                 throw new AssertionError("S2C opcode 7 entity state update decode: " + entity7);
+              ProtocolWorldStateCodec.Opcode18 pickup18 = ProtocolWorldStateCodec.decodeS2COpcode18(
+                new PacketWriter().writeI16(55).writeI8(3).writeI16(700).writeI16(701).writeI16(702)
+                  .writeI8(-4).writeI8(5).writeI16(706).writeI16(707).toByteArray());
+              ProtocolWorldStateCodec.Opcode19 reward19 = ProtocolWorldStateCodec.decodeS2COpcode19(
+                new PacketWriter().writeI16(55).writeI16(701).writeU8(0).writeI16(250).toByteArray());
+              ProtocolWorldStateCodec.Opcode20 remove20 = ProtocolWorldStateCodec.decodeS2COpcode20(
+                new PacketWriter().writeI8(3).writeI16(701).toByteArray());
+              ProtocolWorldStateCodec.Opcode21 inventory21 = ProtocolWorldStateCodec.decodeS2COpcode21(
+                new PacketWriter().writeI16(900).writeI16(4).writeI8(-2).writeU16(60000).writeI8(1)
+                  .writeU8(7).writeI16(-8).writeI8(11).writeI8(-12).toByteArray());
+              if (pickup18.ownerCharacterId() != 55 || pickup18.itemId() != 701 || pickup18.fieldSByte() != -4
+                  || reward19.currencyOrItemIndex() != 0 || reward19.amount() != 250
+                  || remove20.entityKind() != 3 || remove20.entityId() != 701
+                  || inventory21.unsignedValueW() != 60000 || inventory21.stats().get(0).value() != -8
+                  || inventory21.optionalFieldC() != -12)
+                throw new AssertionError("S2C opcode 18-21 inventory/entity event decode");
               PacketWriter extension3 = new PacketWriter().writeI16(123).writeI8(0).writeBool(true).writeBool(false)
                 .writeI8(1).writeI8(2).writeI8(3).writeI16(4).writeI32(5).writeI16(6).writeI32(7).writeUTF("title").writeBool(true)
                 .writeI16(11).writeI8(12).writeI16(21).writeI8(22).writeI16(23).writeI16(31).writeI16(32).writeI16(33)

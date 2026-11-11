@@ -368,3 +368,8 @@ The generated world-state codec includes S2C opcode 17, based on the original cl
 ### Bytecode-verified world-state packets
 
 Opcode 7 is now decoded as an update for an existing entity: entity/template IDs, coordinates, current/max HP, two state bytes and one opaque integer. Opcode 17's first short is confirmed by bytecode as the actor entity ID, resolving the prior CFR assignment ambiguity. These decoders remain parse-only; they do not apply authoritative combat or spawn entities.
+
+
+### S2C ground-item and inventory events (opcodes 18–21)
+
+Added source-traced decoders for partial ground-item pickup records, pickup rewards, typed entity removal and inventory item updates. The codecs preserve signed/unsigned widths, optional defaults and neutral fields; the application layer still needs to apply authoritative inventory/currency changes.

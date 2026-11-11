@@ -87,3 +87,35 @@ export function decodeS2COpcode7(payload) {
     trailingBytes: readRemaining(reader)
   };
 }
+
+export function decodeS2COpcode18(payload) {
+  const reader = new PacketReader(payload);
+  return {
+    ownerCharacterId: reader.readI16(),
+    sharedTypeByte: reader.readI8(),
+    fieldK: reader.readI16(), itemId: reader.readI16(), fieldR: reader.readI16(),
+    fieldSByte: reader.readI8(), fieldYByte: reader.readI8(),
+    fieldU: reader.readI16(), fieldV: reader.readI16(),
+    trailingBytes: readRemaining(reader)
+  };
+}
+export function decodeS2COpcode19(payload) {
+  const reader = new PacketReader(payload);
+  return { characterId: reader.readI16(), groundItemId: reader.readI16(),
+    currencyOrItemIndex: reader.readU8(), amount: reader.readI16(), trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcode20(payload) {
+  const reader = new PacketReader(payload);
+  return { entityKind: reader.readI8(), entityId: reader.readI16(), trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcode21(payload) {
+  const reader = new PacketReader(payload);
+  const itemId = reader.readI16(), fieldU = reader.readI16(), typeByteD = reader.readI8();
+  const unsignedValueW = reader.readU16(), statCount = reader.readI8(), stats = [];
+  for (let i = 0; i < statCount; i += 1) stats.push({ statId: reader.readU8(), value: reader.readI16() });
+  const fieldS = reader.readI8();
+  let optionalFieldC = 0;
+  if (reader.remaining() > 0) optionalFieldC = reader.readI8();
+  return { itemId, fieldU, typeByteD, unsignedValueW, statCount, stats, fieldS,
+    optionalFieldC, trailingBytes: readRemaining(reader) };
+}

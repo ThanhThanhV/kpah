@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
-import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode12, decodeS2COpcode17, decodeS2COpcode7 } from "../src/protocol/generated/world-state-codec.js";
+import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode12, decodeS2COpcode17, decodeS2COpcode7, decodeS2COpcode18, decodeS2COpcode19, decodeS2COpcode20, decodeS2COpcode21 } from "../src/protocol/generated/world-state-codec.js";
 const spawn=new PacketWriter().writeI8(1).writeU8(7).writeI16(123).writeI16(456).writeI16(789).writeI8(2)
  .writeI32(-99).writeI8(4).writeI8(5).writeBool(false)
  .writeI8(0).writeU8(8).writeI16(124).writeI16(500).writeI16(600).writeI8(1).writeI32(77).writeI8(6).writeBool(true).toUint8Array();
@@ -33,3 +33,17 @@ assert.throws(()=>decodeS2COpcode17(new PacketWriter().writeI16(1).writeI16(2).w
 const entityState=decodeS2COpcode7(new PacketWriter().writeI16(321).writeU8(255).writeI16(1200).writeI16(340)
  .writeI32(750).writeI8(-2).writeI8(3).writeI32(1000).writeI32(987654).toUint8Array());
 assert.deepEqual(entityState,{entityId:321,templateId:255,x:1200,y:340,currentHp:750,stateByteD:-2,stateByteI:3,maxHp:1000,opaqueInt:987654,trailingBytes:new Uint8Array()});
+
+const pickup18=decodeS2COpcode18(new PacketWriter().writeI16(55).writeI8(3).writeI16(700).writeI16(701)
+ .writeI16(702).writeI8(-4).writeI8(5).writeI16(706).writeI16(707).toUint8Array());
+assert.deepEqual(pickup18,{ownerCharacterId:55,sharedTypeByte:3,fieldK:700,itemId:701,fieldR:702,fieldSByte:-4,fieldYByte:5,fieldU:706,fieldV:707,trailingBytes:new Uint8Array()});
+const reward19=decodeS2COpcode19(new PacketWriter().writeI16(55).writeI16(701).writeU8(0).writeI16(250).toUint8Array());
+assert.deepEqual(reward19,{characterId:55,groundItemId:701,currencyOrItemIndex:0,amount:250,trailingBytes:new Uint8Array()});
+const remove20=decodeS2COpcode20(new PacketWriter().writeI8(3).writeI16(701).toUint8Array());
+assert.deepEqual(remove20,{entityKind:3,entityId:701,trailingBytes:new Uint8Array()});
+const inventory21=decodeS2COpcode21(new PacketWriter().writeI16(900).writeI16(4).writeI8(-2).writeU16(60000)
+ .writeI8(2).writeU8(7).writeI16(-8).writeU8(9).writeI16(10).writeI8(11).writeI8(-12).toUint8Array());
+assert.deepEqual(inventory21,{itemId:900,fieldU:4,typeByteD:-2,unsignedValueW:60000,statCount:2,
+ stats:[{statId:7,value:-8},{statId:9,value:10}],fieldS:11,optionalFieldC:-12,trailingBytes:new Uint8Array()});
+const inventory21NoOptional=decodeS2COpcode21(new PacketWriter().writeI16(900).writeI16(4).writeI8(1).writeU16(2).writeI8(0).writeI8(3).toUint8Array());
+assert.equal(inventory21NoOptional.optionalFieldC,0);

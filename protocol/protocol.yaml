@@ -2593,6 +2593,65 @@
         "max-hp",
         "opaque-int"
       ]
+    },
+    {
+      "name": "GROUND_ITEM_PICKUP",
+      "direction": "S2C",
+      "opcode": 18,
+      "evidenceSource": "ka.java:case18",
+      "evidence": "Reads owner character ID short and a partial bo item: one signed byte assigned to both bo.m and bo.D, then short k/i/r, signed bytes s/y, and shorts u/v. mj.a(ownerId, item) resolves the matching ground entity by bo.k and adds the item to the local inventory when ownerId is the current character.",
+      "sections": [
+        "owner-character-id",
+        "shared-type-byte",
+        "field-k",
+        "item-id",
+        "field-r",
+        "field-s-byte",
+        "field-y-byte",
+        "field-u",
+        "field-v"
+      ]
+    },
+    {
+      "name": "GROUND_ITEM_REWARD",
+      "direction": "S2C",
+      "opcode": 19,
+      "evidenceSource": "ka.java:case19",
+      "evidence": "Reads character ID short, ground item entity ID short, unsigned byte index and signed short amount; mj.a(...) removes the ground pickup visual and updates local currency when index is zero or item count otherwise.",
+      "sections": [
+        "character-id",
+        "ground-item-id",
+        "currency-or-item-index",
+        "amount"
+      ]
+    },
+    {
+      "name": "ENTITY_REMOVE_TYPED",
+      "direction": "S2C",
+      "opcode": 20,
+      "evidenceSource": "ka.java:case20",
+      "evidence": "Reads signed byte entity kind followed by signed short entity ID; calls mj.a(entityId,kind), removing the matching entity from the world list.",
+      "sections": [
+        "entity-kind",
+        "entity-id"
+      ]
+    },
+    {
+      "name": "INVENTORY_ITEM_UPDATE",
+      "direction": "S2C",
+      "opcode": 21,
+      "evidenceSource": "ka.java:case21",
+      "evidence": "Reads item ID short, field u short, D byte, w unsigned short, signed-byte stat count with repeated unsigned-byte stat ID + signed-short value, s byte, then an optional C byte defaulting to the bo constructor's zero. Calls mj.a(bo) to merge the item into the active inventory/equipment/trade/shop lists.",
+      "sections": [
+        "item-id",
+        "field-u",
+        "type-byte-d",
+        "unsigned-value-w",
+        "signed-stat-count",
+        "stat-pairs",
+        "field-s",
+        "optional-field-c"
+      ]
     }
   ],
   "extensionSchemas": [
