@@ -247,20 +247,21 @@ jobs:
               for(int n=0;n<7;n++) world5.writeI8(n);
               for(int n=0;n<7;n++) world5.writeI16(10+n);
               world5.writeI16(50).writeI8(6).writeI16(70).writeI16(80).writeI8(9).writeI8(10).writeI8(2)
-                .writeI8(3).writeI8(4).writeI8(5).writeI16(99).writeI8(7).writeI8(8);
+                .writeI8(3).writeI8(4).writeI8(5).writeI16(99).writeI8(7).writeI8(8).writeI8(13);
               for(int n=0;n<5;n++) world5.writeI16(200+n);
               world5.writeBool(true).writeBool(false).writeI8(11).writeI8(12).writeBool(true)
                 .writeI16(21).writeI8(22).writeI16(31).writeI8(32).writeI16(33)
-                .writeI16(41).writeI16(42).writeI16(43).writeI16(51).writeI8(61).writeI16(62)
+                .writeI16(41).writeI16(42).writeI16(43).writeI8(2).writeI16(44).writeI8(45).writeI16(46).writeI8(47).writeI16(51).writeI8(61).writeI16(62)
                 .writeI8(63).writeI8(64).writeI8(71).writeI16(72).writeI8(73).writeU8(0xaa);
               ProtocolOpcode5Codec.Decoded worldDecoded = ProtocolOpcode5Codec.decode(world5.toByteArray(), true);
               if (!worldDecoded.name().equals("Hero") || worldDecoded.combatState().length != 4
                   || worldDecoded.appearanceBytes().length != 7 || worldDecoded.appearanceValues()[6] != 16
-                  || worldDecoded.co() != 1 || worldDecoded.af() != 8 || worldDecoded.ca()[4] != 204
+                  || worldDecoded.co() != 1 || worldDecoded.af() != 8 || worldDecoded.aS() != 13 || worldDecoded.ca()[4] != 204
                   || !worldDecoded.bM() || worldDecoded.presenceFlag()
                   || worldDecoded.optional().pairA().shortValue() != 21
                   || worldDecoded.optional().tripleB().shortValue2() != 33
                   || worldDecoded.optional().tripleC().shortValue3() != 43
+                  || !worldDecoded.optional().mappingApplied() || worldDecoded.optional().mappingPairs().size() != 2
                   || worldDecoded.optional().bf() != 51 || worldDecoded.optional().groupD().bk() != 64
                   || worldDecoded.optional().groupE().bl() != 73
                   || !Arrays.equals(worldDecoded.trailingBytes(), new byte[]{(byte)0xaa}))
