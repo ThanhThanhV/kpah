@@ -674,3 +674,5 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 
 
 | 2026-11-11 | B16 | Hoàn thiện nhánh opcode 16 mode 2: hai collection signed-byte count, record `k` theo đúng thứ tự đọc CFR, common `aY/aZ`, ánh xạ collection thứ hai vào `z.by`; unknown mode giữ opaque | `4321de4`, `ae41c97`, `96a6b98`, `16660d5`, `873226b`, `249e8b8`, `e2896f4` | CI run `42981960004` PASS: build FE, generator consistency, JS tests, local TCP replay harness, Java 21 compile/smoke; bốn mode 0–3 đã có vector kiểm chứng. |
+
+| 2026-11-11 | B16 | Bổ sung decoder opcode 15 subtype 0 và non-zero: item record khác nhau ở trường w; parse aS, 5 short, optional UTF/context sentinel; nhánh non-zero giữ image atlas opaque và frame metadata | `473533b`, `b0acc02`, `e558d6b`, `183d2fe`, `4ddac3b`, `5ab53d1` | Đã thêm YAML wire layout, generator JS/Java, test vector và CI smoke; chờ CI xác nhận. B16 vẫn Một phần vì opcode 1/3 extension và dữ liệu tile/part chưa hoàn tất. |
