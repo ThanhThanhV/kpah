@@ -28,6 +28,23 @@ Handler đọc dữ liệu cấu hình dùng chung và kết thúc bằng `km.s.
 
 Optional sections are guarded by `available()>0` or local try/catch. The exact meaning of every lookup table is not fully resolved. The server's tile count is expected to fit the two named `km.M` slots observed in this client.
 
+### Opcode 1 lookup consumers — deeper trace
+
+The cv records are skill definitions, not player-owned item records. The loader sets d to the array index, e to the skill icon/resource ID, g/h to name and description, c to the cooldown value and f to the enabled flag. The live state is held in a/b: the UI and validation compare a - b to show remaining upgrade points, and skill upgrade requests are bounded by that difference. The skill quick-slot renderer uses e as the icon and c for cooldown display.
+
+The five z.bw bytes are per-profession skill/action-slot counts: z.A() returns bw[aR], and skill/equipment panels use that value to size the profession-specific slot grid.
+
+The five mj.A vectors are profession-specific skill-description/catalog rows. Each record reads a byte, two UTF strings and an int; the two strings are displayed as skill name and description, and the int is shown as the skill's coin cost. CFR assigns the initial byte through new ia().c rather than the retained ia2 instance, while the UI later reads ia.c. Treat that icon/category byte as a bytecode-review item rather than silently repairing the decompiler output.
+
+Further confirmed destinations:
+
+- mj.aS is used as the ticket price in the boat/travel menu.
+- ku.ad is indexed by item-stat ID (bk.c() - 10) when rendering equipment stat labels. ku.ac is loaded beside it but no consumer was found in the current CFR source scan.
+- bq.e/d is a quest objective catalog: bq.e supplies the icon/resource byte and bq.d the displayed objective/item name used by quest progress text.
+- GameMidlet.g is a URL later passed to platformRequest from the menu.
+- Tile blobs are stored using the two named keys t_hang and t_thanh. The later part-data table is stored in hd.a, a static map keyed by record index and consumed by the hd character-part renderer.
+- mj.Z, the four mj.ac/ad/ae/af bytes, the z.cy/cz/cA/cB matrices and paired mj.bb/bc arrays are populated by this handler, but their runtime consumer was not found in the scanned CFR source. They remain neutral lookup/config data; no business meaning is assigned.
+
 ## S2C opcode 3 — selected character snapshot
 
 Handler writes into the current player `km.s.t` (`ca extends z`). Confirmed prefix:
