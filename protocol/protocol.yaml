@@ -2514,6 +2514,13 @@
       "opcode": 12,
       "evidenceSource": "ka.java:case12",
       "evidence": "Three shorts, optional byte default -1, fourth short, UTF label, optional boolean; if true remaining bytes are map data; map handler receives the four shorts, label and nullable map bytes; optional byte becomes hf.k."
+    },
+    {
+      "name": "PLAYER_ENTITY_SNAPSHOT",
+      "direction": "S2C",
+      "opcode": 5,
+      "evidenceSource": "ka.java:case5",
+      "evidence": "Requires an existing world entity and reads a fixed player snapshot: short ID, UTF name, coordinates, HP/MP, profession/class, 7 part bytes + 7 part shorts, movement/status fields, 5 appearance shorts, then independently guarded optional numeric groups and final state groups."
     }
   ],
   "extensionSchemas": [
