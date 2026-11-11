@@ -657,3 +657,5 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - B14 vẫn **Một phần**: 239 payload opaque, chưa có complete conditional/nested schemas, production capture và server/gateway.
 
 | 2026-11-10 | B14 | Generate transport codec Java/JS từ transport spec: handshake prefix-XOR, XOR stream, C2S/S2C short và S2C encrypted long header; thêm synthetic vectors và CI Java 21 | `4dcdc4d`, `2a7e24b`, `3f3bbd3`, `914a163`, `37239f6`, `c69dfd3`, `509e06a`, `9cdd202`, `e62e5fa`, `f11019e`, `01e41fc`, `b74b4d6` | CI run `42797122962` SUCCESS; generated-source consistency, JS transport vectors, Java 21 compile/smoke test và client Vite build PASS. Run trước đó `42796977585` phát hiện stale generated outputs, đã đồng bộ trực tiếp từ template canonical và chạy lại xanh. |
+
+| 2026-11-11 | B16 | Tạo schema prefix có giới hạn cho S2C opcode 3; codegen decoder Java/JS giữ opaque tail, không đánh dấu full schema | `833cece`, `d83e4ba`, `ca6c8d5`, `008773a`, `a08e25f` | Chờ CI xác minh; B16 vẫn Một phần vì opcode 1/15/16 và extension opcode 3 chưa được giải mã đầy đủ. |
