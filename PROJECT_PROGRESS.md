@@ -548,3 +548,13 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - CI run `42992393021` SUCCESS: Vite production build, Python tooling, all generated-code checks, JS protocol suites, Java 21 compile/smoke tests and original-JAR analysis. No live server, packet capture, browser gameplay test or backend behavior was validated.
 - The earlier runs failed first because generated world-state files were stale and then because the schema evidence marker did not match the generator's exact source marker; both were corrected before the passing run.
 - Overall weighted project percentage is unchanged; no WBS weights were recalculated. BE stage remains deferred.
+
+
+## B5 — Bytecode verification and S2C opcode 7 entity update — CI PASS
+
+- Materialized the original `KPAH_278.jar` from the user's Library and inspected `ka.class` with Java 21 `javap -c -p`; no changes were made to the original JAR.
+- Bytecode confirms opcode 7 assigns the first short to the retained `ce.a` (entity ID), then reads template ID, X/Y, current HP, two state bytes, max HP and an opaque int. `mj.a(ce)` resolves an existing entity; `cd.a(ce)` updates its coordinates/HP/state. Added the Java/JS decoder and vectors.
+- Bytecode confirms opcode 17 assigns the first short to retained `kl.a`; it is the actor/source entity ID. The second short `kl.b` is the target ID. Updated Java/JS codec field to `actorEntityId`; no longer leaves it neutral.
+- Added generator schema checks, JS tests, Java 21 smoke vectors, and source-backed docs.
+- CI run `42993047244` SUCCESS: Vite production build, Python tooling, all generated-code consistency checks, all JavaScript protocol suites, Java 21 compile/smoke and original-JAR analysis.
+- No live server/packet capture, production combat application, browser gameplay test or backend implementation was exercised. Overall weighted percentage unchanged pending WBS recalculation; BE remains deferred.

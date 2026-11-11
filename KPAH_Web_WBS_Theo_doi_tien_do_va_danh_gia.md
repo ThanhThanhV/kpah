@@ -704,3 +704,12 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Negative count được reject; các trường effect giữ neutral. Decoder không áp damage hay render VFX.
 - CI run `42992393021` PASS: Vite build, toàn bộ generator consistency, JS protocol tests, Java 21 compile/smoke và original-JAR analysis.
 - Không tăng % tổng dự án ở increment này vì chưa tính lại trọng số WBS; BE chưa bắt đầu.
+
+
+### B5 — Opcode 7 entity update and opcode 17 actor/target bytecode verification
+
+- **Trạng thái: Một phần (wire decoder + bytecode verification + synthetic tests + CI PASS).**
+- Opcode 7: bytecode `ka.class` xác nhận short đầu tiên gán vào `ce.a` của object được giữ lại; không phải temporary object như CFR hiển thị. Đã parse entity ID, template ID, tọa độ, current/max HP, hai state byte và một int chưa rõ ý nghĩa. `mj.a(ce)` chỉ cập nhật entity đã tồn tại.
+- Opcode 17: bytecode xác nhận short đầu tiên gán vào `kl.a`, là actor/source entity ID; short thứ hai `kl.b` là target entity ID. Decoder đổi tên thành `actorEntityId` và `targetEntityId`.
+- CI run `42993047244` PASS: Vite build, generator checks, JS protocol tests, Java 21 compile/smoke và original-JAR analysis.
+- Các decoder chỉ parse dữ liệu; chưa áp dụng server-authoritative HP/damage hoặc tạo/render effect. Không tăng % tổng dự án vì chưa tính lại trọng số WBS.
