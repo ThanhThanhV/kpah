@@ -436,3 +436,6 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Traced CFR ka.java case 16 and the bo/bk item/stat structures. Mode 1 reads a signed-short item count, per-item property fields, UTF description, unsigned-short value, nested stat pairs and a trailing byte; then common aY/aZ counters.
 - Added source-bounded JavaScript/Java decoding into inventory item records while retaining original obfuscated field names where semantics are not verified. Mode 1 items are the inventory collection assigned to z.bx.
 - Added synthetic tests for signed item/stat values, modified UTF-8 description, unsigned-short value, nested stats, common counters and opaque tail bytes. Mode 2 remains opaque.
+
+
+- Opcode 16 mode 3 validation: CI run 42974710824 SUCCESS (Vite build, generated initialization-codec consistency, JS tests and Java 21 compile/smoke). Mode 1 inventory decoder has been added after this run and is awaiting its own CI run.
