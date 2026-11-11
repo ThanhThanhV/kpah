@@ -19,7 +19,10 @@
     "test:replay-harness": "python tools/kpah_replay_harness.py --self-test",
     "generate:transport": "python tools/generate_transport_codec.py",
     "check:transport-generated": "python tools/generate_transport_codec.py --check",
-    "test:transport-codegen": "node tools/test_transport_codegen.mjs"
+    "test:transport-codegen": "node tools/test_transport_codegen.mjs",
+    "generate:prefix-protocol": "python tools/generate_prefix_protocol.py",
+    "check:prefix-protocol": "python tools/generate_prefix_protocol.py --check",
+    "test:prefix-protocol": "node tools/test_prefix_protocol.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"
