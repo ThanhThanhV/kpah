@@ -736,3 +736,12 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Opcode 33: character ID, level byte and two ints; consumer updates level and HP/MP values and triggers level-up effects.
 - CI run `42994113670` PASS: Vite build, generator checks, JS protocol tests, Java 21 compile/smoke and original-JAR analysis.
 - Chưa áp dụng authoritative character progression/state; không tăng % tổng dự án do chưa tính lại trọng số WBS.
+
+
+### B5 — S2C opcodes 61 and 78: inventory drop / warehouse sale
+
+- **Trạng thái: Một phần (wire decoder + bytecode/consumer trace + synthetic tests + CI PASS).**
+- Opcode 61: character ID, inventory item ID, hai byte và ba short effect data. Bytecode xác nhận byte đầu vào được ghi vào `jz.a` trên instance thực; consumer xóa item tương ứng và tạo ground-effect visual.
+- Opcode 78: warehouse item ID; consumer giảm số lượng trong storage và cộng tiền khi stack hết.
+- CI run `42994477192` PASS: Vite build, generator checks, JS protocol tests, Java 21 compile/smoke và original-JAR analysis.
+- Chưa áp dụng authoritative inventory/economy; không tăng % tổng dự án do chưa tính lại trọng số WBS.

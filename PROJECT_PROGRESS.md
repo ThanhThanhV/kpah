@@ -578,3 +578,12 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Consumer traces confirm opcode 27 updates overhead text/world chat; 28 removes the sold inventory item and credits proceeds; 30 updates experience and displays XP gain; 32 updates hp/mp/bp/sp fields; 33 updates level and HP/MP state.
 - Added packet schemas, generator consistency, JS vectors (including local/non-local opcode 32), and Java 21 smoke tests. CI run `42994113670` SUCCESS: Vite build, all generated-code checks, all JS protocol suites, Java 21 compile/smoke and original-JAR analysis.
 - Decoders remain parse-only; they do not apply authoritative inventory, currency, XP, level or resource changes. Overall weighted project percentage unchanged pending WBS recalculation; BE remains deferred.
+
+
+## B5 — S2C opcodes 61 and 78 — CI PASS
+
+- Added JavaScript/Java decoders for opcode 61 inventory item drop and opcode 78 warehouse item sale.
+- Inspected original JAR bytecode for opcode 61: the first effect byte is assigned to the retained `jz.a` instance (not a temporary object as CFR suggested); the packet then carries one more byte and three signed shorts. The consumer removes the matching inventory item and creates a ground-effect visual.
+- Opcode 78 carries one signed-short warehouse item ID; the consumer decrements the storage stack and credits sale proceeds when exhausted.
+- Added packet schemas, generator consistency, JS vectors, Java 21 smoke tests and documentation. CI run `42994477192` SUCCESS: Vite build, all generated-code checks, all JS protocol suites, Java 21 compile/smoke and original-JAR analysis.
+- These are parse-only decoders; no inventory mutation, item spawning or economy side effects are applied. Overall weighted project percentage unchanged pending WBS recalculation; BE remains deferred.
