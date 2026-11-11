@@ -477,3 +477,9 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Expanded the opcode 1 trace from raw field order to consumers: cv skill definition fields (index, icon/resource, name, description, cooldown, enabled, available/used upgrade points), z.bw profession-specific skill-slot count, and the five mj.A profession skill-description vectors.
 - Confirmed mj.aS is the boat ticket price, ku.ad maps item-stat IDs to display labels, bq.e/d supplies quest objective icon/name, GameMidlet.g is passed to platformRequest, named tile blobs are t_hang/t_thanh, and hd.a stores indexed character-part data.
 - Marked mj.Z, mj.ac/ad/ae/af, z.cy/cz/cA/cB and mj.bb/bc as populated but not semantically resolved from current CFR consumer scan. Flagged the ia icon byte assignment as a CFR/bytecode-review anomaly.
+
+
+## B16 — Opcode 3 optional extension trace
+
+- Extended the CFR trace beyond the generated 33-field prefix. Documented the main character extension (i/af, bM/e/t/u, cd/cc/ce/dm/dn/ak), three separately guarded numeric groups, a counted short+byte mapping plus UTF metadata, bf, and the final two guarded state groups.
+- Recorded each group's fallback defaults and the important cursor behavior: catch blocks do not rewind after partial reads. The generated decoder continues to preserve this area as opaque trailing bytes until dedicated truncation/consumer tests are available.
