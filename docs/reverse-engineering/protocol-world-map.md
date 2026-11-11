@@ -91,6 +91,14 @@ Payload prefix:
 
 Handler gọi `mj.a(short,short,short,short,String,byte[])` và cập nhật `hf.k`. Chưa khẳng định tên nghiệp vụ chính xác của ba short đầu; giữ nguyên thứ tự cho tới khi trace sâu hơn.
 
+## Entity movement state machine — CFR cd/ca
+
+- `cd.a(ce)` applies an entity snapshot. It copies `ce.g` to the entity update interval `E`, applies `ce.e` to current/max HP state, and sets the template/type `R = ce.h`. When the entity is the locally controlled actor (`cd.a == true`), it writes `ce.b/ce.c` directly to current `l/m`; otherwise it stores them as movement targets `M/N` for interpolation. It also applies status `ce.d` and max HP `ce.f`.
+- Movement speed `cT` is not a fixed global constant: it is loaded from the selected entity template `ku.T[R].c` and refreshed in `cd.b()`; the same template supplies animation/state metadata. Do not hardcode a single speed for all NPC/monster types.
+- In `cd.b()`, movement states `w = 2, 6, 7` route through `y()`; `cd.c(x,y)` uses the same axis-priority stepping rule for explicit targets. Each update first snaps X when `abs(x-targetX) <= cT`, and snaps Y when `abs(y-targetY) < cT`; otherwise it advances one axis by exactly `cT`, prioritizing X before Y. It does not use a diagonal normalized vector or time-based tween.
+- Facing/direction `cO`: `0` down, `1` up, `2` left, `3` right. The direction is updated when the selected axis moves. A snapshot for a remote actor therefore means “move toward target at template speed,” not “teleport to the received coordinate.”
+- Player-controlled `ca.b()` sends C2S opcode 4 using the current `l/m` coordinate after the movement-send throttle `mj.av`; collision and tile checks occur client-side before the request. This is distinct from S2C opcode 4 spawn/update records and S2C opcode 5 entity snapshots.
+
 ## World entity model đã xác nhận
 
 - `ca extends z`: player-controlled actor; gửi movement request opcode 4.
