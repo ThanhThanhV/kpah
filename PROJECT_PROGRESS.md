@@ -558,3 +558,14 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Added generator schema checks, JS tests, Java 21 smoke vectors, and source-backed docs.
 - CI run `42993047244` SUCCESS: Vite production build, Python tooling, all generated-code consistency checks, all JavaScript protocol suites, Java 21 compile/smoke and original-JAR analysis.
 - No live server/packet capture, production combat application, browser gameplay test or backend implementation was exercised. Overall weighted percentage unchanged pending WBS recalculation; BE remains deferred.
+
+
+## B5 — S2C opcodes 18–21 ground-item and inventory events — CI PASS
+
+- Added JavaScript/Java decoders for opcode 18 partial ground-item pickup context, opcode 19 pickup reward, opcode 20 typed entity removal and opcode 21 inventory item update.
+- Opcode 18 preserves the shared byte assigned to both `bo.m` and `bo.D`; item/drop IDs and remaining partial fields retain source field order.
+- Opcode 19 preserves the unsigned-byte currency/item index and signed-short amount; the client consumer updates local currency for index 0 or an item counter otherwise.
+- Opcode 20 decodes signed-byte entity kind before signed-short entity ID.
+- Opcode 21 preserves unsigned-short `w`, signed-byte stat count, unsigned-byte stat IDs, signed-short stat values, and optional `C` byte with constructor default zero. Negative stat counts produce zero records, matching the source loop.
+- Added schema/generator validation, JS vectors and Java 21 smoke tests. CI run `42993708570` SUCCESS: Vite build, all generator checks, all JS protocol tests, Java 21 compile/smoke and original-JAR analysis.
+- Decoders remain parse-only; no server-authoritative inventory mutation, currency award, or live session was implemented. Overall weighted project percentage unchanged pending WBS recalculation; BE remains deferred.

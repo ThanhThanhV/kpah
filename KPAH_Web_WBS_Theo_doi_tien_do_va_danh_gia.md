@@ -713,3 +713,14 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Opcode 17: bytecode xác nhận short đầu tiên gán vào `kl.a`, là actor/source entity ID; short thứ hai `kl.b` là target entity ID. Decoder đổi tên thành `actorEntityId` và `targetEntityId`.
 - CI run `42993047244` PASS: Vite build, generator checks, JS protocol tests, Java 21 compile/smoke và original-JAR analysis.
 - Các decoder chỉ parse dữ liệu; chưa áp dụng server-authoritative HP/damage hoặc tạo/render effect. Không tăng % tổng dự án vì chưa tính lại trọng số WBS.
+
+
+### B5 — S2C opcodes 18–21: ground-item and inventory events
+
+- **Trạng thái: Một phần (wire decoder + consumer trace + synthetic tests + CI PASS).**
+- Opcode 18: partial `bo` ground-item pickup context; owner character ID, shared type byte (`bo.m` và `bo.D`), drop ID/item ID and remaining properties. Consumer `mj.a(short,bo)` removes the matching ground item and adds it to local inventory for the owner.
+- Opcode 19: character ID, ground-item ID, unsigned-byte currency/item index, signed-short amount. Consumer updates currency or item counter and closes the pickup visual.
+- Opcode 20: typed removal (signed-byte kind + signed-short ID), matching `j.g/j.h`.
+- Opcode 21: inventory item update with unsigned-short value, signed-byte stat count and pairs, optional final byte defaulting to constructor value zero. Consumer merges item state into active lists/panels.
+- CI run `42993708570` PASS: Vite build, generator consistency, JavaScript tests, Java 21 compile/smoke and original-JAR analysis.
+- Các gói chỉ được decode; chưa có BE/session authoritative để apply reward/inventory. Không tăng % tổng dự án vì chưa tính lại trọng số WBS.
