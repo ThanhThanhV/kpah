@@ -127,7 +127,7 @@ jobs:
                   || mode2.secondCollection().get(0).g() != -987
                   || !Arrays.equals(mode2.trailingBytes(), new byte[]{(byte)0xca}))
                 throw new AssertionError("opcode 16 mode 2 decode: " + mode2);
-              PacketWriter mode1Packet = new PacketWriter().writeU8(1).writeI16(1)
+              ProtocolInitializationCodec.Decoded mode1 = ProtocolInitializationCodec.decodeS2COpcode16(mode1Packet.toByteArray());
               ProtocolInitializationCodec.InventoryItem mode1Item = mode1.items().get(0);
               if (!mode1.decoded() || mode1.mode() != 1 || mode1.items().size() != 1
                   || mode1Item.i() != 1001 || !mode1Item.d().equals("Sword") || mode1Item.w() != 65500
