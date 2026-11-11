@@ -11,7 +11,7 @@ CT=ROOT/'tools/ProtocolWorldStateCodec.java.template'
 def outputs():
  spec=json.loads(SPEC.read_text(encoding='utf-8'))
  schemas=spec.get('packetSchemas',[])
- expected={4:'ENTITY_SPAWN_UPDATE',5:'PLAYER_ENTITY_SNAPSHOT',8:'ENTITY_DESPAWN_LIST',12:'MAP_TRANSITION'}
+ expected={4:'ENTITY_SPAWN_UPDATE',5:'PLAYER_ENTITY_SNAPSHOT',6:'COMBAT_EVENT_VARIANT_A',8:'ENTITY_DESPAWN_LIST',9:'COMBAT_EVENT_VARIANT_B',12:'MAP_TRANSITION'}
  for opcode,name in expected.items():
   matches=[s for s in schemas if s.get('direction')=='S2C' and s.get('opcode')==opcode and s.get('name')==name]
   if len(matches)!=1 or matches[0].get('evidenceSource')!='ka.java:case'+str(opcode): raise ValueError('Missing world packet schema '+name)
