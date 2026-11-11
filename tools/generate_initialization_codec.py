@@ -20,6 +20,8 @@ def outputs():
         seen.add(key)
         if schema["direction"] != "S2C":
             raise ValueError("Mode decoder currently supports S2C only")
+        if int(schema["mode"]) != 0:
+            raise ValueError("Only mode 0 has a generated schema entry")
         if schema["fields"] != [{"name": "currency", "type": "i64"}]:
             raise ValueError("Unsupported verified fixed fields")
         if schema.get("commonFields") != [
@@ -43,6 +45,17 @@ export function decodeS2CInitialization(opcode, payload) {
   if (!schema) throw new Error("No verified mode schema for S2C opcode " + opcode);
   const reader = new PacketReader(payload);
   const mode = reader.readU8();
+  if (mode === 3) {
+    const aY = reader.readI32();
+    const count = reader.readI8();
+    if (count < 0) throw new RangeError("Negative opcode 16 mode 3 item count");
+    const values = [];
+    for (let i = 0; i < count; i += 1) values.push(reader.readI16());
+    const aZ = reader.readI32();
+    const trailingBytes = new Uint8Array(reader.remaining());
+    for (let i = 0; i < trailingBytes.length; i += 1) trailingBytes[i] = reader.readU8();
+    return { mode, decoded: true, aY, values, aZ, trailingBytes };
+  }
   if (mode !== schema.mode) {
     const opaquePayload = new Uint8Array(reader.remaining());
     for (let i = 0; i < opaquePayload.length; i += 1) opaquePayload[i] = reader.readU8();
@@ -70,14 +83,25 @@ public final class ProtocolInitializationCodec {
     private ProtocolInitializationCodec() {}
     public record SkillValue(int skillIndex, int skillValue) {}
     public record Decoded(int mode, boolean decoded, Long currency, List<SkillValue> skills,
-                          Integer aY, Integer aZ, byte[] opaquePayload, byte[] trailingBytes) {}
+                          Integer aY, Integer aZ, byte[] opaquePayload, byte[] trailingBytes, short[] values) {}
     public static Decoded decodeS2COpcode16(byte[] payload) throws IOException {
         PacketReader in = new PacketReader(payload);
         int mode = in.readU8();
+        if (mode == 3) {
+            int aY = in.readI32();
+            int count = in.readI8();
+            if (count < 0) throw new IOException("Negative opcode 16 mode 3 item count");
+            short[] values = new short[count];
+            for (int i = 0; i < count; i++) values[i] = in.readI16();
+            int aZ = in.readI32();
+            byte[] trailing = new byte[in.remaining()];
+            for (int i = 0; i < trailing.length; i++) trailing[i] = (byte) in.readU8();
+            return new Decoded(mode, true, null, List.of(), aY, aZ, new byte[0], trailing, values);
+        }
         if (mode != 0) {
             byte[] opaque = new byte[in.remaining()];
             for (int i = 0; i < opaque.length; i++) opaque[i] = (byte) in.readU8();
-            return new Decoded(mode, false, null, List.of(), null, null, opaque, new byte[0]);
+            return new Decoded(mode, false, null, List.of(), null, null, opaque, new byte[0], new short[0]);
         }
         long currency = in.readI64();
         int count = in.readU8();
@@ -89,7 +113,7 @@ public final class ProtocolInitializationCodec {
         int aZ = in.readI32();
         byte[] trailing = new byte[in.remaining()];
         for (int i = 0; i < trailing.length; i++) trailing[i] = (byte) in.readU8();
-        return new Decoded(mode, true, currency, List.copyOf(skills), aY, aZ, new byte[0], trailing);
+        return new Decoded(mode, true, currency, List.copyOf(skills), aY, aZ, new byte[0], trailing, new short[0]);
     }
 }
 '''
