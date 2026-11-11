@@ -224,6 +224,26 @@ jobs:
                   || playerSnapshot.groupD().bk() != 57 || playerSnapshot.groupE().bl() != 60
                   || !Arrays.equals(playerSnapshot.trailingBytes(), new byte[]{(byte)0xee}))
                 throw new AssertionError("S2C opcode 5 player snapshot decode: " + playerSnapshot);
+              PacketWriter opcode5 = new PacketWriter().writeI16(17).writeUTF("Hero").writeI16(120).writeI16(240);
+              for (int n : new int[]{100,200,300,400}) opcode5.writeI32(n);
+              opcode5.writeI8(1).writeI8(2);
+              for (int n=0;n<7;n++) opcode5.writeI8(n);
+              for (int n=10;n<17;n++) opcode5.writeI16(n);
+              opcode5.writeI16(50).writeI8(6).writeI16(70).writeI16(80).writeI8(9).writeI8(10).writeI8(2)
+                .writeI8(3).writeI8(4).writeI8(5).writeI16(99).writeI8(7).writeI8(8).writeI8(13);
+              for (int n=200;n<205;n++) opcode5.writeI16(n);
+              opcode5.writeBool(true).writeBool(false).writeI8(11).writeI8(12).writeBool(true)
+                .writeI16(21).writeI8(22).writeI16(31).writeI8(32).writeI16(33)
+                .writeI16(41).writeI16(42).writeI16(43).writeI8(2).writeI16(44).writeI8(45).writeI16(46).writeI8(47)
+                .writeI16(51).writeI8(61).writeI16(62).writeI8(63).writeI8(64).writeI8(71).writeI16(72).writeI8(73).writeU8(0xaa);
+              ProtocolOpcode5Codec.Decoded opcode5Decoded = ProtocolOpcode5Codec.decode(opcode5.toByteArray(), true);
+              if (opcode5Decoded.entityId() != 17 || opcode5Decoded.ca()[4] != 204 || opcode5Decoded.aS() != 13
+                  || !opcode5Decoded.optional().mappingApplied() || opcode5Decoded.optional().mappingPairs().size() != 2
+                  || opcode5Decoded.optional().bf() != 51 || opcode5Decoded.optional().groupE().bl() != 73)
+                throw new AssertionError("dedicated opcode 5 decoder: " + opcode5Decoded);
+              ProtocolOpcode5Codec.Decoded unknownOpcode5 = ProtocolOpcode5Codec.decode(new byte[]{0,99,1,2}, false);
+              if (unknownOpcode5.entityExists() || !Arrays.equals(unknownOpcode5.trailingBytes(), new byte[]{1,2}))
+                throw new AssertionError("opcode 5 unknown entity guard: " + unknownOpcode5);
               ProtocolWorldStateCodec.CombatEvent combat6 = ProtocolWorldStateCodec.decodeS2COpcode6(
                 new PacketWriter().writeI16(10).writeI16(20).writeI8(3).writeI32(400).writeI32(900)
                   .writeI8(1).writeI8(2).writeI8(3).writeI8(4).toByteArray());
