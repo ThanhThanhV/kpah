@@ -754,3 +754,12 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Giữ đúng signed count/short, unsigned item bytes, quy tắc cộng 256 cho raw short âm ở subtype 2; không tự suy diễn các trường catalog.
 - CI run `42994967419` PASS: Vite build, generator consistency, JS protocol tests, Java 21 compile/smoke và original-JAR analysis.
 - Chưa apply inventory/UI state và chưa có BE; không tăng % tổng dự án do chưa tính lại trọng số WBS.
+
+
+### B16 — S2C opcode 25: static item/shop catalog
+
+- **Trạng thái: Một phần (cấu trúc catalog decode + bytecode verification + synthetic tests + CI PASS).**
+- Parse lookup `ck`, coordinate `cw`, 5 config bytes, indexed `br` definitions (five bytes + short + 10 shorts + int + 2 bytes + 2 shorts), signed `bd` list và unsigned `bd` list.
+- Bytecode xác nhận `bd.o` của cả hai danh sách được gán trên instance giữ lại; per-definition exception boundary được giữ trong decoder. Các trường chưa có semantic rõ ràng vẫn dùng tên trung tính.
+- CI run `42995767130` PASS: Vite build, generator consistency, JS tests, Java 21 compile/smoke và original-JAR analysis.
+- Chưa kết nối catalog với UI giao dịch/BE; không tăng % tổng dự án do chưa tính lại trọng số WBS.

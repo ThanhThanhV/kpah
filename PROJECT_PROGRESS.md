@@ -596,3 +596,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Consumer trace: subtype 0 rebuilds the local item context; subtype 1 resolves catalog fields and opens the appropriate inventory/equipment view; subtype 2 installs the partial item vector; subtype 3 filters static catalog entries; subtype 4 opens the shop-tab actions.
 - Added packet schema, generator check, JS branch vectors (including empty/negative count cases), Java 21 smoke vectors and docs. CI run `42994967419` SUCCESS: Vite build, generated-code checks, JS protocol suites, Java 21 compile/smoke and original-JAR analysis.
 - Decoder does not resolve static item catalogs or apply UI/inventory mutations. Overall weighted project percentage unchanged pending WBS recalculation; BE remains deferred.
+
+
+## B16/B5 — S2C opcode 25 static item/shop catalog — CI PASS
+
+- Added a JavaScript/Java decoder for the full opcode 25 section sequence: `ck` lookup records, signed-byte coordinate pairs, five fixed config bytes, indexed `br` definitions, signed-count `bd` list and unsigned-count `bd` list.
+- Cross-checked the decompiler's `bd.o` assignments against original `ka.class` bytecode: both first and second `bd` lists write IDs to the retained `bd` instance. Definition entries preserve the original per-entry error boundary; index errors are surfaced as neutral parse errors.
+- Added packet schema, generator check, JS synthetic catalog vector and Java 21 smoke vector. CI run `42995767130` SUCCESS: Vite build, all generator checks, all JS protocol suites, Java 21 compile/smoke and original-JAR analysis.
+- Catalog decoder does not derive UI labels, instantiate shop models or implement purchases. Overall weighted project percentage unchanged pending WBS recalculation; BE remains deferred.
