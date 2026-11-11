@@ -16,6 +16,13 @@ def outputs():
     if actual != expected: raise ValueError(f'Opcode 15 schema declarations mismatch: {actual}')
     for s in schemas:
         if s.get('direction')!='S2C' or s.get('evidenceSource')!='ka.java:case15': raise ValueError('Opcode 15 schema lacks CFR evidence')
+        layout=s.get('layout',{})
+        if not isinstance(layout.get('header'),list) or len(layout.get('header'))!=3:
+            raise ValueError('Opcode 15 variant must declare the 3-field packet header')
+        if not isinstance(layout.get('itemRecord'),list) or not layout['itemRecord']:
+            raise ValueError('Opcode 15 variant must declare its item record order')
+        if not isinstance(layout.get('trailer'),list) or not layout['trailer']:
+            raise ValueError('Opcode 15 variant must declare its trailer')
     return {JS:JS_TEMPLATE.read_text(encoding='utf-8'),JAVA:JAVA_TEMPLATE.read_text(encoding='utf-8')}
 def main():
     p=argparse.ArgumentParser(); p.add_argument('--check',action='store_true'); a=p.parse_args(); stale=[]
