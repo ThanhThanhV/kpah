@@ -162,7 +162,7 @@ The verified mode-0 layout is now represented in `protocol/protocol.yaml` (`mode
 4. Repeated records: unsigned-byte skill index, signed 32-bit skill value.
 5. Common signed 32-bit fields `aY` and `aZ`, read by the handler for every mode.
 
-The decoder preserves the full 64-bit currency value (JavaScript `BigInt`; Java `long`) and returns skill records in wire order and preserves `aY`/`aZ` as numeric fields without guessing their business meaning. Any bytes after the verified fields are returned as an opaque tail. All four observed mode branches (0–3) now have separate source-bounded decoders. Mode 2 parses both auxiliary collections using the exact `ka.java` read order and retains the common `aY`/`aZ` values; unknown mode values remain opaque. The full opcode 16 command remains opaque in the general command catalog.
+The decoder preserves the full 64-bit currency value (JavaScript `BigInt`; Java `long`) and returns skill records in wire order and preserves `aY`/`aZ` as numeric fields without guessing their business meaning. Any bytes after the verified fields are returned as an opaque tail. All four observed mode branches (0–3) now have separate source-bounded decoders. Mode 1 parses the `bo` inventory records; mode 2 parses both auxiliary collections using the exact `ka.java` read order and retains common `aY`/`aZ`; mode 3 parses the `ca.T` short array. Unknown mode values remain opaque. The full opcode 16 command remains opaque in the general command catalog.
 
 Generator and checks:
 
@@ -177,5 +177,5 @@ npm run test:initialization-protocol
 - Chưa phân loại hết các lookup arrays trong opcode 1 hoặc gán semantic names cho toàn bộ numeric fields.
 - Chưa xác định toàn bộ skill metadata mapping, profession growth curves, item templates, tile/object catalogs và part binary schema.
 - Chưa có live packet capture để xác nhận server send order, optional-field versioning và error/retry behavior.
-- Opcode 16 modes 0–3 đã có decoder source-bounded; opcode 15 subtype 0 và non-zero đã có decoder riêng. Tiếp theo: trace lookup/catalog consumers và xác minh cấu trúc ảnh atlas thực tế bằng payload/assets hợp lệ; chưa có live packet capture.
+- Opcode 16 modes 0–3 đã có decoder source-bounded; opcode 15 subtype 0 và non-zero có decoder riêng. Tiếp theo: trace lookup/catalog consumers và xác minh cấu trúc ảnh atlas thực tế bằng payload/assets hợp lệ; chưa có live packet capture.
 
