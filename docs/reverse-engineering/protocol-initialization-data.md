@@ -180,6 +180,29 @@ npm run check:opcode15
 npm run test:opcode15
 ```
 
+## S2C opcode 5 — world entity snapshot decoder
+
+The opcode 5 handler first checks that the world scene is active, reads a signed-short entity ID, and resolves that ID against an already-known client entity. If no entity exists, it returns immediately after consuming only the ID; it does not construct an entity from this packet.
+
+For a known entity, the decoder reads the ordered base snapshot:
+
+- UTF name; two signed-short coordinates; four signed ints retained as neutral combat-state values.
+- Two action bytes; exactly seven appearance bytes and seven appearance shorts (the source entity class initializes these arrays to length seven).
+- A short, byte, two shorts and two bytes; a nonnegative co wire byte is converted to wireValue - 1, otherwise co is left unchanged.
+- cp, cn, cT bytes; i short; db byte; af byte only when i != -1; aS byte; five short ca values.
+- bM boolean and the presence boolean (the original handler invokes mj.a(entity) before reading this presence flag; a true value triggers km.s.G.u(entityId)).
+- t/u bytes and ak boolean.
+
+The tail has independently guarded pair-A, triple-B, triple-C, bf-short, group-D and group-E reads. Their fallback values match the source handler and the reader is not rewound on a partial read. Unknown field meanings are intentionally neutral in the codec; mj.a, entity refresh L() and guild-side side effects remain application behavior, not packet decoding.
+
+The generated Java and JS codecs accept an explicit entityExists guard because the original client resolves an existing entity before consuming the rest of the record. They do not fabricate a new world entity when that lookup fails.
+
+```bash
+npm run generate:opcode5
+npm run check:opcode5
+npm run test:opcode5
+```
+
 ## Related initialization packets
 
 - S2C opcode `5`: full player/entity snapshot for a character already present in world; it reuses many of opcode 3's `z` fields but is not the selected-character bootstrap packet.
