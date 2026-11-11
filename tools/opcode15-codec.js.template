@@ -21,7 +21,7 @@ export function decodeS2COpcode15(payload) {
   if (subtype === 0) {
     const items = [];
     for (let i = 0; i < itemCount; i += 1) items.push(readItem(reader, true));
-    const shopMode = reader.readI8();
+    const aS = reader.readI8();
     const shortValues = [];
     for (let i = 0; i < 5; i += 1) shortValues.push(reader.readI16());
     const optionalTextSentinel = reader.readI8();
@@ -37,7 +37,7 @@ export function decodeS2COpcode15(payload) {
     }
     const trailingBytes = new Uint8Array(reader.remaining());
     for (let i = 0; i < trailingBytes.length; i += 1) trailingBytes[i] = reader.readU8();
-    return { subtype, accepted: true, targetCharacterId, items, shopMode, shortValues,
+    return { subtype, accepted: true, targetCharacterId, items, aS, shortValues,
       optionalTextSentinel, optionalText, optionalTextValue, optionalContextSentinel, optionalContext, trailingBytes };
   }
   if (itemCount < 0) {
@@ -51,5 +51,5 @@ export function decodeS2COpcode15(payload) {
   const imageBytes = new Uint8Array(reader.remaining());
   for (let i = 0; i < imageBytes.length; i += 1) imageBytes[i] = reader.readU8();
   return { subtype, accepted: true, targetCharacterId, items, frameCount,
-    frameMode: frameCount === 3 ? 3 : 6, imageBytes };
+    atlasLayoutCode: frameCount === 3 ? 3 : 6, imageBytes };
 }
