@@ -745,3 +745,12 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Opcode 78: warehouse item ID; consumer giảm số lượng trong storage và cộng tiền khi stack hết.
 - CI run `42994477192` PASS: Vite build, generator checks, JS protocol tests, Java 21 compile/smoke và original-JAR analysis.
 - Chưa áp dụng authoritative inventory/economy; không tăng % tổng dự án do chưa tính lại trọng số WBS.
+
+
+### B5 — S2C opcode 23: inventory/equipment context variants
+
+- **Trạng thái: Một phần (5 nhánh decode + consumer trace + synthetic tests + CI PASS).**
+- Subtype 0: byte list; subtype 1: category byte + list item ID + optional mode default 2; subtype 2: partial item records; subtype 3: không có payload, lấy catalog tĩnh; subtype 4: byte list + hai trailer bytes để mở shop tabs.
+- Giữ đúng signed count/short, unsigned item bytes, quy tắc cộng 256 cho raw short âm ở subtype 2; không tự suy diễn các trường catalog.
+- CI run `42994967419` PASS: Vite build, generator consistency, JS protocol tests, Java 21 compile/smoke và original-JAR analysis.
+- Chưa apply inventory/UI state và chưa có BE; không tăng % tổng dự án do chưa tính lại trọng số WBS.

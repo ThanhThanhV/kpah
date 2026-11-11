@@ -587,3 +587,12 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode 78 carries one signed-short warehouse item ID; the consumer decrements the storage stack and credits sale proceeds when exhausted.
 - Added packet schemas, generator consistency, JS vectors, Java 21 smoke tests and documentation. CI run `42994477192` SUCCESS: Vite build, all generated-code checks, all JS protocol suites, Java 21 compile/smoke and original-JAR analysis.
 - These are parse-only decoders; no inventory mutation, item spawning or economy side effects are applied. Overall weighted project percentage unchanged pending WBS recalculation; BE remains deferred.
+
+
+## B5 — S2C opcode 23 inventory/equipment context variants — CI PASS
+
+- Added a branch-aware JavaScript/Java decoder for all five subtype branches.
+- Subtype 0: counted raw byte list. Subtype 1: category byte, signed-short item ID list and optional mode byte (default 2). Subtype 2: partial item records with source-compatible negative-value normalization. Subtype 3: no payload. Subtype 4: counted byte list plus two trailer bytes.
+- Consumer trace: subtype 0 rebuilds the local item context; subtype 1 resolves catalog fields and opens the appropriate inventory/equipment view; subtype 2 installs the partial item vector; subtype 3 filters static catalog entries; subtype 4 opens the shop-tab actions.
+- Added packet schema, generator check, JS branch vectors (including empty/negative count cases), Java 21 smoke vectors and docs. CI run `42994967419` SUCCESS: Vite build, generated-code checks, JS protocol suites, Java 21 compile/smoke and original-JAR analysis.
+- Decoder does not resolve static item catalogs or apply UI/inventory mutations. Overall weighted project percentage unchanged pending WBS recalculation; BE remains deferred.
