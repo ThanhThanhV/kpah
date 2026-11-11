@@ -177,4 +177,46 @@ public final class ProtocolWorldStateCodec {
             raw4,trailer4,readRemaining(in));
     }
 
+    public record Lookup25(int id, String text, byte valueA, byte valueB) {}
+    public record Coordinate25(short x, short y) {}
+    public record Definition25(short index, String name, List<Byte> bytes, short shortH,
+                               List<Short> valuesL, int intK, byte byteM, byte byteP, short shortI, short shortJ) {}
+    public record DefinitionError25(short index, String error) {}
+    public record SignedList25(short id, byte byteL, int intR, String textJ, String textK,
+                                byte byteH, boolean flagQ, byte byteI, byte byteP) {}
+    public record UnsignedList25(int id, int byteL, int intR, String textJ, String textK,
+                                 byte byteP, byte byteG, boolean flagQ, short shortM) {}
+    public record Opcode25(int lookupCount, List<Lookup25> lookupRecords, int coordinateCount,
+                           List<Coordinate25> coordinatePairs, List<Byte> fixedConfigBytes,
+                           short definitionCount, int definitionArrayLength, List<Definition25> definitions,
+                           List<DefinitionError25> definitionErrors, short signedListCount,
+                           List<SignedList25> signedList, int unsignedListCount,
+                           List<UnsignedList25> unsignedList, byte[] trailingBytes) {}
+    public static Opcode25 decodeS2COpcode25(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);int lookupCount=in.readU8();List<Lookup25> lookup=new ArrayList<>();
+        for(int i=0;i<lookupCount;i++)lookup.add(new Lookup25(in.readU8(),in.readUTF(),in.readI8(),in.readI8()));
+        int coordinateCount=in.readI8();List<Coordinate25> coordinates=new ArrayList<>();
+        for(int i=0;i<coordinateCount;i++)coordinates.add(new Coordinate25(in.readI16(),in.readI16()));
+        List<Byte> fixed=new ArrayList<>();for(int i=0;i<5;i++)fixed.add(in.readI8());
+        short definitionCount=in.readI16();if(definitionCount < -1)throw new IOException("Invalid opcode 25 definition count");
+        int arrayLength=definitionCount+1;List<Definition25> definitions=new ArrayList<>();List<DefinitionError25> errors=new ArrayList<>();
+        for(int i=0;i<definitionCount;i++){
+            short index=in.readI16();
+            if(index<0||index>=arrayLength){errors.add(new DefinitionError25(index,"definition index out of bounds"));continue;}
+            try{
+                String name=in.readUTF();List<Byte> bytes=new ArrayList<>();for(int k=0;k<5;k++)bytes.add(in.readI8());
+                short shortH=in.readI16();List<Short> values=new ArrayList<>();for(int k=0;k<10;k++)values.add(in.readI16());
+                int intK=in.readI32();byte byteM=in.readI8(),byteP=in.readI8();short shortI=in.readI16(),shortJ=in.readI16();
+                definitions.add(new Definition25(index,name,List.copyOf(bytes),shortH,List.copyOf(values),intK,byteM,byteP,shortI,shortJ));
+            }catch(IOException ex){errors.add(new DefinitionError25(index,ex.getMessage()));break;}
+        }
+        short signedCount=in.readI16();List<SignedList25> signed=new ArrayList<>();
+        for(int i=0;i<signedCount;i++)signed.add(new SignedList25(in.readI16(),in.readI8(),in.readI32(),in.readUTF(),in.readUTF(),in.readI8(),in.readBool(),in.readI8(),in.readI8()));
+        int unsignedCount=in.readU8();List<UnsignedList25> unsigned=new ArrayList<>();
+        for(int i=0;i<unsignedCount;i++)unsigned.add(new UnsignedList25(in.readU8(),in.readU8(),in.readI32(),in.readUTF(),in.readUTF(),in.readI8(),in.readI8(),in.readBool(),in.readI16()));
+        return new Opcode25(lookupCount,List.copyOf(lookup),coordinateCount,List.copyOf(coordinates),List.copyOf(fixed),
+            definitionCount,arrayLength,List.copyOf(definitions),List.copyOf(errors),signedCount,List.copyOf(signed),
+            unsignedCount,List.copyOf(unsigned),readRemaining(in));
+    }
+
 }

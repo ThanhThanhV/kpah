@@ -195,3 +195,45 @@ export function decodeS2COpcode23(payload) {
   result.trailingBytes = readRemaining(reader);
   return result;
 }
+
+export function decodeS2COpcode25(payload) {
+  const reader = new PacketReader(payload);
+  const lookupCount = reader.readU8(), lookupRecords = [];
+  for (let i = 0; i < lookupCount; i += 1) {
+    lookupRecords.push({ id: reader.readU8(), text: reader.readUTF(), valueA: reader.readI8(), valueB: reader.readI8() });
+  }
+  const coordinateCount = reader.readI8(), coordinatePairs = [];
+  for (let i = 0; i < coordinateCount; i += 1) coordinatePairs.push({ x: reader.readI16(), y: reader.readI16() });
+  const fixedConfigBytes = Array.from({ length: 5 }, () => reader.readI8());
+  const definitionCount = reader.readI16();
+  if (definitionCount < -1) throw new RangeError("Invalid opcode 25 definition count");
+  const definitionArrayLength = definitionCount + 1, definitions = [], definitionErrors = [];
+  for (let i = 0; i < definitionCount; i += 1) {
+    const index = reader.readI16();
+    if (index < 0 || index >= definitionArrayLength) { definitionErrors.push({ index, error: "definition index out of bounds" }); continue; }
+    try {
+      const name = reader.readUTF(), bytes = Array.from({ length: 5 }, () => reader.readI8());
+      const shortH = reader.readI16(), valuesL = Array.from({ length: 10 }, () => reader.readI16());
+      const intK = reader.readI32(), byteM = reader.readI8(), byteP = reader.readI8();
+      const shortI = reader.readI16(), shortJ = reader.readI16();
+      definitions.push({ index, name, bytes, shortH, valuesL, intK, byteM, byteP, shortI, shortJ });
+    } catch (error) { definitionErrors.push({ index, error: String(error?.message ?? error) }); break; }
+  }
+  const signedListCount = reader.readI16(), signedList = [];
+  for (let i = 0; i < signedListCount; i += 1) {
+    const id = reader.readI16(), byteL = reader.readI8(), intR = reader.readI32();
+    const textJ = reader.readUTF(), textK = reader.readUTF(), byteH = reader.readI8();
+    const flagQ = reader.readBool(), byteI = reader.readI8(), byteP = reader.readI8();
+    signedList.push({ id, byteL, intR, textJ, textK, byteH, flagQ, byteI, byteP });
+  }
+  const unsignedListCount = reader.readU8(), unsignedList = [];
+  for (let i = 0; i < unsignedListCount; i += 1) {
+    const id = reader.readU8(), byteL = reader.readU8(), intR = reader.readI32();
+    const textJ = reader.readUTF(), textK = reader.readUTF(), byteP = reader.readI8();
+    const byteG = reader.readI8(), flagQ = reader.readBool(), shortM = reader.readI16();
+    unsignedList.push({ id, byteL, intR, textJ, textK, byteP, byteG, flagQ, shortM });
+  }
+  return { lookupCount, lookupRecords, coordinateCount, coordinatePairs, fixedConfigBytes,
+    definitionCount, definitionArrayLength, definitions, definitionErrors,
+    signedListCount, signedList, unsignedListCount, unsignedList, trailingBytes: readRemaining(reader) };
+}

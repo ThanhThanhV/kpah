@@ -82,3 +82,21 @@ assert.equal(variant233.trailingBytes.length,0);
 const variant234=decodeS2COpcode23(new PacketWriter().writeI8(4).writeI8(2).writeU8(8).writeU8(9).writeI8(-1).writeI8(3).toUint8Array());
 assert.deepEqual([...variant234.subtype4Bytes],[8,9]);assert.deepEqual(variant234.subtype4Trailer,[-1,3]);
 assert.throws(()=>decodeS2COpcode23(new PacketWriter().writeI8(0).writeI8(-1).toUint8Array()),/Negative opcode 23 subtype 0 count/);
+
+const catalog25Writer=new PacketWriter().writeU8(1).writeU8(7).writeUTF("lookup").writeI8(-1).writeI8(2)
+ .writeI8(1).writeI16(100).writeI16(200);
+for(let i=0;i<5;i++)catalog25Writer.writeI8(i-2);
+catalog25Writer.writeI16(1).writeI16(0).writeUTF("Sword9");
+for(let i=0;i<5;i++)catalog25Writer.writeI8(i);
+catalog25Writer.writeI16(88);
+for(let i=0;i<10;i++)catalog25Writer.writeI16(i-5);
+catalog25Writer.writeI32(123456).writeI8(-6).writeI8(7).writeI16(8).writeI16(9);
+catalog25Writer.writeI16(1).writeI16(22).writeI8(-3).writeI32(456).writeUTF("item1").writeUTF("desc")
+ .writeI8(4).writeBool(true).writeI8(-5).writeI8(6);
+catalog25Writer.writeU8(1).writeU8(23).writeU8(24).writeI32(789).writeUTF("shop").writeUTF("detail")
+ .writeI8(-7).writeI8(8).writeBool(false).writeI16(90);
+const catalog25=decodeS2COpcode25(catalog25Writer.toUint8Array());
+assert.equal(catalog25.lookupRecords[0].id,7);assert.equal(catalog25.coordinatePairs[0].y,200);
+assert.equal(catalog25.definitions[0].name,"Sword9");assert.equal(catalog25.definitions[0].valuesL.length,10);
+assert.equal(catalog25.signedList[0].textK,"desc");assert.equal(catalog25.unsignedList[0].id,23);
+assert.equal(catalog25.unsignedList[0].shortM,90);

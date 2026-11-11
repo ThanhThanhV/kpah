@@ -292,6 +292,25 @@ jobs:
                   || variant231.modeByte() != 2 || variant232.subtype2Items().get(0).normalizedValue() != 254
                   || variant234.subtype4Trailer()[0] != -1)
                 throw new AssertionError("S2C opcode 23 inventory context variants");
+              PacketWriter catalog25Writer = new PacketWriter().writeU8(1).writeU8(7).writeUTF("lookup").writeI8(-1).writeI8(2)
+                .writeI8(1).writeI16(100).writeI16(200);
+              for (int i = 0; i < 5; i++) catalog25Writer.writeI8(i - 2);
+              catalog25Writer.writeI16(1).writeI16(0).writeUTF("Sword9");
+              for (int i = 0; i < 5; i++) catalog25Writer.writeI8(i);
+              catalog25Writer.writeI16(88);
+              for (int i = 0; i < 10; i++) catalog25Writer.writeI16(i - 5);
+              catalog25Writer.writeI32(123456).writeI8(-6).writeI8(7).writeI16(8).writeI16(9)
+                .writeI16(1).writeI16(22).writeI8(-3).writeI32(456).writeUTF("item1").writeUTF("desc")
+                .writeI8(4).writeBool(true).writeI8(-5).writeI8(6)
+                .writeU8(1).writeU8(23).writeU8(24).writeI32(789).writeUTF("shop").writeUTF("detail")
+                .writeI8(-7).writeI8(8).writeBool(false).writeI16(90);
+              ProtocolWorldStateCodec.Opcode25 catalog25 = ProtocolWorldStateCodec.decodeS2COpcode25(catalog25Writer.toByteArray());
+              if (catalog25.lookupRecords().get(0).id() != 7 || catalog25.coordinatePairs().get(0).y() != 200
+                  || !catalog25.definitions().get(0).name().equals("Sword9")
+                  || catalog25.definitions().get(0).valuesL().size() != 10
+                  || !catalog25.signedList().get(0).textK().equals("desc")
+                  || catalog25.unsignedList().get(0).id() != 23 || catalog25.unsignedList().get(0).shortM() != 90)
+                throw new AssertionError("S2C opcode 25 static item/shop catalog decode");
               PacketWriter extension3 = new PacketWriter().writeI16(123).writeI8(0).writeBool(true).writeBool(false)
                 .writeI8(1).writeI8(2).writeI8(3).writeI16(4).writeI32(5).writeI16(6).writeI32(7).writeUTF("title").writeBool(true)
                 .writeI16(11).writeI8(12).writeI16(21).writeI8(22).writeI16(23).writeI16(31).writeI16(32).writeI16(33)

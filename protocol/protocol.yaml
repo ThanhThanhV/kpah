@@ -2753,6 +2753,21 @@
         "subtype-3-empty",
         "subtype-4-byte-list-and-two-trailer-bytes"
       ]
+    },
+    {
+      "name": "STATIC_ITEM_AND_SHOP_CATALOG",
+      "direction": "S2C",
+      "opcode": 25,
+      "evidenceSource": "ka.java:case25",
+      "evidence": "Parses the ck lookup table, signed-byte cw coordinate pairs, five fixed bytes, an indexed br[] catalog with per-entry catch, then two bd lists (first signed-short count, second unsigned-byte count). The first bd list includes a short ID, signed-byte fields, int, UTF strings and boolean; the second uses unsigned-byte IDs/fields and a short. CFR temporary-object assignments were bytecode-verified for bd.o.",
+      "sections": [
+        "ck-lookup-records",
+        "signed-cw-count-and-pairs",
+        "five-config-bytes",
+        "indexed-br-catalog",
+        "signed-bd-list",
+        "unsigned-bd-list"
+      ]
     }
   ],
   "extensionSchemas": [

@@ -388,3 +388,8 @@ Added bytecode-backed parsing for opcode 61 (inventory item dropped to the world
 ### S2C opcode 23 inventory/equipment variants
 
 Added a branch-aware decoder for all five opcode 23 subtypes: raw byte list, catalog-backed item IDs, partial item records, static-catalog selection and shop-tab payload. Signed count behavior and the subtype-1 default mode are covered by JS and Java synthetic vectors.
+
+
+### S2C opcode 25 static item/shop catalog
+
+Added a structured decoder for lookup records, coordinate pairs, five fixed configuration bytes, indexed item definitions, and two shop/catalog lists. Signed/unsigned widths and per-definition error boundaries are retained; catalog-derived UI fields remain outside the protocol parser.

@@ -354,3 +354,17 @@ The first signed byte selects one of five source branches in `ka.java:case23`:
 - **Subtype 4:** signed-byte count, that many bytes, then two trailer bytes. The consumer uses this byte array to open the three shop-tab actions.
 
 Counts preserve the original signed-byte behavior. Negative subtype 0/4 lengths fail array construction/indexing; negative subtype 2 counts execute zero loop iterations. Subtype 1's signed-short count likewise produces zero iterations when negative. Derived catalog fields and UI side effects are intentionally outside the decoder.
+
+
+## S2C opcode 25 — static item/shop catalog
+
+Bytecode and CFR trace show a structured initialization payload with these ordered sections:
+
+1. Unsigned-byte count of lookup records: unsigned-byte ID, UTF text, two signed bytes.
+2. Signed-byte count of coordinate pairs: two signed shorts per pair.
+3. Five fixed signed bytes.
+4. Signed-short definition count; the client allocates an indexed `br[]` of count + 1. Each entry starts with a signed-short index, then UTF name, five signed bytes, one short, ten shorts, one int, two signed bytes and two shorts. Per-entry parsing is caught independently; out-of-range indices fail before the definition payload is read.
+5. Signed-short list of `bd` records: short ID, signed byte, int, two UTF strings, signed byte, boolean, two signed bytes.
+6. Unsigned-byte list of `bd` records: two unsigned-byte IDs, int, two UTF strings, two signed bytes, boolean, short.
+
+The decoder preserves source field names neutrally and records per-entry definition errors. The client additionally derives display fields from string suffixes and populates static catalog objects; those transformations are not inferred or applied here. This packet is a catalog source, not proof that shop/equipment transactions are server-implemented in this browser client.
