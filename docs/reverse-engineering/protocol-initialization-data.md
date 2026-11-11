@@ -322,3 +322,14 @@ These handlers are traced from CFR `ka.java` and cross-checked against `bo.java`
 - **Opcode 21 — inventory item update:** item ID short, `u` short, `D` byte, `w` unsigned short, signed-byte stat count and repeated unsigned-byte stat ID + signed-short value, `s` byte, optional `C` byte (constructor default 0). The consumer merges the item into current inventory/equipment/trade/shop collections and refreshes the active panel.
 
 Negative opcode-21 stat counts execute zero iterations, matching the original signed-byte loop. Opcode 21's optional `C` read only occurs when bytes remain; absent values preserve the constructor default of zero. Decoders parse only; they do not mutate inventory or award currency.
+
+
+## S2C opcodes 27, 28, 30, 32 and 33 — character feedback/state events
+
+- **Opcode 27:** entity/character ID short + UTF message. `mj.a(id,text)` displays a timed overhead message; for player characters it also appends a world-chat entry.
+- **Opcode 28:** item ID short. `mj.g(itemId)` removes the matching local inventory item and credits the sale proceeds.
+- **Opcode 30:** character ID short, experience value short and experience gain int. Consumer updates the character's `aU` experience value and displays the gain.
+- **Opcode 32:** character ID short, signed-byte stat count, repeated UTF key + signed int value. For the local character only, the original handler then reads one extra signed byte and one short before applying the stat records. The consumer recognizes `hp`, `mp`, `bp` and `sp`; other keys are retained without inferred semantics. Negative counts are rejected (the source array allocation would fail).
+- **Opcode 33:** character ID short, level byte, then two signed ints passed to the level-up consumer, which updates level and HP/MP state and triggers the level-up feedback.
+
+The opcode 32 decoder requires the caller to supply whether the packet targets the local character because the additional two fields are conditional on comparing the packet character ID with the current player ID. All codecs remain parse-only; inventory sale, XP, level and resource changes are not applied by these decoders.

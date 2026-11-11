@@ -100,4 +100,36 @@ public final class ProtocolWorldStateCodec {
         return new Opcode21(item,fieldU,type,valueW,count,List.copyOf(stats),fieldS,fieldC,readRemaining(in));
     }
 
+    public record Opcode27(short entityId, String message, byte[] trailingBytes) {}
+    public static Opcode27 decodeS2COpcode27(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);
+        return new Opcode27(in.readI16(),in.readUTF(),readRemaining(in));
+    }
+    public record Opcode28(short itemId, byte[] trailingBytes) {}
+    public static Opcode28 decodeS2COpcode28(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new Opcode28(in.readI16(),readRemaining(in));
+    }
+    public record Opcode30(short characterId, short experienceValue, int experienceGain, byte[] trailingBytes) {}
+    public static Opcode30 decodeS2COpcode30(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);
+        return new Opcode30(in.readI16(),in.readI16(),in.readI32(),readRemaining(in));
+    }
+    public record CharacterStat(String key, int value) {}
+    public record Opcode32(short characterId, int statCount, List<CharacterStat> stats,
+                           Byte localStateByte, Short localShortValue, byte[] trailingBytes) {}
+    public static Opcode32 decodeS2COpcode32(byte[] payload, boolean isLocalCharacter) throws IOException {
+        PacketReader in=new PacketReader(payload);short id=in.readI16();int count=in.readI8();
+        if(count<0)throw new IOException("Negative opcode 32 stat count");
+        List<CharacterStat> stats=new ArrayList<>();
+        for(int i=0;i<count;i++)stats.add(new CharacterStat(in.readUTF(),in.readI32()));
+        Byte state=null;Short localShort=null;
+        if(isLocalCharacter){state=in.readI8();localShort=in.readI16();}
+        return new Opcode32(id,count,List.copyOf(stats),state,localShort,readRemaining(in));
+    }
+    public record Opcode33(short characterId, byte level, int valueA, int valueB, byte[] trailingBytes) {}
+    public static Opcode33 decodeS2COpcode33(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);
+        return new Opcode33(in.readI16(),in.readI8(),in.readI32(),in.readI32(),readRemaining(in));
+    }
+
 }

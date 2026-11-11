@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
-import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode12, decodeS2COpcode17, decodeS2COpcode7, decodeS2COpcode18, decodeS2COpcode19, decodeS2COpcode20, decodeS2COpcode21 } from "../src/protocol/generated/world-state-codec.js";
+import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode12, decodeS2COpcode17, decodeS2COpcode7, decodeS2COpcode18, decodeS2COpcode19, decodeS2COpcode20, decodeS2COpcode21, decodeS2COpcode27, decodeS2COpcode28, decodeS2COpcode30, decodeS2COpcode32, decodeS2COpcode33 } from "../src/protocol/generated/world-state-codec.js";
 const spawn=new PacketWriter().writeI8(1).writeU8(7).writeI16(123).writeI16(456).writeI16(789).writeI8(2)
  .writeI32(-99).writeI8(4).writeI8(5).writeBool(false)
  .writeI8(0).writeU8(8).writeI16(124).writeI16(500).writeI16(600).writeI8(1).writeI32(77).writeI8(6).writeBool(true).toUint8Array();
@@ -47,3 +47,17 @@ assert.deepEqual(inventory21,{itemId:900,fieldU:4,typeByteD:-2,unsignedValueW:60
  stats:[{statId:7,value:-8},{statId:9,value:10}],fieldS:11,optionalFieldC:-12,trailingBytes:new Uint8Array()});
 const inventory21NoOptional=decodeS2COpcode21(new PacketWriter().writeI16(900).writeI16(4).writeI8(1).writeU16(2).writeI8(0).writeI8(3).toUint8Array());
 assert.equal(inventory21NoOptional.optionalFieldC,0);
+
+const chat27=decodeS2COpcode27(new PacketWriter().writeI16(321).writeUTF("Xin chào").toUint8Array());
+assert.deepEqual(chat27,{entityId:321,message:"Xin chào",trailingBytes:new Uint8Array()});
+const sold28=decodeS2COpcode28(new PacketWriter().writeI16(900).toUint8Array());
+assert.equal(sold28.itemId,900);
+const exp30=decodeS2COpcode30(new PacketWriter().writeI16(321).writeI16(1234).writeI32(500).toUint8Array());
+assert.deepEqual(exp30,{characterId:321,experienceValue:1234,experienceGain:500,trailingBytes:new Uint8Array()});
+const resource32=decodeS2COpcode32(new PacketWriter().writeI16(321).writeI8(2).writeUTF("hp").writeI32(1000).writeUTF("mp").writeI32(250).toUint8Array());
+assert.equal(resource32.stats[0].key,"hp");assert.equal(resource32.stats[1].value,250);assert.equal(resource32.localStateByte,null);
+const local32=decodeS2COpcode32(new PacketWriter().writeI16(321).writeI8(0).writeI8(4).writeI16(50).toUint8Array(),true);
+assert.equal(local32.localStateByte,4);assert.equal(local32.localShortValue,50);
+assert.throws(()=>decodeS2COpcode32(new PacketWriter().writeI16(321).writeI8(-1).toUint8Array()),/Negative opcode 32 stat count/);
+const level33=decodeS2COpcode33(new PacketWriter().writeI16(321).writeI8(12).writeI32(10000).writeI32(2000).toUint8Array());
+assert.deepEqual(level33,{characterId:321,level:12,valueA:10000,valueB:2000,trailingBytes:new Uint8Array()});

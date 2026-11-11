@@ -119,3 +119,31 @@ export function decodeS2COpcode21(payload) {
   return { itemId, fieldU, typeByteD, unsignedValueW, statCount, stats, fieldS,
     optionalFieldC, trailingBytes: readRemaining(reader) };
 }
+
+export function decodeS2COpcode27(payload) {
+  const reader = new PacketReader(payload);
+  return { entityId: reader.readI16(), message: reader.readUTF(), trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcode28(payload) {
+  const reader = new PacketReader(payload);
+  return { itemId: reader.readI16(), trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcode30(payload) {
+  const reader = new PacketReader(payload);
+  return { characterId: reader.readI16(), experienceValue: reader.readI16(),
+    experienceGain: reader.readI32(), trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcode32(payload, isLocalCharacter = false) {
+  const reader = new PacketReader(payload);
+  const characterId = reader.readI16(), statCount = reader.readI8(), stats = [];
+  if (statCount < 0) throw new RangeError("Negative opcode 32 stat count");
+  for (let i = 0; i < statCount; i += 1) stats.push({ key: reader.readUTF(), value: reader.readI32() });
+  let localStateByte = null, localShortValue = null;
+  if (isLocalCharacter) { localStateByte = reader.readI8(); localShortValue = reader.readI16(); }
+  return { characterId, statCount, stats, localStateByte, localShortValue, trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcode33(payload) {
+  const reader = new PacketReader(payload);
+  return { characterId: reader.readI16(), level: reader.readI8(), valueA: reader.readI32(),
+    valueB: reader.readI32(), trailingBytes: readRemaining(reader) };
+}

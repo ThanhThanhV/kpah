@@ -253,6 +253,23 @@ jobs:
                   || inventory21.unsignedValueW() != 60000 || inventory21.stats().get(0).value() != -8
                   || inventory21.optionalFieldC() != -12)
                 throw new AssertionError("S2C opcode 18-21 inventory/entity event decode");
+              ProtocolWorldStateCodec.Opcode27 chat27 = ProtocolWorldStateCodec.decodeS2COpcode27(
+                new PacketWriter().writeI16(321).writeUTF("Xin chào").toByteArray());
+              ProtocolWorldStateCodec.Opcode28 sold28 = ProtocolWorldStateCodec.decodeS2COpcode28(
+                new PacketWriter().writeI16(900).toByteArray());
+              ProtocolWorldStateCodec.Opcode30 exp30 = ProtocolWorldStateCodec.decodeS2COpcode30(
+                new PacketWriter().writeI16(321).writeI16(1234).writeI32(500).toByteArray());
+              ProtocolWorldStateCodec.Opcode32 resource32 = ProtocolWorldStateCodec.decodeS2COpcode32(
+                new PacketWriter().writeI16(321).writeI8(1).writeUTF("hp").writeI32(1000).toByteArray(), false);
+              ProtocolWorldStateCodec.Opcode32 local32 = ProtocolWorldStateCodec.decodeS2COpcode32(
+                new PacketWriter().writeI16(321).writeI8(0).writeI8(4).writeI16(50).toByteArray(), true);
+              ProtocolWorldStateCodec.Opcode33 level33 = ProtocolWorldStateCodec.decodeS2COpcode33(
+                new PacketWriter().writeI16(321).writeI8(12).writeI32(10000).writeI32(2000).toByteArray());
+              if (!chat27.message().equals("Xin chào") || sold28.itemId() != 900
+                  || exp30.experienceGain() != 500 || !resource32.stats().get(0).key().equals("hp")
+                  || local32.localStateByte() != 4 || local32.localShortValue() != 50
+                  || level33.level() != 12 || level33.valueB() != 2000)
+                throw new AssertionError("S2C opcode 27/28/30/32/33 character events");
               PacketWriter extension3 = new PacketWriter().writeI16(123).writeI8(0).writeBool(true).writeBool(false)
                 .writeI8(1).writeI8(2).writeI8(3).writeI16(4).writeI32(5).writeI16(6).writeI32(7).writeUTF("title").writeBool(true)
                 .writeI16(11).writeI8(12).writeI16(21).writeI8(22).writeI16(23).writeI16(31).writeI16(32).writeI16(33)

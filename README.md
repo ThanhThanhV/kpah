@@ -373,3 +373,8 @@ Opcode 7 is now decoded as an update for an existing entity: entity/template IDs
 ### S2C ground-item and inventory events (opcodes 18–21)
 
 Added source-traced decoders for partial ground-item pickup records, pickup rewards, typed entity removal and inventory item updates. The codecs preserve signed/unsigned widths, optional defaults and neutral fields; the application layer still needs to apply authoritative inventory/currency changes.
+
+
+### S2C character feedback and progression events
+
+Added source-traced codecs for overhead chat (27), inventory sale confirmation (28), experience update (30), keyed character resource update (32) and level-up state (33). Opcode 32 exposes its local-character-only trailer through an explicit decoder argument so the parser follows the original branch condition.

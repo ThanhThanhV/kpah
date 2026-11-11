@@ -2652,6 +2652,65 @@
         "field-s",
         "optional-field-c"
       ]
+    },
+    {
+      "name": "CHAT_BUBBLE_EVENT",
+      "direction": "S2C",
+      "opcode": 27,
+      "evidenceSource": "ka.java:case27",
+      "evidence": "Reads character/entity ID short and UTF text, then calls mj.a(id,text) to show a timed overhead message; player entities also append the message to the world chat log.",
+      "sections": [
+        "entity-id",
+        "message-utf"
+      ]
+    },
+    {
+      "name": "INVENTORY_ITEM_SOLD",
+      "direction": "S2C",
+      "opcode": 28,
+      "evidenceSource": "ka.java:case28",
+      "evidence": "Reads one item ID short and calls mj.g(short), which removes the matching inventory item and credits the sale proceeds to local currency.",
+      "sections": [
+        "item-id"
+      ]
+    },
+    {
+      "name": "EXPERIENCE_UPDATE",
+      "direction": "S2C",
+      "opcode": 30,
+      "evidenceSource": "ka.java:case30",
+      "evidence": "Reads character ID short, experience value short and experience gain int; mj.a(id,value,gain) updates the character's experience field and displays the gain.",
+      "sections": [
+        "character-id",
+        "experience-value",
+        "experience-gain"
+      ]
+    },
+    {
+      "name": "CHARACTER_RESOURCE_UPDATE",
+      "direction": "S2C",
+      "opcode": 32,
+      "evidenceSource": "ka.java:case32",
+      "evidence": "Reads character ID short, signed-byte-counted records of UTF key + int value; if the ID is the local character, reads an additional byte and short before calling mj.a(id,cx[]). The consumer recognizes hp/mp/bp/sp keys.",
+      "sections": [
+        "character-id",
+        "signed-stat-count",
+        "key-value-records",
+        "conditional-local-state-byte-and-short"
+      ]
+    },
+    {
+      "name": "CHARACTER_LEVEL_UP",
+      "direction": "S2C",
+      "opcode": 33,
+      "evidenceSource": "ka.java:case33",
+      "evidence": "Reads character ID short, level byte and two signed ints passed to mj.a(id,level,int,int), which updates level and character HP/MP state.",
+      "sections": [
+        "character-id",
+        "level-byte",
+        "value-a",
+        "value-b"
+      ]
     }
   ],
   "extensionSchemas": [
