@@ -61,6 +61,16 @@ npm run test:transport-codegen
 - Java generated sources được compile bằng Java 21 trong CI.
 - JS test kiểm tra opcode counts, payload vectors, signed integer, modified UTF-8 (bao gồm NUL và surrogate pair), payload trailing bytes và bounds.
 
+## Partial S2C prefix schemas
+
+For server payloads whose prefix is source-backed but whose optional tail remains unresolved, `protocol/protocol.yaml` supports a separate `prefixSchemas` catalog. It currently describes the fixed prefix of S2C opcode 3 only. Generated decoders return unparsed trailing bytes instead of silently discarding them or claiming the full payload is typed. The main command schema remains `opaque` until the full payload is understood.
+
+```bash
+npm run generate:prefix-protocol
+npm run check:prefix-protocol
+npm run test:prefix-protocol
+```
+
 ## Transport codec đã generate
 
 - Handshake opcode -40: đọc signed key length, giải mã prefix-XOR key material; encode helper chỉ phục vụ vector tổng hợp.
