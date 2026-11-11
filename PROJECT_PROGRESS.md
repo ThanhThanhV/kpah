@@ -517,3 +517,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Added the source-bounded opcode 5 decoder using the fixed z arrays: seven part bytes, seven part-slot shorts and five appearance shorts. It parses identity/position/HP/MP, profession/class, status and equipment fields, optional af, trade flag and the independently guarded extension groups.
 - Preserves co wire value and only exposes coNormalized when non-negative; negative co leaves existing runtime state unchanged. Optional groups retain their individual defaults and partial-read cursor behavior.
 - Added full JS vector and Java 21 smoke coverage. Opcode 5 decoder does not mutate world entities; it returns decoded state for a later runtime adapter. Validation pending.
+
+
+## B16 — Opcode 5 world entity snapshot
+
+- Added a Java/JS decoder generated from the S2C opcode 5 handler and entity array dimensions in z.java.
+- Covers known-entity guard, ordered identity/position/combat/appearance/state fields, conditional af, five short ca values, presence flag, and six independently guarded tail groups.
+- Unknown entity behavior is explicit: only the entity ID is consumed and the remainder is returned untouched. No entity is synthesized.
+- Added full synthetic packet, unknown-entity vector, generator consistency and Java 21 smoke test. CI validation pending.
