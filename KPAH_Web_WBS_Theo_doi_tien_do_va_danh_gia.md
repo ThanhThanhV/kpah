@@ -692,3 +692,5 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 | 2026-11-11 | B5 | Bổ sung decoder S2C opcode 5 player/entity snapshot: fixed arrays 7 part bytes + 7 part shorts + 5 appearance shorts, HP/MP, trạng thái, trade flag và các optional groups | `765a6e9`, `263ff57`, `eb633d3`, `37da513`, `0a04715` | Có YAML, JS/Java codegen, vector đầy đủ và Java smoke; chờ CI. Decoder chỉ trả state, chưa mutate world. |
 
 | 2026-11-11 | B16 | Decoder opcode 5 world entity snapshot Java/JS; kiểm soát entity đã tồn tại, trường vị trí/combat/appearance/state, điều kiện af và các nhóm tail optional | 64294c3, 79e6b47, a370fb1, 39e7c4c, 2244f30, 4ad4bc4, a7c5485, 7e39316, 2472ab0 | Có source contract, generator, test vector full/unknown entity và Java smoke; chờ CI. Không tự tạo entity khi ID chưa có trong world. |
+
+| 2026-11-11 | B5 | Bổ sung decoder combat event S2C opcode 6 và 9 (2 short + byte + 2 int + 4 byte), giữ field trung tính theo đúng wire order | `70dddb0`, `2980989`, `024ce11`, `5b99517`, `a802c0b`, `b7a17ef` | Có generator Java/JS, vector và Java smoke; chờ CI. |
