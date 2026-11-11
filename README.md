@@ -363,3 +363,8 @@ Press **Tab** to select the next living monster or **Shift+Tab** to select the p
 ### S2C opcode 17 entity action/effect decoder
 
 The generated world-state codec includes S2C opcode 17, based on the original client's event handler and consumer. It parses the event header, counted effect records and optional trailer bytes in Java and JavaScript. The first short and effect fields remain neutral where CFR output is inconsistent or semantics are not yet verified. Run `npm run check:world-state` and `npm run test:world-state`; CI also compiles and smoke-tests the Java vector. This decoder does not apply combat damage or render effects.
+
+
+### Bytecode-verified world-state packets
+
+Opcode 7 is now decoded as an update for an existing entity: entity/template IDs, coordinates, current/max HP, two state bytes and one opaque integer. Opcode 17's first short is confirmed by bytecode as the actor entity ID, resolving the prior CFR assignment ambiguity. These decoders remain parse-only; they do not apply authoritative combat or spawn entities.

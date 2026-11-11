@@ -45,7 +45,7 @@ public final class ProtocolWorldStateCodec {
     }
 
     public record Effect(int type, short valueA, short valueB, short valueC, short valueD) {}
-    public record Opcode17(short firstShortWireValue, short targetEntityId, byte eventByte, int value,
+    public record Opcode17(short actorEntityId, short targetEntityId, byte eventByte, int value,
                            byte displayByte, List<Effect> effects, byte repeatCount,
                            Byte discardedByte, byte modeByte, byte[] trailingBytes) {}
     public static Opcode17 decodeS2COpcode17(byte[] payload) throws IOException {
@@ -60,4 +60,14 @@ public final class ProtocolWorldStateCodec {
         byte mode=0;if(in.remaining()>0)mode=in.readI8();
         return new Opcode17(first,target,event,value,display,List.copyOf(effects),repeat,discarded,mode,readRemaining(in));
     }
+    public record Opcode7(short entityId, int templateId, short x, short y, int currentHp,
+                          byte stateByteD, byte stateByteI, int maxHp, int opaqueInt, byte[] trailingBytes) {}
+    public static Opcode7 decodeS2COpcode7(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);
+        short entityId=in.readI16();int templateId=in.readU8();short x=in.readI16(),y=in.readI16();
+        int currentHp=in.readI32();byte stateD=in.readI8(),stateI=in.readI8();
+        int maxHp=in.readI32(),opaque=in.readI32();
+        return new Opcode7(entityId,templateId,x,y,currentHp,stateD,stateI,maxHp,opaque,readRemaining(in));
+    }
+
 }

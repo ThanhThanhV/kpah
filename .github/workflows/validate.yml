@@ -225,11 +225,18 @@ jobs:
               ProtocolWorldStateCodec.Opcode17 action17 = ProtocolWorldStateCodec.decodeS2COpcode17(
                 new PacketWriter().writeI16(101).writeI16(202).writeI8(3).writeI32(450).writeI8(2).writeI8(1)
                   .writeI8(7).writeI16(1).writeI16(2).writeI16(3).writeI16(4).writeI8(3).writeI8(99).writeI8(5).toByteArray());
-              if (action17.firstShortWireValue() != 101 || action17.targetEntityId() != 202
+              if (action17.actorEntityId() != 101 || action17.targetEntityId() != 202
                   || action17.value() != 450 || action17.effects().size() != 1
                   || action17.effects().get(0).valueD() != 4 || action17.repeatCount() != 3
                   || action17.discardedByte() != 99 || action17.modeByte() != 5)
                 throw new AssertionError("S2C opcode 17 entity action event decode: " + action17);
+              ProtocolWorldStateCodec.Opcode7 entity7 = ProtocolWorldStateCodec.decodeS2COpcode7(
+                new PacketWriter().writeI16(321).writeU8(255).writeI16(1200).writeI16(340).writeI32(750)
+                  .writeI8(-2).writeI8(3).writeI32(1000).writeI32(987654).toByteArray());
+              if (entity7.entityId() != 321 || entity7.templateId() != 255 || entity7.x() != 1200
+                  || entity7.y() != 340 || entity7.currentHp() != 750 || entity7.stateByteD() != -2
+                  || entity7.stateByteI() != 3 || entity7.maxHp() != 1000 || entity7.opaqueInt() != 987654)
+                throw new AssertionError("S2C opcode 7 entity state update decode: " + entity7);
               PacketWriter extension3 = new PacketWriter().writeI16(123).writeI8(0).writeBool(true).writeBool(false)
                 .writeI8(1).writeI8(2).writeI8(3).writeI16(4).writeI32(5).writeI16(6).writeI32(7).writeUTF("title").writeBool(true)
                 .writeI16(11).writeI8(12).writeI16(21).writeI8(22).writeI16(23).writeI16(31).writeI16(32).writeI16(33)

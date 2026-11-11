@@ -22,10 +22,14 @@ const actionEvent=decodeS2COpcode17(new PacketWriter().writeI16(101).writeI16(20
  .writeI8(7).writeI16(1).writeI16(2).writeI16(3).writeI16(4)
  .writeI8(8).writeI16(-1).writeI16(-2).writeI16(-3).writeI16(-4)
  .writeI8(3).writeI8(99).writeI8(5).toUint8Array());
-assert.equal(actionEvent.firstShortWireValue,101);assert.equal(actionEvent.targetEntityId,202);
+assert.equal(actionEvent.actorEntityId,101);assert.equal(actionEvent.targetEntityId,202);
 assert.equal(actionEvent.eventByte,3);assert.equal(actionEvent.value,450);assert.equal(actionEvent.displayByte,2);
 assert.deepEqual(actionEvent.effects,[{type:7,valueA:1,valueB:2,valueC:3,valueD:4},{type:8,valueA:-1,valueB:-2,valueC:-3,valueD:-4}]);
 assert.equal(actionEvent.repeatCount,3);assert.equal(actionEvent.discardedByte,99);assert.equal(actionEvent.modeByte,5);
 const actionNoTail=decodeS2COpcode17(new PacketWriter().writeI16(1).writeI16(2).writeI8(3).writeI32(4).writeI8(5).writeI8(0).toUint8Array());
 assert.equal(actionNoTail.repeatCount,1);assert.equal(actionNoTail.discardedByte,null);assert.equal(actionNoTail.modeByte,0);
 assert.throws(()=>decodeS2COpcode17(new PacketWriter().writeI16(1).writeI16(2).writeI8(3).writeI32(4).writeI8(5).writeI8(-1).toUint8Array()),/Negative opcode 17 effect count/);
+
+const entityState=decodeS2COpcode7(new PacketWriter().writeI16(321).writeU8(255).writeI16(1200).writeI16(340)
+ .writeI32(750).writeI8(-2).writeI8(3).writeI32(1000).writeI32(987654).toUint8Array());
+assert.deepEqual(entityState,{entityId:321,templateId:255,x:1200,y:340,currentHp:750,stateByteD:-2,stateByteI:3,maxHp:1000,opaqueInt:987654,trailingBytes:new Uint8Array()});

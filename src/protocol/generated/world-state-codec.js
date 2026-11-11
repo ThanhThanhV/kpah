@@ -55,7 +55,7 @@ export function decodeS2COpcode12(payload) {
 
 export function decodeS2COpcode17(payload) {
   const reader = new PacketReader(payload);
-  const firstShortWireValue = reader.readI16();
+  const actorEntityId = reader.readI16();
   const targetEntityId = reader.readI16();
   const eventByte = reader.readI8();
   const value = reader.readI32();
@@ -73,6 +73,17 @@ export function decodeS2COpcode17(payload) {
   if (reader.remaining() > 0) discardedByte = reader.readI8();
   let modeByte = 0;
   if (reader.remaining() > 0) modeByte = reader.readI8();
-  return { firstShortWireValue, targetEntityId, eventByte, value, displayByte, effects,
+  return { actorEntityId, targetEntityId, eventByte, value, displayByte, effects,
     repeatCount, discardedByte, modeByte, trailingBytes: readRemaining(reader) };
+}
+
+export function decodeS2COpcode7(payload) {
+  const reader = new PacketReader(payload);
+  return {
+    entityId: reader.readI16(), templateId: reader.readU8(),
+    x: reader.readI16(), y: reader.readI16(), currentHp: reader.readI32(),
+    stateByteD: reader.readI8(), stateByteI: reader.readI8(),
+    maxHp: reader.readI32(), opaqueInt: reader.readI32(),
+    trailingBytes: readRemaining(reader)
+  };
 }

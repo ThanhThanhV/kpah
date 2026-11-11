@@ -2576,6 +2576,23 @@
         "optional-discarded-byte",
         "optional-mode-byte"
       ]
+    },
+    {
+      "name": "ENTITY_STATE_UPDATE",
+      "direction": "S2C",
+      "opcode": 7,
+      "evidenceSource": "ka.java:case7",
+      "evidence": "Reads entity ID short, template ID unsigned byte, X/Y shorts, current HP int, one signed byte stored in ce.d short, another signed byte, max HP int and an opaque int; calls mj.a(ce), which resolves an existing entity and updates it. No entity is created.",
+      "sections": [
+        "entity-id",
+        "template-id",
+        "x-y",
+        "current-hp",
+        "state-byte-d",
+        "state-byte-i",
+        "max-hp",
+        "opaque-int"
+      ]
     }
   ],
   "extensionSchemas": [

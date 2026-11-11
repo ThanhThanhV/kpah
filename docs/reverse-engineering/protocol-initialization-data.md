@@ -289,3 +289,24 @@ npm run generate:world-state
 npm run check:world-state
 npm run test:world-state
 ```
+
+
+## S2C opcode 7 — existing entity state update
+
+Bytecode-verified from `ka.class` (switch target 5322; field writes on the retained `ce` instance), then traced through `mj.a(ce)` and `cd.a(ce)`.
+
+Wire order:
+
+1. Entity ID: signed short `ce.a`; `mj.a(ce)` resolves the existing `cd` entity by this ID and does nothing if it is not present.
+2. Template ID: unsigned byte, stored as short `ce.h`.
+3. X/Y: signed shorts, assigned to current or target coordinates depending on the entity's local/remote state.
+4. Current HP: signed int `ce.e`; `cd.a(ce)` assigns it to `cE/cG`.
+5. Signed byte `ce.d`, then signed byte `ce.i`; retained as neutral state bytes in the codec (`ce.d` is stored in a short field but originates from readByte).
+6. Max HP: signed int `ce.f`, assigned to `cH`.
+7. Opaque signed int `ce.g`, assigned to `j.E`; no business meaning is asserted.
+
+This is an update for an entity already in the world, not an entity creation packet. The earlier CFR output incorrectly displayed the first short as assigned to a temporary `new ce()`; bytecode proves it is assigned to the retained instance. The generated codec reflects the bytecode, not the faulty decompiler expression.
+
+## Opcode 17 — bytecode confirmation
+
+Bytecode for `ka.class` confirms the first short is written to the retained `kl.a` field (the `dup; astore_3; ... putfield kl.a` sequence). It is therefore the actor/source entity ID used by `mj.a(kl)`; the second short `kl.b` is the target entity ID. The generated codecs now expose `actorEntityId` and `targetEntityId`, replacing the earlier neutral first-short name.
