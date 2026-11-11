@@ -19,7 +19,7 @@ assert.deepEqual(subtype0.items[0], {
   K: 8, L: 9, n: 10, o: 11, p: 12, q: 13, C: 14,
   d: "Áo thử", w: 60000, stats: [{statId:4,statValue:-50},{statId:8,statValue:75}]
 });
-assert.equal(subtype0.shopMode, 2);
+assert.equal(subtype0.aS, 2);
 assert.deepEqual(subtype0.shortValues, [101,102,103,104,105]);
 assert.equal(subtype0.optionalText, "Dòng phụ");
 assert.equal(subtype0.optionalTextValue, 6);
@@ -50,7 +50,7 @@ assert.equal(subtype1.items[0].d, "Thú");
 assert.equal(subtype1.items[0].w, undefined);
 assert.deepEqual(subtype1.items[0].stats, [{statId:12,statValue:345}]);
 assert.equal(subtype1.frameCount, 3);
-assert.equal(subtype1.frameMode, 3);
+assert.equal(subtype1.atlasLayoutCode, 3);
 assert.deepEqual([...subtype1.imageBytes], [...imageBytes]);
 
 const negativeCount = new PacketWriter().writeI8(1).writeI16(7).writeI8(-1).writeU8(0x44).toUint8Array();
