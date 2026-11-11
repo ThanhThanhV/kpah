@@ -2550,6 +2550,20 @@
         "group-d-four-fields",
         "group-e-three-fields"
       ]
+    },
+    {
+      "name": "COMBAT_EVENT_VARIANT_A",
+      "direction": "S2C",
+      "opcode": 6,
+      "evidenceSource": "ka.java:case6",
+      "evidence": "Two signed shorts, one signed byte, two ints, then four signed bytes; passed unchanged to mj.a(short,short,byte,int,int,byte,byte,byte,byte)."
+    },
+    {
+      "name": "COMBAT_EVENT_VARIANT_B",
+      "direction": "S2C",
+      "opcode": 9,
+      "evidenceSource": "ka.java:case9",
+      "evidence": "Two signed shorts, one signed byte, two ints, then four signed bytes; passed unchanged to mj.b(short,short,byte,int,int,byte,byte,byte,byte)."
     }
   ],
   "extensionSchemas": [
