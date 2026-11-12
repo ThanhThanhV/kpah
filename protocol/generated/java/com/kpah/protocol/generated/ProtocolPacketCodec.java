@@ -20,6 +20,13 @@ public final class ProtocolPacketCodec {
         SCHEMAS.put("C2S_SELECT_CHARACTER", List.of(new Field("subcommand", Type.U8), new Field("characterId", Type.I32)));
         SCHEMAS.put("C2S_CREATE_CHARACTER", List.of(new Field("name", Type.UTF), new Field("field1", Type.U8), new Field("field2", Type.U8), new Field("field3", Type.U8), new Field("field4", Type.U8), new Field("serverFlag", Type.U8)));
         SCHEMAS.put("C2S_USE_ITEM", List.of(new Field("itemId", Type.I32)));
+        SCHEMAS.put("C2S_OP_61", List.of(new Field("itemId", Type.I16)));
+        SCHEMAS.put("C2S_OP_68", List.of(new Field("itemId", Type.I16)));
+        SCHEMAS.put("C2S_OP_69", List.of(new Field("itemId", Type.I16)));
+        SCHEMAS.put("C2S_OP_78", List.of(new Field("itemId", Type.I16), new Field("optionByte", Type.I8)));
+        SCHEMAS.put("C2S_OP_92", List.of(new Field("fieldBoolean", Type.BOOL), new Field("fieldByteA", Type.I8), new Field("fieldByteB", Type.I8), new Field("itemId", Type.I16), new Field("fieldInt", Type.I32), new Field("sourceSelector", Type.I8)));
+        SCHEMAS.put("C2S_OP_95", List.of(new Field("fieldByteA", Type.I8), new Field("fieldByteB", Type.I8), new Field("itemId", Type.I16), new Field("fieldShortB", Type.I16), new Field("fieldByteC", Type.I8)));
+        SCHEMAS.put("C2S_OP_100", List.of(new Field("mode", Type.I8), new Field("itemId", Type.I16)));
         SCHEMAS.put("C2S_FARM_PLOT_ACTION", List.of(new Field("action", Type.U8), new Field("plotId", Type.U8)));
     }
     public static byte[] encode(String command, Map<String, ?> values) throws IOException {
