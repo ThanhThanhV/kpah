@@ -483,3 +483,11 @@ The decoder only exposes wire values; original panel navigation, confirmation pr
 - **Opcode -47:** signed-short slot ID, boolean, signed-short blob length and blob bytes. The client applies the payload only if the corresponding local resource slot exists.
 - **Opcode -48:** signed target byte. A target other than -1 carries a signed-short length and blob; target -1 carries two signed bytes and the remaining opaque payload.
 - Blob bytes are preserved without attempting image/resource decoding or applying local resource updates.
+
+
+## S2C opcodes -49 and -51 — animation asset / image refresh
+
+- **Opcode -49, variant 0:** asset ID, phase/progress bytes, duration short, mode byte. Mode 1 carries one distance short; mode 2 carries a signed-byte-counted list of short coordinate pairs. Phase 0 carries one origin short; other phases carry two shorts.
+- **Opcode -49, other variants:** signed-short image length and image bytes, then five-byte descriptors, groups of signed-byte-counted triples, and a final signed-byte-counted byte array. This matches the source structure in `ar.a(acu)`.
+- **Opcode -51:** signed-short resource ID followed by all remaining bytes as the replacement image payload.
+- Decoders preserve source fields and opaque image bytes. They do not instantiate animation objects, decode images, or replace runtime resources.

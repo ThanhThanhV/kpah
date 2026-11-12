@@ -620,3 +620,37 @@ export function decodeS2COpcodeMinus48(payload) {
   return { target, length: null, blob: null, fieldA, fieldB, opaqueBytes: readRemaining(reader),
     trailingBytes: new Uint8Array() };
 }
+
+export function decodeS2COpcodeMinus49(payload) {
+  const reader = new PacketReader(payload), variant = reader.readI8(), assetId = reader.readI8();
+  if (variant === 0) {
+    const phase = reader.readI8(), progress = reader.readI8(), duration = reader.readI16(), mode = reader.readI8();
+    let distance = null, offsets = null;
+    if (mode === 1) distance = reader.readI16();
+    else if (mode === 2) {
+      const count = reader.readI8(); offsets = [];
+      for (let i = 0; i < count; i += 1) offsets.push([reader.readI16(), reader.readI16()]);
+    }
+    const origin = phase === 0 ? { value: reader.readI16() } : { first: reader.readI16(), second: reader.readI16() };
+    return { variant, assetId, phase, progress, duration, mode, distance, offsets, origin,
+      trailingBytes: readRemaining(reader) };
+  }
+  const imageLength = reader.readI16(), imageBytes = readSizedBytes(reader, imageLength);
+  const descriptorCount = reader.readI8(), descriptors = [];
+  for (let i = 0; i < descriptorCount; i += 1)
+    descriptors.push({ c: reader.readI8(), d: reader.readI8(), e: reader.readI8(), a: reader.readI8(), b: reader.readI8() });
+  const groupCount = reader.readI8(), groups = [];
+  for (let i = 0; i < groupCount; i += 1) {
+    const count = reader.readI8(), triples = [];
+    for (let j = 0; j < count; j += 1) triples.push([reader.readI8(), reader.readI8(), reader.readI8()]);
+    groups.push({ count, triples });
+  }
+  const finalCount = reader.readI8(), finalBytes = [];
+  for (let i = 0; i < finalCount; i += 1) finalBytes.push(reader.readI8());
+  return { variant, assetId, imageLength, imageBytes, descriptorCount, descriptors, groupCount, groups,
+    finalCount, finalBytes, trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcodeMinus51(payload) {
+  const reader = new PacketReader(payload), resourceId = reader.readI16();
+  return { resourceId, imageBytes: readRemaining(reader), trailingBytes: new Uint8Array() };
+}

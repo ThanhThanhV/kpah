@@ -574,4 +574,37 @@ public final class ProtocolWorldStateCodec {
         byte a=in.readI8(),b=in.readI8();return new OpcodeMinus48(target,null,null,a,b,readRemaining(in),new byte[0]);
     }
 
+    public record Offset49(short x,short y) {}
+    public record Descriptor49(byte c,byte d,byte e,byte a,byte b) {}
+    public record TripleGroup49(byte count,List<List<Byte>> triples) {}
+    public record Origin49(Short value,Short first,Short second) {}
+    public record OpcodeMinus49(byte variant,byte assetId,Byte phase,Byte progress,Short duration,Byte mode,
+                                Short distance,List<Offset49> offsets,Origin49 origin,Short imageLength,byte[] imageBytes,
+                                Byte descriptorCount,List<Descriptor49> descriptors,Byte groupCount,
+                                List<TripleGroup49> groups,Byte finalCount,List<Byte> finalBytes,byte[] trailingBytes) {}
+    public static OpcodeMinus49 decodeS2COpcodeMinus49(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte variant=in.readI8(),asset=in.readI8();
+        if(variant==0){
+            byte phase=in.readI8(),progress=in.readI8();short duration=in.readI16();byte mode=in.readI8();
+            Short distance=null;List<Offset49> offsets=null;
+            if(mode==1)distance=in.readI16();
+            else if(mode==2){byte count=in.readI8();offsets=new ArrayList<>();for(int i=0;i<count;i++)offsets.add(new Offset49(in.readI16(),in.readI16()));offsets=List.copyOf(offsets);}
+            Origin49 origin=phase==0?new Origin49(in.readI16(),null,null):new Origin49(null,in.readI16(),in.readI16());
+            return new OpcodeMinus49(variant,asset,phase,progress,duration,mode,distance,offsets,origin,null,null,null,null,null,null,null,null,readRemaining(in));
+        }
+        short imageLength=in.readI16();byte[] image=readSizedBytes(in,imageLength);byte descriptorCount=in.readI8();
+        List<Descriptor49> descriptors=new ArrayList<>();for(int i=0;i<descriptorCount;i++)descriptors.add(new Descriptor49(in.readI8(),in.readI8(),in.readI8(),in.readI8(),in.readI8()));
+        byte groupCount=in.readI8();List<TripleGroup49> groups=new ArrayList<>();
+        for(int i=0;i<groupCount;i++){byte count=in.readI8();List<List<Byte>> triples=new ArrayList<>();
+            for(int j=0;j<count;j++)triples.add(List.of(in.readI8(),in.readI8(),in.readI8()));
+            groups.add(new TripleGroup49(count,List.copyOf(triples)));}
+        byte finalCount=in.readI8();List<Byte> finalBytes=new ArrayList<>();for(int i=0;i<finalCount;i++)finalBytes.add(in.readI8());
+        return new OpcodeMinus49(variant,asset,null,null,null,null,null,null,null,imageLength,image,descriptorCount,
+            List.copyOf(descriptors),groupCount,List.copyOf(groups),finalCount,List.copyOf(finalBytes),readRemaining(in));
+    }
+    public record OpcodeMinus51(short resourceId,byte[] imageBytes,byte[] trailingBytes) {}
+    public static OpcodeMinus51 decodeS2COpcodeMinus51(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);short id=in.readI16();return new OpcodeMinus51(id,readRemaining(in),new byte[0]);
+    }
+
 }

@@ -842,3 +842,12 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - -52: context + danh sách lựa chọn + selected index + mode tùy chọn.
 - -59: batch NPC/world records, gồm tên, dữ liệu số, flags và tọa độ ×16.
 - CI run `43178823238` PASS. Chưa mutate world/quest/UI state; không tăng % tổng dự án khi chưa tính lại trọng số WBS.
+
+
+### B16 — S2C opcodes -46, -47 and -48: resource transfer variants
+
+- **Trạng thái: Một phần (3 nhánh resource transfer + tests + CI PASS).**
+- -46: hai nhánh panel/resource payload.
+- -47: resource slot + flag + blob length + blob.
+- -48: targeted blob hoặc broadcast payload.
+- CI run `43178993630` PASS. Chưa decode ảnh hoặc cập nhật runtime resource; không tăng % tổng dự án khi chưa tính lại trọng số WBS.

@@ -3249,6 +3249,35 @@
         "target-blob",
         "broadcast-two-bytes-and-opaque-tail"
       ]
+    },
+    {
+      "name": "ANIMATION_ASSET_VARIANTS",
+      "direction": "S2C",
+      "opcode": -49,
+      "evidenceSource": "ka.java:case-49; av.java; ar.java",
+      "evidence": "Outer signed-byte variant and asset ID. Variant 0 carries animation timing/position fields with mode-dependent short or short-pair arrays. Other variants carry a signed-short image blob, signed-byte-counted five-byte descriptors, signed-byte-counted groups of byte triples, and a final signed-byte-counted byte array.",
+      "sections": [
+        "variant-and-asset-id",
+        "animation-timing-fields",
+        "mode-1-distance",
+        "mode-2-short-pairs",
+        "animation-origin-or-destination",
+        "image-blob",
+        "five-byte-descriptors",
+        "triple-groups",
+        "final-byte-array"
+      ]
+    },
+    {
+      "name": "ANIMATION_IMAGE_REFRESH",
+      "direction": "S2C",
+      "opcode": -51,
+      "evidenceSource": "ka.java:case-51",
+      "evidence": "Reads a signed-short resource ID and treats all remaining packet bytes as an image blob; the client replaces the image on the existing local resource object.",
+      "sections": [
+        "resource-id",
+        "opaque-image-bytes"
+      ]
     }
   ],
   "extensionSchemas": [

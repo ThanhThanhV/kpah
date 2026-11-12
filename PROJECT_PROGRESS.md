@@ -683,3 +683,12 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode -59: NPC/world spawn records with UTF name, int value, flags and 16× coordinate conversion.
 - Added Java/JS codecs, schemas, synthetic tests and source trace. CI run `43178823238` SUCCESS.
 - These decoders do not mutate quest state, create world objects or open menus. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B16 — S2C opcodes -46, -47 and -48 — CI PASS
+
+- Opcode -46: variant 0 UTF + byte; other variants two bytes + opaque tail.
+- Opcode -47: resource slot short, boolean, signed-short blob length and image/resource bytes.
+- Opcode -48: target byte; targeted blob branch or broadcast branch with two bytes and opaque tail.
+- Java/JS codecs, schema, generator consistency and branch vectors added. CI run `43178993630` SUCCESS.
+- Resource bytes are not decoded or applied to runtime assets. Weighted project percentage unchanged; BE remains deferred.

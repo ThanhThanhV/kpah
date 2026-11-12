@@ -453,3 +453,8 @@ Added source-backed decoders for world labels/context choices and NPC spawn batc
 ### S2C opcodes -46, -47 and -48: resource transfer
 
 Added Java/JavaScript decoders for resource-panel variant payloads, slot-targeted blobs and broadcast blobs. Lengths remain signed shorts and raw data stays opaque until resource semantics are independently verified.
+
+
+### S2C opcodes -49 and -51: animation assets and image refresh
+
+Added Java/JavaScript decoders for animation timing/offset variants, packed image/descriptor bundles and resource image refresh. Raw image payloads remain opaque; runtime asset replacement is not performed.
