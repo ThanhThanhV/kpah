@@ -681,3 +681,22 @@ export function decodeS2COpcodeMinus57(payload) {
   return { variant, enabled: null, entityId: null, companionType: null, imageSlot, imageLength,
     imageBytes, frameGroups, offsetA, offsetB, trailingBytes: readRemaining(reader) };
 }
+
+export function decodeS2COpcodeMinus55(payload) {
+  const reader = new PacketReader(payload), count = reader.readI8(), records = [];
+  for (let i = 0; i < count; i += 1)
+    records.push({ type: reader.readI8(), firstShort: reader.readI16(), secondShort: reader.readI16(),
+      thirdShort: reader.readI16(), fourthShort: reader.readI16() });
+  return { count, records, trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcodeMinus60(payload) {
+  const reader = new PacketReader(payload);
+  return { text: reader.readUTF(), trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcodeMinus61(payload) {
+  const reader = new PacketReader(payload), firstByte = reader.readI8(), secondByte = reader.readI8(),
+    thirdByte = reader.readI8(), shortValue = reader.readI16(), fifthByte = reader.readI8();
+  const optionalByte = reader.remaining() > 0 ? reader.readI8() : 0;
+  return { firstByte, secondByte, thirdByte, shortValue, fifthByte, optionalByte,
+    trailingBytes: readRemaining(reader) };
+}

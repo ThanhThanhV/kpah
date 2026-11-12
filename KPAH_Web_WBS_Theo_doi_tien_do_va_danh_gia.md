@@ -859,3 +859,11 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - -49: animation timing/offset branch hoặc image + descriptor/frame data branch.
 - -51: resource ID + opaque image bytes.
 - CI run `43179606039` PASS. Chưa apply runtime animation/image assets; không tăng % tổng dự án khi chưa tính lại trọng số WBS.
+
+
+### B16 — S2C opcodes -56 and -57: companion state and sprite data
+
+- **Trạng thái: Một phần (companion record/state/sprite decoders + CI PASS).**
+- -56: hai danh sách record ID/label/flags.
+- -57: trạng thái companion hoặc image + ba nhóm frame tuple 4 byte.
+- CI run `43179931960` PASS. Chưa apply companion/world state và chưa render sprite; không tăng % tổng dự án khi chưa tính lại trọng số WBS.

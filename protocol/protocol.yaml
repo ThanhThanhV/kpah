@@ -3305,6 +3305,39 @@
         "frame-group-c",
         "sprite-offset-bytes"
       ]
+    },
+    {
+      "name": "WORLD_OBJECT_SPAWN_BATCH",
+      "direction": "S2C",
+      "opcode": -55,
+      "evidenceSource": "ka.java:case-55; mj.java:method o(acu)",
+      "evidence": "Signed-byte count followed by records containing one signed byte and four signed shorts. The world consumer constructs an an object and initializes its position from the decoded coordinate pair.",
+      "sections": [
+        "object-count",
+        "world-object-records"
+      ]
+    },
+    {
+      "name": "WORLD_NOTICE_TEXT",
+      "direction": "S2C",
+      "opcode": -60,
+      "evidenceSource": "ka.java:case-60",
+      "evidence": "Reads a single UTF string and passes it to the world notice handler.",
+      "sections": [
+        "notice-utf"
+      ]
+    },
+    {
+      "name": "WORLD_EVENT_MARKER",
+      "direction": "S2C",
+      "opcode": -61,
+      "evidenceSource": "ka.java:case-61",
+      "evidence": "Reads three signed bytes, one signed short, one signed byte and an optional final signed byte; the last byte defaults to zero when absent.",
+      "sections": [
+        "event-type-bytes",
+        "event-short",
+        "optional-final-byte"
+      ]
     }
   ],
   "extensionSchemas": [

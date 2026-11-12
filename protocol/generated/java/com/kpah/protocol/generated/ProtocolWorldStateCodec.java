@@ -633,4 +633,23 @@ public final class ProtocolWorldStateCodec {
         return new OpcodeMinus57(variant,null,null,null,slot,length,image,List.copyOf(groups),offsetA,offsetB,readRemaining(in));
     }
 
+    public record WorldObject55(byte type,short firstShort,short secondShort,short thirdShort,short fourthShort) {}
+    public record OpcodeMinus55(byte count,List<WorldObject55> records,byte[] trailingBytes) {}
+    public static OpcodeMinus55 decodeS2COpcodeMinus55(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte count=in.readI8();List<WorldObject55> records=new ArrayList<>();
+        for(int i=0;i<count;i++)records.add(new WorldObject55(in.readI8(),in.readI16(),in.readI16(),in.readI16(),in.readI16()));
+        return new OpcodeMinus55(count,List.copyOf(records),readRemaining(in));
+    }
+    public record OpcodeMinus60(String text,byte[] trailingBytes) {}
+    public static OpcodeMinus60 decodeS2COpcodeMinus60(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new OpcodeMinus60(in.readUTF(),readRemaining(in));
+    }
+    public record OpcodeMinus61(byte firstByte,byte secondByte,byte thirdByte,short shortValue,byte fifthByte,
+                                byte optionalByte,byte[] trailingBytes) {}
+    public static OpcodeMinus61 decodeS2COpcodeMinus61(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte a=in.readI8(),b=in.readI8(),c=in.readI8();short value=in.readI16();byte fifth=in.readI8();
+        byte optional=in.remaining()>0?in.readI8():(byte)0;
+        return new OpcodeMinus61(a,b,c,value,fifth,optional,readRemaining(in));
+    }
+
 }

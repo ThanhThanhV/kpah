@@ -499,3 +499,11 @@ The decoder only exposes wire values; original panel navigation, confirmation pr
 - **Opcode -57, variant 0:** enabled boolean, entity ID short and companion type byte.
 - **Opcode -57, other variants:** sprite slot byte, signed-short image length and image bytes; then three signed-byte-counted groups, each record containing four bytes; finally two offset bytes.
 - Image bytes and frame tuples are decoded but not rendered or applied to companion entities.
+
+
+## S2C opcodes -55, -60 and -61 — world objects / notices / markers
+
+- **Opcode -55:** signed-byte count followed by world-object records containing one signed byte and four signed shorts. The world consumer creates local `an` objects and initializes their position from the record.
+- **Opcode -60:** one UTF string passed to the world notice handler.
+- **Opcode -61:** three signed bytes, one signed short, one signed byte and an optional final signed byte (default 0 if absent).
+- These decoders preserve source order and widths; no world object, notice UI or event state is mutated.

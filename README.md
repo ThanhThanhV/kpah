@@ -463,3 +463,8 @@ Added Java/JavaScript decoders for animation timing/offset variants, packed imag
 ### S2C opcodes -56 and -57: companion data
 
 Added decoders for companion record lists, companion state changes and sprite/frame-group payloads. The three frame groups retain four-byte tuples and image data remains opaque.
+
+
+### S2C opcodes -55, -60 and -61: world objects and notices
+
+Added world-object spawn record, notice text and event-marker decoders with source-compatible signed fields and optional-byte default.

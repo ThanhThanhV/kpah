@@ -700,3 +700,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode -51: resource ID short plus remaining image bytes.
 - Added Java/JS codecs, schema, generator check and synthetic vectors. CI run `43179606039` SUCCESS.
 - Image bytes remain opaque and no runtime animation/image replacement is applied. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B16 — S2C opcodes -56 and -57 — CI PASS
+
+- Opcode -56: two companion record lists; each entry has short ID, byte fields and UTF label. Local receive timestamps are not transmitted.
+- Opcode -57: companion state update or sprite bundle with image bytes and three four-byte frame groups.
+- Added Java/JS codecs, schema, generator consistency, JS vectors and Java 21 smoke tests. CI run `43179931960` SUCCESS.
+- No companion state or image rendering is applied. Weighted project percentage unchanged; BE remains deferred.
