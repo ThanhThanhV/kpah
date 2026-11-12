@@ -723,3 +723,21 @@ export function decodeS2COpcodeMinus63(payload) {
   for (let i = 0; i < count; i += 1) values.push(reader.readI8());
   return { count, values, trailingBytes: readRemaining(reader) };
 }
+
+export function decodeS2COpcodeMinus65(payload) {
+  const reader = new PacketReader(payload);
+  return { firstShort: reader.readI16(), secondShort: reader.readI16(), eventByte: reader.readI8(),
+    trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcodeMinus41(payload) {
+  const reader = new PacketReader(payload);
+  return { firstShort: reader.readI16(), eventByte: reader.readI8(), secondShort: reader.readI16(),
+    trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcode58(payload) {
+  const reader = new PacketReader(payload), count = reader.readI8();
+  if (count < 0) throw new RangeError("Negative opcode 58 short-ID count");
+  const ids = [];
+  for (let i = 0; i < count; i += 1) ids.push(reader.readI16());
+  return { count, ids, trailingBytes: readRemaining(reader) };
+}

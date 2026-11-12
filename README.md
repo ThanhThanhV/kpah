@@ -473,3 +473,8 @@ Added world-object spawn record, notice text and event-marker decoders with sour
 ### S2C opcodes -62 and -63: lucky-box and grid-selection payloads
 
 Added decoders for the lucky-box result variants and 10×10 grid-selection value list. The lucky-box identity is source-confirmed; grid panel purpose is described only as observed in the consumer.
+
+
+### S2C opcodes -65, -41 and 58
+
+Added compact world-event tuple decoders and a signed-short ID-list decoder, including negative-count validation for opcode 58.

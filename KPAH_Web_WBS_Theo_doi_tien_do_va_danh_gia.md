@@ -874,3 +874,10 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - **Trạng thái: Một phần (world object batch, notice and event marker decoders + CI PASS).**
 - -55: danh sách world object records; -60: UTF notice; -61: event marker scalar fields và optional byte.
 - CI run `43180272168` PASS. Chưa mutate world state/UI; không tăng % tổng dự án khi chưa tính lại trọng số WBS.
+
+
+### B16 — S2C opcodes -62 and -63: lucky-box / grid-selection data
+
+- **Trạng thái: Một phần (lucky-box result variants + grid-selection value list + CI PASS).**
+- -62: 3 nhánh kết quả; -63: danh sách byte values của grid 10×10.
+- CI run `43180593196` PASS. Chưa thực hiện giao dịch/reward hoặc chọn ô; không tăng % tổng dự án khi chưa tính lại trọng số WBS.

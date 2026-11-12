@@ -670,4 +670,19 @@ public final class ProtocolWorldStateCodec {
         for(int i=0;i<count;i++)values.add(in.readI8());return new OpcodeMinus63(count,List.copyOf(values),readRemaining(in));
     }
 
+    public record OpcodeMinus65(short firstShort,short secondShort,byte eventByte,byte[] trailingBytes) {}
+    public static OpcodeMinus65 decodeS2COpcodeMinus65(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new OpcodeMinus65(in.readI16(),in.readI16(),in.readI8(),readRemaining(in));
+    }
+    public record OpcodeMinus41(short firstShort,byte eventByte,short secondShort,byte[] trailingBytes) {}
+    public static OpcodeMinus41 decodeS2COpcodeMinus41(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new OpcodeMinus41(in.readI16(),in.readI8(),in.readI16(),readRemaining(in));
+    }
+    public record Opcode58(byte count,List<Short> ids,byte[] trailingBytes) {}
+    public static Opcode58 decodeS2COpcode58(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte count=in.readI8();if(count<0)throw new IOException("Negative opcode 58 short-ID count");
+        List<Short> ids=new ArrayList<>();for(int i=0;i<count;i++)ids.add(in.readI16());
+        return new Opcode58(count,List.copyOf(ids),readRemaining(in));
+    }
+
 }

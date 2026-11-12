@@ -3364,6 +3364,41 @@
         "value-count",
         "grid-values"
       ]
+    },
+    {
+      "name": "WORLD_ENTITY_SHORT_SHORT_BYTE_EVENT",
+      "direction": "S2C",
+      "opcode": -65,
+      "evidenceSource": "ka.java:case-65",
+      "evidence": "Reads two signed shorts and one signed byte, then forwards them to the active world scene.",
+      "sections": [
+        "first-short",
+        "second-short",
+        "event-byte"
+      ]
+    },
+    {
+      "name": "WORLD_ENTITY_SHORT_BYTE_SHORT_EVENT",
+      "direction": "S2C",
+      "opcode": -41,
+      "evidenceSource": "ka.java:case-41",
+      "evidence": "Reads a signed short, signed byte and signed short, then forwards the ordered values to the active world scene.",
+      "sections": [
+        "first-short",
+        "event-byte",
+        "second-short"
+      ]
+    },
+    {
+      "name": "WORLD_SHORT_ID_LIST",
+      "direction": "S2C",
+      "opcode": 58,
+      "evidenceSource": "ka.java:case58",
+      "evidence": "Reads a signed-byte count and that many signed shorts into an integer lookup list.",
+      "sections": [
+        "signed-count",
+        "short-id-list"
+      ]
     }
   ],
   "extensionSchemas": [

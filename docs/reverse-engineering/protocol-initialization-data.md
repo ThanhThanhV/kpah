@@ -514,3 +514,11 @@ The decoder only exposes wire values; original panel navigation, confirmation pr
 - **Opcode -62:** source identifies the consumer as the “Hộp may mắn” panel. Type 0 carries box count, text count and UTF labels; type 1 carries selected box, text and UTF options; type 2 ends the flow without more payload.
 - **Opcode -63:** signed-byte count followed by signed-byte values; the consumer opens a 10×10 grid-selection panel and renders the values.
 - These are packet decoders only; no lucky-box purchase/reward or grid selection is executed.
+
+
+## S2C opcodes -65, -41 and 58 — world event tuples / ID list
+
+- **Opcode -65:** two signed shorts and one signed byte, forwarded to the world scene.
+- **Opcode -41:** signed short, signed byte and signed short, forwarded to the world scene.
+- **Opcode 58:** signed-byte count followed by a list of signed shorts.
+- Field names remain neutral because the downstream world-scene methods do not establish a more specific semantic name in the packet handler. Negative opcode 58 counts are rejected, matching the original array allocation behavior.

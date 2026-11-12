@@ -717,3 +717,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode -61: three bytes, short, byte and optional final byte defaulting to zero.
 - Java/JS codecs, schemas, tests and source trace added. CI run `43180272168` SUCCESS.
 - No world objects or notices are created in the browser client. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B16 — S2C opcodes -62 and -63 — CI PASS
+
+- Opcode -62: source-confirmed lucky-box panel variants — initialization labels, selected box/options and terminal branch.
+- Opcode -63: signed-byte count + values displayed by a 10×10 grid-selection panel.
+- Added Java/JS codecs, schemas, generator checks and synthetic tests. CI run `43180593196` SUCCESS.
+- No lucky-box transaction/reward or grid selection is executed. Weighted project percentage unchanged; BE remains deferred.
