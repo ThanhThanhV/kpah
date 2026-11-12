@@ -3254,8 +3254,8 @@
       "name": "ANIMATION_ASSET_VARIANTS",
       "direction": "S2C",
       "opcode": -49,
-      "evidenceSource": "ka.java:case-49; av.java; ar.java",
-      "evidence": "Outer signed-byte variant and asset ID. Variant 0 carries animation timing/position fields with mode-dependent short or short-pair arrays. Other variants carry a signed-short image blob, signed-byte-counted five-byte descriptors, signed-byte-counted groups of byte triples, and a final signed-byte-counted byte array.",
+      "evidenceSource": "ka.java:case-49",
+      "evidence": "Outer signed-byte variant and asset ID. Variant 0 carries animation timing/position fields with mode-dependent short or short-pair arrays. Other variants carry a signed-short image blob, signed-byte-counted five-byte descriptors, signed-byte-counted groups of byte triples, and a final signed-byte-counted byte array. Supporting record layouts were cross-checked against av.java and ar.java.",
       "sections": [
         "variant-and-asset-id",
         "animation-timing-fields",
