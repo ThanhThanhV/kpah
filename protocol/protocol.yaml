@@ -3452,8 +3452,8 @@
       "name": "MULTI_TARGET_COMBAT_EVENT",
       "direction": "S2C",
       "opcode": 106,
-      "evidenceSource": "ka.java:case106; mj.java:method a(acu)",
-      "evidence": "Reads source entity short, action byte, damage int, three effect bytes, signed-byte target count and repeated target short plus int value. Each target record is independently guarded by a catch in the original consumer.",
+      "evidenceSource": "ka.java:case106",
+      "evidence": "Reads source entity short, action byte, damage int, three effect bytes, signed-byte target count and repeated target short plus int value. Each target record is independently guarded by a catch in the original consumer. The target loop and per-record catch behavior are confirmed in mj.java:method a(acu).",
       "sections": [
         "source-entity-id",
         "action-byte",
