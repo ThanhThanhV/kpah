@@ -3343,8 +3343,8 @@
       "name": "LUCKY_BOX_RESULT_VARIANTS",
       "direction": "S2C",
       "opcode": -62,
-      "evidenceSource": "ka.java:case-62; so.java",
-      "evidence": "Signed-byte result type. Type 0 carries signed-byte box count, signed-byte text count and UTF labels. Type 1 carries selected box byte, UTF text, signed-byte option count and UTF options. Type 2 carries no additional fields and closes the lucky-box flow.",
+      "evidenceSource": "ka.java:case-62",
+      "evidence": "Signed-byte result type. Type 0 carries signed-byte box count, signed-byte text count and UTF labels. Type 1 carries selected box byte, UTF text, signed-byte option count and UTF options. Type 2 carries no additional fields and closes the lucky-box flow. The consumer layout is implemented in so.java.",
       "sections": [
         "result-type",
         "type-0-box-and-label-counts",
@@ -3358,8 +3358,8 @@
       "name": "GRID_SELECTION_VALUES",
       "direction": "S2C",
       "opcode": -63,
-      "evidenceSource": "ka.java:case-63; sc.java",
-      "evidence": "Signed-byte count followed by that many signed bytes. The consumer displays the values in a 10×10 grid-selection panel.",
+      "evidenceSource": "ka.java:case-63",
+      "evidence": "Signed-byte count followed by that many signed bytes. The consumer displays the values in a 10×10 grid-selection panel. The 10×10 value grid consumer is implemented in sc.java.",
       "sections": [
         "value-count",
         "grid-values"
