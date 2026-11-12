@@ -1051,3 +1051,10 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - CFR `ka.java:case-68` chuyển packet tới `mj.x(acu)`. Handler đọc result byte; result 0 reset luồng panel luyện đồ; result 4 đọc short + hai byte và chuyển cho callback của màn hình hiện tại.
 - Đặt tên S2C opcode -68 là `REFINEMENT_RESULT`; giữ payload opaque vì nhánh result 4 phụ thuộc callback/UI contract. C2S -68 là `REFINEMENT_ACTION`, không nhầm với C2S -25 `EQUIPMENT_UPGRADE_ACTION`.
 - Thêm assertion Java/JS tra cứu enum theo direction để tránh nhầm cùng opcode số âm giữa hai chiều. Chưa decode đầy đủ response hoặc xác minh mutation server.
+
+
+### B7 — C2S equip and drop-equipped requests
+
+- Opcode 86 `EQUIP_ITEM`: equipment panel `ca.P` gear list → `acm.a()` → `jy.b(int)`; payload one signed-short item ID.
+- Opcode -21 `DROP_EQUIPPED_ITEM`: equipped-slot menu “Bỏ ra đất” → confirmation `yf.a()` → `jy.p(int)`; payload one signed-short equipment slot index. Đây là drop-to-ground, không phải unequip-to-bag.
+- Bổ sung typed schema, JS round-trip và Java 21 smoke vectors. Unequip-to-bag, response handling và server-authoritative inventory/equipment mutation vẫn chưa xác minh.
