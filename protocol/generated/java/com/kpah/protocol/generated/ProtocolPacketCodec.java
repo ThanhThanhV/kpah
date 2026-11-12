@@ -12,7 +12,6 @@ public final class ProtocolPacketCodec {
         SCHEMAS.put("C2S_FARM_PANEL_ACTION", List.of(new Field("action", Type.U8), new Field("index", Type.U8)));
         SCHEMAS.put("C2S_DROP_EQUIPPED_ITEM", List.of(new Field("equipmentSlot", Type.I16)));
         SCHEMAS.put("C2S_EQUIPMENT_UPGRADE_ACTION", List.of(new Field("action", Type.U8), new Field("itemId", Type.U8)));
-        SCHEMAS.put("C2S_EQUIP_ITEM", List.of(new Field("itemId", Type.I16)));
         SCHEMAS.put("C2S_GUILD_CHAT", List.of(new Field("message", Type.UTF)));
         SCHEMAS.put("C2S_REMOVE_FRIEND", List.of(new Field("friendName", Type.UTF)));
         SCHEMAS.put("C2S_CHAT", List.of(new Field("channel", Type.UTF), new Field("message", Type.UTF)));
@@ -26,6 +25,7 @@ public final class ProtocolPacketCodec {
         SCHEMAS.put("C2S_OP_68", List.of(new Field("itemId", Type.I16)));
         SCHEMAS.put("C2S_OP_69", List.of(new Field("itemId", Type.I16)));
         SCHEMAS.put("C2S_OP_78", List.of(new Field("itemId", Type.I16), new Field("optionByte", Type.I8)));
+        SCHEMAS.put("C2S_EQUIP_ITEM", List.of(new Field("itemId", Type.I16)));
         SCHEMAS.put("C2S_OP_92", List.of(new Field("fieldBoolean", Type.BOOL), new Field("fieldByteA", Type.I8), new Field("fieldByteB", Type.I8), new Field("itemId", Type.I16), new Field("fieldInt", Type.I32), new Field("sourceSelector", Type.I8)));
         SCHEMAS.put("C2S_OP_95", List.of(new Field("fieldByteA", Type.I8), new Field("fieldByteB", Type.I8), new Field("itemId", Type.I16), new Field("fieldShortB", Type.I16), new Field("fieldByteC", Type.I8)));
         SCHEMAS.put("C2S_OP_100", List.of(new Field("mode", Type.I8), new Field("itemId", Type.I16)));
