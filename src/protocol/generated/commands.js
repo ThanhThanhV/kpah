@@ -259,8 +259,8 @@ export const S2C = Object.freeze({
 export const COMMAND_SCHEMAS = Object.freeze({
   "C2S_OPEN_ARTIFACT_PANEL": [{"name":"sentinel","type":"i16"}],
   "C2S_FARM_PANEL_ACTION": [{"name":"action","type":"u8"},{"name":"index","type":"u8"}],
-  "C2S_DROP_EQUIPPED_ITEM": [{"name":"equipmentSlot","type":"i16"}],
   "C2S_EQUIPMENT_UPGRADE_ACTION": [{"name":"action","type":"u8"},{"name":"itemId","type":"u8"}],
+  "C2S_DROP_EQUIPPED_ITEM": [{"name":"equipmentSlot","type":"i16"}],
   "C2S_GUILD_CHAT": [{"name":"message","type":"utf"}],
   "C2S_REMOVE_FRIEND": [{"name":"friendName","type":"utf"}],
   "C2S_CHAT": [{"name":"channel","type":"utf"},{"name":"message","type":"utf"}],
