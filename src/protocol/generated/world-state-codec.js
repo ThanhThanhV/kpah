@@ -818,3 +818,17 @@ export function decodeS2COpcode15(payload) {
     optionalText: null, optionalByte: null, auxiliarySelector: null, auxiliary: null, frameCount, imageBytes,
     trailingBytes: new Uint8Array() };
 }
+
+export function decodeS2COpcode100(payload) {
+  const reader = new PacketReader(payload), subtype = reader.readU8(), resourceId = reader.readI16();
+  if (subtype !== 0) return { subtype, resourceId, imageBytes: null, label: null, fieldM: null,
+    valueP: null, fieldN: null, fieldO: null, mode: null, optionalBlob: null,
+    trailingBytes: readRemaining(reader) };
+  const imageLength = reader.readI8();
+  if (imageLength < 0) throw new RangeError("Negative opcode 100 image length");
+  const imageBytes = readSizedBytes(reader, imageLength), label = reader.readUTF(), fieldM = reader.readI8();
+  const valueP = reader.readI32(), fieldN = reader.readI8(), fieldO = reader.readI8(), mode = reader.readI8();
+  const optionalBlob = mode === 1 ? readSizedBytes(reader, reader.readI16()) : null;
+  return { subtype, resourceId, imageLength, imageBytes, label, fieldM, valueP, fieldN, fieldO, mode,
+    optionalBlob, trailingBytes: readRemaining(reader) };
+}

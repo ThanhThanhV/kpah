@@ -541,3 +541,10 @@ The signed mode byte selects two layouts:
 - **Nonzero mode:** shop ID and signed-byte item count. For a nonnegative count, compact item records are followed by a frame-count byte and the remaining opaque image bytes. A negative count ends the branch without image data.
 
 Item records retain neutral field names. The browser decoder does not apply prices, stock, inventory or shop UI changes, and the image payload is not rendered.
+
+
+## S2C opcode 100 — resource-slot metadata update
+
+The opcode handler delegates to `mj.z(acu)`. The packet begins with an unsigned subtype byte and signed-short resource ID. Subtype 0 carries an image byte array, UTF label, one signed byte, an int, two signed bytes and a mode byte. Mode 1 adds a signed-short length-prefixed blob. Other subtypes have no additional fields in the observed handler.
+
+The decoder keeps image and optional blob bytes opaque; it does not update the original resource table or browser asset runtime.

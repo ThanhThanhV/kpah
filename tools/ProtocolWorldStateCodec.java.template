@@ -756,4 +756,15 @@ public final class ProtocolWorldStateCodec {
             frames,readRemaining(in),new byte[0]);
     }
 
+    public record Opcode100(int subtype,short resourceId,Byte imageLength,byte[] imageBytes,String label,Byte fieldM,
+                            Integer valueP,Byte fieldN,Byte fieldO,Byte mode,byte[] optionalBlob,byte[] trailingBytes) {}
+    public static Opcode100 decodeS2COpcode100(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);int subtype=in.readU8();short resourceId=in.readI16();
+        if(subtype!=0)return new Opcode100(subtype,resourceId,null,null,null,null,null,null,null,null,null,readRemaining(in));
+        byte length=in.readI8();if(length<0)throw new IOException("Negative opcode 100 image length");
+        byte[] image=readSizedBytes(in,length);String label=in.readUTF();byte fieldM=in.readI8();int value=in.readI32();
+        byte fieldN=in.readI8(),fieldO=in.readI8(),mode=in.readI8();byte[] optional=mode==1?readSizedBytes(in,in.readI16()):null;
+        return new Opcode100(subtype,resourceId,length,image,label,fieldM,value,fieldN,fieldO,mode,optional,readRemaining(in));
+    }
+
 }

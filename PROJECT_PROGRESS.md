@@ -741,3 +741,10 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode 13: server character-selection roster, including -1 UTF message branch, core entries, counted byte pairs, optional resource blobs and matching second-pass supplemental fields.
 - Added Java/JS codecs, schema, generator check and synthetic vectors for error and normal/resource variants. CI run `43181035721` SUCCESS.
 - Not connected to the local roster UI; opaque blobs are not rendered. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B16 — S2C opcode 15 — CI PASS
+
+- Opcode 15: shop catalog mode 0 full item records, subrecords, category/five shorts and optional text/auxiliary object; nonzero mode compact item records and frame-count/image payload.
+- Added Java/JS codecs, schema, generator check and synthetic vectors. CI run `43181452453` SUCCESS.
+- No shop transactions, stock, currency or UI changes are applied. Weighted project percentage unchanged; BE remains deferred.

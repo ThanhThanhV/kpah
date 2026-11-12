@@ -488,3 +488,8 @@ Added a Java/JavaScript decoder for server roster entries, optional opaque resou
 ### S2C opcode 15: shop catalog
 
 Added decoders for both shop catalog layouts, full/compact item records, counted subrecords, optional text/auxiliary data and opaque image payload.
+
+
+### S2C opcode 100: resource-slot metadata
+
+Added a source-backed decoder for subtype 0 image/label/scalar payload and optional mode-1 blob; nonzero subtype remains an empty branch.

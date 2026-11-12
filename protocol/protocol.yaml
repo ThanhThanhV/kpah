@@ -3433,6 +3433,20 @@
         "compact-item-records",
         "image-frame-count-and-opaque-bytes"
       ]
+    },
+    {
+      "name": "RESOURCE_SLOT_METADATA_UPDATE",
+      "direction": "S2C",
+      "opcode": 100,
+      "evidenceSource": "ka.java:case100",
+      "evidence": "Delegates to mj.z(acu): unsigned-byte subtype and signed-short resource ID. Subtype 0 carries signed-byte image length and image bytes, UTF label, signed byte, int, two signed bytes, a mode byte, and an optional signed-short length-prefixed blob when mode equals 1. Other subtypes carry no further fields.",
+      "sections": [
+        "unsigned-subtype",
+        "resource-id",
+        "image-length-and-image-bytes",
+        "resource-label-and-scalars",
+        "optional-mode-1-blob"
+      ]
     }
   ],
   "extensionSchemas": [
