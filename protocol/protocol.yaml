@@ -3503,6 +3503,34 @@
         "record-option-strings",
         "mode-1-byte-list"
       ]
+    },
+    {
+      "name": "SOCIAL_CHARACTER_LIST_TYPE_1",
+      "direction": "S2C",
+      "opcode": -7,
+      "evidenceSource": "ka.java:case-7",
+      "evidence": "Delegates to mj.a(acu,1,uppercaseLabel). Reads signed-short character count; each record has UTF name, two signed bytes, signed-byte-counted item records (byte, short, byte, byte), short, byte. Types 3/4/7/8 append long, int and byte; type 7 appends two more ints.",
+      "sections": [
+        "character-count",
+        "character-core-records",
+        "character-item-records",
+        "optional-long-int-byte",
+        "type-7-two-extra-ints"
+      ]
+    },
+    {
+      "name": "SOCIAL_CHARACTER_LIST_TYPE_6",
+      "direction": "S2C",
+      "opcode": -53,
+      "evidenceSource": "ka.java:case-53",
+      "evidence": "Uses the same record layout as opcode -7 but category type 6; the UTF label is uppercased before the list consumer opens its panel.",
+      "sections": [
+        "character-count",
+        "character-core-records",
+        "character-item-records",
+        "optional-long-int-byte",
+        "type-7-two-extra-ints"
+      ]
     }
   ],
   "extensionSchemas": [

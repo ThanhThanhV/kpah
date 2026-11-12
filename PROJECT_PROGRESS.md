@@ -763,3 +763,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode 83: source ID/action always read; remaining target group data is decoded only when the source entity exists, including two optional unsigned bytes.
 - Added Java/JS codecs, schemas and context-branch vectors. CI run `43182096267` SUCCESS.
 - No HP, damage, effects or target group state is applied. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B16 — S2C opcodes 10 and 87 — CI PASS
+
+- Opcode 10: two signed shorts + two signed ints forwarded to the world scene.
+- Opcode 87: activity panel mode 0 nested records/options; mode 1 byte list.
+- Added Java/JS codecs, schemas, generator checks and synthetic vectors. CI run `43182301153` SUCCESS.
+- No world/activity state or UI mutation is applied. Weighted project percentage unchanged; BE remains deferred.

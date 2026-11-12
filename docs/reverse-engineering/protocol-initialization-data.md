@@ -563,3 +563,10 @@ The decoder keeps image and optional blob bytes opaque; it does not update the o
 - **Opcode 87, mode 0:** global byte and a list of activity records containing a byte, short, UTF label, counted UTF options and trailing byte.
 - **Opcode 87, mode 1:** signed-byte count followed by a byte list. Other modes carry no further fields in the observed handler.
 - The decoder retains neutral field names and does not apply world changes or open activity UI.
+
+
+## S2C opcodes -7 and -53 — social character lists
+
+Both handlers delegate to the same source method with category values 1 and 6. The payload contains a signed-short character count; each record has UTF name, two bytes, a signed-byte-counted list of item tuples (byte, short, byte, byte), then a short and byte. Categories 3/4/7/8 add a long, int and byte; category 7 adds two further ints.
+
+The decoder preserves neutral names and category-specific extension fields. It does not populate friend/member panels or mutate character records.

@@ -916,3 +916,10 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - **Trạng thái: Một phần (multi-target combat decoder + entity-existence guarded group update + CI PASS).**
 - -106: damage/effect header + target ID/value list; 83: source ID/action và chỉ parse phần target khi entity còn tồn tại.
 - CI run `43182096267` PASS. Chưa apply HP/damage/effect; không tăng % tổng dự án khi chưa tính lại trọng số WBS.
+
+
+### B16 — S2C opcodes 10 and 87: world scalar/activity panel
+
+- **Trạng thái: Một phần (world scalar tuple + activity panel variants + CI PASS).**
+- -10: hai short + hai int; 87: mode 0 danh sách record và options, mode 1 danh sách byte.
+- CI run `43182301153` PASS. Chưa apply world/activity UI; không tăng % tổng dự án khi chưa tính lại trọng số WBS.

@@ -812,4 +812,24 @@ public final class ProtocolWorldStateCodec {
         PacketReader in=new PacketReader(payload);return new Opcode10(in.readI16(),in.readI16(),in.readI32(),in.readI32(),readRemaining(in));
     }
 
+    public record SocialItem7(byte fieldM,short fieldR,byte fieldY,byte fieldS) {}
+    public record SocialCharacter7(String name,byte fieldAM,byte fieldCY,byte itemCount,List<SocialItem7> items,
+                                   short fieldI,byte fieldAF,Long longValue,Integer intValue,Byte byteValue,
+                                   List<Integer> type7Ints) {}
+    public record SocialCharacterList7(int category,short count,List<SocialCharacter7> characters,byte[] trailingBytes) {}
+    private static SocialCharacterList7 decodeSocialCharacterList(byte[] payload,int category) throws IOException {
+        PacketReader in=new PacketReader(payload);short count=in.readI16();List<SocialCharacter7> characters=new ArrayList<>();
+        for(int i=0;i<count;i++){
+            String name=in.readUTF();byte am=in.readI8(),cy=in.readI8(),itemCount=in.readI8();List<SocialItem7> items=new ArrayList<>();
+            for(int j=0;j<itemCount;j++)items.add(new SocialItem7(in.readI8(),in.readI16(),in.readI8(),in.readI8()));
+            short fieldI=in.readI16();byte af=in.readI8();Long longValue=null;Integer intValue=null;Byte byteValue=null;List<Integer> extra=null;
+            if(category==3||category==4||category==7||category==8){longValue=in.readI64();intValue=in.readI32();byteValue=in.readI8();
+                if(category==7)extra=List.of(in.readI32(),in.readI32());}
+            characters.add(new SocialCharacter7(name,am,cy,itemCount,List.copyOf(items),fieldI,af,longValue,intValue,byteValue,extra));
+        }
+        return new SocialCharacterList7(category,count,List.copyOf(characters),readRemaining(in));
+    }
+    public static SocialCharacterList7 decodeS2COpcodeMinus7(byte[] payload) throws IOException { return decodeSocialCharacterList(payload,1); }
+    public static SocialCharacterList7 decodeS2COpcodeMinus53(byte[] payload) throws IOException { return decodeSocialCharacterList(payload,6); }
+
 }

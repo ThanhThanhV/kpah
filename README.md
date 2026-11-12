@@ -503,3 +503,8 @@ Added context-aware decoders for multi-target attack records and entity-existenc
 ### S2C opcodes 10 and 87: world scalar and activity panel
 
 Added a four-field world scalar decoder and both source-observed activity panel variants, including nested UTF option lists and raw byte-list mode.
+
+
+### S2C opcodes -7 and -53: social character lists
+
+Added shared Java/JavaScript decoding for social character list records, item tuples and category-dependent extended fields.

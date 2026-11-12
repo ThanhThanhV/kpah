@@ -885,3 +885,24 @@ export function decodeS2COpcode87(payload) {
   }
   return { mode, globalByte: null, count: null, records: null, values: null, trailingBytes: readRemaining(reader) };
 }
+
+function decodeSocialCharacterList(payload, category) {
+  const reader = new PacketReader(payload), count = reader.readI16(), characters = [];
+  for (let i = 0; i < count; i += 1) {
+    const name = reader.readUTF(), fieldAM = reader.readI8(), fieldCY = reader.readI8(),
+      itemCount = reader.readI8(), items = [];
+    for (let j = 0; j < itemCount; j += 1)
+      items.push({ fieldM: reader.readI8(), fieldR: reader.readI16(), fieldY: reader.readI8(), fieldS: reader.readI8() });
+    const fieldI = reader.readI16(), fieldAF = reader.readI8();
+    let longValue = null, intValue = null, byteValue = null, type7Ints = null;
+    if ([3, 4, 7, 8].includes(category)) {
+      longValue = reader.readI64(); intValue = reader.readI32(); byteValue = reader.readI8();
+      if (category === 7) type7Ints = [reader.readI32(), reader.readI32()];
+    }
+    characters.push({ name, fieldAM, fieldCY, itemCount, items, fieldI, fieldAF,
+      longValue, intValue, byteValue, type7Ints });
+  }
+  return { category, count, characters, trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcodeMinus7(payload) { return decodeSocialCharacterList(payload, 1); }
+export function decodeS2COpcodeMinus53(payload) { return decodeSocialCharacterList(payload, 6); }
