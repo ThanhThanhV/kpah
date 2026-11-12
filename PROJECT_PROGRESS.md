@@ -612,5 +612,13 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Each optional group follows the original client's independent catch boundary. The decoder records section errors and installs the original fallback arrays for `ct/cu`, `cv`, `cw`, and `cx`; the primary blob remains strict.
 - Resource IDs and payload bytes are preserved as opaque data; no image formats, rendering meanings, or gameplay semantics are invented.
 - Added protocol schema, generator consistency, JS vectors for complete and fallback cases, Java 21 smoke vectors and docs.
-- CI run `43171326536` SUCCESS: Vite build, generated-code checks, JS protocol suites, Java 21 compile/smoke and original-JAR analysis.
+- CI run `43173158542` SUCCESS: Vite build, generated-code checks, JS protocol suites, Java 21 compile/smoke and original-JAR analysis.
 - Overall weighted project percentage unchanged pending WBS recalculation; BE remains deferred.
+
+
+## B16 — S2C opcodes 2 and 22 — CI PASS
+
+- Opcode 2 now decodes all three source variants: prefix-2 option list (UTF label, signed-short value, UTF description), prefix-3 provider/agent pair, and plain server message. The UI selector suffix is exposed without implementing navigation.
+- Opcode 22 decodes two signed shorts, a signed byte, another short, an int and optional signed byte defaulting to zero.
+- Added Java/JS generated decoders, schema validation, synthetic branch vectors and Java 21 smoke tests. CI run `43173158542` SUCCESS.
+- The combined CI run also validates opcode 26 world resource bundle. No authoritative server state or browser UI side effects are implemented; weighted project percentage remains unchanged.

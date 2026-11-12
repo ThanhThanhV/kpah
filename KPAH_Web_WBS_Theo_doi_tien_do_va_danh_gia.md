@@ -770,5 +770,14 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - **Trạng thái: Một phần (decoder + fallback semantics + tests + CI PASS).**
 - Giải mã template count, primary blob, effect blob list, indexed image/graphics blobs, cặp mảng cấu hình 4 byte và ba cặp byte-array có độ dài động.
 - Các nhóm optional giữ đúng catch boundary và fallback array của client gốc; blob chính vẫn strict. Payload/ID giữ opaque, chưa diễn giải format ảnh/ý nghĩa gameplay.
-- CI run `43171326536` PASS: Vite build, generator consistency, JS protocol tests, Java 21 compile/smoke và original-JAR analysis.
+- CI run `43173158542` PASS: Vite build, generator consistency, JS protocol tests, Java 21 compile/smoke và original-JAR analysis.
 - Chưa áp dụng dữ liệu tài nguyên vào runtime Phaser; không tăng % tổng dự án khi chưa tính lại trọng số WBS.
+
+
+### B16 — S2C opcodes 2 and 22: server metadata / entity auxiliary update
+
+- **Trạng thái: Một phần (3 nhánh opcode 2 + opcode 22 + Java/JS tests + CI PASS).**
+- Opcode 2: prefix `2` → danh sách lựa chọn có label/value/description; prefix `3` → provider/agent; còn lại là thông báo server.
+- Opcode 22: hai short, một byte, một short, một int và byte optional mặc định 0.
+- CI run `43173158542` PASS; cùng run xác nhận generator consistency, Vite build, JS tests, Java 21 compile/smoke và original-JAR analysis.
+- Chưa triển khai điều hướng UI hoặc mutate world state; không tăng % tổng dự án khi chưa tính lại trọng số WBS.
