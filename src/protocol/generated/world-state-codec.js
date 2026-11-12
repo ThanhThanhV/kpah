@@ -1010,3 +1010,19 @@ export function decodeS2COpcode80(payload) {
   }
   return { entryCount, entries, trailingBytes: readRemaining(reader) };
 }
+
+
+export function decodeS2COpcode73(payload) {
+  const reader = new PacketReader(payload), recordCount = reader.readI16(), records = [];
+  if (recordCount < 0) throw new RangeError("Negative opcode 73 record count");
+  for (let i = 0; i < recordCount; i += 1) records.push({ itemId: reader.readI16(), materialCategory: reader.readI16(), quantity: reader.readI16() });
+  const destinationSelector = reader.readI8();
+  return { recordCount, records, destinationSelector, destinationList: destinationSelector === 0 ? "N" : "O", trailingBytes: readRemaining(reader) };
+}
+
+export function decodeS2COpcode76(payload) {
+  const reader = new PacketReader(payload), recordCount = reader.readI8(), records = [];
+  if (recordCount < 0) throw new RangeError("Negative opcode 76 record count");
+  for (let i = 0; i < recordCount; i += 1) records.push({ itemId: reader.readI16(), equipmentSlot: reader.readI8(), value: reader.readI16() });
+  return { recordCount, records, trailingBytes: readRemaining(reader) };
+}
