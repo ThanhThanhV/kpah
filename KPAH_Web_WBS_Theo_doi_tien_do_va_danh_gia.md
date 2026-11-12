@@ -1011,3 +1011,10 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - **Trạng thái: Một phần (two-mode source-backed command codec + tests; CI pending).**
 - Mode 0: hai signed byte; mode 1: hai signed byte và một signed short, theo hai writer branch trong jy.java.
 - Không gán nghĩa nghiệp vụ cho các positional args khi chưa truy đủ callsite/handler.
+
+
+### B7 — C2S opcode 94 market-panel modes
+
+- **Trạng thái: Một phần (source-backed command schema + generated Java/JS codec + tests + CI PASS).**
+- Mode 0: hai signed byte; mode 1: hai signed byte và một signed short. Generator validate cả opcode 62 và 94, giữ unknown-mode payload chưa đọc và từ chối encode mode chưa xác minh.
+- CI run `43191399012` PASS. Chưa có server-side transaction hoặc authoritative market state.

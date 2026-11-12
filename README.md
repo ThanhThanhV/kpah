@@ -557,3 +557,6 @@ The C2S inventory/market writer schemas (61, 68, 69, 78, 92, 95, 100) passed CI 
 
 
 C2S opcode 94 now has a generated two-mode market-panel command codec, based on both outbound writer branches in jy.java.
+
+
+C2S opcode 94's two market-panel writer modes now have generated Java/JavaScript codecs; CI run `43191399012` passed.

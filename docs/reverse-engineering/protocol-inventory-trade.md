@@ -135,3 +135,8 @@ C2S command catalog now includes typed payload schemas for opcodes 61, 68, 69, 7
 ## C2S opcode 94 — market-panel modes
 
 The outbound writer has two verified variants: mode 0 writes two signed bytes; mode 1 writes the same two signed bytes followed by a signed short. The command-variant codec generates both modes in Java and JavaScript, preserves unknown-mode payload bytes on decode, and rejects unsupported modes on encode. Field names remain positional/neutral until the caller graph is fully mapped.
+
+
+### Opcode 94 codec verification
+
+The two mode branches now have generated Java/JavaScript encoders and decoders. The generator validates the schema against the observed mode set; unknown modes are preserved on decode but rejected on encode. CI run `43191399012` passed all protocol checks and Java 21 smoke tests.

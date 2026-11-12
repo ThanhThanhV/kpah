@@ -844,3 +844,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 - Added source-backed mode 0 (two signed bytes) and mode 1 (two signed bytes + signed short) to the command-variant schema and Java/JavaScript generator. Unknown modes preserve their unread bytes; encoder rejects unverified modes.
 - JS/Java vectors are added; CI pending. The UI/business meaning of the positional arguments remains neutral.
+
+
+## B7 — C2S opcode 94 market-panel modes — CI PASS
+
+- Added two source-backed modes to the command-variant schema: mode 0 (two signed bytes) and mode 1 (two signed bytes + signed short).
+- Extended the Python generator to validate opcode 62 and 94 schemas and emit Java/JavaScript encoders/decoders. Unknown mode payloads remain unconsumed; encoding unknown modes fails closed.
+- Added JS round-trip and Java 21 smoke vectors. CI run `43191399012` SUCCESS: Vite build, generated checks, all protocol suites, Java compile/smoke and original-JAR analysis.
+- Still packet serialization only; market-panel state and server transaction behavior remain open. Weighted progress unchanged; BE deferred.
