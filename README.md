@@ -508,3 +508,8 @@ Added a four-field world scalar decoder and both source-observed activity panel 
 ### S2C opcodes -7 and -53: social character lists
 
 Added shared Java/JavaScript decoding for social character list records, item tuples and category-dependent extended fields.
+
+
+### S2C opcodes 86 and 95
+
+Added Java/JavaScript decoders and synthetic vectors for the three temporary-status modes in opcode 86 and the fixed short/short/byte event in opcode 95. Client-side clock initialization and downstream state mutation remain outside the parser.

@@ -3531,6 +3531,30 @@
         "optional-long-int-byte",
         "type-7-two-extra-ints"
       ]
+    },
+    {
+      "name": "TEMPORARY_CHARACTER_STATUS",
+      "direction": "S2C",
+      "opcode": 86,
+      "evidenceSource": "ka.java:case86; z.java fields",
+      "evidence": "Mode 0 clears client timer and status fields without additional payload. Mode 1 reads one signed byte, subtracts one for z.bT, uses fixed duration 1440 and reads UTF z.bU. Mode 2 reads signed byte minus one, signed int duration and UTF status text. Client sets its local start timestamp to current time; decoder does not synthesize timestamps.",
+      "sections": [
+        "mode",
+        "mode-1-status-index-and-fixed-duration",
+        "mode-2-status-index-duration-and-text"
+      ]
+    },
+    {
+      "name": "WORLD_ENTITY_SHORT_SHORT_BYTE_EVENT",
+      "direction": "S2C",
+      "opcode": 95,
+      "evidenceSource": "ka.java:case95",
+      "evidence": "Reads two signed shorts and one signed byte, then passes them unchanged to km.s.c(short,short,byte). The target consumer method is not assigned additional semantics in this decoder.",
+      "sections": [
+        "first-short",
+        "second-short",
+        "type-byte"
+      ]
     }
   ],
   "extensionSchemas": [

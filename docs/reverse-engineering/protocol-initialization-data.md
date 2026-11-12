@@ -570,3 +570,18 @@ The decoder keeps image and optional blob bytes opaque; it does not update the o
 Both handlers delegate to the same source method with category values 1 and 6. The payload contains a signed-short character count; each record has UTF name, two bytes, a signed-byte-counted list of item tuples (byte, short, byte, byte), then a short and byte. Categories 3/4/7/8 add a long, int and byte; category 7 adds two further ints.
 
 The decoder preserves neutral names and category-specific extension fields. It does not populate friend/member panels or mutate character records.
+
+
+## S2C opcode 86 — temporary character status
+
+The source handler has three recognized modes:
+
+- **Mode 0:** clears the client's local status start time, duration and text; no branch payload.
+- **Mode 1:** reads a signed byte and stores value minus one as the status index, sets a fixed duration of 1440, then reads UTF status text.
+- **Mode 2:** reads the same adjusted signed-byte index, a signed 32-bit duration and UTF status text.
+
+The original client sets the start timestamp locally using its clock. The decoder deliberately returns only wire fields and does not invent that timestamp or apply the status to a character.
+
+## S2C opcode 95 — short/short/byte world event
+
+Reads two signed shorts and one signed byte and forwards them unchanged to `km.s.c(short, short, byte)`. Until the consumer method is separately traced, the generated schema preserves neutral field names rather than claiming these values represent a particular entity, coordinate or action.

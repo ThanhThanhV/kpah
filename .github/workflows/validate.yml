@@ -473,6 +473,19 @@ jobs:
                   || !catalog25.signedList().get(0).textK().equals("desc")
                   || catalog25.unsignedList().get(0).id() != 23 || catalog25.unsignedList().get(0).shortM() != 90)
                 throw new AssertionError("S2C opcode 25 static item/shop catalog decode");
+              ProtocolWorldStateCodec.Opcode86 status86Clear = ProtocolWorldStateCodec.decodeS2COpcode86(
+                new PacketWriter().writeI8(0).toByteArray());
+              ProtocolWorldStateCodec.Opcode86 status86Fixed = ProtocolWorldStateCodec.decodeS2COpcode86(
+                new PacketWriter().writeI8(1).writeI8(4).writeUTF("Hộ mệnh").toByteArray());
+              ProtocolWorldStateCodec.Opcode86 status86Custom = ProtocolWorldStateCodec.decodeS2COpcode86(
+                new PacketWriter().writeI8(2).writeI8(0).writeI32(98765).writeUTF("Trạng thái").toByteArray());
+              ProtocolWorldStateCodec.Opcode95 world95 = ProtocolWorldStateCodec.decodeS2COpcode95(
+                new PacketWriter().writeI16(-120).writeI16(340).writeI8(-2).toByteArray());
+              if (status86Clear.statusIndex() != null || status86Fixed.duration() != 1440
+                  || status86Fixed.statusIndex() != 3 || status86Custom.duration() != 98765
+                  || status86Custom.statusIndex() != -1 || world95.firstShort() != -120
+                  || world95.secondShort() != 340 || world95.typeByte() != -2)
+                throw new AssertionError("S2C opcodes 86/95 status and world event");
               PacketWriter extension3 = new PacketWriter().writeI16(123).writeI8(0).writeBool(true).writeBool(false)
                 .writeI8(1).writeI8(2).writeI8(3).writeI16(4).writeI32(5).writeI16(6).writeI32(7).writeUTF("title").writeBool(true)
                 .writeI16(11).writeI8(12).writeI16(21).writeI8(22).writeI16(23).writeI16(31).writeI16(32).writeI16(33)
