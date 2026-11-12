@@ -397,6 +397,19 @@ jobs:
                 ||petContext.petExtraShorts().get(4)!=64||petImage.items().get(0).itemV()!=6
                 ||petImage.imageFrameCount()!=3||petImage.imageBytes().length!=3||!petUnavailable.variant().equals("no-information"))
                 throw new AssertionError("S2C opcode -22 pet equipment context");
+
+              PacketWriter lookup105Writer=new PacketWriter().writeI8(2).writeI8(1).writeI8(2);
+              for(int row=0;row<2;row++){for(int i=0;i<6;i++){lookup105Writer.writeI16(row*10+i);if(i%3==0)lookup105Writer.writeUTF("label-"+row+"-"+i);}}
+              lookup105Writer.writeI8(1).writeI16(70).writeI16(71).writeI16(72).writeI8(1);
+              for(int i=0;i<6;i++){lookup105Writer.writeI16(80+i);if(i%3==0)lookup105Writer.writeUTF("third-"+i);}
+              ProtocolWorldStateCodec.Opcode105 lookup105=ProtocolWorldStateCodec.decodeS2COpcode105(lookup105Writer.toByteArray());
+              if(lookup105.rowWidth()!=2||lookup105.firstGroups().get(0).size()!=2
+                ||lookup105.firstGroups().get(0).get(1).values().get(5)!=15
+                ||!lookup105.firstGroups().get(0).get(0).labels().get(1).equals("label-0-3")
+                ||lookup105.secondGroups().get(0).values().get(1)!=71
+                ||lookup105.secondGroups().get(0).trailingValue()!=72
+                ||!lookup105.thirdGroups().get(0).labels().get(1).equals("third-3"))
+                throw new AssertionError("S2C opcode 105 nested lookup tables");
               PacketWriter catalog25Writer = new PacketWriter().writeU8(1).writeU8(7).writeUTF("lookup").writeI8(-1).writeI8(2)
                 .writeI8(1).writeI16(100).writeI16(200);
               for (int i = 0; i < 5; i++) catalog25Writer.writeI8(i - 2);

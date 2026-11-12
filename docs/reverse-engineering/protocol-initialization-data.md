@@ -423,3 +423,14 @@ Two source-backed variants are decoded:
 - **Nonzero subtype:** signed-byte item count. A negative count is the original "no pet information" branch. Otherwise it carries compact item records, image frame count and the remaining raw image bytes.
 
 Both item record layouts include fixed appearance arrays with source-defined lengths 10, 3 and 15; compact records additionally carry two shorts. The decoder keeps the raw image bytes opaque and does not instantiate the original `bo` or `z` models.
+
+
+## S2C opcode 105 — multi-level lookup tables
+
+The packet starts with a signed-byte row width and carries three nested table families:
+
+1. A signed-byte group count; each group has a signed-byte entry count. Each entry contains `width × 3` signed shorts, with a UTF label after every third short.
+2. A signed-byte count of rows, each with `width` signed shorts and one trailing short.
+3. A signed-byte count of entries, each using the same `width × 3` short + periodic UTF label layout as family 1.
+
+This packet populates `ku.ab/aa`, `mj.aM/aL` and `ku.Y/Z`. The decoder retains the nested shape and source ordering but does not assign gameplay meanings to the columns.

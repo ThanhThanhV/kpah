@@ -3003,6 +3003,19 @@
         "optional-pet-text",
         "image-frame-count-and-opaque-image-bytes"
       ]
+    },
+    {
+      "name": "MULTI_LEVEL_LOOKUP_TABLES",
+      "direction": "S2C",
+      "opcode": 105,
+      "evidenceSource": "ka.java:case105",
+      "evidence": "Reads a signed-byte row width, then three nested table groups. Group one has signed-byte group and entry counts; each entry carries width*3 shorts with a UTF label after every third short. Group two has signed-byte count, width shorts and one trailing short per entry. Group three repeats the width*3 shorts plus UTF label pattern.",
+      "sections": [
+        "signed-byte-row-width",
+        "nested-value-and-label-table",
+        "row-short-table",
+        "second-value-and-label-table"
+      ]
     }
   ],
   "extensionSchemas": [

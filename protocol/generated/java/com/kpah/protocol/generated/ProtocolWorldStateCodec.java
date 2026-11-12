@@ -405,4 +405,29 @@ public final class ProtocolWorldStateCodec {
         return new OpcodeMinus22("pet-equipment-image",subtype,null,(byte)0,(byte)0,count,List.copyOf(items),null,null,List.of(),null,null,frames,image,new byte[0]);
     }
 
+    public record LookupTriple105(List<Short> values,List<String> labels) {}
+    private static LookupTriple105 readLookupTriples105(PacketReader in,int width) throws IOException {
+        if(width<0)throw new IOException("Negative opcode 105 row width");
+        List<Short> values=new ArrayList<>();List<String> labels=new ArrayList<>();
+        for(int i=0;i<width*3;i++){values.add(in.readI16());if(i%3==0)labels.add(in.readUTF());}
+        return new LookupTriple105(List.copyOf(values),List.copyOf(labels));
+    }
+    public record SecondLookup105(List<Short> values,short trailingValue) {}
+    public record Opcode105(byte rowWidth,List<List<LookupTriple105>> firstGroups,List<SecondLookup105> secondGroups,
+                            List<LookupTriple105> thirdGroups,byte[] trailingBytes) {}
+    public static Opcode105 decodeS2COpcode105(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte widthByte=in.readI8();int width=widthByte;
+        if(width<0)throw new IOException("Negative opcode 105 row width");
+        int firstCount=in.readI8();if(firstCount<0)throw new IOException("Negative opcode 105 first group count");
+        List<List<LookupTriple105>> first=new ArrayList<>();
+        for(int i=0;i<firstCount;i++){int entries=in.readI8();if(entries<0)throw new IOException("Negative opcode 105 entry count");
+            List<LookupTriple105> group=new ArrayList<>();for(int j=0;j<entries;j++)group.add(readLookupTriples105(in,width));first.add(List.copyOf(group));}
+        int secondCount=in.readI8();if(secondCount<0)throw new IOException("Negative opcode 105 second group count");
+        List<SecondLookup105> second=new ArrayList<>();
+        for(int i=0;i<secondCount;i++){List<Short> values=new ArrayList<>();for(int j=0;j<width;j++)values.add(in.readI16());second.add(new SecondLookup105(List.copyOf(values),in.readI16()));}
+        int thirdCount=in.readI8();if(thirdCount<0)throw new IOException("Negative opcode 105 third group count");
+        List<LookupTriple105> third=new ArrayList<>();for(int i=0;i<thirdCount;i++)third.add(readLookupTriples105(in,width));
+        return new Opcode105(widthByte,List.copyOf(first),List.copyOf(second),List.copyOf(third),readRemaining(in));
+    }
+
 }

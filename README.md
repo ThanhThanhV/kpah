@@ -418,3 +418,8 @@ Added source-backed decoders for binary resource transfer variants, short-ID/mes
 ### S2C opcode -22 pet equipment context
 
 Added Java/JavaScript decoding for both pet context variants, including full and compact item records, source-verified appearance array lengths (10/3/15), optional pet text, five pet shorts and trailing image bytes. Negative item count preserves the original no-information branch.
+
+
+### S2C opcode 105 multi-level lookup tables
+
+Added Java/JavaScript decoders for all three nested table families, preserving signed-byte dimensions, width×3 short sequences and UTF labels inserted at every third short. Added synthetic nested-table vectors and negative-width validation.

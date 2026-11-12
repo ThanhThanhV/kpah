@@ -452,3 +452,34 @@ export function decodeS2COpcodeMinus22(payload) {
   const imageFrameCount=reader.readI8(),imageBytes=readRemaining(reader);
   return {variant:"pet-equipment-image",subtype,itemCount,items,imageFrameCount,imageBytes,trailingBytes:new Uint8Array(0)};
 }
+
+function readLookupTriples105(reader,width) {
+  if(width<0)throw new RangeError("Negative opcode 105 row width");
+  const values=[],labels=[];
+  for(let i=0;i<width*3;i++){values.push(reader.readI16());if(i%3===0)labels.push(reader.readUTF());}
+  return {values,labels};
+}
+export function decodeS2COpcode105(payload) {
+  const reader=new PacketReader(payload),rowWidth=reader.readI8();
+  if(rowWidth<0)throw new RangeError("Negative opcode 105 row width");
+  const firstGroupCount=reader.readI8();
+  if(firstGroupCount<0)throw new RangeError("Negative opcode 105 first group count");
+  const firstGroups=[];
+  for(let i=0;i<firstGroupCount;i++){
+    const entryCount=reader.readI8();if(entryCount<0)throw new RangeError("Negative opcode 105 entry count");
+    const entries=[];for(let j=0;j<entryCount;j++)entries.push(readLookupTriples105(reader,rowWidth));
+    firstGroups.push(entries);
+  }
+  const secondGroupCount=reader.readI8();
+  if(secondGroupCount<0)throw new RangeError("Negative opcode 105 second group count");
+  const secondGroups=[];
+  for(let i=0;i<secondGroupCount;i++){
+    const values=Array.from({length:rowWidth},()=>reader.readI16()),trailingValue=reader.readI16();
+    secondGroups.push({values,trailingValue});
+  }
+  const thirdGroupCount=reader.readI8();
+  if(thirdGroupCount<0)throw new RangeError("Negative opcode 105 third group count");
+  const thirdGroups=[];
+  for(let i=0;i<thirdGroupCount;i++)thirdGroups.push(readLookupTriples105(reader,rowWidth));
+  return {rowWidth,firstGroups,secondGroups,thirdGroups,trailingBytes:readRemaining(reader)};
+}
