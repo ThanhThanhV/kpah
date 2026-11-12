@@ -781,3 +781,12 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Opcode 22: hai short, một byte, một short, một int và byte optional mặc định 0.
 - CI run `43173158542` PASS; cùng run xác nhận generator consistency, Vite build, JS tests, Java 21 compile/smoke và original-JAR analysis.
 - Chưa triển khai điều hướng UI hoặc mutate world state; không tăng % tổng dự án khi chưa tính lại trọng số WBS.
+
+
+### B16 — S2C opcodes -5, 35, 37, 38, 39 and 64
+
+- **Trạng thái: Một phần (skill grid + chat/dialog/notice/SMS + skill-record decoders + CI PASS).**
+- Opcode 35: giải mã đầy đủ các bảng `ic` theo kích thước cố định 15×11 và 5 mảng byte bổ sung; giữ đúng signed/unsigned và phép nhân 100 của bảng thứ hai.
+- Opcode 64: danh sách record gồm 2 byte + 3 short. Opcode -5: danh sách sender/message. Opcode 37/38/39: dialog, world notice và kết quả đăng ký SMS.
+- CI run `43173647371` PASS: Vite build, generator consistency, JS tests, Java 21 compile/smoke và original-JAR analysis.
+- Chưa áp dụng skill progression/chat/UI side effects; không tăng % tổng dự án do chưa tính lại trọng số WBS.

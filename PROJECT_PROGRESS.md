@@ -622,3 +622,12 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode 22 decodes two signed shorts, a signed byte, another short, an int and optional signed byte defaulting to zero.
 - Added Java/JS generated decoders, schema validation, synthetic branch vectors and Java 21 smoke tests. CI run `43173158542` SUCCESS.
 - The combined CI run also validates opcode 26 world resource bundle. No authoritative server state or browser UI side effects are implemented; weighted project percentage remains unchanged.
+
+
+## B16 — S2C opcodes -5, 35, 37, 38, 39 and 64 — CI PASS
+
+- Opcode 35 decodes the fixed `ic` tables: 15×11 short grid, 15×11 short grid scaled by 100, 15 row shorts, 15×11 unsigned-byte grid, 15×11 short grid, 15×11 signed-byte grid, and five length-prefixed byte arrays.
+- Opcode 64 decodes a signed-byte-counted list of records (two signed bytes + three signed shorts).
+- Opcode -5 decodes signed-byte-counted sender/message UTF pairs. Opcodes 37/38/39 decode server dialog, world notice and SMS registration result payloads.
+- Added schema, Java/JS generated codecs, tests for grid dimensions/signedness, UTF payloads and registration result. CI run `43173647371` SUCCESS: Vite build, generated-source checks, JS tests, Java 21 compile/smoke and original-JAR analysis.
+- These are parse-only decoders; no skill progression, chat state, dialogs or SMS actions are executed. Weighted project percentage unchanged; BE remains deferred.
