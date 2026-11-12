@@ -852,3 +852,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Extended the Python generator to validate opcode 62 and 94 schemas and emit Java/JavaScript encoders/decoders. Unknown mode payloads remain unconsumed; encoding unknown modes fails closed.
 - Added JS round-trip and Java 21 smoke vectors. CI run `43191399012` SUCCESS: Vite build, generated checks, all protocol suites, Java compile/smoke and original-JAR analysis.
 - Still packet serialization only; market-panel state and server transaction behavior remain open. Weighted progress unchanged; BE deferred.
+
+
+## B7 — C2S opcodes 48 and -25: use-item / refine-item codec tests
+
+- Added positive/negative 32-bit item ID vectors and missing-field validation for opcode 48 `USE_ITEM`.
+- Added Java 21 smoke round-trip for opcode -25 `REFINE_ITEM` (action byte + item ID byte); existing JS round-trip retained.
+- Updated CI smoke assertions to compare unsigned-byte decode values as Java integers.
+- CI for this increment is pending; previous protocol suites remain documented as passing. No server-side use/refinement semantics or inventory mutation implemented.
