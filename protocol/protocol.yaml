@@ -3666,6 +3666,29 @@
         "short-values-c",
         "short-values-d"
       ]
+    },
+    {
+      "name": "MATERIAL_RECIPE_LISTS",
+      "direction": "S2C",
+      "opcode": 73,
+      "evidenceSource": "ka.java:case73",
+      "evidence": "Reads signed-short record count; each record is three signed shorts in source order: item ID (be.b), material/category (be.a), quantity/count (be.c). A trailing signed byte selects destination list: 0 replaces ca.N, nonzero replaces ca.O. The consumer refreshes the matching material/crafting tab when open.",
+      "sections": [
+        "record-count",
+        "material-records-item-category-quantity",
+        "destination-selector"
+      ]
+    },
+    {
+      "name": "EQUIPMENT_GEAR_LIST",
+      "direction": "S2C",
+      "opcode": 76,
+      "evidenceSource": "ka.java:case76",
+      "evidence": "Reads signed-byte record count; each record is signed short item ID (be.b), signed byte equipment slot/category (be.a), and signed short value/count (be.c). Replaces ca.P and refreshes the equipment tab when the character panel is open.",
+      "sections": [
+        "record-count",
+        "equipment-records-item-slot-value"
+      ]
     }
   ],
   "extensionSchemas": [
