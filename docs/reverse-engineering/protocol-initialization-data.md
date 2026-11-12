@@ -467,3 +467,11 @@ The decoder only exposes wire values; original panel navigation, confirmation pr
 - **Opcode -33:** two signed coordinate bytes and a signed-short map ID. The client shifts each coordinate left four bits to obtain world-pixel coordinates. It creates two local marker objects only when the packet map ID matches the active map.
 - **Opcode -37:** a signed result-type byte selects a quest/result branch. Type 0 carries quest text and a subtype: subtype 0 has a progress byte, total/completed shorts and trailing UTF; subtype 1 has a progress byte, total/claimed shorts and trailing UTF; subtype 2 has a plot byte and trailing UTF. Type 1 carries one UTF string; type 2 carries title and body UTF strings.
 - The decoder preserves raw values and does not mutate map markers, quest counters, quest UI, or farming state.
+
+
+## S2C opcodes -50, -52 and -59 — world context / NPC data
+
+- **Opcode -50:** UTF label, six signed shorts and two signed bytes; the client forwards the ordered values to the active world scene.
+- **Opcode -52:** UTF context label, signed-short context ID, signed-byte count of choice records (UTF label, short ID, byte type), selected-index byte and optional mode byte (default 0 when absent).
+- **Opcode -59:** signed-byte record count; each NPC/world record contains two bytes, UTF name, byte type, int value, two signed coordinate bytes, boolean and two trailing bytes. The client shifts coordinate bytes left four bits to obtain pixel coordinates.
+- The decoders retain neutral field names and do not spawn NPCs, open menus, or mutate world state.

@@ -443,3 +443,8 @@ Added Java/JavaScript decoders for world notice action, entity text/binary updat
 ### S2C opcodes -33 and -37: world marker and quest result
 
 Added Java/JavaScript decoders for map-coordinate markers and quest-result variants. Coordinates retain raw signed bytes and the client's 16× pixel conversion. Quest subtype fields are decoded separately; no world/quest UI mutation is applied.
+
+
+### S2C opcodes -50, -52 and -59
+
+Added source-backed decoders for world labels/context choices and NPC spawn batches. Preserves signed widths, optional mode default and 16× coordinate conversion; no NPC or UI state mutation is applied.

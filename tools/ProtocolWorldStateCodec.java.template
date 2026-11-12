@@ -528,4 +528,30 @@ public final class ProtocolWorldStateCodec {
         return new OpcodeMinus37(type,null,null,null,null,null,null,null,null,null,readRemaining(in));
     }
 
+    public record OpcodeMinus50(String label,List<Short> shortFields,List<Byte> byteFields,byte[] trailingBytes) {}
+    public static OpcodeMinus50 decodeS2COpcodeMinus50(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);String label=in.readUTF();List<Short> shorts=new ArrayList<>();
+        for(int i=0;i<6;i++)shorts.add(in.readI16());List<Byte> bytes=List.of(in.readI8(),in.readI8());
+        return new OpcodeMinus50(label,List.copyOf(shorts),bytes,readRemaining(in));
+    }
+    public record Choice52(String label,short id,byte type) {}
+    public record OpcodeMinus52(String contextLabel,short contextId,byte count,List<Choice52> choices,
+                                byte selectedIndex,byte mode,byte[] trailingBytes) {}
+    public static OpcodeMinus52 decodeS2COpcodeMinus52(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);String label=in.readUTF();short id=in.readI16();byte count=in.readI8();
+        List<Choice52> choices=new ArrayList<>();for(int i=0;i<count;i++)choices.add(new Choice52(in.readUTF(),in.readI16(),in.readI8()));
+        byte selected=in.readI8(),mode=in.remaining()>0?in.readI8():(byte)0;
+        return new OpcodeMinus52(label,id,count,List.copyOf(choices),selected,mode,readRemaining(in));
+    }
+    public record NpcSpawn59(byte firstByte,byte secondByte,String name,byte type,int value,byte rawX,byte rawY,
+                             int xPixels,int yPixels,boolean enabled,byte extraA,byte extraB) {}
+    public record OpcodeMinus59(byte count,List<NpcSpawn59> records,byte[] trailingBytes) {}
+    public static OpcodeMinus59 decodeS2COpcodeMinus59(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte count=in.readI8();List<NpcSpawn59> records=new ArrayList<>();
+        for(int i=0;i<count;i++){byte a=in.readI8(),b=in.readI8();String name=in.readUTF();byte type=in.readI8();
+            int value=in.readI32();byte x=in.readI8(),y=in.readI8();boolean enabled=in.readBool();byte extraA=in.readI8(),extraB=in.readI8();
+            records.add(new NpcSpawn59(a,b,name,type,value,x,y,x<<4,y<<4,enabled,extraA,extraB));}
+        return new OpcodeMinus59(count,List.copyOf(records),readRemaining(in));
+    }
+
 }

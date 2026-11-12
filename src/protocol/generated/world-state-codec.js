@@ -573,3 +573,28 @@ export function decodeS2COpcodeMinus37(payload) {
   if (resultType === 2) return { resultType, title: reader.readUTF(), text: reader.readUTF(), trailingBytes: readRemaining(reader) };
   return { resultType, trailingBytes: readRemaining(reader) };
 }
+
+export function decodeS2COpcodeMinus50(payload) {
+  const reader = new PacketReader(payload), label = reader.readUTF();
+  const shortFields = Array.from({ length: 6 }, () => reader.readI16());
+  const byteFields = [reader.readI8(), reader.readI8()];
+  return { label, shortFields, byteFields, trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcodeMinus52(payload) {
+  const reader = new PacketReader(payload), contextLabel = reader.readUTF(), contextId = reader.readI16();
+  const count = reader.readI8(), choices = [];
+  for (let i = 0; i < count; i += 1) choices.push({ label: reader.readUTF(), id: reader.readI16(), type: reader.readI8() });
+  const selectedIndex = reader.readI8(), mode = reader.remaining() > 0 ? reader.readI8() : 0;
+  return { contextLabel, contextId, count, choices, selectedIndex, mode, trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcodeMinus59(payload) {
+  const reader = new PacketReader(payload), count = reader.readI8(), records = [];
+  for (let i = 0; i < count; i += 1) {
+    const firstByte = reader.readI8(), secondByte = reader.readI8(), name = reader.readUTF(), type = reader.readI8();
+    const value = reader.readI32(), rawX = reader.readI8(), rawY = reader.readI8(), enabled = reader.readBool();
+    const extraA = reader.readI8(), extraB = reader.readI8();
+    records.push({ firstByte, secondByte, name, type, value, rawX, rawY, xPixels: rawX << 4,
+      yPixels: rawY << 4, enabled, extraA, extraB });
+  }
+  return { count, records, trailingBytes: readRemaining(reader) };
+}

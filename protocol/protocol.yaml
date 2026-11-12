@@ -3174,6 +3174,44 @@
         "type-1-text",
         "type-2-title-and-text"
       ]
+    },
+    {
+      "name": "WORLD_ENTITY_POSITION_LABEL",
+      "direction": "S2C",
+      "opcode": -50,
+      "evidenceSource": "ka.java:case-50",
+      "evidence": "Reads one UTF label, six signed shorts and two signed bytes, then forwards the ordered values to the active world scene.",
+      "sections": [
+        "label-utf",
+        "six-short-fields",
+        "two-byte-fields"
+      ]
+    },
+    {
+      "name": "WORLD_CONTEXT_CHOICE_LIST",
+      "direction": "S2C",
+      "opcode": -52,
+      "evidenceSource": "ka.java:case-52",
+      "evidence": "Reads UTF context label, short context ID, signed-byte record count, repeated UTF/short/signed-byte choices, a signed-byte selected index and an optional signed-byte mode defaulting to zero when absent.",
+      "sections": [
+        "context-label",
+        "context-id",
+        "choice-records",
+        "selected-index",
+        "optional-mode"
+      ]
+    },
+    {
+      "name": "WORLD_NPC_SPAWN_BATCH",
+      "direction": "S2C",
+      "opcode": -59,
+      "evidenceSource": "ka.java:case-59",
+      "evidence": "Reads a signed-byte record count. Each record has two signed bytes, UTF name, signed byte, int, two coordinate bytes converted to 16× pixel coordinates, boolean and two signed bytes.",
+      "sections": [
+        "spawn-count",
+        "npc-records",
+        "pixel-coordinate-conversion"
+      ]
     }
   ],
   "extensionSchemas": [
