@@ -158,3 +158,11 @@ Generated Java/JavaScript codecs use the corrected command names and cover both 
 - Opcode 86 `EQUIP_ITEM`: the `ca.P` equipment/gear list is rendered in the equipment panel. Its “Sử dụng” action is `acm.a()`, which sends `be.b` (item ID) through `jy.b(int)`; the writer emits one signed short. This confirms the client equip request path, not the server-side result.
 - Opcode -21 `DROP_EQUIPPED_ITEM`: the equipped-slot menu offers “Bỏ ra đất”; after confirmation, `yf.a()` calls `jy.p(slotIndex)`, and the writer emits the slot index as one signed short. This is a drop-to-ground action, not unequip-to-inventory.
 - No unequip-to-bag request has been established from these callsites. Keep that flow open until another source path is found.
+
+
+## C2S — shop purchase request families
+
+- Opcode 85 `SHOP_PURCHASE_ITEM`: tab 20 purchase confirmation callbacks `abv`/`gt` call `jy.c(itemId)`; the writer emits one byte. S2C opcode 85 is a separate direction and its handler displays “Đã mua, món đồ đang ở trong hành trang.”, so it is named `SHOP_PURCHASE_SUCCESS` and remains payload-opaque.
+- Opcode 74 `SHOP_PURCHASE_BATCH`: tab 10 “Gian hàng” accumulates selected item quantities; closing the panel invokes `xg.p()` → `jy.a(Vector)`. The writer emits total quantity as a short, then repeats each item ID as a short for every purchased unit. The request is named but kept opaque until a dedicated variable-list codec is added.
+- Opcode 24 `SHOP_BATCH_ACTION`: `xg.p()` selects `jy.b(Vector)` or `jy.c(Vector)` by tab. The former writes count + records (category byte, template ID short, quantity short, optional byte for category 3); the latter writes count + fixed category 4, item ID short and quantity short. Both layouts share opcode 24; keep opaque until variant-aware encoding is added.
+- These are client request/response paths only. Do not treat local optimistic currency/inventory updates in the UI callbacks as authoritative server results.
