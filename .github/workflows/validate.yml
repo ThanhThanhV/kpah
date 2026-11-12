@@ -523,6 +523,19 @@ jobs:
                   || catalog62Close.collectionIndex() != null || matrix80.entries().get(0).byteValues().get(0) != -1
                   || matrix80.entries().get(0).shortValuesD().get(1) != -300)
                 throw new AssertionError("S2C opcodes 62/80 collection catalog and refinement matrix");
+              ProtocolWorldStateCodec.Opcode73 materials73 = ProtocolWorldStateCodec.decodeS2COpcode73(
+                new PacketWriter().writeI16(2).writeI16(501).writeI16(7).writeI16(12)
+                  .writeI16(502).writeI16(-3).writeI16(0).writeI8(1).toByteArray());
+              ProtocolWorldStateCodec.Opcode73 materials73Empty = ProtocolWorldStateCodec.decodeS2COpcode73(
+                new PacketWriter().writeI16(0).writeI8(0).toByteArray());
+              ProtocolWorldStateCodec.Opcode76 equipment76 = ProtocolWorldStateCodec.decodeS2COpcode76(
+                new PacketWriter().writeI8(2).writeI16(601).writeI8(4).writeI16(1)
+                  .writeI16(602).writeI8(-2).writeI16(300).toByteArray());
+              if (materials73.recordCount() != 2 || materials73.records().get(1).materialCategory() != -3
+                  || materials73.destinationList().equals("N") || materials73Empty.records().size() != 0
+                  || equipment76.records().get(1).equipmentSlot() != -2
+                  || equipment76.records().get(1).value() != 300)
+                throw new AssertionError("S2C opcodes 73/76 material and equipment lists");
               PacketWriter extension3 = new PacketWriter().writeI16(123).writeI8(0).writeBool(true).writeBool(false)
                 .writeI8(1).writeI8(2).writeI8(3).writeI16(4).writeI32(5).writeI16(6).writeI32(7).writeUTF("title").writeBool(true)
                 .writeI16(11).writeI8(12).writeI16(21).writeI8(22).writeI16(23).writeI16(31).writeI16(32).writeI16(33)
