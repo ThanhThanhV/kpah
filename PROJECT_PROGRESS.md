@@ -631,3 +631,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode -5 decodes signed-byte-counted sender/message UTF pairs. Opcodes 37/38/39 decode server dialog, world notice and SMS registration result payloads.
 - Added schema, Java/JS generated codecs, tests for grid dimensions/signedness, UTF payloads and registration result. CI run `43173647371` SUCCESS: Vite build, generated-source checks, JS tests, Java 21 compile/smoke and original-JAR analysis.
 - These are parse-only decoders; no skill progression, chat state, dialogs or SMS actions are executed. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B16 — S2C opcodes -8, -9, -10, -11, -12, -17, -18, -19 and -20 — CI PASS
+
+- Added source-backed decoders for binary resource transfer subtypes (-8), signed-short ID/message lists (-9), panel message (-10), conditional confirmation result (-11), social/guild record with three signed 64-bit fields (-12), announcement list (-17), guild chat (-18), ranking result (-19), and guild currency reward (-20).
+- Type-5 ranking records are typed; other ranking payloads stay opaque for their ranking-specific parser. Resource image bytes remain opaque; no image format is assumed.
+- Added Java/JS codecs and synthetic vectors for nested binary blobs, optional fields, 64-bit values, UTF strings and ranking variants. CI run `43174297049` SUCCESS.
+- Decoders do not trigger prompts, alter guild/chat state, render images or apply currency. Weighted project percentage unchanged; BE remains deferred.

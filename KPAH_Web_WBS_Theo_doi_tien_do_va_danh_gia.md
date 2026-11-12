@@ -790,3 +790,11 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Opcode 64: danh sách record gồm 2 byte + 3 short. Opcode -5: danh sách sender/message. Opcode 37/38/39: dialog, world notice và kết quả đăng ký SMS.
 - CI run `43173647371` PASS: Vite build, generator consistency, JS tests, Java 21 compile/smoke và original-JAR analysis.
 - Chưa áp dụng skill progression/chat/UI side effects; không tăng % tổng dự án do chưa tính lại trọng số WBS.
+
+
+### B16 — S2C opcodes -8, -9, -10, -11, -12, -17, -18, -19 and -20
+
+- **Trạng thái: Một phần (resource/social/ranking result decoders + Java/JS tests + CI PASS).**
+- -8: blob tài nguyên theo subtype, gồm nested groups; -9: list short + message; -10: ID + message; -11: confirmation có nhánh conditional; -12: social/guild record có 3 long; -17: announcement list; -18: guild chat; -19: ranking type 5 có record typed, loại khác giữ opaque; -20: currency reward int.
+- CI run `43174297049` PASS: Vite build, generator consistency, JS tests, Java 21 compile/smoke và original-JAR analysis.
+- Chưa thực thi UI prompt/chat/ranking/economy side effects; không tăng % tổng dự án do chưa tính lại trọng số WBS.
