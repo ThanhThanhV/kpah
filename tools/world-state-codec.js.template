@@ -506,3 +506,22 @@ export function decodeS2COpcodeMinus43(payload) {
   }
   return {imageCount,images,imageErrors,objectCount,objects,trailingBytes:readRemaining(reader)};
 }
+
+export function decodeS2COpcodeMinus38(payload) {
+  const reader=new PacketReader(payload),enabled=reader.readBool(),count=reader.readI8();
+  if(count<0)throw new RangeError("Negative opcode -38 marker count");
+  const records=[];
+  for(let i=0;i<count;i++)records.push({firstShort:reader.readI16(),entityId:reader.readI16(),label:reader.readUTF(),marker:reader.readUTF()});
+  return {enabled,count,records,trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcodeMinus39(payload) {
+  const reader=new PacketReader(payload);
+  return {typeByte:reader.readI8(),entityId:reader.readI16(),counter:reader.readI32(),trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcodeMinus42(payload) {
+  const reader=new PacketReader(payload),contextId=reader.readI16(),remaining=reader.remaining();
+  if(remaining%2!==0)throw new RangeError("Odd opcode -42 byte-pair payload length");
+  const pairs=[];
+  while(reader.remaining()>0)pairs.push([reader.readI8(),reader.readI8()]);
+  return {contextId,pairCount:pairs.length,pairs,trailingBytes:readRemaining(reader)};
+}

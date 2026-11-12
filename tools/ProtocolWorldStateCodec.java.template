@@ -453,4 +453,25 @@ public final class ProtocolWorldStateCodec {
         return new OpcodeMinus43(count,List.copyOf(images),List.copyOf(errors),objectCount,List.copyOf(objects),readRemaining(in));
     }
 
+    public record MarkerRecord38(short firstShort,short entityId,String label,String marker) {}
+    public record OpcodeMinus38(boolean enabled,byte count,List<MarkerRecord38> records,byte[] trailingBytes) {}
+    public static OpcodeMinus38 decodeS2COpcodeMinus38(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);boolean enabled=in.readBool();byte count=in.readI8();
+        if(count<0)throw new IOException("Negative opcode -38 marker count");
+        List<MarkerRecord38> records=new ArrayList<>();
+        for(int i=0;i<count;i++)records.add(new MarkerRecord38(in.readI16(),in.readI16(),in.readUTF(),in.readUTF()));
+        return new OpcodeMinus38(enabled,count,List.copyOf(records),readRemaining(in));
+    }
+    public record OpcodeMinus39(byte typeByte,short entityId,int counter,byte[] trailingBytes) {}
+    public static OpcodeMinus39 decodeS2COpcodeMinus39(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new OpcodeMinus39(in.readI8(),in.readI16(),in.readI32(),readRemaining(in));
+    }
+    public record BytePair42(byte first,byte second) {}
+    public record OpcodeMinus42(short contextId,List<BytePair42> pairs,byte[] trailingBytes) {}
+    public static OpcodeMinus42 decodeS2COpcodeMinus42(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);short id=in.readI16();if(in.remaining()%2!=0)throw new IOException("Odd opcode -42 byte-pair payload length");
+        List<BytePair42> pairs=new ArrayList<>();while(in.remaining()>0)pairs.add(new BytePair42(in.readI8(),in.readI8()));
+        return new OpcodeMinus42(id,List.copyOf(pairs),readRemaining(in));
+    }
+
 }

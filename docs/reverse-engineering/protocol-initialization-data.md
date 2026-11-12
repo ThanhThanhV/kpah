@@ -441,3 +441,10 @@ This packet populates `ku.ab/aa`, `mj.aM/aL` and `ku.Y/Z`. The decoder retains t
 - **-27:** target selector and image subtype. When subtype is not -1, two signed-short-length binary images and two metadata bytes follow; the original client composes them for character creation/portrait contexts. The decoder keeps both images raw.
 - **-43:** signed-byte image count; positive counts carry signed-int-length image blobs, each with its own error boundary. A signed-byte object count follows, with image index, signed-byte coordinates, and three bytes. Coordinates are exposed both raw and shifted left four bits, matching the original client.
 - Image formats and rendering are not inferred; this is a wire/data decoder only.
+
+
+## S2C opcodes -38, -39 and -42 — world entity marker/counter updates
+
+- **-38:** boolean global flag, signed-byte record count, then two shorts and two UTF strings per world-entity marker record.
+- **-39:** signed byte, signed-short entity ID and signed int counter.
+- **-42:** signed-short context ID followed by repeated signed-byte pairs. The original client computes the pair count from remaining bytes divided by two; odd trailing lengths are invalid and are rejected by the decoder.

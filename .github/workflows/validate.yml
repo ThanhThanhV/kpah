@@ -426,6 +426,17 @@ jobs:
                 ||sprites43.objects().get(0).xPixels()!=32||sprites43.objects().get(0).yPixels()!=-48
                 ||spritesEmpty.objects()!=null)
                 throw new AssertionError("S2C opcode -27 portrait and -43 sprite bundle");
+
+              ProtocolWorldStateCodec.OpcodeMinus38 markers38=ProtocolWorldStateCodec.decodeS2COpcodeMinus38(
+                new PacketWriter().writeBool(true).writeI8(1).writeI16(10).writeI16(20).writeUTF("npc").writeUTF("quest").toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus39 counter39=ProtocolWorldStateCodec.decodeS2COpcodeMinus39(
+                new PacketWriter().writeI8(-2).writeI16(321).writeI32(98765).toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus42 pairs42=ProtocolWorldStateCodec.decodeS2COpcodeMinus42(
+                new PacketWriter().writeI16(77).writeI8(-1).writeI8(2).writeI8(3).writeI8(-4).toByteArray());
+              if(!markers38.enabled()||markers38.records().get(0).entityId()!=20
+                ||counter39.typeByte()!=-2||counter39.entityId()!=321||counter39.counter()!=98765
+                ||pairs42.contextId()!=77||pairs42.pairs().get(1).second()!=-4)
+                throw new AssertionError("S2C opcodes -38/-39/-42 world entity events");
               PacketWriter catalog25Writer = new PacketWriter().writeU8(1).writeU8(7).writeUTF("lookup").writeI8(-1).writeI8(2)
                 .writeI8(1).writeI16(100).writeI16(200);
               for (int i = 0; i < 5; i++) catalog25Writer.writeI8(i - 2);

@@ -428,3 +428,8 @@ Added Java/JavaScript decoders for all three nested table families, preserving s
 ### S2C opcodes -27 and -43
 
 Added Java/JavaScript decoders for layered portrait image updates and world sprite bundles. Raw image blobs, per-image errors, sprite image indexes, raw coordinates and source-compatible 16× coordinate scaling are retained.
+
+
+### S2C opcodes -38, -39 and -42
+
+Added source-backed world entity marker, counter and byte-pair map decoders, with signed field widths and odd-length validation. Java/JavaScript synthetic vectors cover each payload.

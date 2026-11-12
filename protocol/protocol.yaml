@@ -3043,6 +3043,44 @@
         "signed-object-count",
         "sprite-object-descriptors"
       ]
+    },
+    {
+      "name": "WORLD_ENTITY_MARKER_LIST",
+      "direction": "S2C",
+      "opcode": -38,
+      "evidenceSource": "ka.java:case-38",
+      "evidence": "Boolean flag followed by signed-byte count and records of two signed shorts and two UTF strings. The original consumer associates each record with a world entity and updates its marker/label state.",
+      "sections": [
+        "global-flag",
+        "signed-byte-count",
+        "first-short",
+        "entity-id-short",
+        "label-utf",
+        "marker-utf"
+      ]
+    },
+    {
+      "name": "WORLD_ENTITY_COUNTER_UPDATE",
+      "direction": "S2C",
+      "opcode": -39,
+      "evidenceSource": "ka.java:case-39",
+      "evidence": "Reads one signed byte, one signed short and one signed int, then forwards them to the world-state consumer.",
+      "sections": [
+        "type-byte",
+        "entity-id-short",
+        "counter-int"
+      ]
+    },
+    {
+      "name": "WORLD_ENTITY_BYTE_PAIR_MAP",
+      "direction": "S2C",
+      "opcode": -42,
+      "evidenceSource": "ka.java:case-42",
+      "evidence": "Reads a signed short followed by all remaining payload bytes as repeated two-byte pairs. The original client derives pair count from available()/2; an odd trailing byte causes the original array/index logic to fail.",
+      "sections": [
+        "entity-or-context-short",
+        "repeated-byte-pairs"
+      ]
     }
   ],
   "extensionSchemas": [
