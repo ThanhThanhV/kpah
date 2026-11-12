@@ -920,4 +920,25 @@ public final class ProtocolWorldStateCodec {
         return new Opcode80(count,List.copyOf(entries),readRemaining(in));
     }
 
+
+    public record MaterialRecord73(short itemId,short materialCategory,short quantity) {}
+    public record Opcode73(short recordCount,List<MaterialRecord73> records,byte destinationSelector,String destinationList,byte[] trailingBytes) {}
+    public static Opcode73 decodeS2COpcode73(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);short count=in.readI16();
+        if(count<0)throw new IOException("Negative opcode 73 record count");
+        List<MaterialRecord73> records=new ArrayList<>();
+        for(int i=0;i<count;i++)records.add(new MaterialRecord73(in.readI16(),in.readI16(),in.readI16()));
+        byte selector=in.readI8();
+        return new Opcode73(count,List.copyOf(records),selector,selector==0?"N":"O",readRemaining(in));
+    }
+    public record EquipmentRecord76(short itemId,byte equipmentSlot,short value) {}
+    public record Opcode76(byte recordCount,List<EquipmentRecord76> records,byte[] trailingBytes) {}
+    public static Opcode76 decodeS2COpcode76(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte count=in.readI8();
+        if(count<0)throw new IOException("Negative opcode 76 record count");
+        List<EquipmentRecord76> records=new ArrayList<>();
+        for(int i=0;i<count;i++)records.add(new EquipmentRecord76(in.readI16(),in.readI8(),in.readI16()));
+        return new Opcode76(count,List.copyOf(records),readRemaining(in));
+    }
+
 }
