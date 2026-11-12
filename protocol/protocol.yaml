@@ -672,11 +672,11 @@
       "evidence": "dispatcher-only"
     },
     {
-      "name": "OP_24",
+      "name": "SHOP_BATCH_ACTION",
       "opcode": 24,
       "direction": "C2S",
       "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "evidence": "verified-client-writer: jy.java:816-860; xg.p() submits Vector via tab-specific purchase/action branches; two record layouts remain opaque"
     },
     {
       "name": "OP_27",
@@ -839,11 +839,11 @@
       "evidence": "dispatcher-only"
     },
     {
-      "name": "OP_74",
+      "name": "SHOP_PURCHASE_BATCH",
       "opcode": 74,
       "direction": "C2S",
       "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "evidence": "verified-client-writer: jy.java:756-779; xg.p() tab 10 purchase list sends total quantity short then repeated item IDs short"
     },
     {
       "name": "OP_75",
@@ -904,11 +904,16 @@
       "evidence": "dispatcher-only"
     },
     {
-      "name": "OP_85",
+      "name": "SHOP_PURCHASE_ITEM",
       "opcode": 85,
       "direction": "C2S",
-      "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "payload": [
+        {
+          "name": "itemId",
+          "type": "i8"
+        }
+      ],
+      "evidence": "verified-client-writer: jy.java:207-214; xg tab 20 callers abv/gt send itemId byte after purchase confirmation"
     },
     {
       "name": "EQUIP_ITEM",
@@ -1953,11 +1958,11 @@
       "evidence": "dispatcher-only"
     },
     {
-      "name": "OP_85",
+      "name": "SHOP_PURCHASE_SUCCESS",
       "opcode": 85,
       "direction": "S2C",
       "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "evidence": "verified-client-handler: ka.java:case-85 displays purchase-success notice"
     },
     {
       "name": "OP_86",
