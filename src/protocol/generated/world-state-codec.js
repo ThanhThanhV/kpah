@@ -419,3 +419,36 @@ export function decodeS2COpcodeMinus19(payload) {
 export function decodeS2COpcodeMinus20(payload) {
   const reader=new PacketReader(payload);return {amount:reader.readI32(),trailingBytes:readRemaining(reader)};
 }
+
+function readPetAppearance22(reader) {
+  const a=new Uint8Array(10),c=new Uint8Array(3),b=new Uint8Array(15);
+  for(let i=0;i<a.length;i++)a[i]=reader.readI8();
+  for(let i=0;i<c.length;i++)c[i]=reader.readI8();
+  for(let i=0;i<b.length;i++)b[i]=reader.readI8();
+  return {a,c,b};
+}
+function readPetItem22(reader,full) {
+  const itemType=reader.readI8();
+  let itemShortI,itemId,wireByteA,wireByteB,itemV=null,itemU=null;
+  if(full){itemId=reader.readI16();wireByteA=reader.readI8();wireByteB=reader.readI8();itemShortI=reader.readI16();}
+  else {itemShortI=reader.readI16();itemId=reader.readI16();wireByteA=reader.readI8();wireByteB=reader.readI8();itemV=reader.readI16();itemU=reader.readI16();}
+  const itemK=reader.readI8(),attributesE=Array.from({length:5},()=>reader.readI16());
+  const n=reader.readI8(),o=reader.readI8(),p=reader.readI8(),q=reader.readI8(),cByte=reader.readI8();
+  const description=reader.readUTF(),appearance=readPetAppearance22(reader);
+  return {itemType,itemId,wireByteA,wireByteB,itemShortI,itemV,itemU,itemK,attributesE,n,o,p,q,cByte,description,...appearance};
+}
+export function decodeS2COpcodeMinus22(payload) {
+  const reader=new PacketReader(payload),subtype=reader.readI8();
+  if(subtype===0){
+    const petName=reader.readUTF(),petTypeByte=reader.readI8(),petStateByte=reader.readI8(),itemCount=reader.readI8(),items=[];
+    for(let i=0;i<itemCount;i++)items.push(readPetItem22(reader,true));
+    const petShortValue=reader.readI16(),petExtraByte=reader.readI8(),petExtraShorts=Array.from({length:5},()=>reader.readI16());
+    const petOptionByte=reader.readI8(),petOptionText=petOptionByte!==-1?reader.readUTF():null;
+    return {variant:"pet-context",subtype,petName,petTypeByte,petStateByte,itemCount,items,petShortValue,petExtraByte,petExtraShorts,petOptionByte,petOptionText,imageFrameCount:null,imageBytes:null,trailingBytes:readRemaining(reader)};
+  }
+  const itemCount=reader.readI8();
+  if(itemCount<0)return {variant:"no-information",subtype,itemCount,items:[],imageFrameCount:null,imageBytes:null,trailingBytes:readRemaining(reader)};
+  const items=[];for(let i=0;i<itemCount;i++)items.push(readPetItem22(reader,false));
+  const imageFrameCount=reader.readI8(),imageBytes=readRemaining(reader);
+  return {variant:"pet-equipment-image",subtype,itemCount,items,imageFrameCount,imageBytes,trailingBytes:new Uint8Array(0)};
+}

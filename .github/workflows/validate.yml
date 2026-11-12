@@ -375,6 +375,28 @@ jobs:
                 ||!guild18.message().equals("guild chat")||ranking19.records().get(0).longValue()!=4L
                 ||otherRanking19.opaqueRankingPayload().length!=2||reward20.amount()!=12345)
                 throw new AssertionError("S2C opcode -8..-20 resource/social decoders");
+
+              PacketWriter petContextWriter=new PacketWriter().writeI8(0).writeUTF("Pet A").writeI8(2).writeI8(3).writeI8(1)
+                .writeI8(2).writeI16(101).writeI8(3).writeI8(4).writeI16(5).writeI8(6);
+              for(int i=0;i<5;i++)petContextWriter.writeI16(10+i);for(int i=0;i<5;i++)petContextWriter.writeI8(7+i);
+              petContextWriter.writeUTF("Pet gear");for(int i=0;i<10;i++)petContextWriter.writeI8(20+i);
+              for(int i=0;i<3;i++)petContextWriter.writeI8(30+i);for(int i=0;i<15;i++)petContextWriter.writeI8(40+i);
+              petContextWriter.writeI16(200).writeI8(-2);for(int i=0;i<5;i++)petContextWriter.writeI16(60+i);petContextWriter.writeI8(-1);
+              ProtocolWorldStateCodec.OpcodeMinus22 petContext=ProtocolWorldStateCodec.decodeS2COpcodeMinus22(petContextWriter.toByteArray());
+              PacketWriter petImageWriter=new PacketWriter().writeI8(1).writeI8(1)
+                .writeI8(3).writeI16(501).writeI16(502).writeI8(-4).writeI8(5).writeI16(6).writeI16(7).writeI8(8);
+              for(int i=0;i<5;i++)petImageWriter.writeI16(20+i);for(int i=0;i<5;i++)petImageWriter.writeI8(9+i);
+              petImageWriter.writeUTF("Compact gear");for(int i=0;i<10;i++)petImageWriter.writeI8(50+i);
+              for(int i=0;i<3;i++)petImageWriter.writeI8(60+i);for(int i=0;i<15;i++)petImageWriter.writeI8(70+i);
+              petImageWriter.writeI8(3).writeU8(90).writeU8(91).writeU8(92);
+              ProtocolWorldStateCodec.OpcodeMinus22 petImage=ProtocolWorldStateCodec.decodeS2COpcodeMinus22(petImageWriter.toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus22 petUnavailable=ProtocolWorldStateCodec.decodeS2COpcodeMinus22(
+                new PacketWriter().writeI8(1).writeI8(-1).toByteArray());
+              if(!petContext.variant().equals("pet-context")||petContext.items().get(0).appearanceA().length!=10
+                ||petContext.items().get(0).appearanceC().length!=3||petContext.items().get(0).appearanceB().length!=15
+                ||petContext.petExtraShorts().get(4)!=64||petImage.items().get(0).itemV()!=6
+                ||petImage.imageFrameCount()!=3||petImage.imageBytes().length!=3||!petUnavailable.variant().equals("no-information"))
+                throw new AssertionError("S2C opcode -22 pet equipment context");
               PacketWriter catalog25Writer = new PacketWriter().writeU8(1).writeU8(7).writeUTF("lookup").writeI8(-1).writeI8(2)
                 .writeI8(1).writeI16(100).writeI16(200);
               for (int i = 0; i < 5; i++) catalog25Writer.writeI8(i - 2);

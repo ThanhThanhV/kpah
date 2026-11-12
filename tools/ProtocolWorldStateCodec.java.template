@@ -373,4 +373,36 @@ public final class ProtocolWorldStateCodec {
         PacketReader in=new PacketReader(payload);return new OpcodeMinus20(in.readI32(),readRemaining(in));
     }
 
+    private static byte[][] readPetAppearance22(PacketReader in) throws IOException {
+        byte[] a=new byte[10],c=new byte[3],b=new byte[15];
+        for(int i=0;i<a.length;i++)a[i]=in.readI8();for(int i=0;i<c.length;i++)c[i]=in.readI8();for(int i=0;i<b.length;i++)b[i]=in.readI8();
+        return new byte[][]{a,c,b};
+    }
+    public record PetItem22(byte itemType,short itemId,byte wireByteA,byte wireByteB,short itemShortI,
+        Short itemV,Short itemU,byte itemK,List<Short> attributesE,byte n,byte o,byte p,byte q,byte cByte,
+        String description,byte[] appearanceA,byte[] appearanceC,byte[] appearanceB) {}
+    private static PetItem22 readPetItem22(PacketReader in,boolean full) throws IOException {
+        byte type=in.readI8();short itemI,itemId;byte a,b;Short v=null,u=null;
+        if(full){itemId=in.readI16();a=in.readI8();b=in.readI8();itemI=in.readI16();}
+        else{itemI=in.readI16();itemId=in.readI16();a=in.readI8();b=in.readI8();v=in.readI16();u=in.readI16();}
+        byte k=in.readI8();List<Short> attrs=new ArrayList<>();for(int i=0;i<5;i++)attrs.add(in.readI16());
+        byte n=in.readI8(),o=in.readI8(),p=in.readI8(),q=in.readI8(),c=in.readI8();String desc=in.readUTF();byte[][] appearance=readPetAppearance22(in);
+        return new PetItem22(type,itemId,a,b,itemI,v,u,k,List.copyOf(attrs),n,o,p,q,c,desc,appearance[0],appearance[1],appearance[2]);
+    }
+    public record OpcodeMinus22(String variant,byte subtype,String petName,byte petTypeByte,byte petStateByte,
+        byte itemCount,List<PetItem22> items,Short petShortValue,Byte petExtraByte,List<Short> petExtraShorts,
+        Byte petOptionByte,String petOptionText,Byte imageFrameCount,byte[] imageBytes,byte[] trailingBytes) {}
+    public static OpcodeMinus22 decodeS2COpcodeMinus22(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte subtype=in.readI8();
+        if(subtype==0){String name=in.readUTF();byte type=in.readI8(),state=in.readI8(),count=in.readI8();List<PetItem22> items=new ArrayList<>();
+            for(int i=0;i<count;i++)items.add(readPetItem22(in,true));
+            short petShort=in.readI16();byte extra=in.readI8();List<Short> shorts=new ArrayList<>();for(int i=0;i<5;i++)shorts.add(in.readI16());
+            byte option=in.readI8();String optionText=option!=-1?in.readUTF():null;
+            return new OpcodeMinus22("pet-context",subtype,name,type,state,count,List.copyOf(items),petShort,extra,List.copyOf(shorts),option,optionText,null,null,readRemaining(in));}
+        byte count=in.readI8();if(count<0)return new OpcodeMinus22("no-information",subtype,null,(byte)0,(byte)0,count,List.of(),null,null,List.of(),null,null,null,null,readRemaining(in));
+        List<PetItem22> items=new ArrayList<>();for(int i=0;i<count;i++)items.add(readPetItem22(in,false));
+        byte frames=in.readI8();byte[] image=readRemaining(in);
+        return new OpcodeMinus22("pet-equipment-image",subtype,null,(byte)0,(byte)0,count,List.copyOf(items),null,null,List.of(),null,null,frames,image,new byte[0]);
+    }
+
 }

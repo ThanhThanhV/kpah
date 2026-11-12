@@ -2988,6 +2988,21 @@
         "source-ordered-fields",
         "conditional-or-counted-payload"
       ]
+    },
+    {
+      "name": "PET_EQUIPMENT_CONTEXT",
+      "direction": "S2C",
+      "opcode": -22,
+      "evidenceSource": "ka.java:case-22",
+      "evidence": "Subtype 0 carries pet name/type/state, a signed-byte-counted full bo item list, five pet short values and an optional UTF field. Nonzero subtype carries a signed-byte-counted compact bo list followed by image frame count and the remaining image bytes; negative item count returns the original no-information branch. bo appearance arrays have source-defined lengths 10, 3 and 15.",
+      "sections": [
+        "subtype",
+        "pet-header",
+        "full-or-compact-item-records",
+        "five-pet-short-values",
+        "optional-pet-text",
+        "image-frame-count-and-opaque-image-bytes"
+      ]
     }
   ],
   "extensionSchemas": [

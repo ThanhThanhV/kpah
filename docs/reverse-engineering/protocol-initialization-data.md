@@ -413,3 +413,13 @@ The packet fills the original `ic` static tables in a fixed order: 15×11 signed
 - **-20:** signed int guild currency reward.
 
 These are parsing boundaries only. UI prompts, guild/chat state changes, ranking display and resource rendering remain outside the decoder.
+
+
+## S2C opcode -22 — pet equipment context
+
+Two source-backed variants are decoded:
+
+- **Subtype 0:** pet name, two header bytes, signed-byte item count, full item records, pet short value, one byte, five shorts and an optional UTF field when the option byte is not -1.
+- **Nonzero subtype:** signed-byte item count. A negative count is the original "no pet information" branch. Otherwise it carries compact item records, image frame count and the remaining raw image bytes.
+
+Both item record layouts include fixed appearance arrays with source-defined lengths 10, 3 and 15; compact records additionally carry two shorts. The decoder keeps the raw image bytes opaque and does not instantiate the original `bo` or `z` models.

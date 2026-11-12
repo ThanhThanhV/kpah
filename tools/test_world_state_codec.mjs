@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
-import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode12, decodeS2COpcode17, decodeS2COpcode7, decodeS2COpcode18, decodeS2COpcode19, decodeS2COpcode20, decodeS2COpcode21, decodeS2COpcode27, decodeS2COpcode28, decodeS2COpcode30, decodeS2COpcode32, decodeS2COpcode33, decodeS2COpcode2, decodeS2COpcode22, decodeS2COpcode23, decodeS2COpcode25, decodeS2COpcode26, decodeS2COpcode35, decodeS2COpcode64, decodeS2COpcodeMinus5, decodeS2COpcode37, decodeS2COpcode38, decodeS2COpcode39, decodeS2COpcodeMinus8, decodeS2COpcodeMinus9, decodeS2COpcodeMinus10, decodeS2COpcodeMinus11, decodeS2COpcodeMinus12, decodeS2COpcodeMinus17, decodeS2COpcodeMinus18, decodeS2COpcodeMinus19, decodeS2COpcodeMinus20, decodeS2COpcode61, decodeS2COpcode78 } from "../src/protocol/generated/world-state-codec.js";
+import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode12, decodeS2COpcode17, decodeS2COpcode7, decodeS2COpcode18, decodeS2COpcode19, decodeS2COpcode20, decodeS2COpcode21, decodeS2COpcode27, decodeS2COpcode28, decodeS2COpcode30, decodeS2COpcode32, decodeS2COpcode33, decodeS2COpcode2, decodeS2COpcode22, decodeS2COpcode23, decodeS2COpcode25, decodeS2COpcode26, decodeS2COpcode35, decodeS2COpcode64, decodeS2COpcodeMinus5, decodeS2COpcode37, decodeS2COpcode38, decodeS2COpcode39, decodeS2COpcodeMinus8, decodeS2COpcodeMinus9, decodeS2COpcodeMinus10, decodeS2COpcodeMinus11, decodeS2COpcodeMinus12, decodeS2COpcodeMinus17, decodeS2COpcodeMinus18, decodeS2COpcodeMinus19, decodeS2COpcodeMinus20, decodeS2COpcodeMinus22, decodeS2COpcode61, decodeS2COpcode78 } from "../src/protocol/generated/world-state-codec.js";
 const spawn=new PacketWriter().writeI8(1).writeU8(7).writeI16(123).writeI16(456).writeI16(789).writeI8(2)
  .writeI32(-99).writeI8(4).writeI8(5).writeBool(false)
  .writeI8(0).writeU8(8).writeI16(124).writeI16(500).writeI16(600).writeI8(1).writeI32(77).writeI8(6).writeBool(true).toUint8Array();
@@ -181,3 +181,22 @@ assert.equal(ranking19.records[0].longValue,4n);assert.equal(ranking19.opaqueRan
 const otherRanking19=decodeS2COpcodeMinus19(new PacketWriter().writeI8(4).writeUTF("Top").writeU8(1).writeU8(2).toUint8Array());
 assert.deepEqual([...otherRanking19.opaqueRankingPayload],[1,2]);
 assert.equal(decodeS2COpcodeMinus20(new PacketWriter().writeI32(12345).toUint8Array()).amount,12345);
+
+const petContextWriter=new PacketWriter().writeI8(0).writeUTF("Pet A").writeI8(2).writeI8(3).writeI8(1);
+petContextWriter.writeI8(2).writeI16(101).writeI8(3).writeI8(4).writeI16(5).writeI8(6);
+for(let i=0;i<5;i++)petContextWriter.writeI16(10+i);for(let i=0;i<5;i++)petContextWriter.writeI8(7+i);
+petContextWriter.writeUTF("Pet gear");for(let i=0;i<10;i++)petContextWriter.writeI8(20+i);for(let i=0;i<3;i++)petContextWriter.writeI8(30+i);for(let i=0;i<15;i++)petContextWriter.writeI8(40+i);
+petContextWriter.writeI16(200).writeI8(-2);for(let i=0;i<5;i++)petContextWriter.writeI16(60+i);petContextWriter.writeI8(-1);
+const petContext=decodeS2COpcodeMinus22(petContextWriter.toUint8Array());
+assert.equal(petContext.variant,"pet-context");assert.equal(petContext.petName,"Pet A");assert.equal(petContext.items[0].itemId,101);
+assert.equal(petContext.items[0].appearanceA.length,10);assert.equal(petContext.items[0].appearanceC.length,3);assert.equal(petContext.items[0].appearanceB.length,15);
+assert.equal(petContext.petExtraShorts[4],64);
+const petImageWriter=new PacketWriter().writeI8(1).writeI8(1);
+petImageWriter.writeI8(3).writeI16(501).writeI16(502).writeI8(-4).writeI8(5).writeI16(6).writeI16(7).writeI8(8);
+for(let i=0;i<5;i++)petImageWriter.writeI16(20+i);for(let i=0;i<5;i++)petImageWriter.writeI8(9+i);
+petImageWriter.writeUTF("Compact gear");for(let i=0;i<10;i++)petImageWriter.writeI8(50+i);for(let i=0;i<3;i++)petImageWriter.writeI8(60+i);for(let i=0;i<15;i++)petImageWriter.writeI8(70+i);
+petImageWriter.writeI8(3).writeU8(90).writeU8(91).writeU8(92);
+const petImage=decodeS2COpcodeMinus22(petImageWriter.toUint8Array());
+assert.equal(petImage.variant,"pet-equipment-image");assert.equal(petImage.items[0].itemV,6);assert.equal(petImage.imageFrameCount,3);assert.deepEqual([...petImage.imageBytes],[90,91,92]);
+const petUnavailable=decodeS2COpcodeMinus22(new PacketWriter().writeI8(1).writeI8(-1).toUint8Array());
+assert.equal(petUnavailable.variant,"no-information");
