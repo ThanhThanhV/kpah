@@ -84,11 +84,11 @@
       "evidence": "dispatcher-only"
     },
     {
-      "name": "OP_NEG_68",
+      "name": "REFINEMENT_ACTION",
       "opcode": -68,
       "direction": "C2S",
       "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "evidence": "verified-client-writer: jy.java:1404; tx.java modes 1/2/3/5; payload opaque pending full mode trace"
     },
     {
       "name": "OPEN_ARTIFACT_PANEL",
@@ -294,7 +294,7 @@
       "evidence": "dispatcher-only"
     },
     {
-      "name": "REFINE_ITEM",
+      "name": "EQUIPMENT_UPGRADE_ACTION",
       "opcode": -25,
       "direction": "C2S",
       "payload": [
@@ -307,7 +307,7 @@
           "type": "u8"
         }
       ],
-      "evidence": "verified-client-writer"
+      "evidence": "verified-client-writer: jy.java:23-31; xg.java:3122; xo.java:13 (action 10); xp.java:13 (action 11)"
     },
     {
       "name": "OP_NEG_24",
