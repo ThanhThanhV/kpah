@@ -560,6 +560,20 @@ jobs:
               if (counter82Update.counterByte() != -7 || counter82Guarded.counterByte() != null
                   || counter82Guarded.unconsumedBytes().length != 2)
                 throw new AssertionError("S2C opcode 82 state-dependent counter guard");
+              java.util.Map<String,Object> useItemValues = new java.util.LinkedHashMap<>();
+              useItemValues.put("itemId", 0x12345678);
+              byte[] useItemEncoded = ProtocolPacketCodec.encode("C2S_USE_ITEM", useItemValues);
+              java.util.Map<String,Object> useItemDecoded = ProtocolPacketCodec.decode("C2S_USE_ITEM", useItemEncoded);
+              java.util.Map<String,Object> refineItemValues = new java.util.LinkedHashMap<>();
+              refineItemValues.put("action", (byte)10);
+              refineItemValues.put("itemId", (byte)17);
+              byte[] refineItemEncoded = ProtocolPacketCodec.encode("C2S_REFINE_ITEM", refineItemValues);
+              java.util.Map<String,Object> refineItemDecoded = ProtocolPacketCodec.decode("C2S_REFINE_ITEM", refineItemEncoded);
+              if (!java.util.Arrays.equals(useItemEncoded, new byte[]{0x12,0x34,0x56,0x78})
+                  || !useItemDecoded.get("itemId").equals(0x12345678)
+                  || !refineItemDecoded.get("action").equals((byte)10)
+                  || !refineItemDecoded.get("itemId").equals((byte)17))
+                throw new AssertionError("C2S use-item/refinement command payloads");
               java.util.Map<String,Object> command62Values = new java.util.LinkedHashMap<>();
               command62Values.put("fieldShort", (short)-123);
               command62Values.put("fieldIntA", 123456);
