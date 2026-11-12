@@ -948,10 +948,11 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 
 ### B7 — S2C opcodes 73 and 76: material / equipment list decoders
 
-- **Trạng thái: Một phần (source-backed Java/JavaScript decoders + schema + synthetic tests + CI chờ chạy).**
+- **Trạng thái: Một phần (source-backed Java/JavaScript decoders + schema + synthetic tests + CI PASS).**
 - Opcode 73: signed-short count; mỗi record gồm item ID, material/category, quantity (3 short); selector cuối packet chọn `ca.N` hoặc `ca.O`.
 - Opcode 76: signed-byte count; mỗi record gồm item ID (short), equipment slot/category (byte), value/count (short); consumer thay `ca.P`.
 - Đã cập nhật `protocol/protocol.yaml`, generator expectation, Java/JavaScript templates, JS test vectors và tài liệu `protocol-inventory-trade.md`.
+- CI run `43188123419` PASS cho material/equipment decoder; run `43188530604` PASS cho combined world-state validation.
 - Decoder chỉ parse payload, không tự mutation inventory/equipment hoặc refresh UI. Không đánh dấu B7 hoàn thành vì purchase/use/equip/unequip/upgrade/warehouse và transaction semantics còn mở.
 
 
@@ -1008,7 +1009,7 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 
 ### B7 — C2S opcode 94 market-panel modes
 
-- **Trạng thái: Một phần (two-mode source-backed command codec + tests; CI pending).**
+- **Trạng thái: Một phần (two-mode source-backed command codec + tests; CI PASS, xem mục validation bên dưới).**
 - Mode 0: hai signed byte; mode 1: hai signed byte và một signed short, theo hai writer branch trong jy.java.
 - Không gán nghĩa nghiệp vụ cho các positional args khi chưa truy đủ callsite/handler.
 
@@ -1024,5 +1025,13 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 
 - **Trạng thái: Một phần (typed schema đã có; tăng cường JS vectors + Java 21 smoke assertions).**
 - Opcode 48 `USE_ITEM`: signed 32-bit item ID; test thêm positive multi-byte value, negative value và missing-field validation.
+- Opcode -25 `REFINE_ITEM`: action byte + item ID byte; JS round-trip hiện hữu được bổ sung Java smoke round-trip.
+- Chỉ xác minh payload serialization; chưa suy diễn tác dụng item, điều kiện hợp lệ, tiêu hao nguyên liệu/tiền hoặc kết quả luyện đồ phía server.
+
+
+### B7 — C2S opcodes 48 and -25: use-item / refine-item request codecs
+
+- **Trạng thái: Một phần (typed schema đã có; bổ sung JS vectors + Java 21 smoke assertions; CI chờ kết quả cho commit mới).**
+- Opcode 48 `USE_ITEM`: signed 32-bit item ID; test positive multi-byte value, negative value và missing-field validation.
 - Opcode -25 `REFINE_ITEM`: action byte + item ID byte; JS round-trip hiện hữu được bổ sung Java smoke round-trip.
 - Chỉ xác minh payload serialization; chưa suy diễn tác dụng item, điều kiện hợp lệ, tiêu hao nguyên liệu/tiền hoặc kết quả luyện đồ phía server.
