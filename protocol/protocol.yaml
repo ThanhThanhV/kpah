@@ -2800,7 +2800,7 @@
       "name": "WORLD_RESOURCE_BUNDLE",
       "direction": "S2C",
       "opcode": 26,
-      "evidenceSource": "ka.java:case26; ku.java; z.java; hz.java; d.java",
+      "evidenceSource": "ka.java:case26",
       "evidence": "Reads a template count, one length-prefixed primary blob, then independently caught groups of length-prefixed effect blobs, indexed image blobs, indexed graphics blobs, paired 4-byte arrays and three pairs of byte arrays. Failed optional groups install the original client's documented fallback arrays; the primary blob is outside those catches.",
       "sections": [
         "template-count",
