@@ -932,3 +932,15 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Opcode 95: hai short + một byte; consumer trong `mj.java` đối chiếu inventory, type 0 tìm/xóa item `bo`, các type còn lại tìm/xóa item `de`; có nhánh cảnh báo item đã ở trong inventory. Decoder không thực hiện mutation.
 - CI run `43186990152` PASS: Vite build, generated-code consistency, JS protocol tests, Java 21 compile/smoke và original-JAR analysis.
 - Không tăng % tổng dự án khi chưa tính lại trọng số toàn WBS; BE vẫn chưa bắt đầu.
+
+
+### B5 — S2C opcodes 65–71 and -34: entity state / trade / storage / refinement
+
+- **Trạng thái: Một phần (wire decoders + consumer trace + synthetic tests + CI PASS).**
+- Opcode 65: cập nhật cờ trạng thái entity.
+- Opcode 66: các mode giao dịch: request, busy, nhánh có player ID, mode 2 có phần payload opaque và các callback không payload.
+- Opcode 67: cập nhật trade flag và short state cho nhân vật/entity.
+- Opcode 68/69: chuyển item theo ID giữa inventory và storage.
+- Opcode 71/-34: payload mở hai nhánh context luyện đồ; giữ nguyên optional byte default 0.
+- CI run `43187383635` PASS: Vite build, generated consistency, JS protocol suites, Java 21 compile/smoke và original-JAR analysis.
+- Decoder chưa thực thi side effect hoặc transaction authoritative; không tăng % tổng dự án khi chưa tái tính trọng số WBS. BE vẫn deferred.

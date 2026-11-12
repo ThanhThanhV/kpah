@@ -602,3 +602,8 @@ Follow-up inspection of `mj.java` confirms the consumer behavior without changin
 - **-34:** one short and optional byte (default 0); forwarded to the alternate refinement context handler.
 
 The generated codecs only parse wire values. They do not mutate inventory, open trade dialogs or execute refinement operations.
+
+
+### Consumer trace details for opcodes 65–71 and -34
+
+The opcode 65 consumer stores the supplied state byte only when the selector equals 1; otherwise it clears the state. Opcode 67 locates the player by ID, updates its trade flag from the selector and stores the short value. Opcode 68 moves an item from `z.bx` (inventory) to `z.bA` (storage); opcode 69 reverses the move. Both close the active panel after handling the item. Opcode 71 discards its leading byte before forwarding the short and optional byte; opcode -34 forwards its short and optional byte to a separate refinement handler. The decoder remains side-effect free.
