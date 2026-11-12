@@ -501,4 +501,31 @@ public final class ProtocolWorldStateCodec {
         PacketReader in=new PacketReader(payload);return new OpcodeMinus32(in.readI16(),in.readI8(),in.readUTF(),readRemaining(in));
     }
 
+    public record OpcodeMinus33(byte rawX, byte rawY, int xPixels, int yPixels, short mapId, byte[] trailingBytes) {}
+    public static OpcodeMinus33 decodeS2COpcodeMinus33(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte x=in.readI8(),y=in.readI8();short mapId=in.readI16();
+        return new OpcodeMinus33(x,y,x<<4,y<<4,mapId,readRemaining(in));
+    }
+    public record OpcodeMinus37(byte resultType,String questText,Byte subtype,Byte progressByte,
+                                Short total,Short completedOrClaimed,Byte plotId,String trailingText,
+                                String text,String title,byte[] trailingBytes) {}
+    public static OpcodeMinus37 decodeS2COpcodeMinus37(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte type=in.readI8();
+        if(type==0){
+            String quest=in.readUTF();byte subtype=in.readI8();
+            if(subtype==0||subtype==1){
+                byte progress=in.readI8();short total=in.readI16(),done=in.readI16();String trailing=in.readUTF();
+                return new OpcodeMinus37(type,quest,subtype,progress,total,done,null,trailing,null,null,readRemaining(in));
+            }
+            if(subtype==2){
+                byte plot=in.readI8();String trailing=in.readUTF();
+                return new OpcodeMinus37(type,quest,subtype,null,null,null,plot,trailing,null,null,readRemaining(in));
+            }
+            return new OpcodeMinus37(type,quest,subtype,null,null,null,null,null,null,null,readRemaining(in));
+        }
+        if(type==1)return new OpcodeMinus37(type,null,null,null,null,null,null,null,in.readUTF(),null,readRemaining(in));
+        if(type==2)return new OpcodeMinus37(type,null,null,null,null,null,null,null,in.readUTF(),in.readUTF(),readRemaining(in));
+        return new OpcodeMinus37(type,null,null,null,null,null,null,null,null,null,readRemaining(in));
+    }
+
 }

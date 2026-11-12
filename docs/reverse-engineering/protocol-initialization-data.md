@@ -460,3 +460,10 @@ This packet populates `ku.ab/aa`, `mj.aM/aL` and `ku.Y/Z`. The decoder retains t
 - **-32:** short ID, byte type and UTF confirmation text.
 
 The decoder only exposes wire values; original panel navigation, confirmation prompts and entity mutations remain outside this layer.
+
+
+## S2C opcodes -33 and -37 — world marker / quest result
+
+- **Opcode -33:** two signed coordinate bytes and a signed-short map ID. The client shifts each coordinate left four bits to obtain world-pixel coordinates. It creates two local marker objects only when the packet map ID matches the active map.
+- **Opcode -37:** a signed result-type byte selects a quest/result branch. Type 0 carries quest text and a subtype: subtype 0 has a progress byte, total/completed shorts and trailing UTF; subtype 1 has a progress byte, total/claimed shorts and trailing UTF; subtype 2 has a plot byte and trailing UTF. Type 1 carries one UTF string; type 2 carries title and body UTF strings.
+- The decoder preserves raw values and does not mutate map markers, quest counters, quest UI, or farming state.

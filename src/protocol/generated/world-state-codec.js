@@ -547,3 +547,29 @@ export function decodeS2COpcodeMinus31(payload) {
 export function decodeS2COpcodeMinus32(payload) {
   const reader=new PacketReader(payload);return {id:reader.readI16(),type:reader.readI8(),text:reader.readUTF(),trailingBytes:readRemaining(reader)};
 }
+
+export function decodeS2COpcodeMinus33(payload) {
+  const reader = new PacketReader(payload);
+  const rawX = reader.readI8(), rawY = reader.readI8(), mapId = reader.readI16();
+  return { rawX, rawY, xPixels: rawX << 4, yPixels: rawY << 4, mapId,
+    trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcodeMinus37(payload) {
+  const reader = new PacketReader(payload), resultType = reader.readI8();
+  if (resultType === 0) {
+    const questText = reader.readUTF(), subtype = reader.readI8();
+    if (subtype === 0 || subtype === 1) {
+      const progressByte = reader.readI8(), total = reader.readI16(), completedOrClaimed = reader.readI16();
+      const trailingText = reader.readUTF();
+      return { resultType, questText, subtype, progressByte, total, completedOrClaimed, trailingText, trailingBytes: readRemaining(reader) };
+    }
+    if (subtype === 2) {
+      const plotId = reader.readI8(), trailingText = reader.readUTF();
+      return { resultType, questText, subtype, plotId, trailingText, trailingBytes: readRemaining(reader) };
+    }
+    return { resultType, questText, subtype, trailingBytes: readRemaining(reader) };
+  }
+  if (resultType === 1) return { resultType, text: reader.readUTF(), trailingBytes: readRemaining(reader) };
+  if (resultType === 2) return { resultType, title: reader.readUTF(), text: reader.readUTF(), trailingBytes: readRemaining(reader) };
+  return { resultType, trailingBytes: readRemaining(reader) };
+}

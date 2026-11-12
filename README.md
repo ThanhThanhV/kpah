@@ -438,3 +438,8 @@ Added source-backed world entity marker, counter and byte-pair map decoders, wit
 ### S2C opcodes -24, -26, -28, -30, -31 and -32
 
 Added Java/JavaScript decoders for world notice action, entity text/binary updates, option lists, text-option and confirmation payloads. Signed lengths/counts and UTF values are covered by synthetic vectors.
+
+
+### S2C opcodes -33 and -37: world marker and quest result
+
+Added Java/JavaScript decoders for map-coordinate markers and quest-result variants. Coordinates retain raw signed bytes and the client's 16× pixel conversion. Quest subtype fields are decoded separately; no world/quest UI mutation is applied.

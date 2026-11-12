@@ -3147,6 +3147,33 @@
         "source-ordered-fields",
         "conditional-or-counted-payload"
       ]
+    },
+    {
+      "name": "WORLD_MAP_MARKER_UPDATE",
+      "direction": "S2C",
+      "opcode": -33,
+      "evidenceSource": "ka.java:case-33",
+      "evidence": "Reads two signed bytes and a signed short. Byte coordinates are shifted left four bits for world-pixel coordinates; the short is compared with the current map identifier before two local marker objects are created.",
+      "sections": [
+        "raw-x-byte",
+        "raw-y-byte",
+        "map-id-short"
+      ]
+    },
+    {
+      "name": "QUEST_PROGRESS_VARIANTS",
+      "direction": "S2C",
+      "opcode": -37,
+      "evidenceSource": "ka.java:case-37",
+      "evidence": "First signed byte selects quest result branch. Type 0 reads quest text and a subtype byte; subtype 0 reads progress byte plus total/completed shorts and trailing UTF, subtype 1 reads progress byte plus total/claimed shorts and trailing UTF, subtype 2 reads plot byte and trailing UTF. Type 1 reads one UTF. Type 2 reads two UTF strings.",
+      "sections": [
+        "result-type",
+        "quest-subtype-0-progress",
+        "quest-subtype-1-claimed",
+        "quest-subtype-2-plot",
+        "type-1-text",
+        "type-2-title-and-text"
+      ]
     }
   ],
   "extensionSchemas": [
