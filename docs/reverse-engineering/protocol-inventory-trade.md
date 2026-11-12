@@ -79,3 +79,15 @@ Payload: short item ID, short owner/context ID, byte item class. Handler gọi `
 - Trace upgrade/refine/material consumption, đối chiếu opcode `-52`, `-51`, `-48` cùng các bảng item/material.
 - Xác nhận currency debit/credit và server-side validation; không dùng client message làm nguồn sự thật.
 
+
+
+## Generated S2C decoders — opcodes 73 and 76
+
+The source-backed Java/JavaScript decoders preserve the wire order without assigning undocumented gameplay meanings:
+
+- Opcode 73 reads a signed-short record count, then each material record as three signed shorts: item ID, material/category, quantity. The final signed byte selects destination `ca.N` when zero or `ca.O` otherwise.
+- Opcode 76 reads a signed-byte record count, then each equipment record as item ID (short), slot/category (byte), and value/count (short), corresponding to `be.b`, `be.a`, and `be.c`; the consumer replaces `ca.P`.
+
+The decoders are parse-only. They do not mutate inventory/material/equipment collections or refresh panels. Negative record counts are rejected; zero-count lists and signed field values are covered by synthetic tests.
+
+Run `npm run check:world-state` and `npm run test:world-state` to verify generated outputs and JavaScript vectors. The Java 21 CI smoke test includes matching vectors.
