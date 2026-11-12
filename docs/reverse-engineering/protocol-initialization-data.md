@@ -434,3 +434,10 @@ The packet starts with a signed-byte row width and carries three nested table fa
 3. A signed-byte count of entries, each using the same `width × 3` short + periodic UTF label layout as family 1.
 
 This packet populates `ku.ab/aa`, `mj.aM/aL` and `ku.Y/Z`. The decoder retains the nested shape and source ordering but does not assign gameplay meanings to the columns.
+
+
+## S2C opcodes -27 and -43 — portrait and world sprite assets
+
+- **-27:** target selector and image subtype. When subtype is not -1, two signed-short-length binary images and two metadata bytes follow; the original client composes them for character creation/portrait contexts. The decoder keeps both images raw.
+- **-43:** signed-byte image count; positive counts carry signed-int-length image blobs, each with its own error boundary. A signed-byte object count follows, with image index, signed-byte coordinates, and three bytes. Coordinates are exposed both raw and shifted left four bits, matching the original client.
+- Image formats and rendering are not inferred; this is a wire/data decoder only.

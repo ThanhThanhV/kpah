@@ -423,3 +423,8 @@ Added Java/JavaScript decoding for both pet context variants, including full and
 ### S2C opcode 105 multi-level lookup tables
 
 Added Java/JavaScript decoders for all three nested table families, preserving signed-byte dimensions, width×3 short sequences and UTF labels inserted at every third short. Added synthetic nested-table vectors and negative-width validation.
+
+
+### S2C opcodes -27 and -43
+
+Added Java/JavaScript decoders for layered portrait image updates and world sprite bundles. Raw image blobs, per-image errors, sprite image indexes, raw coordinates and source-compatible 16× coordinate scaling are retained.

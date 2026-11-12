@@ -430,4 +430,27 @@ public final class ProtocolWorldStateCodec {
         return new Opcode105(widthByte,List.copyOf(first),List.copyOf(second),List.copyOf(third),readRemaining(in));
     }
 
+    public record OpcodeMinus27(byte targetSelector,byte imageSubtype,byte[] firstImage,byte[] secondImage,
+        Byte metadataA,Byte metadataB,byte[] trailingBytes) {}
+    public static OpcodeMinus27 decodeS2COpcodeMinus27(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte target=in.readI8(),subtype=in.readI8();
+        if(subtype==-1)return new OpcodeMinus27(target,subtype,null,null,null,null,readRemaining(in));
+        byte[] first=readSizedBytes(in,in.readI16()),second=readSizedBytes(in,in.readI16());byte a=in.readI8(),b=in.readI8();
+        return new OpcodeMinus27(target,subtype,first,second,a,b,readRemaining(in));
+    }
+    public record SpriteObject43(byte imageIndex,byte rawX,byte rawY,int xPixels,int yPixels,byte byteB,byte byteC,byte byteD) {}
+    public record ImageError43(int index,String error) {}
+    public record OpcodeMinus43(byte imageCount,List<byte[]> images,List<ImageError43> imageErrors,
+        Byte objectCount,List<SpriteObject43> objects,byte[] trailingBytes) {}
+    public static OpcodeMinus43 decodeS2COpcodeMinus43(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte count=in.readI8();List<byte[]> images=new ArrayList<>();List<ImageError43> errors=new ArrayList<>();
+        if(count<=0)return new OpcodeMinus43(count,List.of(),List.of(),null,List.of(),readRemaining(in));
+        for(int i=0;i<count;i++){try{int length=in.readI32();if(length<0)throw new IOException("Negative opcode -43 image length");images.add(readSizedBytes(in,length));}
+            catch(Exception ex){errors.add(new ImageError43(i,ex.getMessage()));}}
+        byte objectCount=in.readI8();List<SpriteObject43> objects=new ArrayList<>();
+        for(int i=0;i<objectCount;i++){byte image=in.readI8(),x=in.readI8(),y=in.readI8(),b=in.readI8(),c=in.readI8(),d=in.readI8();
+            objects.add(new SpriteObject43(image,x,y,x<<4,y<<4,b,c,d));}
+        return new OpcodeMinus43(count,List.copyOf(images),List.copyOf(errors),objectCount,List.copyOf(objects),readRemaining(in));
+    }
+
 }

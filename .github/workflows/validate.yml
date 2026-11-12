@@ -410,6 +410,22 @@ jobs:
                 ||lookup105.secondGroups().get(0).trailingValue()!=72
                 ||!lookup105.thirdGroups().get(0).labels().get(1).equals("third-3"))
                 throw new AssertionError("S2C opcode 105 nested lookup tables");
+
+              ProtocolWorldStateCodec.OpcodeMinus27 portrait27=ProtocolWorldStateCodec.decodeS2COpcodeMinus27(
+                new PacketWriter().writeI8(1).writeI8(2).writeI16(2).writeU8(10).writeU8(11)
+                  .writeI16(3).writeU8(20).writeU8(21).writeU8(22).writeI8(4).writeI8(5).toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus27 portraitEmpty=ProtocolWorldStateCodec.decodeS2COpcodeMinus27(
+                new PacketWriter().writeI8(0).writeI8(-1).toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus43 sprites43=ProtocolWorldStateCodec.decodeS2COpcodeMinus43(
+                new PacketWriter().writeI8(1).writeI32(3).writeU8(1).writeU8(2).writeU8(3)
+                  .writeI8(1).writeI8(0).writeI8(2).writeI8(-3).writeI8(4).writeI8(5).writeI8(6).toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus43 spritesEmpty=ProtocolWorldStateCodec.decodeS2COpcodeMinus43(
+                new PacketWriter().writeI8(0).toByteArray());
+              if(portrait27.firstImage().length!=2||portrait27.secondImage().length!=3||portrait27.metadataB()!=5
+                ||portraitEmpty.firstImage()!=null||sprites43.images().get(0)[2]!=3
+                ||sprites43.objects().get(0).xPixels()!=32||sprites43.objects().get(0).yPixels()!=-48
+                ||spritesEmpty.objects()!=null)
+                throw new AssertionError("S2C opcode -27 portrait and -43 sprite bundle");
               PacketWriter catalog25Writer = new PacketWriter().writeU8(1).writeU8(7).writeUTF("lookup").writeI8(-1).writeI8(2)
                 .writeI8(1).writeI16(100).writeI16(200);
               for (int i = 0; i < 5; i++) catalog25Writer.writeI8(i - 2);

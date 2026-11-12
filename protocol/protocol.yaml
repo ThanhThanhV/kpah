@@ -3016,6 +3016,33 @@
         "row-short-table",
         "second-value-and-label-table"
       ]
+    },
+    {
+      "name": "CHARACTER_PORTRAIT_IMAGE_UPDATE",
+      "direction": "S2C",
+      "opcode": -27,
+      "evidenceSource": "ka.java:case-27",
+      "evidence": "Reads target selector and subtype byte. If subtype is not -1, reads two signed-short-length binary images and two trailing bytes; the client composes them and updates one of the character creation, character portrait or other portrait contexts. Then closes the current overlay.",
+      "sections": [
+        "target-selector",
+        "image-subtype",
+        "first-image-blob",
+        "second-image-blob",
+        "two-image-metadata-bytes"
+      ]
+    },
+    {
+      "name": "WORLD_SPRITE_BUNDLE",
+      "direction": "S2C",
+      "opcode": -43,
+      "evidenceSource": "ka.java:case-43",
+      "evidence": "Signed-byte image count; when positive, each image has a signed-int byte length and opaque image bytes with an independent per-image catch. Then a signed-byte object count and records containing image index, signed-byte x/y coordinates shifted left four bits, and three signed bytes.",
+      "sections": [
+        "signed-image-count",
+        "int-length-prefixed-image-blobs",
+        "signed-object-count",
+        "sprite-object-descriptors"
+      ]
     }
   ],
   "extensionSchemas": [

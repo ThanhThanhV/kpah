@@ -483,3 +483,26 @@ export function decodeS2COpcode105(payload) {
   for(let i=0;i<thirdGroupCount;i++)thirdGroups.push(readLookupTriples105(reader,rowWidth));
   return {rowWidth,firstGroups,secondGroups,thirdGroups,trailingBytes:readRemaining(reader)};
 }
+
+export function decodeS2COpcodeMinus27(payload) {
+  const reader=new PacketReader(payload),targetSelector=reader.readI8(),imageSubtype=reader.readI8();
+  if(imageSubtype===-1)return {targetSelector,imageSubtype,firstImage:null,secondImage:null,metadataA:null,metadataB:null,trailingBytes:readRemaining(reader)};
+  const firstImage=readSizedBytes(reader,reader.readI16()),secondImage=readSizedBytes(reader,reader.readI16());
+  const metadataA=reader.readI8(),metadataB=reader.readI8();
+  return {targetSelector,imageSubtype,firstImage,secondImage,metadataA,metadataB,trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcodeMinus43(payload) {
+  const reader=new PacketReader(payload),imageCount=reader.readI8(),images=[],imageErrors=[];
+  if(imageCount<=0)return {imageCount,images,imageErrors,objects:null,trailingBytes:readRemaining(reader)};
+  for(let i=0;i<imageCount;i++){
+    try{const length=reader.readI32();if(length<0)throw new RangeError("Negative opcode -43 image length");
+      images.push(readSizedBytes(reader,length));}
+    catch(error){imageErrors.push({index:i,error:String(error?.message??error)});}
+  }
+  const objectCount=reader.readI8(),objects=[];
+  for(let i=0;i<objectCount;i++){
+    const imageIndex=reader.readI8(),rawX=reader.readI8(),rawY=reader.readI8(),byteB=reader.readI8(),byteC=reader.readI8(),byteD=reader.readI8();
+    objects.push({imageIndex,rawX,rawY,xPixels:rawX<<4,yPixels:rawY<<4,byteB,byteC,byteD});
+  }
+  return {imageCount,images,imageErrors,objectCount,objects,trailingBytes:readRemaining(reader)};
+}
