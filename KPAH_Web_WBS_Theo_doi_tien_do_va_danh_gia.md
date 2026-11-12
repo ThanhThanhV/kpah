@@ -798,3 +798,11 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - -8: blob tài nguyên theo subtype, gồm nested groups; -9: list short + message; -10: ID + message; -11: confirmation có nhánh conditional; -12: social/guild record có 3 long; -17: announcement list; -18: guild chat; -19: ranking type 5 có record typed, loại khác giữ opaque; -20: currency reward int.
 - CI run `43174297049` PASS: Vite build, generator consistency, JS tests, Java 21 compile/smoke và original-JAR analysis.
 - Chưa thực thi UI prompt/chat/ranking/economy side effects; không tăng % tổng dự án do chưa tính lại trọng số WBS.
+
+
+### B16/B10 — S2C opcode -22: pet equipment context
+
+- **Trạng thái: Một phần (2 packet variants + full/compact item records + CI PASS).**
+- Nhánh subtype 0: pet header, full item list, 5 short pet stats và UTF tùy chọn. Nhánh khác: compact item list, frame count và raw image bytes; count âm trả nhánh "chưa có thông tin".
+- Bytecode/class `bo` xác nhận appearance arrays dài 10/3/15; compact item có thêm 2 short. CI run `43174961636` PASS.
+- Chưa mutate pet/inventory state hoặc render ảnh; không tăng % tổng dự án do chưa tính lại trọng số WBS.

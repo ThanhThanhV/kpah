@@ -639,3 +639,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Type-5 ranking records are typed; other ranking payloads stay opaque for their ranking-specific parser. Resource image bytes remain opaque; no image format is assumed.
 - Added Java/JS codecs and synthetic vectors for nested binary blobs, optional fields, 64-bit values, UTF strings and ranking variants. CI run `43174297049` SUCCESS.
 - Decoders do not trigger prompts, alter guild/chat state, render images or apply currency. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B16/B10 — S2C opcode -22 pet equipment context — CI PASS
+
+- Added Java/JavaScript decoders for both pet packet variants. Subtype 0 parses pet header, full item records, pet stats and conditional text; nonzero subtype parses compact item records and trailing image bytes. Negative compact item count preserves the original no-information branch.
+- Source class `bo` confirms appearance byte arrays are fixed lengths 10, 3 and 15; compact records also carry two extra shorts. The decoder retains all these values and leaves image bytes opaque.
+- Added schema, generator consistency, JS vectors for both branches and Java 21 smoke tests. CI run `43174961636` SUCCESS.
+- No pet model mutation, item catalog lookup or image rendering is applied. Weighted project percentage unchanged; BE remains deferred.
