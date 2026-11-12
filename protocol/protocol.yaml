@@ -2813,6 +2813,82 @@
         "two-count-byte-arrays-cw",
         "two-count-byte-arrays-cx"
       ]
+    },
+    {
+      "name": "SKILL_PROGRESSION_GRID",
+      "direction": "S2C",
+      "opcode": 35,
+      "evidenceSource": "ka.java:case35",
+      "evidence": "Fixed 15x11 grid packet: 165 signed shorts, 165 signed shorts scaled by 100, 15 signed shorts, 165 unsigned bytes, 165 signed shorts, 165 signed bytes, then five signed-byte-length byte arrays. Values populate the source class ic fields.",
+      "sections": [
+        "15x11-short-grid",
+        "15x11-short-grid-scaled-by-100",
+        "15-row-short-vector",
+        "15x11-unsigned-byte-grid",
+        "15x11-short-grid",
+        "15x11-signed-byte-grid",
+        "five-variable-byte-arrays"
+      ]
+    },
+    {
+      "name": "SKILL_RECORD_LIST",
+      "direction": "S2C",
+      "opcode": 64,
+      "evidenceSource": "ka.java:case64",
+      "evidence": "Signed-byte count followed by records containing two signed bytes and three signed shorts.",
+      "sections": [
+        "signed-byte-count",
+        "byte-a",
+        "byte-b",
+        "short-c",
+        "short-d",
+        "short-e"
+      ]
+    },
+    {
+      "name": "CHAT_MESSAGE_BATCH",
+      "direction": "S2C",
+      "opcode": -5,
+      "evidenceSource": "ka.java:case-5",
+      "evidence": "Signed-byte count followed by repeated UTF sender and UTF message pairs; original client appends each message to the chat view.",
+      "sections": [
+        "signed-byte-count",
+        "sender-message-pairs"
+      ]
+    },
+    {
+      "name": "SERVER_DIALOG_EVENT",
+      "direction": "S2C",
+      "opcode": 37,
+      "evidenceSource": "ka.java:case37",
+      "evidence": "Two UTF strings. Empty second string shows a simple message; non-empty second string opens a confirmation dialog.",
+      "sections": [
+        "title-or-message",
+        "dialog-body"
+      ]
+    },
+    {
+      "name": "WORLD_NOTICE_ENTRY",
+      "direction": "S2C",
+      "opcode": 38,
+      "evidenceSource": "ka.java:case38",
+      "evidence": "One UTF string appended to the world notice/message collection.",
+      "sections": [
+        "notice-text"
+      ]
+    },
+    {
+      "name": "REGISTRATION_SMS_RESULT",
+      "direction": "S2C",
+      "opcode": 39,
+      "evidenceSource": "ka.java:case39",
+      "evidence": "UTF suffix, boolean success flag, UTF display text and UTF SMS destination. False success displays a retry message; true success opens the SMS action.",
+      "sections": [
+        "account-suffix",
+        "success-boolean",
+        "display-text",
+        "sms-destination"
+      ]
     }
   ],
   "extensionSchemas": [

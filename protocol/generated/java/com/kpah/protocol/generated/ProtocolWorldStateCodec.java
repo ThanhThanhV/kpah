@@ -274,4 +274,46 @@ public final class ProtocolWorldStateCodec {
         byte e=in.remaining()>0?in.readI8():0;return new Opcode22(a,b,c,d,e,readRemaining(in));
     }
 
+    public record SkillGrid35(List<List<Short>> shortGrid,List<List<Integer>> scaledGrid,List<Short> rowShorts,
+        List<List<Integer>> unsignedGrid,List<List<Short>> secondaryShortGrid,List<List<Byte>> signedByteGrid,
+        List<byte[]> extraArrays,byte[] trailingBytes) {}
+    public static SkillGrid35 decodeS2COpcode35(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);List<List<Short>> a=new ArrayList<>(),e=new ArrayList<>();
+        List<List<Integer>> b=new ArrayList<>(),d=new ArrayList<>();List<List<Byte>> f=new ArrayList<>();
+        for(int r=0;r<15;r++){List<Short> row=new ArrayList<>();for(int c=0;c<11;c++)row.add(in.readI16());a.add(List.copyOf(row));}
+        for(int r=0;r<15;r++){List<Integer> row=new ArrayList<>();for(int c=0;c<11;c++)row.add(in.readI16()*100);b.add(List.copyOf(row));}
+        List<Short> rows=new ArrayList<>();for(int r=0;r<15;r++)rows.add(in.readI16());
+        for(int r=0;r<15;r++){List<Integer> row=new ArrayList<>();for(int c=0;c<11;c++)row.add(in.readU8());d.add(List.copyOf(row));}
+        for(int r=0;r<15;r++){List<Short> row=new ArrayList<>();for(int c=0;c<11;c++)row.add(in.readI16());e.add(List.copyOf(row));}
+        for(int r=0;r<15;r++){List<Byte> row=new ArrayList<>();for(int c=0;c<11;c++)row.add(in.readI8());f.add(List.copyOf(row));}
+        List<byte[]> extras=new ArrayList<>();for(int r=0;r<5;r++){int count=in.readI8();if(count<0)throw new IOException("Negative opcode 35 byte-array length");byte[] data=new byte[count];for(int c=0;c<count;c++)data[c]=(byte)in.readI8();extras.add(data);}
+        return new SkillGrid35(List.copyOf(a),List.copyOf(b),List.copyOf(rows),List.copyOf(d),List.copyOf(e),List.copyOf(f),List.copyOf(extras),readRemaining(in));
+    }
+    public record SkillRecord64(byte byteA,byte byteB,short shortC,short shortD,short shortE) {}
+    public record Opcode64(byte count,List<SkillRecord64> records,byte[] trailingBytes) {}
+    public static Opcode64 decodeS2COpcode64(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte count=in.readI8();List<SkillRecord64> records=new ArrayList<>();
+        for(int i=0;i<count;i++)records.add(new SkillRecord64(in.readI8(),in.readI8(),in.readI16(),in.readI16(),in.readI16()));
+        return new Opcode64(count,List.copyOf(records),readRemaining(in));
+    }
+    public record ChatMessage5(String sender,String message) {}
+    public record OpcodeMinus5(byte count,List<ChatMessage5> messages,byte[] trailingBytes) {}
+    public static OpcodeMinus5 decodeS2COpcodeMinus5(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte count=in.readI8();List<ChatMessage5> messages=new ArrayList<>();
+        for(int i=0;i<count;i++)messages.add(new ChatMessage5(in.readUTF(),in.readUTF()));
+        return new OpcodeMinus5(count,List.copyOf(messages),readRemaining(in));
+    }
+    public record Opcode37(String titleOrMessage,String dialogBody,byte[] trailingBytes) {}
+    public static Opcode37 decodeS2COpcode37(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new Opcode37(in.readUTF(),in.readUTF(),readRemaining(in));
+    }
+    public record Opcode38(String noticeText,byte[] trailingBytes) {}
+    public static Opcode38 decodeS2COpcode38(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new Opcode38(in.readUTF(),readRemaining(in));
+    }
+    public record Opcode39(String accountSuffix,boolean success,String displayText,String smsDestination,byte[] trailingBytes) {}
+    public static Opcode39 decodeS2COpcode39(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new Opcode39(in.readUTF(),in.readBool(),in.readUTF(),in.readUTF(),readRemaining(in));
+    }
+
 }

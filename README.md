@@ -403,3 +403,8 @@ Added source-backed decoders for server-text variants (option list, provider/age
 ### S2C opcodes 2, 22 and 26
 
 Added source-backed Java/JavaScript decoders for server text/options, world-entity auxiliary updates and the world resource bundle. Synthetic vectors cover all opcode 2 variants, opcode 22's optional-byte default, opcode 26's binary sections and original fallback arrays.
+
+
+### S2C opcodes -5, 35, 37, 38, 39 and 64
+
+Added generated Java/JavaScript decoders for batch chat, the fixed 15×11 skill progression tables, server dialog/notice/SMS registration responses, and the compact skill-record list. Tests cover dimensions, signed/unsigned values, Vietnamese UTF payloads and response variants.

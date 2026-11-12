@@ -320,3 +320,38 @@ export function decodeS2COpcode26(payload) {
   catch (error) { sectionErrors.push({ section: "cx", error: String(error?.message ?? error) }); cx = [new Uint8Array(1), new Uint8Array(1)]; }
   return { templateCount, primaryLength, primaryData, effectData, indexedImages, indexedGraphics, ct, cu, cv, cw, cx, sectionErrors, trailingBytes: readRemaining(reader) };
 }
+
+export function decodeS2COpcode35(payload) {
+  const reader=new PacketReader(payload);
+  const shortGrid=Array.from({length:15},()=>Array.from({length:11},()=>reader.readI16()));
+  const scaledGrid=Array.from({length:15},()=>Array.from({length:11},()=>reader.readI16()*100));
+  const rowShorts=Array.from({length:15},()=>reader.readI16());
+  const unsignedGrid=Array.from({length:15},()=>Array.from({length:11},()=>reader.readU8()));
+  const secondaryShortGrid=Array.from({length:15},()=>Array.from({length:11},()=>reader.readI16()));
+  const signedByteGrid=Array.from({length:15},()=>Array.from({length:11},()=>reader.readI8()));
+  const extraArrays=[];
+  for(let i=0;i<5;i++){const count=reader.readI8();if(count<0)throw new RangeError("Negative opcode 35 byte-array length");const data=new Uint8Array(count);for(let j=0;j<count;j++)data[j]=reader.readI8();extraArrays.push(data);}
+  return {shortGrid,scaledGrid,rowShorts,unsignedGrid,secondaryShortGrid,signedByteGrid,extraArrays,trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcode64(payload) {
+  const reader=new PacketReader(payload),count=reader.readI8(),records=[];
+  for(let i=0;i<count;i++)records.push({byteA:reader.readI8(),byteB:reader.readI8(),shortC:reader.readI16(),shortD:reader.readI16(),shortE:reader.readI16()});
+  return {count,records,trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcodeMinus5(payload) {
+  const reader=new PacketReader(payload),count=reader.readI8(),messages=[];
+  for(let i=0;i<count;i++)messages.push({sender:reader.readUTF(),message:reader.readUTF()});
+  return {count,messages,trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcode37(payload) {
+  const reader=new PacketReader(payload);
+  return {titleOrMessage:reader.readUTF(),dialogBody:reader.readUTF(),trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcode38(payload) {
+  const reader=new PacketReader(payload);
+  return {noticeText:reader.readUTF(),trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcode39(payload) {
+  const reader=new PacketReader(payload);
+  return {accountSuffix:reader.readUTF(),success:reader.readBool(),displayText:reader.readUTF(),smsDestination:reader.readUTF(),trailingBytes:readRemaining(reader)};
+}

@@ -386,3 +386,16 @@ Opcode 26 loads several binary resource families: template count, primary raw bl
 ## S2C opcodes 2 and 22
 
 Opcode 2 carries one modified-UTF discriminator: prefix `2` selects a signed-byte-counted list of UTF label / signed-short value / UTF description records; prefix `3` carries provider and agent strings; otherwise the value is a plain server message. Opcode 22 carries two signed shorts, a signed byte, another short, an int and an optional byte defaulting to zero. Field semantics remain neutral where the consumer has not proven them.
+
+
+## S2C opcode 35 — fixed skill progression grids
+
+The packet fills the original `ic` static tables in a fixed order: 15×11 signed-short grid; 15×11 signed-short grid multiplied by 100 into integer values; 15 signed-short row values; 15×11 unsigned-byte grid; 15×11 signed-short grid; 15×11 signed-byte grid; then five signed-byte-length byte arrays. The decoder retains the fixed dimensions and signedness. It does not interpret the table columns as specific skill attributes without additional source proof.
+
+## S2C opcodes 64, -5, 37, 38 and 39
+
+- Opcode 64: signed-byte count followed by records with two signed bytes and three signed shorts.
+- Opcode -5: signed-byte count followed by UTF sender/message pairs.
+- Opcode 37: two UTF strings used by the original client for a message or confirmation dialog.
+- Opcode 38: one UTF world-notice string.
+- Opcode 39: UTF suffix, boolean success, UTF display text and UTF SMS destination. The original client opens the SMS action only on success; this decoder only parses the result.
