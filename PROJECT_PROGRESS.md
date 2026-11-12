@@ -788,3 +788,12 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Consumer traces: opcode 65 updates an entity status byte; 66 handles trade request/busy/accept/decline/other trade states and preserves the mode-2 opaque tail; 67 updates player trade flag/value; 68/69 move matching item records between inventory and storage collections; 71/-34 open refinement contexts.
 - Added schemas, generator validation, JS branch vectors and Java 21 smoke vectors. CI run `43187383635` SUCCESS: Vite build, generated-code checks, JS protocol suites, Java compile/smoke and original-JAR analysis.
 - Parsers do not perform authoritative trade, inventory or refinement mutations. Weighted project progress unchanged; backend remains deferred.
+
+
+## B5/B7/B10 — S2C opcodes 62, 73, 76 and 80 — CI PASS
+
+- Opcode 62: decoded the collection/catalog group with mode-to-vector mapping, complete item record fields, nested unsigned-byte/short pairs, mode-3 long field and pagination short. Consumer trace in `mj.y(acu)` confirms mode -1 closes the panel and other modes replace the selected collection.
+- Opcode 73: material recipe/list records; opcode 76: equipment/gear list records. Both now have Java/JavaScript decoders, source schemas and synthetic tests (CI run `43188123419`).
+- Opcode 80: decoded the four parallel arrays stored as `hp[]` in `ku.g`. Follow-up source trace in `oy.java`/ `oz.java` confirms the first array supplies option IDs for the refinement menu and the fourth array is checked against the character's currency before opening the next selection. Other columns remain neutrally named until their consumers are traced.
+- These protocol changes passed the validate job in CI run `43188530604` (Vite build, generated checks, JS protocol suites and Java 21 compile/smoke); original-JAR analysis also completed successfully.
+- Decoder-only: no authoritative market, inventory, storage, refinement or currency mutation. Overall weighted percentage unchanged pending full WBS recalculation; BE remains deferred.

@@ -532,3 +532,6 @@ Added generated decoders for the collection/catalog item group (including nested
 
 
 S2C opcode 82 is decoded with an explicit caller-state guard, preserving the original conditional read behavior and exposing unconsumed bytes when the local counter blocks the update.
+
+
+The collection/material/equipment/refinement packet increment (S2C 62, 73, 76 and 80) is covered by generated JS/Java decoders and source-trace documentation. CI validation passed in run `43188530604`.

@@ -953,3 +953,13 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Opcode 76: signed-byte count; mỗi record gồm item ID (short), equipment slot/category (byte), value/count (short); consumer thay `ca.P`.
 - Đã cập nhật `protocol/protocol.yaml`, generator expectation, Java/JavaScript templates, JS test vectors và tài liệu `protocol-inventory-trade.md`.
 - Decoder chỉ parse payload, không tự mutation inventory/equipment hoặc refresh UI. Không đánh dấu B7 hoàn thành vì purchase/use/equip/unequip/upgrade/warehouse và transaction semantics còn mở.
+
+
+### B7/B10 — S2C opcodes 62, 73, 76 and 80: catalog / materials / equipment / refinement matrix
+
+- **Trạng thái: Một phần (Java/JavaScript decoder + source trace + tests + CI validate PASS).**
+- Opcode 62: collection/catalog records, nested item pairs, mode-3 long field và pagination; mode -1 đóng panel.
+- Opcode 73: danh sách material recipe/list; opcode 76: danh sách gear/equipment.
+- Opcode 80: bốn mảng cấu hình song song. `oy.java` xác nhận mảng đầu là option IDs hiển thị menu luyện đồ; `oz.java` dùng mảng thứ tư để kiểm tra tiền trước khi đi tiếp. Hai cột còn lại chưa gán nghĩa.
+- CI run `43188530604` validate PASS; original-JAR analysis PASS. CI run `43188123419` cũng xác nhận material/equipment decoder.
+- Không thực thi mutation kinh tế/inventory hoặc refinement server-side; không tăng % tổng dự án khi chưa tính lại trọng số WBS. BE vẫn deferred.

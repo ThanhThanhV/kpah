@@ -621,3 +621,8 @@ Reads a signed-byte outer count. Each entry has a signed-byte length followed by
 ## S2C opcode 82 — state-dependent character counter
 
 The handler always clears the local popup reference. It reads one signed byte only when the current character's `bS` field is non-positive; that byte is assigned to both `cj` and `bS`, and the client records its own current timestamp. When `bS` is positive, the packet handler reads no payload byte. The generated decoder therefore requires a `canUpdate` argument derived from the caller's current state and returns the entire payload as unconsumed when false. It does not fabricate the client timestamp.
+
+
+### Opcode 80 refinement menu consumer trace
+
+The refinement UI callback `oy.a()` calls `ku.c()` and builds menu entries from the selected `hp.a[]` values using the label table `ku.ae`. The corresponding `oz.a()` callback compares `hp.d[index]` against the character's currency before proceeding to a second option list. This establishes the first array as option IDs and the fourth as a cost threshold; arrays `b[]` and `c[]` remain neutral because the inspected callback does not consume them.
