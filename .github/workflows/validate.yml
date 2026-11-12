@@ -571,6 +571,8 @@ jobs:
               java.util.Map<String,Object> refineItemDecoded = ProtocolPacketCodec.decode("C2S_EQUIPMENT_UPGRADE_ACTION", refineItemEncoded);
               if (ProtocolCommand.find(ProtocolCommand.Direction.C2S, -68).orElseThrow() != ProtocolCommand.C2S_REFINEMENT_ACTION)
                 throw new AssertionError("C2S refinement action opcode lookup");
+              if (ProtocolCommand.find(ProtocolCommand.Direction.S2C, -68).orElseThrow() != ProtocolCommand.S2C_REFINEMENT_RESULT)
+                throw new AssertionError("S2C refinement result opcode lookup");
               java.util.Map<String,Object> upgradeKeepStatsValues = new java.util.LinkedHashMap<>();
               upgradeKeepStatsValues.put("action", 11);
               upgradeKeepStatsValues.put("itemId", 255);
