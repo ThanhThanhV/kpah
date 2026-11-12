@@ -331,11 +331,16 @@
       "evidence": "dispatcher-only"
     },
     {
-      "name": "OP_NEG_21",
+      "name": "DROP_EQUIPPED_ITEM",
       "opcode": -21,
       "direction": "C2S",
-      "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "payload": [
+        {
+          "name": "equipmentSlot",
+          "type": "i16"
+        }
+      ],
+      "evidence": "verified-client-writer: jy.java:1170-1178; xg.java equipped-slot menu -> ye/yf confirmation sends slot index to drop item to ground"
     },
     {
       "name": "OP_NEG_20",
@@ -906,11 +911,16 @@
       "evidence": "dispatcher-only"
     },
     {
-      "name": "OP_86",
+      "name": "EQUIP_ITEM",
       "opcode": 86,
       "direction": "C2S",
-      "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "payload": [
+        {
+          "name": "itemId",
+          "type": "i16"
+        }
+      ],
+      "evidence": "verified-client-writer: jy.java:194-202; xg.java:3063-3067; acm.a() sends be.itemId from ca.P gear list"
     },
     {
       "name": "OP_87",
