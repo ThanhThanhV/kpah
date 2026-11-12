@@ -981,3 +981,12 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - **Trạng thái: Một phần (schema nguồn đã thêm; Java/JS codegen và CI đang triển khai).**
 - Đã xác định 7 mode được writer trong `jy.java` thực sự gửi: 0, 2, 3, 4, 5, 6, 7; field order/type được giữ đúng source. Mode 1 không có writer branch trong phần đã kiểm tra nên không tự tạo.
 - Các field giữ tên trung tính, không gán ý nghĩa nghiệp vụ khi chưa truy được callsite/handler đầy đủ.
+
+
+### B7 — C2S opcode 62 collection action variants
+
+- **Trạng thái: Một phần (source-backed schema + Java/JS codegen + round-trip tests + CI PASS).**
+- Bảy mode đã xác minh trong `jy.java`: 0, 2, 3, 4, 5, 6, 7; generator sinh encoder/decoder, giữ nguyên field order và signed widths.
+- Mode 1 không có writer branch được xác minh, vì vậy decoder bảo toàn payload chưa đọc cho mode không hỗ trợ và encoder từ chối mode lạ.
+- CI run `43189624674` PASS: Vite build, generated checks, protocol/transport/prefix/initialization/world-state tests, Java 21 compile/smoke và original-JAR analysis.
+- Không suy diễn semantics giao dịch hay gọi server; không tăng % tổng dự án trước khi tái tính WBS.

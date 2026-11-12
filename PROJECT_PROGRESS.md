@@ -814,3 +814,12 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Added `commandVariantSchemas` to `protocol/protocol.yaml` for C2S opcode 62, preserving seven source-observed modes: 0, 2, 3, 4, 5, 6, 7.
 - The schema records source method/line and exact field widths/order; mode 1 remains intentionally unspecified.
 - JavaScript/Java generated codec and round-trip tests are added in the next commit of this increment; no business meaning is inferred from opaque argument values.
+
+
+## B7 — C2S opcode 62 command variants — CI PASS
+
+- Added `commandVariantSchemas` for seven source-observed modes (0, 2, 3, 4, 5, 6, 7), with exact field widths/order and `jy.java` method/line evidence.
+- Added a dedicated generator for Java/JavaScript encoders and decoder, package scripts, unknown-mode preservation, and round-trip vectors.
+- Mode 1 remains intentionally unsupported because no matching outbound writer branch was found in the inspected source.
+- CI run `43189624674` SUCCESS: Vite build, all generated-source checks, protocol/transport/prefix/initialization/world-state suites, JS tests, Java 21 compilation/smoke and original-JAR analysis.
+- These are packet encoders only; server-side transaction semantics remain unimplemented. Weighted project progress unchanged; BE remains deferred.

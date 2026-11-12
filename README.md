@@ -543,3 +543,6 @@ The latest protocol increment also includes S2C opcode 82's caller-state-depende
 ### C2S opcode 62 — collection action variants
 
 Added a source-backed command-variant schema for seven observed opcode 62 modes (0, 2–7), generated JavaScript/Java encoders and decoder, and round-trip vectors. Mode 1 is intentionally not fabricated because no writer branch was found in the inspected source. Fields remain neutral where business meaning is not proven.
+
+
+C2S opcode 62 now has generated Java/JavaScript codecs for seven source-observed modes. CI run `43189624674` passed all protocol checks and Java 21 smoke tests.

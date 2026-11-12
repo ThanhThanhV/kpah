@@ -91,3 +91,20 @@ The source-backed Java/JavaScript decoders preserve the wire order without assig
 The decoders are parse-only. They do not mutate inventory/material/equipment collections or refresh panels. Negative record counts are rejected; zero-count lists and signed field values are covered by synthetic tests.
 
 Run `npm run check:world-state` and `npm run test:world-state` to verify generated outputs and JavaScript vectors. The Java 21 CI smoke test includes matching vectors.
+
+
+## C2S opcode 62 — collection action variants
+
+The outbound writer in `jy.java` has seven distinct mode branches:
+
+| Mode | Writer method | Wire fields after mode |
+|---:|---|---|
+| 0 | `a(int,int,int,int)` | signed short, signed int, signed int |
+| 2 | `b(int,int,int,int,int)` | five signed bytes |
+| 3 | `o(int,int)` | signed byte, signed short |
+| 4 | `w(int)` | signed byte |
+| 5 | `o()` | none |
+| 6 | `f(int,int,int)` | signed byte, signed short, signed int |
+| 7 | `g(String)` | modified UTF string |
+
+The schema records the source method and line for each branch. The argument names remain neutral because the complete UI call graph and server-side handling have not yet been tied to these values. No mode 1 writer was found; it is not treated as a supported variant. Generated JS/Java codecs include encode/decode round trips and preserve unknown-mode payload bytes. CI run `43189624674` passed.
