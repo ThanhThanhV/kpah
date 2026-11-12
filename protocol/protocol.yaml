@@ -3283,8 +3283,8 @@
       "name": "COMPANION_RECORD_GROUPS",
       "direction": "S2C",
       "opcode": -56,
-      "evidenceSource": "ka.java:case-56; gy.java",
-      "evidence": "Two consecutive signed-byte-counted lists. Each record contains a signed short ID, signed byte field, UTF label and signed byte field. The client assigns a local receive timestamp not carried on the wire.",
+      "evidenceSource": "ka.java:case-56",
+      "evidence": "Two consecutive signed-byte-counted lists. Each record contains a signed short ID, signed byte field, UTF label and signed byte field. The client assigns a local receive timestamp not carried on the wire. gy.java confirms that the record stores a short ID, two byte fields and UTF label; the client timestamp is local only.",
       "sections": [
         "first-record-list",
         "second-record-list"
@@ -3294,8 +3294,8 @@
       "name": "COMPANION_STATE_AND_SPRITE_DATA",
       "direction": "S2C",
       "opcode": -57,
-      "evidenceSource": "ka.java:case-57; bn.java",
-      "evidence": "Signed variant byte. Variant 0 carries boolean enabled, signed-short entity ID and signed-byte companion type. Other variants carry signed-byte slot, signed-short image length and image bytes, then three signed-byte-counted arrays of four-byte tuples and two trailing signed bytes.",
+      "evidenceSource": "ka.java:case-57",
+      "evidence": "Signed variant byte. Variant 0 carries boolean enabled, signed-short entity ID and signed-byte companion type. Other variants carry signed-byte slot, signed-short image length and image bytes, then three signed-byte-counted arrays of four-byte tuples and two trailing signed bytes. bn.java confirms the three static frame groups each store four byte channels per frame.",
       "sections": [
         "variant",
         "state-update",
