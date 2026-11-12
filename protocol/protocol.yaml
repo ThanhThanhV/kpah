@@ -1110,11 +1110,11 @@
       "evidence": "dispatcher-only"
     },
     {
-      "name": "OP_NEG_68",
+      "name": "REFINEMENT_RESULT",
       "opcode": -68,
       "direction": "S2C",
       "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "evidence": "verified-client-handler: ka.java:case-68 -> mj.x; reads result byte; result 0 resets refinement panel, result 4 reads short + two bytes and calls active screen callback; conditional payload kept opaque"
     },
     {
       "name": "ARTIFACT_PANEL_DATA",
