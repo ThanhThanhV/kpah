@@ -906,3 +906,26 @@ function decodeSocialCharacterList(payload, category) {
 }
 export function decodeS2COpcodeMinus7(payload) { return decodeSocialCharacterList(payload, 1); }
 export function decodeS2COpcodeMinus53(payload) { return decodeSocialCharacterList(payload, 6); }
+
+export function decodeS2COpcode86(payload) {
+  const reader = new PacketReader(payload), mode = reader.readI8();
+  let statusIndex = null, duration = null, statusText = null;
+  if (mode === 1) {
+    statusIndex = reader.readI8() - 1;
+    duration = 1440;
+    statusText = reader.readUTF();
+  } else if (mode === 0) {
+    // Source clears the active status fields without reading any additional payload.
+  } else if (mode === 2) {
+    statusIndex = reader.readI8() - 1;
+    duration = reader.readI32();
+    statusText = reader.readUTF();
+  }
+  return { mode, statusIndex, duration, statusText, trailingBytes: readRemaining(reader) };
+}
+
+export function decodeS2COpcode95(payload) {
+  const reader = new PacketReader(payload);
+  return { firstShort: reader.readI16(), secondShort: reader.readI16(), typeByte: reader.readI8(),
+    trailingBytes: readRemaining(reader) };
+}

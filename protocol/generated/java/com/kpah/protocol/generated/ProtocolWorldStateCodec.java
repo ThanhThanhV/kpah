@@ -832,4 +832,17 @@ public final class ProtocolWorldStateCodec {
     public static SocialCharacterList7 decodeS2COpcodeMinus7(byte[] payload) throws IOException { return decodeSocialCharacterList(payload,1); }
     public static SocialCharacterList7 decodeS2COpcodeMinus53(byte[] payload) throws IOException { return decodeSocialCharacterList(payload,6); }
 
+    public record Opcode86(byte mode, Integer statusIndex, Integer duration, String statusText, byte[] trailingBytes) {}
+    public static Opcode86 decodeS2COpcode86(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte mode=in.readI8();Integer statusIndex=null,duration=null;String statusText=null;
+        if(mode==1){statusIndex=(int)in.readI8()-1;duration=1440;statusText=in.readUTF();}
+        else if(mode==2){statusIndex=(int)in.readI8()-1;duration=in.readI32();statusText=in.readUTF();}
+        return new Opcode86(mode,statusIndex,duration,statusText,readRemaining(in));
+    }
+    public record Opcode95(short firstShort,short secondShort,byte typeByte,byte[] trailingBytes) {}
+    public static Opcode95 decodeS2COpcode95(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);
+        return new Opcode95(in.readI16(),in.readI16(),in.readI8(),readRemaining(in));
+    }
+
 }
