@@ -478,3 +478,8 @@ Added decoders for the lucky-box result variants and 10×10 grid-selection value
 ### S2C opcodes -65, -41 and 58
 
 Added compact world-event tuple decoders and a signed-short ID-list decoder, including negative-count validation for opcode 58.
+
+
+### S2C opcode 13: character-selection roster
+
+Added a Java/JavaScript decoder for server roster entries, optional opaque resource blobs and the matching second-pass supplemental data. The local browser roster remains client-only until server integration.

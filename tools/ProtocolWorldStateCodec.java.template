@@ -685,4 +685,40 @@ public final class ProtocolWorldStateCodec {
         return new Opcode58(count,List.copyOf(ids),readRemaining(in));
     }
 
+    public record Pair13(byte key,byte value) {}
+    public record Supplemental13(short firstShort,byte firstByte,byte secondByte,short secondShort,byte thirdByte,
+                                 byte fourthByte,short thirdShort,byte fifthByte,byte sixthByte,String parseError) {}
+    public record CharacterEntry13(int characterKey,String name,byte fieldA,byte pairCount,List<Pair13> pairs,
+                                   short fieldV,byte fieldAC,byte fieldT,short fieldDK,byte resourceSelector,
+                                   byte[] resourceA,byte[] resourceB,byte[] resourceTrailer,Integer secondPassKey,
+                                   Supplemental13 supplemental) {}
+    public record Opcode13(byte count,String message,List<CharacterEntry13> entries,byte[] trailingBytes) {}
+    public static Opcode13 decodeS2COpcode13(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte count=in.readI8();
+        if(count==-1)return new Opcode13(count,in.readUTF(),List.of(),readRemaining(in));
+        if(count<0)throw new IOException("Invalid opcode 13 character count");
+        List<CharacterEntry13> entries=new ArrayList<>();
+        for(int i=0;i<count;i++){
+            int key=in.readI32();String name=in.readUTF();byte fieldA=in.readI8(),pairCount=in.readI8();List<Pair13> pairs=new ArrayList<>();
+            for(int j=0;j<pairCount;j++)pairs.add(new Pair13(in.readI8(),in.readI8()));
+            short fieldV=in.readI16();byte fieldAC=in.readI8(),fieldT=in.readI8();short fieldDK=in.readI16();byte selector=in.readI8();
+            byte[] resourceA=null,resourceB=null,trailer=null;
+            if(selector!=-1){resourceA=readSizedBytes(in,in.readI16());resourceB=readSizedBytes(in,in.readI16());trailer=new byte[]{(byte)in.readI8(),(byte)in.readI8()};}
+            entries.add(new CharacterEntry13(key,name,fieldA,pairCount,List.copyOf(pairs),fieldV,fieldAC,fieldT,fieldDK,
+                selector,resourceA,resourceB,trailer,null,null));
+        }
+        for(int i=0;i<count;i++){
+            Integer key=null;try{key=in.readI32();}catch(IOException ignored){}
+            CharacterEntry13 old=entries.get(i);Supplemental13 supplemental=null;
+            if(key!=null&&key!=-1&&old.characterKey()==key){
+                try{supplemental=new Supplemental13(in.readI16(),in.readI8(),in.readI8(),in.readI16(),in.readI8(),in.readI8(),in.readI16(),in.readI8(),in.readI8(),null);}
+                catch(IOException ex){supplemental=new Supplemental13((short)-1,(byte)-1,(byte)-1,(short)-1,(byte)-1,(byte)-1,(short)-1,(byte)-1,(byte)-1,ex.getMessage());}
+            }
+            entries.set(i,new CharacterEntry13(old.characterKey(),old.name(),old.fieldA(),old.pairCount(),old.pairs(),
+                old.fieldV(),old.fieldAC(),old.fieldT(),old.fieldDK(),old.resourceSelector(),old.resourceA(),old.resourceB(),
+                old.resourceTrailer(),key,supplemental));
+        }
+        return new Opcode13(count,null,List.copyOf(entries),readRemaining(in));
+    }
+
 }

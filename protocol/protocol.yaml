@@ -3399,6 +3399,22 @@
         "signed-count",
         "short-id-list"
       ]
+    },
+    {
+      "name": "CHARACTER_SELECTION_SERVER_ROSTER",
+      "direction": "S2C",
+      "opcode": 13,
+      "evidenceSource": "ka.java:case13",
+      "evidence": "Signed-byte count; -1 is a UTF error/message branch. Normal entries contain int character key, UTF name, byte, signed-byte-counted byte pairs, short, two bytes, short and optional resource data selected by a byte sentinel. A second pass reads one int per entry; matching keys have nine supplemental scalar fields, with all nine defaulted to -1 if the supplemental block read fails.",
+      "sections": [
+        "count-or-message-sentinel",
+        "character-entry-core",
+        "byte-key-value-pairs",
+        "optional-two-resource-blobs",
+        "optional-resource-trailer-bytes",
+        "second-pass-match-key",
+        "supplemental-nine-fields"
+      ]
     }
   ],
   "extensionSchemas": [

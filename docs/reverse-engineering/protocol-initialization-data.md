@@ -522,3 +522,12 @@ The decoder only exposes wire values; original panel navigation, confirmation pr
 - **Opcode -41:** signed short, signed byte and signed short, forwarded to the world scene.
 - **Opcode 58:** signed-byte count followed by a list of signed shorts.
 - Field names remain neutral because the downstream world-scene methods do not establish a more specific semantic name in the packet handler. Negative opcode 58 counts are rejected, matching the original array allocation behavior.
+
+
+## S2C opcode 13 — character-selection roster
+
+The packet begins with a signed-byte count. A value of -1 is a UTF error/message branch. Normal entries contain a 32-bit key, UTF character name, one byte, a signed-byte-counted list of byte pairs, several short/byte fields, and an optional pair of length-prefixed opaque resource blobs selected by a byte sentinel.
+
+A second pass reads one 32-bit key per roster entry. When it matches the entry key, nine supplemental scalar fields are read. The original client defaults all nine to -1 if that supplemental read fails. The browser decoder preserves the parse error and those defaults.
+
+This is the server roster payload used by the original character-selection screen. It is not yet wired to replace the browser's local roster, and the opaque resource blobs are not rendered.

@@ -725,3 +725,12 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode -63: signed-byte count + values displayed by a 10×10 grid-selection panel.
 - Added Java/JS codecs, schemas, generator checks and synthetic tests. CI run `43180593196` SUCCESS.
 - No lucky-box transaction/reward or grid selection is executed. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B16 — S2C opcodes -65, -41 and 58 — CI PASS
+
+- Opcode -65: two signed shorts + signed byte world event tuple.
+- Opcode -41: signed short + signed byte + signed short world event tuple.
+- Opcode 58: signed-byte count + signed-short ID list; negative counts rejected.
+- Added Java/JS codecs, schemas and synthetic vectors. CI run `43180797637` SUCCESS.
+- Downstream world mutations remain outside the decoder. Weighted project percentage unchanged; BE remains deferred.

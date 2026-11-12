@@ -881,3 +881,10 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - **Trạng thái: Một phần (lucky-box result variants + grid-selection value list + CI PASS).**
 - -62: 3 nhánh kết quả; -63: danh sách byte values của grid 10×10.
 - CI run `43180593196` PASS. Chưa thực hiện giao dịch/reward hoặc chọn ô; không tăng % tổng dự án khi chưa tính lại trọng số WBS.
+
+
+### B16 — S2C opcodes -65, -41 and 58: world event tuples
+
+- **Trạng thái: Một phần (world event tuple decoders + signed-short ID list + CI PASS).**
+- -65 và -41: các tuple short/byte; 58: danh sách short ID.
+- CI run `43180797637` PASS. Chưa áp dụng vào world state; không tăng % tổng dự án khi chưa tính lại trọng số WBS.

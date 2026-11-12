@@ -741,3 +741,42 @@ export function decodeS2COpcode58(payload) {
   for (let i = 0; i < count; i += 1) ids.push(reader.readI16());
   return { count, ids, trailingBytes: readRemaining(reader) };
 }
+
+export function decodeS2COpcode13(payload) {
+  const reader = new PacketReader(payload), count = reader.readI8();
+  if (count === -1) return { count, message: reader.readUTF(), entries: [], trailingBytes: readRemaining(reader) };
+  if (count < 0) throw new RangeError("Invalid opcode 13 character count");
+  const entries = [];
+  for (let i = 0; i < count; i += 1) {
+    const characterKey = reader.readI32(), name = reader.readUTF(), fieldA = reader.readI8();
+    const pairCount = reader.readI8(), pairs = [];
+    for (let j = 0; j < pairCount; j += 1) pairs.push([reader.readI8(), reader.readI8()]);
+    const fieldV = reader.readI16(), fieldAC = reader.readI8(), fieldT = reader.readI8(), fieldDK = reader.readI16();
+    const resourceSelector = reader.readI8();
+    let resourceA = null, resourceB = null, resourceTrailer = null;
+    if (resourceSelector !== -1) {
+      const lengthA = reader.readI16(); resourceA = readSizedBytes(reader, lengthA);
+      const lengthB = reader.readI16(); resourceB = readSizedBytes(reader, lengthB);
+      resourceTrailer = [reader.readI8(), reader.readI8()];
+    }
+    entries.push({ characterKey, name, fieldA, pairCount, pairs, fieldV, fieldAC, fieldT, fieldDK,
+      resourceSelector, resourceA, resourceB, resourceTrailer, secondPassKey: null, supplemental: null });
+  }
+  for (let i = 0; i < count; i += 1) {
+    let secondPassKey = -1;
+    try { secondPassKey = reader.readI32(); } catch {}
+    if (secondPassKey !== -1 && entries[i].characterKey === secondPassKey) {
+      let supplemental;
+      try {
+        supplemental = { firstShort: reader.readI16(), firstByte: reader.readI8(), secondByte: reader.readI8(),
+          secondShort: reader.readI16(), thirdByte: reader.readI8(), fourthByte: reader.readI8(),
+          thirdShort: reader.readI16(), fifthByte: reader.readI8(), sixthByte: reader.readI8(), parseError: null };
+      } catch (error) {
+        supplemental = { firstShort: -1, firstByte: -1, secondByte: -1, secondShort: -1, thirdByte: -1,
+          fourthByte: -1, thirdShort: -1, fifthByte: -1, sixthByte: -1, parseError: String(error?.message ?? error) };
+      }
+      entries[i].secondPassKey = secondPassKey; entries[i].supplemental = supplemental;
+    } else entries[i].secondPassKey = secondPassKey;
+  }
+  return { count, message: null, entries, trailingBytes: readRemaining(reader) };
+}
