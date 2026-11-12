@@ -929,3 +929,45 @@ export function decodeS2COpcode95(payload) {
   return { firstShort: reader.readI16(), secondShort: reader.readI16(), typeByte: reader.readI8(),
     trailingBytes: readRemaining(reader) };
 }
+
+export function decodeS2COpcode65(payload) {
+  const reader = new PacketReader(payload);
+  return { entityId: reader.readI16(), statusSelector: reader.readI8(), statusValue: reader.readI8(),
+    trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcode66(payload) {
+  const reader = new PacketReader(payload), mode = reader.readI8();
+  let playerId = null, contextByte = null, opaqueTail = null;
+  if (mode === 0 || mode === 1 || mode === -1) playerId = reader.readI16();
+  else if (mode === 2) {
+    contextByte = reader.readI8();
+    playerId = reader.readI16();
+    opaqueTail = readRemaining(reader);
+  }
+  return { mode, playerId, contextByte, opaqueTail, trailingBytes: opaqueTail === null ? readRemaining(reader) : new Uint8Array() };
+}
+export function decodeS2COpcode67(payload) {
+  const reader = new PacketReader(payload);
+  return { playerId: reader.readI16(), stateSelector: reader.readI8(), stateValue: reader.readI16(),
+    trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcode68(payload) {
+  const reader = new PacketReader(payload);
+  return { itemId: reader.readI16(), trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcode69(payload) {
+  const reader = new PacketReader(payload);
+  return { itemId: reader.readI16(), trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcode71(payload) {
+  const reader = new PacketReader(payload), discardedByte = reader.readI8(), itemOrContextId = reader.readI16();
+  let optionalModeByte = 0;
+  try { optionalModeByte = reader.readI8(); } catch {}
+  return { discardedByte, itemOrContextId, optionalModeByte, trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcodeMinus34(payload) {
+  const reader = new PacketReader(payload), itemOrContextId = reader.readI16();
+  let optionalModeByte = 0;
+  try { optionalModeByte = reader.readI8(); } catch {}
+  return { itemOrContextId, optionalModeByte, trailingBytes: readRemaining(reader) };
+}

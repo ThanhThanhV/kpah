@@ -486,6 +486,27 @@ jobs:
                   || status86Custom.statusIndex() != -1 || world95.firstShort() != -120
                   || world95.secondShort() != 340 || world95.typeByte() != -2)
                 throw new AssertionError("S2C opcodes 86/95 status and world event");
+              ProtocolWorldStateCodec.Opcode65 entity65 = ProtocolWorldStateCodec.decodeS2COpcode65(
+                new PacketWriter().writeI16(123).writeI8(1).writeI8(-4).toByteArray());
+              ProtocolWorldStateCodec.Opcode66 trade66a = ProtocolWorldStateCodec.decodeS2COpcode66(
+                new PacketWriter().writeI8(0).writeI16(456).toByteArray());
+              ProtocolWorldStateCodec.Opcode66 trade66c = ProtocolWorldStateCodec.decodeS2COpcode66(
+                new PacketWriter().writeI8(2).writeI8(7).writeI16(789).writeU8(1).writeU8(2).toByteArray());
+              ProtocolWorldStateCodec.Opcode67 trade67 = ProtocolWorldStateCodec.decodeS2COpcode67(
+                new PacketWriter().writeI16(321).writeI8(1).writeI16(-9).toByteArray());
+              ProtocolWorldStateCodec.Opcode68 storage68 = ProtocolWorldStateCodec.decodeS2COpcode68(
+                new PacketWriter().writeI16(500).toByteArray());
+              ProtocolWorldStateCodec.Opcode69 storage69 = ProtocolWorldStateCodec.decodeS2COpcode69(
+                new PacketWriter().writeI16(501).toByteArray());
+              ProtocolWorldStateCodec.Opcode71 refine71 = ProtocolWorldStateCodec.decodeS2COpcode71(
+                new PacketWriter().writeI8(-3).writeI16(88).writeI8(2).toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus34 refine34 = ProtocolWorldStateCodec.decodeS2COpcodeMinus34(
+                new PacketWriter().writeI16(90).writeI8(-1).toByteArray());
+              if (entity65.entityId() != 123 || entity65.statusValue() != -4 || trade66a.playerId() != 456
+                  || trade66c.contextByte() != 7 || trade66c.opaqueTail().length != 2 || trade67.stateValue() != -9
+                  || storage68.itemId() != 500 || storage69.itemId() != 501 || refine71.optionalModeByte() != 2
+                  || refine34.optionalModeByte() != -1)
+                throw new AssertionError("S2C opcodes 65-71 and -34 interaction/inventory events");
               PacketWriter extension3 = new PacketWriter().writeI16(123).writeI8(0).writeBool(true).writeBool(false)
                 .writeI8(1).writeI8(2).writeI8(3).writeI16(4).writeI32(5).writeI16(6).writeI32(7).writeUTF("title").writeBool(true)
                 .writeI16(11).writeI8(12).writeI16(21).writeI8(22).writeI16(23).writeI16(31).writeI16(32).writeI16(33)

@@ -590,3 +590,15 @@ Reads two signed shorts and one signed byte and forwards them unchanged to `km.s
 ### Opcode 95 consumer trace — inventory removal context
 
 Follow-up inspection of `mj.java` confirms the consumer behavior without changing the neutral wire schema: it first checks whether the second short matches the character's current item slot; if so it shows the local “item already in inventory” notice. Otherwise, type byte 0 searches the inventory for a `bo` record by its item ID; other type values search `de` records by their ID. A match is removed and the open inventory panel is refreshed. These are client-side effects after decoding, not additional packet fields.
+
+
+## S2C opcodes 65–71 and -34 — entity state, trade and storage events
+
+- **65:** signed-short entity ID + two signed bytes. The consumer updates the entity's `z.s` flag: selector 1 assigns the supplied value; any other selector clears it.
+- **66:** trade event variants. Mode 0 reads a player ID and prompts for trade; -2 displays the busy notice; 1 and -1 read a player ID for separate trade callbacks; 2 reads a context byte and player ID, then hands the remaining opaque packet body to the trade handler; 3/4/5 call no-argument trade handlers. The opaque mode-2 tail is intentionally not interpreted.
+- **67:** player ID + selector byte + short. The consumer updates the matching player/entity's trade flag (selector == 1) and trade-state short.
+- **68/69:** one item ID short. The consumer moves the matching item between inventory `z.bx` and storage `z.bA`, then closes the current panel.
+- **71:** one discarded byte, one short and optional byte (default 0); forwarded to the refinement context handler.
+- **-34:** one short and optional byte (default 0); forwarded to the alternate refinement context handler.
+
+The generated codecs only parse wire values. They do not mutate inventory, open trade dialogs or execute refinement operations.

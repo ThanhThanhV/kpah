@@ -516,3 +516,8 @@ Added Java/JavaScript decoders and synthetic vectors for the three temporary-sta
 
 
 The opcode 86/95 protocol slice is validated in CI run `43186990152`; opcode 95's consumer has also been traced to its inventory-entry removal behavior in the original client.
+
+
+### S2C trade, storage and refinement events
+
+Added source-backed Java/JavaScript decoders for opcodes 65, 66, 67, 68, 69, 71 and -34. Includes the opaque tail for trade mode 2 and source-compatible defaults for optional refinement bytes; actual trade/storage/refinement mutations remain in the client-side consumer layer.

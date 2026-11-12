@@ -3555,6 +3555,87 @@
         "second-short",
         "type-byte"
       ]
+    },
+    {
+      "name": "WORLD_ENTITY_STATUS_FLAG",
+      "direction": "S2C",
+      "opcode": 65,
+      "evidenceSource": "ka.java:case65",
+      "evidence": "Reads signed short entity ID and two signed bytes, then calls mj.a(short, int, int). Consumer looks up the entity; second byte equal to 1 sets z.s to the third byte, otherwise clears z.s.",
+      "sections": [
+        "entity-id",
+        "status-selector",
+        "status-value"
+      ]
+    },
+    {
+      "name": "PLAYER_TRADE_EVENT_VARIANTS",
+      "direction": "S2C",
+      "opcode": 66,
+      "evidenceSource": "ka.java:case66",
+      "evidence": "Mode 0 reads a short and opens a trade request; -2 emits a local busy notice; mode 1 and -1 each read a short and call separate trade-state consumers; mode 2 reads a byte then a short and passes the remaining packet bytes to the trade consumer; modes 3,4,5 invoke no-argument trade consumers.",
+      "sections": [
+        "mode-0-request",
+        "mode-minus-2-busy",
+        "mode-1-and-minus-1",
+        "mode-2-byte-short-and-opaque-tail",
+        "mode-3-4-5"
+      ]
+    },
+    {
+      "name": "PLAYER_TRADE_STATE_UPDATE",
+      "direction": "S2C",
+      "opcode": 67,
+      "evidenceSource": "ka.java:case67",
+      "evidence": "Reads a signed short player ID, signed byte state selector and signed short value; consumer sets the matching local character/entity trade flag (selector == 1) and short trade state value.",
+      "sections": [
+        "player-id",
+        "state-selector",
+        "state-value"
+      ]
+    },
+    {
+      "name": "INVENTORY_TO_STORAGE_ITEM_MOVE",
+      "direction": "S2C",
+      "opcode": 68,
+      "evidenceSource": "ka.java:case68",
+      "evidence": "Reads a signed short item ID and moves a matching item from the player's inventory collection z.bx into storage collection z.bA, then closes the current panel.",
+      "sections": [
+        "item-id"
+      ]
+    },
+    {
+      "name": "STORAGE_TO_INVENTORY_ITEM_MOVE",
+      "direction": "S2C",
+      "opcode": 69,
+      "evidenceSource": "ka.java:case69",
+      "evidence": "Reads a signed short item ID and moves a matching item from storage collection z.bA into the player's inventory collection z.bx, then closes the current panel.",
+      "sections": [
+        "item-id"
+      ]
+    },
+    {
+      "name": "REFINEMENT_CONTEXT_EVENT",
+      "direction": "S2C",
+      "opcode": 71,
+      "evidenceSource": "ka.java:case71",
+      "evidence": "Reads and discards one signed byte, reads a signed short, then attempts one optional signed byte defaulting to zero; passes the short and optional byte to the refinement-context consumer.",
+      "sections": [
+        "discarded-byte",
+        "item-or-context-id",
+        "optional-mode-byte"
+      ]
+    },
+    {
+      "name": "REFINEMENT_CONTEXT_EVENT_VARIANT",
+      "direction": "S2C",
+      "opcode": -34,
+      "evidenceSource": "ka.java:case-34",
+      "evidence": "Reads a signed short followed by one optional signed byte defaulting to zero; passes both values to the alternate refinement-context consumer.",
+      "sections": [
+        "item-or-context-id",
+        "optional-mode-byte"
+      ]
     }
   ],
   "extensionSchemas": [

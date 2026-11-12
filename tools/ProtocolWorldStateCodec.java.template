@@ -845,4 +845,40 @@ public final class ProtocolWorldStateCodec {
         return new Opcode95(in.readI16(),in.readI16(),in.readI8(),readRemaining(in));
     }
 
+    public record Opcode65(short entityId,byte statusSelector,byte statusValue,byte[] trailingBytes) {}
+    public static Opcode65 decodeS2COpcode65(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new Opcode65(in.readI16(),in.readI8(),in.readI8(),readRemaining(in));
+    }
+    public record Opcode66(byte mode,Short playerId,Byte contextByte,byte[] opaqueTail,byte[] trailingBytes) {}
+    public static Opcode66 decodeS2COpcode66(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte mode=in.readI8();Short player=null;Byte context=null;byte[] opaque=null;
+        if(mode==0||mode==1||mode==-1)player=in.readI16();
+        else if(mode==2){context=in.readI8();player=in.readI16();opaque=readRemaining(in);}
+        return new Opcode66(mode,player,context,opaque,opaque==null?readRemaining(in):new byte[0]);
+    }
+    public record Opcode67(short playerId,byte stateSelector,short stateValue,byte[] trailingBytes) {}
+    public static Opcode67 decodeS2COpcode67(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new Opcode67(in.readI16(),in.readI8(),in.readI16(),readRemaining(in));
+    }
+    public record Opcode68(short itemId,byte[] trailingBytes) {}
+    public static Opcode68 decodeS2COpcode68(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new Opcode68(in.readI16(),readRemaining(in));
+    }
+    public record Opcode69(short itemId,byte[] trailingBytes) {}
+    public static Opcode69 decodeS2COpcode69(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new Opcode69(in.readI16(),readRemaining(in));
+    }
+    public record Opcode71(byte discardedByte,short itemOrContextId,byte optionalModeByte,byte[] trailingBytes) {}
+    public static Opcode71 decodeS2COpcode71(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte discarded=in.readI8();short id=in.readI16();byte optional=0;
+        try{optional=in.readI8();}catch(IOException ignored){}
+        return new Opcode71(discarded,id,optional,readRemaining(in));
+    }
+    public record OpcodeMinus34(short itemOrContextId,byte optionalModeByte,byte[] trailingBytes) {}
+    public static OpcodeMinus34 decodeS2COpcodeMinus34(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);short id=in.readI16();byte optional=0;
+        try{optional=in.readI8();}catch(IOException ignored){}
+        return new OpcodeMinus34(id,optional,readRemaining(in));
+    }
+
 }
