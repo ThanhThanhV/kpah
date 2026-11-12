@@ -368,3 +368,12 @@ Bytecode and CFR trace show a structured initialization payload with these order
 6. Unsigned-byte list of `bd` records: two unsigned-byte IDs, int, two UTF strings, two signed bytes, boolean, short.
 
 The decoder preserves source field names neutrally and records per-entry definition errors. The client additionally derives display fields from string suffixes and populates static catalog objects; those transformations are not inferred or applied here. This packet is a catalog source, not proof that shop/equipment transactions are server-implemented in this browser client.
+
+
+## S2C opcode 2 — server text and option variants
+
+The first field is modified UTF. Prefix `2` selects a signed-byte-counted list of UTF label, signed-short value and UTF description records; the suffix after the prefix is passed to the original UI as a selector. Prefix `3` carries provider and agent UTF strings. Any other string is a plain server message. The decoder exposes data only and does not invent browser navigation behavior.
+
+## S2C opcode 22 — world entity auxiliary update
+
+Reads two signed shorts, one signed byte, one signed short, one int, and an optional signed byte. The final byte defaults to zero if absent, matching the original client's local default. Parameter semantics remain neutral pending proof from the downstream consumer.

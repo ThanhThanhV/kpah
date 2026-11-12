@@ -2768,6 +2768,33 @@
         "signed-bd-list",
         "unsigned-bd-list"
       ]
+    },
+    {
+      "name": "SERVER_TEXT_AND_OPTION_LIST",
+      "direction": "S2C",
+      "opcode": 2,
+      "evidenceSource": "ka.java:case2",
+      "evidence": "Reads a modified-UTF string discriminator. Prefix 2 is followed by a signed-byte count of UTF/short/UTF option records and dispatches the suffix as a selector; prefix 3 is followed by provider and agent UTF strings; all other strings are passed as a single server message.",
+      "sections": [
+        "utf-discriminator",
+        "prefix-2-option-records",
+        "prefix-3-provider-agent",
+        "plain-server-message"
+      ]
+    },
+    {
+      "name": "WORLD_ENTITY_AUXILIARY_UPDATE",
+      "direction": "S2C",
+      "opcode": 22,
+      "evidenceSource": "ka.java:case22",
+      "evidence": "Reads two signed shorts, one signed byte, one signed short, one int, and an optional signed byte defaulting to zero when absent; forwards all six values to the world-state consumer.",
+      "sections": [
+        "first-short",
+        "type-byte",
+        "second-short",
+        "value-int",
+        "optional-byte-default-zero"
+      ]
     }
   ],
   "extensionSchemas": [

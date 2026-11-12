@@ -292,6 +292,23 @@ jobs:
                   || variant231.modeByte() != 2 || variant232.subtype2Items().get(0).normalizedValue() != 254
                   || variant234.subtype4Trailer()[0] != -1)
                 throw new AssertionError("S2C opcode 23 inventory context variants");
+
+              ProtocolWorldStateCodec.Opcode2 message2 = ProtocolWorldStateCodec.decodeS2COpcode2(
+                new PacketWriter().writeUTF("2shop").writeI8(2).writeUTF("Potion").writeI16(101).writeUTF("Restore HP")
+                  .writeUTF("Sword").writeI16(202).writeUTF("Weapon").toByteArray());
+              ProtocolWorldStateCodec.Opcode2 provider2 = ProtocolWorldStateCodec.decodeS2COpcode2(
+                new PacketWriter().writeUTF("3").writeUTF("provider-x").writeUTF("agent-y").toByteArray());
+              ProtocolWorldStateCodec.Opcode2 plain2 = ProtocolWorldStateCodec.decodeS2COpcode2(
+                new PacketWriter().writeUTF("Server maintenance").toByteArray());
+              ProtocolWorldStateCodec.Opcode22 aux22 = ProtocolWorldStateCodec.decodeS2COpcode22(
+                new PacketWriter().writeI16(12).writeI8(-3).writeI16(34).writeI32(5678).writeI8(9).toByteArray());
+              ProtocolWorldStateCodec.Opcode22 aux22Default = ProtocolWorldStateCodec.decodeS2COpcode22(
+                new PacketWriter().writeI16(1).writeI8(2).writeI16(3).writeI32(4).toByteArray());
+              if (!message2.variant().equals("options") || !message2.selector().equals("shop")
+                  || message2.options().get(1).value() != 202 || !provider2.agent().equals("agent-y")
+                  || !plain2.message().equals("Server maintenance") || aux22.optionalByte() != 9
+                  || aux22Default.optionalByte() != 0)
+                throw new AssertionError("S2C opcode 2/22 variants");
               PacketWriter catalog25Writer = new PacketWriter().writeU8(1).writeU8(7).writeUTF("lookup").writeI8(-1).writeI8(2)
                 .writeI8(1).writeI16(100).writeI16(200);
               for (int i = 0; i < 5; i++) catalog25Writer.writeI8(i - 2);

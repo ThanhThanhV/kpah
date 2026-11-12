@@ -237,3 +237,24 @@ export function decodeS2COpcode25(payload) {
     definitionCount, definitionArrayLength, definitions, definitionErrors,
     signedListCount, signedList, unsignedListCount, unsignedList, trailingBytes: readRemaining(reader) };
 }
+
+export function decodeS2COpcode2(payload) {
+  const reader = new PacketReader(payload), discriminator = reader.readUTF();
+  if (discriminator.startsWith("2")) {
+    const count = reader.readI8();
+    if (count < 0) throw new RangeError("Negative opcode 2 option count");
+    const options = [];
+    for (let i = 0; i < count; i += 1) options.push({ label: reader.readUTF(), value: reader.readI16(), description: reader.readUTF() });
+    return { variant: "options", discriminator, selector: discriminator.slice(1), options, trailingBytes: readRemaining(reader) };
+  }
+  if (discriminator.startsWith("3")) return {
+    variant: "provider-agent", discriminator, provider: reader.readUTF(), agent: reader.readUTF(), trailingBytes: readRemaining(reader)
+  };
+  return { variant: "server-message", discriminator, message: discriminator, trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcode22(payload) {
+  const reader = new PacketReader(payload), firstShort = reader.readI16(), typeByte = reader.readI8();
+  const secondShort = reader.readI16(), valueInt = reader.readI32();
+  const optionalByte = reader.remaining() > 0 ? reader.readI8() : 0;
+  return { firstShort, typeByte, secondShort, valueInt, optionalByte, trailingBytes: readRemaining(reader) };
+}

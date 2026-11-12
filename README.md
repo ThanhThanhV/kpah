@@ -393,3 +393,8 @@ Added a branch-aware decoder for all five opcode 23 subtypes: raw byte list, cat
 ### S2C opcode 25 static item/shop catalog
 
 Added a structured decoder for lookup records, coordinate pairs, five fixed configuration bytes, indexed item definitions, and two shop/catalog lists. Signed/unsigned widths and per-definition error boundaries are retained; catalog-derived UI fields remain outside the protocol parser.
+
+
+### S2C opcodes 2 and 22
+
+Added source-backed decoders for server-text variants (option list, provider/agent pair, plain message) and the world-entity auxiliary update, including the optional-byte default. Java and JavaScript synthetic vectors cover all branches.

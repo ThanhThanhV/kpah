@@ -220,3 +220,25 @@ public final class ProtocolWorldStateCodec {
     }
 
 }
+
+    public record Option2(String label, short value, String description) {}
+    public record Opcode2(String variant, String discriminator, String selector, List<Option2> options,
+                          String provider, String agent, String message, byte[] trailingBytes) {}
+    public static Opcode2 decodeS2COpcode2(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);String discriminator=in.readUTF();
+        if(discriminator.startsWith("2")){
+            int count=in.readI8();if(count<0)throw new IOException("Negative opcode 2 option count");
+            List<Option2> options=new ArrayList<>();
+            for(int i=0;i<count;i++)options.add(new Option2(in.readUTF(),in.readI16(),in.readUTF()));
+            return new Opcode2("options",discriminator,discriminator.substring(1),List.copyOf(options),null,null,null,readRemaining(in));
+        }
+        if(discriminator.startsWith("3"))
+            return new Opcode2("provider-agent",discriminator,null,List.of(),in.readUTF(),in.readUTF(),null,readRemaining(in));
+        return new Opcode2("server-message",discriminator,null,List.of(),null,null,discriminator,readRemaining(in));
+    }
+    public record Opcode22(short firstShort, byte typeByte, short secondShort, int valueInt, byte optionalByte, byte[] trailingBytes) {}
+    public static Opcode22 decodeS2COpcode22(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);short first=in.readI16();byte type=in.readI8();
+        short second=in.readI16();int value=in.readI32();byte optional=in.remaining()>0?in.readI8():0;
+        return new Opcode22(first,type,second,value,optional,readRemaining(in));
+    }

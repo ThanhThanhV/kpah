@@ -100,3 +100,15 @@ assert.equal(catalog25.lookupRecords[0].id,7);assert.equal(catalog25.coordinateP
 assert.equal(catalog25.definitions[0].name,"Sword9");assert.equal(catalog25.definitions[0].valuesL.length,10);
 assert.equal(catalog25.signedList[0].textK,"desc");assert.equal(catalog25.unsignedList[0].id,23);
 assert.equal(catalog25.unsignedList[0].shortM,90);
+
+const message2=decodeS2COpcode2(new PacketWriter().writeUTF("2shop").writeI8(2).writeUTF("Potion").writeI16(101).writeUTF("Restore HP").writeUTF("Sword").writeI16(202).writeUTF("Weapon").toUint8Array());
+assert.equal(message2.variant,"options");assert.equal(message2.selector,"shop");assert.equal(message2.options[1].value,202);
+const provider2=decodeS2COpcode2(new PacketWriter().writeUTF("3").writeUTF("provider-x").writeUTF("agent-y").toUint8Array());
+assert.equal(provider2.variant,"provider-agent");assert.equal(provider2.provider,"provider-x");assert.equal(provider2.agent,"agent-y");
+const plain2=decodeS2COpcode2(new PacketWriter().writeUTF("Server maintenance").toUint8Array());
+assert.equal(plain2.variant,"server-message");assert.equal(plain2.message,"Server maintenance");
+assert.throws(()=>decodeS2COpcode2(new PacketWriter().writeUTF("2bad").writeI8(-1).toUint8Array()),/Negative opcode 2 option count/);
+const aux22=decodeS2COpcode22(new PacketWriter().writeI16(12).writeI8(-3).writeI16(34).writeI32(5678).writeI8(9).toUint8Array());
+assert.deepEqual([aux22.firstShort,aux22.typeByte,aux22.secondShort,aux22.valueInt,aux22.optionalByte],[12,-3,34,5678,9]);
+const aux22Default=decodeS2COpcode22(new PacketWriter().writeI16(1).writeI8(2).writeI16(3).writeI32(4).toUint8Array());
+assert.equal(aux22Default.optionalByte,0);
