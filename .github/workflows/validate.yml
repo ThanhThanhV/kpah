@@ -309,6 +309,30 @@ jobs:
                   || !plain2.message().equals("Server maintenance") || aux22.optionalByte() != 9
                   || aux22Default.optionalByte() != 0)
                 throw new AssertionError("S2C opcode 2/22 variants");
+
+              PacketWriter resource26Writer = new PacketWriter().writeU8(3).writeI16(3).writeU8(1).writeU8(2).writeU8(255)
+                .writeU8(1).writeI16(2).writeU8(10).writeU8(11).writeU8(1).writeI16(42).writeI16(2).writeU8(12).writeU8(13)
+                .writeI16(1).writeI16(43).writeI16(2).writeU8(14).writeU8(15)
+                .writeI8(1).writeI8(1).writeI8(2).writeI8(3).writeI8(4).writeI8(-1).writeI8(-2).writeI8(-3).writeI8(-4)
+                .writeI8(2).writeI8(1).writeI8(2).writeI8(1).writeI8(3).writeI8(1).writeI8(4).writeI8(1).writeI8(5)
+                .writeI8(2).writeI8(6).writeI8(7).writeI8(1).writeI8(8);
+              ProtocolWorldStateCodec.Opcode26 resource26=ProtocolWorldStateCodec.decodeS2COpcode26(resource26Writer.toByteArray());
+              ProtocolWorldStateCodec.Opcode2 message2=ProtocolWorldStateCodec.decodeS2COpcode2(
+                new PacketWriter().writeUTF("2shop").writeI8(1).writeUTF("Potion").writeI16(101).writeUTF("Restore HP").toByteArray());
+              ProtocolWorldStateCodec.Opcode2 provider2=ProtocolWorldStateCodec.decodeS2COpcode2(
+                new PacketWriter().writeUTF("3").writeUTF("provider-x").writeUTF("agent-y").toByteArray());
+              ProtocolWorldStateCodec.Opcode2 plain2=ProtocolWorldStateCodec.decodeS2COpcode2(
+                new PacketWriter().writeUTF("Server maintenance").toByteArray());
+              ProtocolWorldStateCodec.Opcode22 aux22=ProtocolWorldStateCodec.decodeS2COpcode22(
+                new PacketWriter().writeI16(12).writeI8(-3).writeI16(34).writeI32(5678).writeI8(9).toByteArray());
+              ProtocolWorldStateCodec.Opcode22 aux22Default=ProtocolWorldStateCodec.decodeS2COpcode22(
+                new PacketWriter().writeI16(1).writeI8(2).writeI16(3).writeI32(4).toByteArray());
+              if(resource26.templateCount()!=3||resource26.indexedImages().get(0).id()!=42||resource26.indexedGraphics().get(0).id()!=43
+                ||resource26.cv().get(0)[1]!=2||resource26.cw().get(0)[0]!=4||resource26.cx().get(1)[0]!=8
+                ||!resource26.sectionErrors().isEmpty()||!message2.selector().equals("shop")||message2.options().get(0).value()!=101
+                ||!provider2.agent().equals("agent-y")||!plain2.message().equals("Server maintenance")
+                ||aux22.optionalByte()!=9||aux22Default.optionalByte()!=0)
+                throw new AssertionError("S2C opcodes 2/22/26 decoders");
               PacketWriter catalog25Writer = new PacketWriter().writeU8(1).writeU8(7).writeUTF("lookup").writeI8(-1).writeI8(2)
                 .writeI8(1).writeI16(100).writeI16(200);
               for (int i = 0; i < 5; i++) catalog25Writer.writeI8(i - 2);

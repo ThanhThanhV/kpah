@@ -219,6 +219,61 @@ public final class ProtocolWorldStateCodec {
             unsignedCount,List.copyOf(unsigned),readRemaining(in));
     }
 
+
+    private static byte[] readSizedBytes(PacketReader in, int length) throws IOException {
+        if(length<0)throw new IOException("Negative resource blob length");
+        byte[] data=new byte[length];for(int i=0;i<length;i++)data[i]=(byte)in.readU8();return data;
+    }
+    private static List<byte[]> readByteArrays(PacketReader in,int groups) throws IOException {
+        List<byte[]> result=new ArrayList<>();
+        for(int group=0;group<groups;group++){
+            int count=in.readI8();if(count<0)throw new IOException("Negative resource byte-array count");
+            byte[] data=new byte[count];for(int i=0;i<count;i++)data[i]=(byte)in.readI8();result.add(data);
+        }
+        return result;
+    }
+    public record IndexedBlob26(short id,byte[] data) {}
+    public record Opcode26(int templateCount,short primaryLength,byte[] primaryData,List<byte[]> effectData,
+        List<IndexedBlob26> indexedImages,List<IndexedBlob26> indexedGraphics,List<byte[]> ct,List<byte[]> cu,
+        List<byte[]> cv,List<byte[]> cw,List<byte[]> cx,List<String> sectionErrors,byte[] trailingBytes) {}
+    public static Opcode26 decodeS2COpcode26(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);int templates=in.readU8();short primaryLength=in.readI16();
+        byte[] primary=readSizedBytes(in,primaryLength);List<String> errors=new ArrayList<>();
+        List<byte[]> effects=new ArrayList<>();
+        try{int count=in.readU8();for(int i=0;i<count;i++)effects.add(readSizedBytes(in,in.readI16()));}
+        catch(Exception ex){errors.add("effectData: "+ex.getMessage());}
+        List<IndexedBlob26> images=new ArrayList<>();
+        try{int count=in.readU8();for(int i=0;i<count;i++){short id=in.readI16();images.add(new IndexedBlob26(id,readSizedBytes(in,in.readI16())));}}
+        catch(Exception ex){errors.add("indexedImages: "+ex.getMessage());}
+        List<IndexedBlob26> graphics=new ArrayList<>();
+        try{short count=in.readI16();for(int i=0;i<count;i++){short id=in.readI16();graphics.add(new IndexedBlob26(id,readSizedBytes(in,in.readI16())));}}
+        catch(Exception ex){errors.add("indexedGraphics: "+ex.getMessage());}
+        List<byte[]> ct=new ArrayList<>(),cu=new ArrayList<>();
+        try{int count=in.readI8();if(count<0)throw new IOException("Negative paired-array count");
+            for(int i=0;i<count;i++){byte[] a=new byte[4],b=new byte[4];for(int j=0;j<4;j++)a[j]=in.readI8();for(int j=0;j<4;j++)b[j]=in.readI8();ct.add(a);cu.add(b);}
+        }catch(Exception ex){errors.add("ct-cu: "+ex.getMessage());ct=List.of(new byte[]{0,0,7,-7});cu=List.of(new byte[]{-20,-15,-15,-15});}
+        List<byte[]> cv;try{cv=readByteArrays(in,2);}catch(Exception ex){errors.add("cv: "+ex.getMessage());cv=List.of(new byte[1],new byte[1]);}
+        List<byte[]> cw;try{cw=readByteArrays(in,2);}catch(Exception ex){errors.add("cw: "+ex.getMessage());cw=List.of(new byte[1],new byte[1]);}
+        List<byte[]> cx;try{cx=readByteArrays(in,2);}catch(Exception ex){errors.add("cx: "+ex.getMessage());cx=List.of(new byte[1],new byte[1]);}
+        return new Opcode26(templates,primaryLength,primary,List.copyOf(effects),List.copyOf(images),List.copyOf(graphics),
+            List.copyOf(ct),List.copyOf(cu),List.copyOf(cv),List.copyOf(cw),List.copyOf(cx),List.copyOf(errors),readRemaining(in));
+    }
+    public record Option2(String label,short value,String description) {}
+    public record Opcode2(String variant,String discriminator,String selector,List<Option2> options,String provider,String agent,String message,byte[] trailingBytes) {}
+    public static Opcode2 decodeS2COpcode2(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);String d=in.readUTF();
+        if(d.startsWith("2")){int count=in.readI8();if(count<0)throw new IOException("Negative opcode 2 option count");List<Option2> options=new ArrayList<>();
+            for(int i=0;i<count;i++)options.add(new Option2(in.readUTF(),in.readI16(),in.readUTF()));
+            return new Opcode2("options",d,d.substring(1),List.copyOf(options),null,null,null,readRemaining(in));}
+        if(d.startsWith("3"))return new Opcode2("provider-agent",d,null,List.of(),in.readUTF(),in.readUTF(),null,readRemaining(in));
+        return new Opcode2("server-message",d,null,List.of(),null,null,d,readRemaining(in));
+    }
+    public record Opcode22(short firstShort,byte typeByte,short secondShort,int valueInt,byte optionalByte,byte[] trailingBytes) {}
+    public static Opcode22 decodeS2COpcode22(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);short a=in.readI16();byte b=in.readI8();short c=in.readI16();int d=in.readI32();
+        byte e=in.remaining()>0?in.readI8():0;return new Opcode22(a,b,c,d,e,readRemaining(in));
+    }
+
 }
 
     public record Option2(String label, short value, String description) {}

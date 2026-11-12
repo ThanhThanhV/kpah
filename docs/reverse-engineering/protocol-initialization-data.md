@@ -377,3 +377,12 @@ The first field is modified UTF. Prefix `2` selects a signed-byte-counted list o
 ## S2C opcode 22 — world entity auxiliary update
 
 Reads two signed shorts, one signed byte, one signed short, one int, and an optional signed byte. The final byte defaults to zero if absent, matching the original client's local default. Parameter semantics remain neutral pending proof from the downstream consumer.
+
+
+## S2C opcode 26 — world resource bundle
+
+Opcode 26 loads several binary resource families: template count, primary raw blob, effect blobs, indexed image blobs, indexed graphics blobs, paired four-byte configuration arrays, and three pairs of variable byte arrays. Each optional family has an independent catch boundary. On failure, the original client installs fixed fallback arrays for `ct/cu`, or two one-byte arrays for `cv/cw/cx`. Resource IDs and binary contents remain opaque; this decoder does not invent image formats or gameplay semantics.
+
+## S2C opcodes 2 and 22
+
+Opcode 2 carries one modified-UTF discriminator: prefix `2` selects a signed-byte-counted list of UTF label / signed-short value / UTF description records; prefix `3` carries provider and agent strings; otherwise the value is a plain server message. Opcode 22 carries two signed shorts, a signed byte, another short, an int and an optional byte defaulting to zero. Field semantics remain neutral where the consumer has not proven them.

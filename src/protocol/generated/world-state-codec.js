@@ -258,3 +258,65 @@ export function decodeS2COpcode22(payload) {
   const optionalByte = reader.remaining() > 0 ? reader.readI8() : 0;
   return { firstShort, typeByte, secondShort, valueInt, optionalByte, trailingBytes: readRemaining(reader) };
 }
+
+function readSizedBytes(reader, length) {
+  if (length < 0) throw new RangeError("Negative resource blob length");
+  const bytes = new Uint8Array(length);
+  for (let i = 0; i < length; i += 1) bytes[i] = reader.readU8();
+  return bytes;
+}
+function readByteArrays(reader, groups) {
+  const result = [];
+  for (let group = 0; group < groups; group += 1) {
+    const count = reader.readI8();
+    if (count < 0) throw new RangeError("Negative resource byte-array count");
+    const bytes = new Uint8Array(count);
+    for (let i = 0; i < count; i += 1) bytes[i] = reader.readI8();
+    result.push(bytes);
+  }
+  return result;
+}
+export function decodeS2COpcode26(payload) {
+  const reader = new PacketReader(payload);
+  const templateCount = reader.readU8(), primaryLength = reader.readI16();
+  const primaryData = readSizedBytes(reader, primaryLength), sectionErrors = [];
+  let effectData = [];
+  try {
+    const count = reader.readU8();
+    for (let i = 0; i < count; i += 1) effectData.push(readSizedBytes(reader, reader.readI16()));
+  } catch (error) { sectionErrors.push({ section: "effectData", error: String(error?.message ?? error) }); }
+  let indexedImages = [];
+  try {
+    const count = reader.readU8();
+    for (let i = 0; i < count; i += 1) indexedImages.push({ id: reader.readI16(), data: readSizedBytes(reader, reader.readI16()) });
+  } catch (error) { sectionErrors.push({ section: "indexedImages", error: String(error?.message ?? error) }); }
+  let indexedGraphics = [];
+  try {
+    const count = reader.readI16();
+    for (let i = 0; i < count; i += 1) indexedGraphics.push({ id: reader.readI16(), data: readSizedBytes(reader, reader.readI16()) });
+  } catch (error) { sectionErrors.push({ section: "indexedGraphics", error: String(error?.message ?? error) }); }
+  let ct = [], cu = [];
+  try {
+    const count = reader.readI8();
+    if (count < 0) throw new RangeError("Negative paired-array count");
+    for (let i = 0; i < count; i += 1) {
+      const a = new Uint8Array(4), b = new Uint8Array(4);
+      for (let j = 0; j < 4; j += 1) a[j] = reader.readI8();
+      for (let j = 0; j < 4; j += 1) b[j] = reader.readI8();
+      ct.push(a); cu.push(b);
+    }
+  } catch (error) {
+    sectionErrors.push({ section: "ct-cu", error: String(error?.message ?? error) });
+    ct = [Uint8Array.from([0, 0, 7, 249])]; cu = [Uint8Array.from([236, 241, 241, 241])];
+  }
+  let cv;
+  try { cv = readByteArrays(reader, 2); }
+  catch (error) { sectionErrors.push({ section: "cv", error: String(error?.message ?? error) }); cv = [new Uint8Array(1), new Uint8Array(1)]; }
+  let cw;
+  try { cw = readByteArrays(reader, 2); }
+  catch (error) { sectionErrors.push({ section: "cw", error: String(error?.message ?? error) }); cw = [new Uint8Array(1), new Uint8Array(1)]; }
+  let cx;
+  try { cx = readByteArrays(reader, 2); }
+  catch (error) { sectionErrors.push({ section: "cx", error: String(error?.message ?? error) }); cx = [new Uint8Array(1), new Uint8Array(1)]; }
+  return { templateCount, primaryLength, primaryData, effectData, indexedImages, indexedGraphics, ct, cu, cv, cw, cx, sectionErrors, trailingBytes: readRemaining(reader) };
+}

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
-import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode12, decodeS2COpcode17, decodeS2COpcode7, decodeS2COpcode18, decodeS2COpcode19, decodeS2COpcode20, decodeS2COpcode21, decodeS2COpcode27, decodeS2COpcode28, decodeS2COpcode30, decodeS2COpcode32, decodeS2COpcode33, decodeS2COpcode2, decodeS2COpcode22, decodeS2COpcode23, decodeS2COpcode25, decodeS2COpcode61, decodeS2COpcode78 } from "../src/protocol/generated/world-state-codec.js";
+import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode12, decodeS2COpcode17, decodeS2COpcode7, decodeS2COpcode18, decodeS2COpcode19, decodeS2COpcode20, decodeS2COpcode21, decodeS2COpcode27, decodeS2COpcode28, decodeS2COpcode30, decodeS2COpcode32, decodeS2COpcode33, decodeS2COpcode2, decodeS2COpcode22, decodeS2COpcode2, decodeS2COpcode22, decodeS2COpcode23, decodeS2COpcode25, decodeS2COpcode61, decodeS2COpcode78 } from "../src/protocol/generated/world-state-codec.js";
 const spawn=new PacketWriter().writeI8(1).writeU8(7).writeI16(123).writeI16(456).writeI16(789).writeI8(2)
  .writeI32(-99).writeI8(4).writeI8(5).writeBool(false)
  .writeI8(0).writeU8(8).writeI16(124).writeI16(500).writeI16(600).writeI8(1).writeI32(77).writeI8(6).writeBool(true).toUint8Array();
@@ -101,6 +101,33 @@ assert.equal(catalog25.definitions[0].name,"Sword9");assert.equal(catalog25.defi
 assert.equal(catalog25.signedList[0].textK,"desc");assert.equal(catalog25.unsignedList[0].id,23);
 assert.equal(catalog25.unsignedList[0].shortM,90);
 
+const message2=decodeS2COpcode2(new PacketWriter().writeUTF("2shop").writeI8(2).writeUTF("Potion").writeI16(101).writeUTF("Restore HP").writeUTF("Sword").writeI16(202).writeUTF("Weapon").toUint8Array());
+assert.equal(message2.variant,"options");assert.equal(message2.selector,"shop");assert.equal(message2.options[1].value,202);
+const provider2=decodeS2COpcode2(new PacketWriter().writeUTF("3").writeUTF("provider-x").writeUTF("agent-y").toUint8Array());
+assert.equal(provider2.variant,"provider-agent");assert.equal(provider2.provider,"provider-x");assert.equal(provider2.agent,"agent-y");
+const plain2=decodeS2COpcode2(new PacketWriter().writeUTF("Server maintenance").toUint8Array());
+assert.equal(plain2.variant,"server-message");assert.equal(plain2.message,"Server maintenance");
+assert.throws(()=>decodeS2COpcode2(new PacketWriter().writeUTF("2bad").writeI8(-1).toUint8Array()),/Negative opcode 2 option count/);
+const aux22=decodeS2COpcode22(new PacketWriter().writeI16(12).writeI8(-3).writeI16(34).writeI32(5678).writeI8(9).toUint8Array());
+assert.deepEqual([aux22.firstShort,aux22.typeByte,aux22.secondShort,aux22.valueInt,aux22.optionalByte],[12,-3,34,5678,9]);
+const aux22Default=decodeS2COpcode22(new PacketWriter().writeI16(1).writeI8(2).writeI16(3).writeI32(4).toUint8Array());
+assert.equal(aux22Default.optionalByte,0);
+
+const resource26Writer=new PacketWriter().writeU8(3).writeI16(3).writeU8(1).writeU8(2).writeU8(255)
+ .writeU8(1).writeI16(2).writeU8(10).writeU8(11)
+ .writeU8(1).writeI16(42).writeI16(2).writeU8(12).writeU8(13)
+ .writeI16(1).writeI16(43).writeI16(2).writeU8(14).writeU8(15)
+ .writeI8(1).writeI8(1).writeI8(2).writeI8(3).writeI8(4).writeI8(-1).writeI8(-2).writeI8(-3).writeI8(-4);
+for(const values of [[1,2],[3],[4],[5],[6,7],[8]]){resource26Writer.writeI8(values.length);for(const v of values)resource26Writer.writeI8(v);}
+const resource26=decodeS2COpcode26(resource26Writer.toUint8Array());
+assert.equal(resource26.templateCount,3);assert.deepEqual([...resource26.primaryData],[1,2,255]);
+assert.deepEqual([...resource26.effectData[0]],[10,11]);assert.equal(resource26.indexedImages[0].id,42);
+assert.equal(resource26.indexedGraphics[0].id,43);assert.deepEqual([...resource26.ct[0]],[1,2,3,4]);
+assert.deepEqual([...resource26.cu[0]],[255,254,253,252]);assert.deepEqual([...resource26.cv[0]],[1,2]);
+assert.deepEqual([...resource26.cw[0]],[4]);assert.deepEqual([...resource26.cx[1]],[8]);assert.equal(resource26.sectionErrors.length,0);
+assert.throws(()=>decodeS2COpcode26(new PacketWriter().writeU8(1).writeI16(-1).toUint8Array()),/Negative resource blob length/);
+const resource26Fallback=decodeS2COpcode26(new PacketWriter().writeU8(0).writeI16(0).writeU8(0).writeU8(0).writeI16(0).writeI8(-1).toUint8Array());
+assert.deepEqual([...resource26Fallback.ct[0]],[0,0,7,249]);assert.deepEqual([...resource26Fallback.cu[0]],[236,241,241,241]);
 const message2=decodeS2COpcode2(new PacketWriter().writeUTF("2shop").writeI8(2).writeUTF("Potion").writeI16(101).writeUTF("Restore HP").writeUTF("Sword").writeI16(202).writeUTF("Weapon").toUint8Array());
 assert.equal(message2.variant,"options");assert.equal(message2.selector,"shop");assert.equal(message2.options[1].value,202);
 const provider2=decodeS2COpcode2(new PacketWriter().writeUTF("3").writeUTF("provider-x").writeUTF("agent-y").toUint8Array());

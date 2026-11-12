@@ -398,3 +398,8 @@ Added a structured decoder for lookup records, coordinate pairs, five fixed conf
 ### S2C opcodes 2 and 22
 
 Added source-backed decoders for server-text variants (option list, provider/agent pair, plain message) and the world-entity auxiliary update, including the optional-byte default. Java and JavaScript synthetic vectors cover all branches.
+
+
+### S2C opcodes 2, 22 and 26
+
+Added source-backed Java/JavaScript decoders for server text/options, world-entity auxiliary updates and the world resource bundle. Synthetic vectors cover all opcode 2 variants, opcode 22's optional-byte default, opcode 26's binary sections and original fallback arrays.
