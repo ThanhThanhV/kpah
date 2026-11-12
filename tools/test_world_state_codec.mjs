@@ -286,7 +286,7 @@ const asset49=new PacketWriter().writeI8(1).writeI8(8).writeI16(2).writeU8(1).wr
  .writeI8(1).writeI8(3).writeI8(4).writeI8(5).writeI8(6).writeI8(7)
  .writeI8(1).writeI8(2).writeI8(8).writeI8(9).writeI8(10)
  .writeI8(2).writeI8(11).writeI8(12).toUint8Array();
-const asset49Decoded=decodeS2COpcodeMinus49(asset49.toUint8Array());
+const asset49Decoded=decodeS2COpcodeMinus49(asset49);
 assert.deepEqual([...asset49Decoded.imageBytes],[1,2]);assert.equal(asset49Decoded.descriptors[0].b,7);
 assert.deepEqual(asset49Decoded.groups[0].triples,[[8,9,10]]);assert.deepEqual(asset49Decoded.finalBytes,[11,12]);
 const image51=decodeS2COpcodeMinus51(new PacketWriter().writeI16(77).writeU8(1).writeU8(2).writeU8(3).toUint8Array());
