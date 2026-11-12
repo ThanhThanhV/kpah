@@ -438,6 +438,6 @@ assert.deepEqual([catalog62.records[0].fieldTextD,catalog62.records[0].fieldNInt
 const catalog62Close=decodeS2COpcode62(new PacketWriter().writeI8(-1).toUint8Array());
 assert.equal(catalog62Close.collectionIndex,null);
 const matrix80=decodeS2COpcode80(new PacketWriter().writeI8(1).writeI8(2).writeI8(-1).writeI8(2)
- .writeI16(100).writeI16(-100).writeI16(200).writeI16(-200).toUint8Array());
-assert.deepEqual([matrix80.entryCount,matrix80.entries[0].byteValues,matrix80.entries[0].shortValuesD],[1,[-1,2],[200,-200]]);
+ .writeI16(100).writeI16(-100).writeI16(200).writeI16(-200).writeI16(300).writeI16(-300).toUint8Array());
+assert.deepEqual([matrix80.entryCount,matrix80.entries[0].byteValues,matrix80.entries[0].shortValuesD],[1,[-1,2],[300,-300]]);
 assert.throws(()=>decodeS2COpcode80(new PacketWriter().writeI8(1).writeI8(-1).toUint8Array()),/Negative opcode 80 value count/);

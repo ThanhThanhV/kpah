@@ -997,6 +997,7 @@ export function decodeS2COpcode62(payload) {
 }
 export function decodeS2COpcode80(payload) {
   const reader = new PacketReader(payload), entryCount = reader.readI8(), entries = [];
+  if (entryCount < 0) throw new RangeError("Negative opcode 80 entry count");
   for (let i = 0; i < entryCount; i += 1) {
     const valueCount = reader.readI8();
     if (valueCount < 0) throw new RangeError("Negative opcode 80 value count");

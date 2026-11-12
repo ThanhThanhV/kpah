@@ -907,7 +907,7 @@ public final class ProtocolWorldStateCodec {
         List<Short> shortValuesC,List<Short> shortValuesD) {}
     public record Opcode80(byte entryCount,List<RefinementMatrixEntry80> entries,byte[] trailingBytes) {}
     public static Opcode80 decodeS2COpcode80(byte[] payload) throws IOException {
-        PacketReader in=new PacketReader(payload);byte count=in.readI8();List<RefinementMatrixEntry80> entries=new ArrayList<>();
+        PacketReader in=new PacketReader(payload);byte count=in.readI8();if(count<0)throw new IOException("Negative opcode 80 entry count");List<RefinementMatrixEntry80> entries=new ArrayList<>();
         for(int i=0;i<count;i++){
             byte valueCount=in.readI8();if(valueCount<0)throw new IOException("Negative opcode 80 value count");
             List<Byte> bytes=new ArrayList<>();List<Short> b=new ArrayList<>(),c=new ArrayList<>(),d=new ArrayList<>();
