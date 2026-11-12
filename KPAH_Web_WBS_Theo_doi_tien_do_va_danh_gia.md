@@ -823,3 +823,11 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - -43: image count signed byte, các blob length int có catch riêng, tiếp theo là object descriptors; tọa độ raw signed byte và tọa độ nhân 16.
 - CI run `43175923692` PASS: Vite build, generator consistency, JS tests, Java 21 compile/smoke và original-JAR analysis.
 - Chưa render ảnh hoặc cập nhật character/world state; không tăng % tổng dự án khi chưa tính lại trọng số WBS.
+
+
+### B16 — S2C opcodes -38, -39 and -42
+
+- **Trạng thái: Một phần (world entity marker/counter/pair-map decoders + CI PASS).**
+- -38: boolean + signed-byte count + record hai short/hai UTF; -39: byte + short entity ID + int; -42: context short + các cặp signed byte, kiểm tra payload lẻ.
+- CI run `43176262933` PASS: Vite build, generator consistency, JS tests, Java 21 compile/smoke và original-JAR analysis.
+- Chưa mutate world entity state; không tăng % tổng dự án khi chưa tính lại trọng số WBS.

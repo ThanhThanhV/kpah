@@ -663,3 +663,12 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode -43 decodes signed-byte image count, int-length image blobs with per-image error capture, then sprite object descriptors. Raw signed-byte coordinates are also exposed in source-compatible 16× scaled units.
 - Added Java/JS codecs, schema, generator check, tests for portrait/no-image variants, sprite descriptors and empty image branch. CI run `43175923692` SUCCESS.
 - Image bytes remain opaque; no browser rendering or character/world mutation is performed. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B16 — S2C opcodes -38, -39 and -42 — CI PASS
+
+- Opcode -38 decodes global boolean, signed-byte count and world-entity marker records (two shorts + two UTF strings).
+- Opcode -39 decodes type byte, entity ID short and counter int.
+- Opcode -42 decodes context short and repeated signed-byte pairs; odd remaining payload length is rejected to match the original client's pair indexing assumptions.
+- Added schema, generated Java/JS codecs, synthetic vectors and Java 21 smoke tests. CI run `43176262933` SUCCESS.
+- No entity marker/counter mutation is applied. Weighted project percentage unchanged; BE remains deferred.
