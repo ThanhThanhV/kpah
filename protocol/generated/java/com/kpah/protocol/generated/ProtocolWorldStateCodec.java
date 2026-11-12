@@ -444,7 +444,7 @@ public final class ProtocolWorldStateCodec {
         Byte objectCount,List<SpriteObject43> objects,byte[] trailingBytes) {}
     public static OpcodeMinus43 decodeS2COpcodeMinus43(byte[] payload) throws IOException {
         PacketReader in=new PacketReader(payload);byte count=in.readI8();List<byte[]> images=new ArrayList<>();List<ImageError43> errors=new ArrayList<>();
-        if(count<=0)return new OpcodeMinus43(count,List.of(),List.of(),null,List.of(),readRemaining(in));
+        if(count<=0)return new OpcodeMinus43(count,List.of(),List.of(),null,null,readRemaining(in));
         for(int i=0;i<count;i++){try{int length=in.readI32();if(length<0)throw new IOException("Negative opcode -43 image length");images.add(readSizedBytes(in,length));}
             catch(Exception ex){errors.add(new ImageError43(i,ex.getMessage()));}}
         byte objectCount=in.readI8();List<SpriteObject43> objects=new ArrayList<>();
