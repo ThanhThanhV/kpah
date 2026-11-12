@@ -343,8 +343,8 @@ const roster13ResourceWriter=new PacketWriter().writeI8(1).writeI32(8).writeUTF(
 const roster13Resource=decodeS2COpcode13(roster13ResourceWriter.toUint8Array());
 assert.deepEqual([[...roster13Resource.entries[0].resourceA],[...roster13Resource.entries[0].resourceB],roster13Resource.entries[0].resourceTrailer],[[6,7],[8],[9,10]]);
 
-const shop15Item=new PacketWriter().writeI8(1).writeI16(100).writeI16(2).writeI16(3).writeI8(4).writeI8(5)
- .writeI16(6).writeI16(7).writeI8(8).writeI8(9).writeI8(10).writeI8(11).writeI8(12).writeI8(13).writeUTF("sword")
+const shop15Item=new PacketWriter().writeI8(1).writeI16(100).writeI16(2).writeI8(3).writeI8(4).writeI16(5)
+ .writeI16(6).writeI8(7).writeI8(8).writeI8(9).writeI8(10).writeI8(11).writeI8(12).writeI8(13).writeUTF("sword")
  .writeI16(500).writeI8(1).writeU8(14).writeI16(15);
 const shop15Writer=new PacketWriter().writeI8(0).writeI16(77).writeI8(1);
 for (const byte of []) shop15Writer.writeI8(byte);
