@@ -3310,8 +3310,8 @@
       "name": "WORLD_OBJECT_SPAWN_BATCH",
       "direction": "S2C",
       "opcode": -55,
-      "evidenceSource": "ka.java:case-55; mj.java:method o(acu)",
-      "evidence": "Signed-byte count followed by records containing one signed byte and four signed shorts. The world consumer constructs an an object and initializes its position from the decoded coordinate pair.",
+      "evidenceSource": "ka.java:case-55",
+      "evidence": "Signed-byte count followed by records containing one signed byte and four signed shorts. The world consumer constructs an an object and initializes its position from the decoded coordinate pair. The delegated world handler is mj.java:method o(acu).",
       "sections": [
         "object-count",
         "world-object-records"
