@@ -120,7 +120,7 @@ public enum ProtocolCommand {
     S2C_OP_NEG_71((byte) -71, Direction.S2C),
     S2C_OP_NEG_70((byte) -70, Direction.S2C),
     S2C_OP_NEG_69((byte) -69, Direction.S2C),
-    S2C_OP_NEG_68((byte) -68, Direction.S2C),
+    S2C_REFINEMENT_RESULT((byte) -68, Direction.S2C),
     S2C_ARTIFACT_PANEL_DATA((byte) -67, Direction.S2C),
     S2C_FARM_PANEL_DATA((byte) -66, Direction.S2C),
     S2C_OP_NEG_65((byte) -65, Direction.S2C),
