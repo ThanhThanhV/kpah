@@ -17,6 +17,7 @@ assert.deepEqual(decodePayload("C2S", "USE_ITEM", useItemNegative), { itemId: -1
 assert.throws(() => encodePayload("C2S", "USE_ITEM", {}), /Missing field itemId/);
 
 assert.equal(S2C.FARM_PANEL_DATA, -66);
+assert.equal(S2C.REFINEMENT_RESULT, -68);
 
 const upgradeNormal = encodePayload("C2S", "EQUIPMENT_UPGRADE_ACTION", { action: 10, itemId: 17 });
 assert.deepEqual([...upgradeNormal], [10, 17]);
