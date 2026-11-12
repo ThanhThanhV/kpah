@@ -604,3 +604,13 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Cross-checked the decompiler's `bd.o` assignments against original `ka.class` bytecode: both first and second `bd` lists write IDs to the retained `bd` instance. Definition entries preserve the original per-entry error boundary; index errors are surfaced as neutral parse errors.
 - Added packet schema, generator check, JS synthetic catalog vector and Java 21 smoke vector. CI run `42995767130` SUCCESS: Vite build, all generator checks, all JS protocol suites, Java 21 compile/smoke and original-JAR analysis.
 - Catalog decoder does not derive UI labels, instantiate shop models or implement purchases. Overall weighted project percentage unchanged pending WBS recalculation; BE remains deferred.
+
+
+## B5/B16 — S2C opcode 26 world resource bundle — CI PASS
+
+- Added generated JavaScript/Java decoders for the source-ordered resource payload: template count, primary binary blob, effect blobs, indexed image blobs, indexed graphics blobs, paired four-byte configuration arrays, and three pairs of variable byte arrays.
+- Each optional group follows the original client's independent catch boundary. The decoder records section errors and installs the original fallback arrays for `ct/cu`, `cv`, `cw`, and `cx`; the primary blob remains strict.
+- Resource IDs and payload bytes are preserved as opaque data; no image formats, rendering meanings, or gameplay semantics are invented.
+- Added protocol schema, generator consistency, JS vectors for complete and fallback cases, Java 21 smoke vectors and docs.
+- CI run `43171326536` SUCCESS: Vite build, generated-code checks, JS protocol suites, Java 21 compile/smoke and original-JAR analysis.
+- Overall weighted project percentage unchanged pending WBS recalculation; BE remains deferred.

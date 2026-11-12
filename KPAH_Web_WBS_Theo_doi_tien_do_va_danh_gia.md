@@ -763,3 +763,12 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Bytecode xác nhận `bd.o` của cả hai danh sách được gán trên instance giữ lại; per-definition exception boundary được giữ trong decoder. Các trường chưa có semantic rõ ràng vẫn dùng tên trung tính.
 - CI run `42995767130` PASS: Vite build, generator consistency, JS tests, Java 21 compile/smoke và original-JAR analysis.
 - Chưa kết nối catalog với UI giao dịch/BE; không tăng % tổng dự án do chưa tính lại trọng số WBS.
+
+
+### B5/B16 — S2C opcode 26: world resource bundle
+
+- **Trạng thái: Một phần (decoder + fallback semantics + tests + CI PASS).**
+- Giải mã template count, primary blob, effect blob list, indexed image/graphics blobs, cặp mảng cấu hình 4 byte và ba cặp byte-array có độ dài động.
+- Các nhóm optional giữ đúng catch boundary và fallback array của client gốc; blob chính vẫn strict. Payload/ID giữ opaque, chưa diễn giải format ảnh/ý nghĩa gameplay.
+- CI run `43171326536` PASS: Vite build, generator consistency, JS protocol tests, Java 21 compile/smoke và original-JAR analysis.
+- Chưa áp dụng dữ liệu tài nguyên vào runtime Phaser; không tăng % tổng dự án khi chưa tính lại trọng số WBS.
