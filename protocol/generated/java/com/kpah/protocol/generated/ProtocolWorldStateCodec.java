@@ -791,4 +791,25 @@ public final class ProtocolWorldStateCodec {
         return new Opcode83(source,action,true,count,List.copyOf(targets),a,b,new byte[0],readRemaining(in));
     }
 
+    public record ActivityRecord87(byte fieldA,short shortC,String label,byte optionCount,List<String> options,byte fieldB) {}
+    public record Opcode87(byte mode,Byte globalByte,Byte count,List<ActivityRecord87> records,List<Byte> values,
+                           byte[] trailingBytes) {}
+    public static Opcode87 decodeS2COpcode87(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte mode=in.readI8();
+        if(mode==0){byte global=in.readI8(),count=in.readI8();List<ActivityRecord87> records=new ArrayList<>();
+            for(int i=0;i<count;i++){byte a=in.readI8();short c=in.readI16();String label=in.readUTF();byte optionCount=in.readI8();
+                if(optionCount<0)throw new IOException("Negative opcode 87 option count");
+                List<String> options=new ArrayList<>();for(int j=0;j<optionCount;j++)options.add(in.readUTF());
+                records.add(new ActivityRecord87(a,c,label,optionCount,List.copyOf(options),in.readI8()));}
+            return new Opcode87(mode,global,count,List.copyOf(records),null,readRemaining(in));}
+        if(mode==1){byte count=in.readI8();if(count<0)throw new IOException("Negative opcode 87 byte count");
+            List<Byte> values=new ArrayList<>();for(int i=0;i<count;i++)values.add(in.readI8());
+            return new Opcode87(mode,null,count,null,List.copyOf(values),readRemaining(in));}
+        return new Opcode87(mode,null,null,null,null,readRemaining(in));
+    }
+    public record Opcode10(short firstShort,short secondShort,int firstInt,int secondInt,byte[] trailingBytes) {}
+    public static Opcode10 decodeS2COpcode10(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new Opcode10(in.readI16(),in.readI16(),in.readI32(),in.readI32(),readRemaining(in));
+    }
+
 }

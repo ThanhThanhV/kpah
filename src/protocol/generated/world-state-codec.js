@@ -857,3 +857,31 @@ export function decodeS2COpcode83(payload, entityExists) {
   return { sourceEntityId, actionByte, entityExists: true, targetCount, targets, optionalByteA, optionalByteB,
     unconsumedBytes: new Uint8Array(), trailingBytes: readRemaining(reader) };
 }
+
+export function decodeS2COpcode10(payload) {
+  const reader = new PacketReader(payload);
+  return { firstShort: reader.readI16(), secondShort: reader.readI16(), firstInt: reader.readI32(),
+    secondInt: reader.readI32(), trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcode87(payload) {
+  const reader = new PacketReader(payload), mode = reader.readI8();
+  if (mode === 0) {
+    const globalByte = reader.readI8(), count = reader.readI8(), records = [];
+    for (let i = 0; i < count; i += 1) {
+      const fieldA = reader.readI8(), shortC = reader.readI16(), label = reader.readUTF(), optionCount = reader.readI8();
+      if (optionCount < 0) throw new RangeError("Negative opcode 87 option count");
+      const options = [];
+      for (let j = 0; j < optionCount; j += 1) options.push(reader.readUTF());
+      records.push({ fieldA, shortC, label, optionCount, options, fieldB: reader.readI8() });
+    }
+    return { mode, globalByte, count, records, values: null, trailingBytes: readRemaining(reader) };
+  }
+  if (mode === 1) {
+    const count = reader.readI8();
+    if (count < 0) throw new RangeError("Negative opcode 87 byte count");
+    const values = [];
+    for (let i = 0; i < count; i += 1) values.push(reader.readI8());
+    return { mode, globalByte: null, count, records: null, values, trailingBytes: readRemaining(reader) };
+  }
+  return { mode, globalByte: null, count: null, records: null, values: null, trailingBytes: readRemaining(reader) };
+}

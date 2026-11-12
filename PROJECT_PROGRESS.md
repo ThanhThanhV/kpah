@@ -755,3 +755,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode 100 delegates to the resource-slot handler: unsigned subtype + resource ID; subtype 0 carries image bytes, UTF label, scalar metadata and optional mode-1 blob.
 - Added Java/JS codec, schema, generator check and synthetic vectors. CI run `43181677911` SUCCESS.
 - Resource data remains opaque and is not applied to the browser runtime. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B16 — S2C opcodes 106 and 83 — CI PASS
+
+- Opcode 106: multi-target combat event with source ID, action, damage, effect bytes and per-target ID/value pairs.
+- Opcode 83: source ID/action always read; remaining target group data is decoded only when the source entity exists, including two optional unsigned bytes.
+- Added Java/JS codecs, schemas and context-branch vectors. CI run `43182096267` SUCCESS.
+- No HP, damage, effects or target group state is applied. Weighted project percentage unchanged; BE remains deferred.

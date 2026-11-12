@@ -498,3 +498,8 @@ Added a source-backed decoder for subtype 0 image/label/scalar payload and optio
 ### S2C opcodes 106 and 83: multi-target combat and target-group updates
 
 Added context-aware decoders for multi-target attack records and entity-existence-guarded target-group state packets, including optional byte defaults.
+
+
+### S2C opcodes 10 and 87: world scalar and activity panel
+
+Added a four-field world scalar decoder and both source-observed activity panel variants, including nested UTF option lists and raw byte-list mode.

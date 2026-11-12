@@ -909,3 +909,10 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - **Trạng thái: Một phần (resource image/metadata decoder + optional blob + CI PASS).**
 - Subtype 0: image bytes, label, scalar metadata và blob tùy mode; subtype khác giữ phần còn lại.
 - CI run `43181677911` PASS. Chưa cập nhật resource runtime; không tăng % tổng dự án khi chưa tính lại trọng số WBS.
+
+
+### B16 — S2C opcodes 106 and 83: multi-target combat / target group
+
+- **Trạng thái: Một phần (multi-target combat decoder + entity-existence guarded group update + CI PASS).**
+- -106: damage/effect header + target ID/value list; 83: source ID/action và chỉ parse phần target khi entity còn tồn tại.
+- CI run `43182096267` PASS. Chưa apply HP/damage/effect; không tăng % tổng dự án khi chưa tính lại trọng số WBS.

@@ -3477,6 +3477,32 @@
         "optional-unsigned-byte-a",
         "optional-unsigned-byte-b"
       ]
+    },
+    {
+      "name": "WORLD_ENTITY_SHORT_INT_PAIR_UPDATE",
+      "direction": "S2C",
+      "opcode": 10,
+      "evidenceSource": "ka.java:case10",
+      "evidence": "Reads two signed shorts followed by two signed ints and forwards all four values to the active world scene.",
+      "sections": [
+        "first-short",
+        "second-short",
+        "first-int",
+        "second-int"
+      ]
+    },
+    {
+      "name": "WORLD_ACTIVITY_PANEL_VARIANTS",
+      "direction": "S2C",
+      "opcode": 87,
+      "evidenceSource": "ka.java:case87",
+      "evidence": "Delegates to mj.p(acu). Mode 0 carries a global byte, signed-byte record count and records containing a byte, short, UTF label, signed-byte-counted UTF options and trailing byte. Mode 1 carries a signed-byte-counted raw byte list. Other modes have no additional fields.",
+      "sections": [
+        "mode",
+        "mode-0-global-byte-and-records",
+        "record-option-strings",
+        "mode-1-byte-list"
+      ]
     }
   ],
   "extensionSchemas": [
