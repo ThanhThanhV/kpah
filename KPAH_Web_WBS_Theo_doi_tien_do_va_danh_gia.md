@@ -1018,3 +1018,11 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - **Trạng thái: Một phần (source-backed command schema + generated Java/JS codec + tests + CI PASS).**
 - Mode 0: hai signed byte; mode 1: hai signed byte và một signed short. Generator validate cả opcode 62 và 94, giữ unknown-mode payload chưa đọc và từ chối encode mode chưa xác minh.
 - CI run `43191399012` PASS. Chưa có server-side transaction hoặc authoritative market state.
+
+
+### B7 — C2S opcodes 48 and -25: use-item / refine-item request codecs
+
+- **Trạng thái: Một phần (typed schema đã có; tăng cường JS vectors + Java 21 smoke assertions).**
+- Opcode 48 `USE_ITEM`: signed 32-bit item ID; test thêm positive multi-byte value, negative value và missing-field validation.
+- Opcode -25 `REFINE_ITEM`: action byte + item ID byte; JS round-trip hiện hữu được bổ sung Java smoke round-trip.
+- Chỉ xác minh payload serialization; chưa suy diễn tác dụng item, điều kiện hợp lệ, tiêu hao nguyên liệu/tiền hoặc kết quả luyện đồ phía server.
