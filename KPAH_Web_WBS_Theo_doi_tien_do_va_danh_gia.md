@@ -923,3 +923,12 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - **Trạng thái: Một phần (world scalar tuple + activity panel variants + CI PASS).**
 - -10: hai short + hai int; 87: mode 0 danh sách record và options, mode 1 danh sách byte.
 - CI run `43182301153` PASS. Chưa apply world/activity UI; không tăng % tổng dự án khi chưa tính lại trọng số WBS.
+
+
+### B5 — S2C opcodes 86 and 95: temporary status / inventory context event
+
+- **Trạng thái: Một phần (wire decoder + consumer trace + synthetic tests + CI PASS).**
+- Opcode 86: mode 0 clear; mode 1 status index = signed byte - 1, duration cố định 1440, UTF text; mode 2 status index = signed byte - 1, duration i32, UTF text. Timestamp do client gán khi nhận packet, không nằm trên wire.
+- Opcode 95: hai short + một byte; consumer trong `mj.java` đối chiếu inventory, type 0 tìm/xóa item `bo`, các type còn lại tìm/xóa item `de`; có nhánh cảnh báo item đã ở trong inventory. Decoder không thực hiện mutation.
+- CI run `43186990152` PASS: Vite build, generated-code consistency, JS protocol tests, Java 21 compile/smoke và original-JAR analysis.
+- Không tăng % tổng dự án khi chưa tính lại trọng số toàn WBS; BE vẫn chưa bắt đầu.

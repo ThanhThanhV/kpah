@@ -771,3 +771,12 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode 87: activity panel mode 0 nested records/options; mode 1 byte list.
 - Added Java/JS codecs, schemas, generator checks and synthetic vectors. CI run `43182301153` SUCCESS.
 - No world/activity state or UI mutation is applied. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B5 — S2C opcodes 86 and 95 — CI PASS
+
+- Added generated Java/JavaScript decoders for opcode 86 temporary character status and opcode 95 short/short/byte item-context event.
+- Opcode 86 source branches: mode 0 clears status; mode 1 reads status index minus one and UTF text with fixed duration 1440; mode 2 reads index minus one, signed int duration and UTF text. Client-local timestamp is deliberately not synthesized by the decoder.
+- Opcode 95 source consumer was traced in `mj.java`: the two shorts and type byte identify a local inventory entry removal path; type 0 checks/removes a `bo` item by item ID, other types check/remove a `de` item. If the second short equals the current character item slot, the client displays an “already in inventory” notice. UI refresh is local consumer behavior, not parser behavior.
+- Added source schemas, generated output, JS and Java 21 synthetic vectors. CI run `43186990152` SUCCESS (Vite build, generated protocol checks, JS protocol suites, Java compile/smoke and original-JAR analysis).
+- Overall weighted project percentage unchanged pending full WBS reweight; backend remains deferred.

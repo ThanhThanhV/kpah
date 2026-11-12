@@ -585,3 +585,8 @@ The original client sets the start timestamp locally using its clock. The decode
 ## S2C opcode 95 — short/short/byte world event
 
 Reads two signed shorts and one signed byte and forwards them unchanged to `km.s.c(short, short, byte)`. Until the consumer method is separately traced, the generated schema preserves neutral field names rather than claiming these values represent a particular entity, coordinate or action.
+
+
+### Opcode 95 consumer trace — inventory removal context
+
+Follow-up inspection of `mj.java` confirms the consumer behavior without changing the neutral wire schema: it first checks whether the second short matches the character's current item slot; if so it shows the local “item already in inventory” notice. Otherwise, type byte 0 searches the inventory for a `bo` record by its item ID; other type values search `de` records by their ID. A match is removed and the open inventory panel is refreshed. These are client-side effects after decoding, not additional packet fields.

@@ -513,3 +513,6 @@ Added shared Java/JavaScript decoding for social character list records, item tu
 ### S2C opcodes 86 and 95
 
 Added Java/JavaScript decoders and synthetic vectors for the three temporary-status modes in opcode 86 and the fixed short/short/byte event in opcode 95. Client-side clock initialization and downstream state mutation remain outside the parser.
+
+
+The opcode 86/95 protocol slice is validated in CI run `43186990152`; opcode 95's consumer has also been traced to its inventory-entry removal behavior in the original client.
