@@ -814,3 +814,12 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Giải mã row width signed byte, nhóm 1 gồm group/entry counts và mỗi entry có width×3 short cùng UTF label mỗi 3 short; nhóm 2 có width short + short cuối; nhóm 3 lặp lại cấu trúc width×3 + label.
 - Map dữ liệu theo đích nguồn `ku.ab/aa`, `mj.aM/aL`, `ku.Y/Z`, không suy đoán ý nghĩa gameplay. CI run `43175388107` PASS.
 - Không tăng % tổng dự án do chưa tính lại trọng số WBS.
+
+
+### B16 — S2C opcodes -27 and -43: portrait / world sprite resources
+
+- **Trạng thái: Một phần (portrait image pair + sprite image bundle + CI PASS).**
+- -27: target selector, image subtype, 2 blob có length short và 2 metadata byte; subtype -1 không có image payload.
+- -43: image count signed byte, các blob length int có catch riêng, tiếp theo là object descriptors; tọa độ raw signed byte và tọa độ nhân 16.
+- CI run `43175923692` PASS: Vite build, generator consistency, JS tests, Java 21 compile/smoke và original-JAR analysis.
+- Chưa render ảnh hoặc cập nhật character/world state; không tăng % tổng dự án khi chưa tính lại trọng số WBS.

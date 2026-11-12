@@ -655,3 +655,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Preserves signed-byte dimensions, nested group/entry counts, width×3 signed-short sequences, UTF labels after every third short, and the second family's trailing short per row.
 - Added schema, generator checks, nested JS vectors, negative-width validation and Java 21 smoke test. CI run `43175388107` SUCCESS.
 - Decoder does not assign gameplay semantics to table columns. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B16 — S2C opcodes -27 and -43 — CI PASS
+
+- Opcode -27 decodes target selector, image subtype, two signed-short-length portrait image blobs and two metadata bytes; subtype -1 carries no image payload.
+- Opcode -43 decodes signed-byte image count, int-length image blobs with per-image error capture, then sprite object descriptors. Raw signed-byte coordinates are also exposed in source-compatible 16× scaled units.
+- Added Java/JS codecs, schema, generator check, tests for portrait/no-image variants, sprite descriptors and empty image branch. CI run `43175923692` SUCCESS.
+- Image bytes remain opaque; no browser rendering or character/world mutation is performed. Weighted project percentage unchanged; BE remains deferred.
