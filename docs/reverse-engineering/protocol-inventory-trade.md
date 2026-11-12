@@ -140,3 +140,13 @@ The outbound writer has two verified variants: mode 0 writes two signed bytes; m
 ### Opcode 94 codec verification
 
 The two mode branches now have generated Java/JavaScript encoders and decoders. The generator validates the schema against the observed mode set; unknown modes are preserved on decode but rejected on encode. CI run `43191399012` passed all protocol checks and Java 21 smoke tests.
+
+
+## C2S — use-item and refinement-item requests
+
+The canonical command catalog exposes two independently typed requests:
+
+- Opcode 48 `USE_ITEM`: one signed 32-bit item ID. The generic JavaScript/Java payload codec now has positive multi-byte and negative-value vectors, plus a missing-field guard.
+- Opcode -25 `REFINE_ITEM`: action byte followed by item ID byte. The Java 21 smoke suite now round-trips both fields alongside the existing JavaScript vector.
+
+These checks validate serialization only. They do not infer the server-side effect of a use-item request, item eligibility, refinement success, material/currency consumption, or inventory mutation.
