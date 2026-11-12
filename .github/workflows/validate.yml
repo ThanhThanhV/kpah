@@ -89,11 +89,11 @@ jobs:
           import java.util.*;
           public class ProtocolCodegenSmoke {
             public static void main(String[] args) throws Exception {
-              byte[] payload = ProtocolPacketCodec.encode("C2S_REFINE_ITEM", Map.of("action", 10, "itemId", 17));
+              byte[] payload = ProtocolPacketCodec.encode("C2S_EQUIPMENT_UPGRADE_ACTION", Map.of("action", 10, "itemId", 17));
               if (!Arrays.equals(payload, new byte[]{10, 17})) throw new AssertionError(Arrays.toString(payload));
-              Map<String,Object> decoded = ProtocolPacketCodec.decode("C2S_REFINE_ITEM", payload);
+              Map<String,Object> decoded = ProtocolPacketCodec.decode("C2S_EQUIPMENT_UPGRADE_ACTION", payload);
               if (!decoded.get("action").equals(10) || !decoded.get("itemId").equals(17)) throw new AssertionError(decoded);
-              if (ProtocolCommand.find(ProtocolCommand.Direction.C2S, -25).orElseThrow() != ProtocolCommand.C2S_REFINE_ITEM) throw new AssertionError("opcode lookup");
+              if (ProtocolCommand.find(ProtocolCommand.Direction.C2S, -25).orElseThrow() != ProtocolCommand.C2S_EQUIPMENT_UPGRADE_ACTION) throw new AssertionError("opcode lookup");
               Map<String,Object> item61Values = Map.of("itemId", 501);
               if (!Arrays.equals(ProtocolPacketCodec.encode("C2S_OP_61", item61Values), new byte[]{1, (byte)0xf5}))
                 throw new AssertionError("C2S opcode 61 item id");
@@ -567,8 +567,19 @@ jobs:
               java.util.Map<String,Object> refineItemValues = new java.util.LinkedHashMap<>();
               refineItemValues.put("action", (byte)10);
               refineItemValues.put("itemId", (byte)17);
-              byte[] refineItemEncoded = ProtocolPacketCodec.encode("C2S_REFINE_ITEM", refineItemValues);
-              java.util.Map<String,Object> refineItemDecoded = ProtocolPacketCodec.decode("C2S_REFINE_ITEM", refineItemEncoded);
+              byte[] refineItemEncoded = ProtocolPacketCodec.encode("C2S_EQUIPMENT_UPGRADE_ACTION", refineItemValues);
+              java.util.Map<String,Object> refineItemDecoded = ProtocolPacketCodec.decode("C2S_EQUIPMENT_UPGRADE_ACTION", refineItemEncoded);
+              if (ProtocolCommand.find(ProtocolCommand.Direction.C2S, -68).orElseThrow() != ProtocolCommand.C2S_REFINEMENT_ACTION)
+                throw new AssertionError("C2S refinement action opcode lookup");
+              java.util.Map<String,Object> upgradeKeepStatsValues = new java.util.LinkedHashMap<>();
+              upgradeKeepStatsValues.put("action", 11);
+              upgradeKeepStatsValues.put("itemId", 255);
+              byte[] upgradeKeepStatsEncoded = ProtocolPacketCodec.encode("C2S_EQUIPMENT_UPGRADE_ACTION", upgradeKeepStatsValues);
+              java.util.Map<String,Object> upgradeKeepStatsDecoded = ProtocolPacketCodec.decode("C2S_EQUIPMENT_UPGRADE_ACTION", upgradeKeepStatsEncoded);
+              if (!java.util.Arrays.equals(upgradeKeepStatsEncoded, new byte[]{11, (byte)255})
+                  || !upgradeKeepStatsDecoded.get("action").equals(11)
+                  || !upgradeKeepStatsDecoded.get("itemId").equals(255))
+                throw new AssertionError("C2S equipment upgrade keep-attributes variant");
               if (!java.util.Arrays.equals(useItemEncoded, new byte[]{0x12,0x34,0x56,0x78})
                   || !useItemDecoded.get("itemId").equals(0x12345678)
                   || !refineItemDecoded.get("action").equals(10)
