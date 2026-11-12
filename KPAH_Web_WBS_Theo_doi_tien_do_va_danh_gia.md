@@ -1004,3 +1004,10 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - **Trạng thái: Một phần (typed C2S command schemas + JS/Java round-trip/smoke tests + CI PASS).**
 - C2S opcode 61, 68, 69, 78, 92, 95, 100 đã có payload schemas theo writer gốc; opcode 62 có 7 mode được generate riêng.
 - CI run `43190442561` PASS. Đây là request serialization; server-authoritative purchase/sale/storage/persistence vẫn chưa triển khai.
+
+
+### B7 — C2S opcode 94 market-panel modes
+
+- **Trạng thái: Một phần (two-mode source-backed command codec + tests; CI pending).**
+- Mode 0: hai signed byte; mode 1: hai signed byte và một signed short, theo hai writer branch trong jy.java.
+- Không gán nghĩa nghiệp vụ cho các positional args khi chưa truy đủ callsite/handler.

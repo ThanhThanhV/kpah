@@ -3921,6 +3921,53 @@
           ]
         }
       ]
+    },
+    {
+      "name": "MARKET_PANEL_ACTION",
+      "direction": "C2S",
+      "opcode": 94,
+      "evidenceSource": "jy.java",
+      "evidence": "Two outbound writer branches: mode 0 writes two signed bytes; mode 1 writes two signed bytes followed by one signed short.",
+      "discriminator": {
+        "name": "mode",
+        "type": "i8"
+      },
+      "variants": [
+        {
+          "mode": 0,
+          "method": "c(int,int)",
+          "sourceLine": 105,
+          "fields": [
+            {
+              "name": "fieldByteA",
+              "type": "i8"
+            },
+            {
+              "name": "fieldByteB",
+              "type": "i8"
+            }
+          ]
+        },
+        {
+          "mode": 1,
+          "method": "a(int,int,int)",
+          "sourceLine": 120,
+          "fields": [
+            {
+              "name": "fieldByteA",
+              "type": "i8"
+            },
+            {
+              "name": "fieldByteB",
+              "type": "i8"
+            },
+            {
+              "name": "fieldShort",
+              "type": "i16"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

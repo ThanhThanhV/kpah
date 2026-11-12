@@ -554,3 +554,6 @@ Added verified writer payload schemas for C2S opcodes 61, 68, 69, 78, 92, 95 and
 
 
 The C2S inventory/market writer schemas (61, 68, 69, 78, 92, 95, 100) passed CI run `43190442561`; opcode 62's seven-mode command codec remains generated and tested.
+
+
+C2S opcode 94 now has a generated two-mode market-panel command codec, based on both outbound writer branches in jy.java.

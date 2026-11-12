@@ -94,7 +94,27 @@ public final class ProtocolCommandVariantCodec {
         }
         return new Decoded(mode, Map.copyOf(fields), new byte[0], readRemaining(in));
     }
+    private static Object required(Map<String,Object> values,String key) {
+        if(values==null || !values.containsKey(key) || values.get(key)==null) throw new IllegalArgumentException("Missing field "+key);
+        return values.get(key);
+    }
     private static byte[] readRemaining(PacketReader in) throws IOException {
         byte[] bytes=new byte[in.remaining()]; for(int i=0;i<bytes.length;i++) bytes[i]=(byte)in.readU8(); return bytes;
+    }
+    public static byte[] encodeC2SOpcode94(int mode,Map<String,Object> values) throws IOException {
+        PacketWriter out=new PacketWriter(); out.writeI8(mode);
+        switch(mode) {
+            case 0 -> { out.writeI8(((Number)required(values,"fieldByteA")).byteValue()); out.writeI8(((Number)required(values,"fieldByteB")).byteValue()); }
+            case 1 -> { out.writeI8(((Number)required(values,"fieldByteA")).byteValue()); out.writeI8(((Number)required(values,"fieldByteB")).byteValue()); out.writeI16(((Number)required(values,"fieldShort")).shortValue()); }
+            default -> throw new IllegalArgumentException("Unsupported C2S opcode 94 mode: "+mode);
+        }
+        return out.toByteArray();
+    }
+    public static Decoded decodeC2SOpcode94(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload); int mode=in.readI8(); Map<String,Object> fields=new LinkedHashMap<>();
+        if(mode==0) { fields.put("fieldByteA",in.readI8()); fields.put("fieldByteB",in.readI8()); }
+        else if(mode==1) { fields.put("fieldByteA",in.readI8()); fields.put("fieldByteB",in.readI8()); fields.put("fieldShort",in.readI16()); }
+        else return new Decoded(mode,Map.of(),readRemaining(in),new byte[0]);
+        return new Decoded(mode,Map.copyOf(fields),new byte[0],readRemaining(in));
     }
 }

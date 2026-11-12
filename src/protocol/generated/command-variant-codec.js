@@ -90,3 +90,20 @@ export function decodeC2SOpcode62(payload) {
   }
   return { mode, fields, unconsumedBytes: new Uint8Array(), trailingBytes: readRemaining(reader) };
 }
+export function encodeC2SOpcode94(values) {
+  if (!values || !Number.isInteger(values.mode)) throw new TypeError("opcode 94 values.mode required");
+  const writer = new PacketWriter().writeI8(values.mode);
+  switch (values.mode) {
+    case 0: if (!("fieldByteA" in values) || !("fieldByteB" in values)) throw new Error("Missing opcode 94 mode 0 fields"); writer.writeI8(values.fieldByteA).writeI8(values.fieldByteB); break;
+    case 1: if (!("fieldByteA" in values) || !("fieldByteB" in values) || !("fieldShort" in values)) throw new Error("Missing opcode 94 mode 1 fields"); writer.writeI8(values.fieldByteA).writeI8(values.fieldByteB).writeI16(values.fieldShort); break;
+    default: throw new RangeError("Unsupported C2S opcode 94 mode: " + values.mode);
+  }
+  return writer.toUint8Array();
+}
+export function decodeC2SOpcode94(payload) {
+  const reader = new PacketReader(payload), mode = reader.readI8(), fields = {};
+  if (mode === 0) { fields.fieldByteA = reader.readI8(); fields.fieldByteB = reader.readI8(); }
+  else if (mode === 1) { fields.fieldByteA = reader.readI8(); fields.fieldByteB = reader.readI8(); fields.fieldShort = reader.readI16(); }
+  else return { mode, fields: null, unconsumedBytes: readRemaining(reader), trailingBytes: new Uint8Array() };
+  return { mode, fields, unconsumedBytes: new Uint8Array(), trailingBytes: readRemaining(reader) };
+}

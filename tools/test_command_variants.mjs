@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
-import { C2S_OPCODE62_MODES, encodeC2SOpcode62, decodeC2SOpcode62 } from "../src/protocol/generated/command-variant-codec.js";
+import { C2S_OPCODE62_MODES, encodeC2SOpcode62, decodeC2SOpcode62, encodeC2SOpcode94, decodeC2SOpcode94 } from "../src/protocol/generated/command-variant-codec.js";
 assert.deepEqual(C2S_OPCODE62_MODES,[0,2,3,4,5,6,7]);
 const cases=[
  {mode:0,fieldShort:-123,fieldIntA:123456,fieldIntB:-654321},
@@ -28,3 +28,9 @@ assert.throws(()=>encodeC2SOpcode62({mode:1}),/Unsupported C2S opcode 62 mode/);
 const trailing=decodeC2SOpcode62(new PacketWriter().writeI8(5).writeU8(99).toUint8Array());
 assert.deepEqual([...trailing.trailingBytes],[99]);
 console.log("C2S opcode 62 command-variant codec: PASS (7 source-backed modes, unknown-mode preservation)");
+
+const market94Cases=[{mode:0,fieldByteA:-1,fieldByteB:2},{mode:1,fieldByteA:3,fieldByteB:-4,fieldShort:1200}];
+for(const values of market94Cases){const encoded=encodeC2SOpcode94(values),decoded=decodeC2SOpcode94(encoded);const {mode,...fields}=values;assert.equal(decoded.mode,mode);assert.deepEqual(decoded.fields,fields);}
+const market94Unknown=decodeC2SOpcode94(new PacketWriter().writeI8(2).writeU8(10).toUint8Array());
+assert.equal(market94Unknown.fields,null);assert.deepEqual([...market94Unknown.unconsumedBytes],[10]);
+assert.throws(()=>encodeC2SOpcode94({mode:2}),/Unsupported C2S opcode 94 mode/);

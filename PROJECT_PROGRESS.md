@@ -838,3 +838,9 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode 92's conditional item source is represented as a single item ID plus a final source selector byte, preserving both writer branches without duplicating fields.
 - Added JS payload round trips and Java 21 smoke assertions. CI run `43190442561` SUCCESS: Vite build, generated protocol consistency, all JS protocol suites, Java compile/smoke and original-JAR analysis.
 - The codec serializes requests only; transaction validation, inventory mutation and persistence remain server responsibilities. Weighted project progress unchanged; BE remains deferred.
+
+
+## B7 — C2S opcode 94 market-panel modes — implementation added
+
+- Added source-backed mode 0 (two signed bytes) and mode 1 (two signed bytes + signed short) to the command-variant schema and Java/JavaScript generator. Unknown modes preserve their unread bytes; encoder rejects unverified modes.
+- JS/Java vectors are added; CI pending. The UI/business meaning of the positional arguments remains neutral.

@@ -130,3 +130,8 @@ These layouts describe client packet serialization only. The actual item transfe
 ### C2S inventory/market schema validation
 
 C2S command catalog now includes typed payload schemas for opcodes 61, 68, 69, 78, 92, 95 and 100, plus a dedicated generated variant codec for opcode 62. JS vectors and Java 21 smoke tests passed in CI run `43190442561`. These are wire codecs only; they do not authorize or persist transactions.
+
+
+## C2S opcode 94 — market-panel modes
+
+The outbound writer has two verified variants: mode 0 writes two signed bytes; mode 1 writes the same two signed bytes followed by a signed short. The command-variant codec generates both modes in Java and JavaScript, preserves unknown-mode payload bytes on decode, and rejects unsupported modes on encode. Field names remain positional/neutral until the caller graph is fully mapped.

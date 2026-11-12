@@ -12,22 +12,24 @@ TYPES = {"i8": ("writeI8", "readI8", "byteValue"), "i16": ("writeI16", "readI16"
 
 def load():
     spec = json.loads(SPEC.read_text(encoding="utf-8"))
-    schemas = [s for s in spec.get("commandVariantSchemas", []) if s.get("direction") == "C2S" and s.get("opcode") == 62]
-    if len(schemas) != 1:
-        raise ValueError("Expected exactly one C2S opcode 62 commandVariantSchema")
-    schema = schemas[0]
-    modes = set()
-    for variant in schema.get("variants", []):
-        mode = int(variant["mode"])
-        if mode in modes:
-            raise ValueError(f"Duplicate opcode 62 mode {mode}")
-        modes.add(mode)
-        for field in variant.get("fields", []):
-            if field["type"] not in TYPES:
-                raise ValueError(f"Unsupported opcode 62 field type {field['type']}")
-    if modes != {0, 2, 3, 4, 5, 6, 7}:
-        raise ValueError(f"Unexpected source-backed opcode 62 modes: {sorted(modes)}")
-    return schema
+    schemas = [s for s in spec.get("commandVariantSchemas", []) if s.get("direction") == "C2S" and s.get("opcode") in (62, 94)]
+    by_opcode = {int(s["opcode"]): s for s in schemas}
+    if set(by_opcode) != {62, 94}:
+        raise ValueError("Expected C2S opcode 62 and 94 commandVariantSchemas")
+    expected_modes = {62: {0, 2, 3, 4, 5, 6, 7}, 94: {0, 1}}
+    for opcode, schema in by_opcode.items():
+        modes = set()
+        for variant in schema.get("variants", []):
+            mode = int(variant["mode"])
+            if mode in modes:
+                raise ValueError(f"Duplicate opcode {opcode} mode {mode}")
+            modes.add(mode)
+            for field in variant.get("fields", []):
+                if field["type"] not in TYPES:
+                    raise ValueError(f"Unsupported opcode {opcode} field type {field['type']}")
+        if modes != expected_modes[opcode]:
+            raise ValueError(f"Unexpected source-backed opcode {opcode} modes: {sorted(modes)}")
+    return by_opcode[62]
 
 def js_output(schema):
     lines = [
@@ -66,6 +68,26 @@ def js_output(schema):
               '  }',
               '  return { mode, fields, unconsumedBytes: new Uint8Array(), trailingBytes: readRemaining(reader) };',
               "}", ""]
+    lines += [
+        "export function encodeC2SOpcode94(values) {",
+        '  if (!values || !Number.isInteger(values.mode)) throw new TypeError("opcode 94 values.mode required");',
+        "  const writer = new PacketWriter().writeI8(values.mode);",
+        "  switch (values.mode) {",
+        '    case 0: if (!("fieldByteA" in values) || !("fieldByteB" in values)) throw new Error("Missing opcode 94 mode 0 fields"); writer.writeI8(values.fieldByteA).writeI8(values.fieldByteB); break;',
+        '    case 1: if (!("fieldByteA" in values) || !("fieldByteB" in values) || !("fieldShort" in values)) throw new Error("Missing opcode 94 mode 1 fields"); writer.writeI8(values.fieldByteA).writeI8(values.fieldByteB).writeI16(values.fieldShort); break;',
+        '    default: throw new RangeError("Unsupported C2S opcode 94 mode: " + values.mode);',
+        "  }",
+        "  return writer.toUint8Array();",
+        "}",
+        "export function decodeC2SOpcode94(payload) {",
+        "  const reader = new PacketReader(payload), mode = reader.readI8(), fields = {};",
+        "  if (mode === 0) { fields.fieldByteA = reader.readI8(); fields.fieldByteB = reader.readI8(); }",
+        "  else if (mode === 1) { fields.fieldByteA = reader.readI8(); fields.fieldByteB = reader.readI8(); fields.fieldShort = reader.readI16(); }",
+        '  else return { mode, fields: null, unconsumedBytes: readRemaining(reader), trailingBytes: new Uint8Array() };',
+        "  return { mode, fields, unconsumedBytes: new Uint8Array(), trailingBytes: readRemaining(reader) };",
+        "}",
+        ""
+    ]
     return "\n".join(lines)
 
 def java_output(schema):
@@ -110,9 +132,32 @@ def java_output(schema):
     lines += ['            default -> { return new Decoded(mode, Map.of(), readRemaining(in), new byte[0]); }',
               "        }", "        return new Decoded(mode, Map.copyOf(fields), new byte[0], readRemaining(in));",
               "    }",
+              "    private static Object required(Map<String,Object> values,String key) {",
+              '        if(values==null || !values.containsKey(key) || values.get(key)==null) throw new IllegalArgumentException("Missing field "+key);',
+              "        return values.get(key);",
+              "    }",
               "    private static byte[] readRemaining(PacketReader in) throws IOException {",
               "        byte[] bytes=new byte[in.remaining()]; for(int i=0;i<bytes.length;i++) bytes[i]=(byte)in.readU8(); return bytes;",
-              "    }", "}", ""]
+              "    }"]
+    lines += [
+        "    public static byte[] encodeC2SOpcode94(int mode,Map<String,Object> values) throws IOException {",
+        "        PacketWriter out=new PacketWriter(); out.writeI8(mode);",
+        "        switch(mode) {",
+        '            case 0 -> { out.writeI8(((Number)required(values,"fieldByteA")).byteValue()); out.writeI8(((Number)required(values,"fieldByteB")).byteValue()); }',
+        '            case 1 -> { out.writeI8(((Number)required(values,"fieldByteA")).byteValue()); out.writeI8(((Number)required(values,"fieldByteB")).byteValue()); out.writeI16(((Number)required(values,"fieldShort")).shortValue()); }',
+        '            default -> throw new IllegalArgumentException("Unsupported C2S opcode 94 mode: "+mode);',
+        "        }",
+        "        return out.toByteArray();",
+        "    }",
+        "    public static Decoded decodeC2SOpcode94(byte[] payload) throws IOException {",
+        "        PacketReader in=new PacketReader(payload); int mode=in.readI8(); Map<String,Object> fields=new LinkedHashMap<>();",
+        '        if(mode==0) { fields.put("fieldByteA",in.readI8()); fields.put("fieldByteB",in.readI8()); }',
+        '        else if(mode==1) { fields.put("fieldByteA",in.readI8()); fields.put("fieldByteB",in.readI8()); fields.put("fieldShort",in.readI16()); }',
+        '        else return new Decoded(mode,Map.of(),readRemaining(in),new byte[0]);',
+        "        return new Decoded(mode,Map.copyOf(fields),new byte[0],readRemaining(in));",
+        "    }",
+        "}"
+    ]
     return "\n".join(lines)
 
 def outputs():

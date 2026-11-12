@@ -577,6 +577,15 @@ jobs:
                   || !command62TextDecoded.fields().get("text").equals("Kỹ năng và vật phẩm")
                   || command62Unknown.fields().size() != 0 || command62Unknown.unconsumedBytes().length != 2)
                 throw new AssertionError("C2S opcode 62 command variants");
+              Map<String,Object> market94Mode0 = Map.of("fieldByteA", -1, "fieldByteB", 2);
+              Map<String,Object> market94Mode1 = Map.of("fieldByteA", 3, "fieldByteB", -4, "fieldShort", 1200);
+              ProtocolCommandVariantCodec.Decoded market94Decoded0 = ProtocolCommandVariantCodec.decodeC2SOpcode94(
+                ProtocolCommandVariantCodec.encodeC2SOpcode94(0, market94Mode0));
+              ProtocolCommandVariantCodec.Decoded market94Decoded1 = ProtocolCommandVariantCodec.decodeC2SOpcode94(
+                ProtocolCommandVariantCodec.encodeC2SOpcode94(1, market94Mode1));
+              if (((Number)market94Decoded0.fields().get("fieldByteA")).intValue() != -1
+                  || ((Number)market94Decoded1.fields().get("fieldShort")).intValue() != 1200)
+                throw new AssertionError("C2S opcode 94 market panel modes");
               ProtocolWorldStateCodec.Opcode73 materials73 = ProtocolWorldStateCodec.decodeS2COpcode73(
                 new PacketWriter().writeI16(2).writeI16(501).writeI16(7).writeI16(12)
                   .writeI16(502).writeI16(-3).writeI16(0).writeI8(1).toByteArray());
