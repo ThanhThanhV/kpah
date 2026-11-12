@@ -807,3 +807,10 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - S2C opcode 82: state-dependent counter update; decoder accepts `canUpdate` from caller state and preserves all bytes when the original handler would not read the payload.
 - The combined world-state codec validation passed in CI `43188530604`: Vite build, generated checks, JS protocol tests, Java 21 compile/smoke and original-JAR analysis.
 - Parser-only scope; no authoritative inventory, market, currency or refinement side effects. Overall weighted project percentage unchanged; backend remains deferred.
+
+
+## B7 — C2S opcode 62 collection action variants — implementation added
+
+- Added `commandVariantSchemas` to `protocol/protocol.yaml` for C2S opcode 62, preserving seven source-observed modes: 0, 2, 3, 4, 5, 6, 7.
+- The schema records source method/line and exact field widths/order; mode 1 remains intentionally unspecified.
+- JavaScript/Java generated codec and round-trip tests are added in the next commit of this increment; no business meaning is inferred from opaque argument values.

@@ -3720,5 +3720,128 @@
         "group-e-three-fields"
       ]
     }
+  ],
+  "commandVariantSchemas": [
+    {
+      "name": "COLLECTION_ACTION",
+      "direction": "C2S",
+      "opcode": 62,
+      "evidenceSource": "jy.java",
+      "evidence": "Seven distinct writer methods build opcode 62 with an initial signed-byte mode. Mode 0 writes short+int+int; mode 2 writes five bytes; mode 3 writes byte+short; mode 4 writes one byte; mode 5 writes no fields; mode 6 writes byte+short+int; mode 7 writes UTF. Mode 1 is not present in the inspected writer methods.",
+      "discriminator": {
+        "name": "mode",
+        "type": "i8"
+      },
+      "variants": [
+        {
+          "mode": 0,
+          "method": "a(int,int,int,int)",
+          "sourceLine": 1569,
+          "fields": [
+            {
+              "name": "fieldShort",
+              "type": "i16"
+            },
+            {
+              "name": "fieldIntA",
+              "type": "i32"
+            },
+            {
+              "name": "fieldIntB",
+              "type": "i32"
+            }
+          ]
+        },
+        {
+          "mode": 2,
+          "method": "b(int,int,int,int,int)",
+          "sourceLine": 1638,
+          "fields": [
+            {
+              "name": "fieldByteA",
+              "type": "i8"
+            },
+            {
+              "name": "fieldByteB",
+              "type": "i8"
+            },
+            {
+              "name": "fieldByteC",
+              "type": "i8"
+            },
+            {
+              "name": "fieldByteD",
+              "type": "i8"
+            },
+            {
+              "name": "fieldByteE",
+              "type": "i8"
+            }
+          ]
+        },
+        {
+          "mode": 3,
+          "method": "o(int,int)",
+          "sourceLine": 1584,
+          "fields": [
+            {
+              "name": "fieldByte",
+              "type": "i8"
+            },
+            {
+              "name": "fieldShort",
+              "type": "i16"
+            }
+          ]
+        },
+        {
+          "mode": 4,
+          "method": "w(int)",
+          "sourceLine": 1613,
+          "fields": [
+            {
+              "name": "fieldByte",
+              "type": "i8"
+            }
+          ]
+        },
+        {
+          "mode": 5,
+          "method": "o()",
+          "sourceLine": 1626,
+          "fields": []
+        },
+        {
+          "mode": 6,
+          "method": "f(int,int,int)",
+          "sourceLine": 1598,
+          "fields": [
+            {
+              "name": "fieldByte",
+              "type": "i8"
+            },
+            {
+              "name": "fieldShort",
+              "type": "i16"
+            },
+            {
+              "name": "fieldInt",
+              "type": "i32"
+            }
+          ]
+        },
+        {
+          "mode": 7,
+          "method": "g(String)",
+          "sourceLine": 1655,
+          "fields": [
+            {
+              "name": "text",
+              "type": "utf"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }

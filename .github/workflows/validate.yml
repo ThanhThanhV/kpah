@@ -530,6 +530,23 @@ jobs:
               if (counter82Update.counterByte() != -7 || counter82Guarded.counterByte() != null
                   || counter82Guarded.unconsumedBytes().length != 2)
                 throw new AssertionError("S2C opcode 82 state-dependent counter guard");
+              java.util.Map<String,Object> command62Values = new java.util.LinkedHashMap<>();
+              command62Values.put("fieldShort", (short)-123);
+              command62Values.put("fieldIntA", 123456);
+              command62Values.put("fieldIntB", -654321);
+              byte[] command62Encoded = ProtocolCommandVariantCodec.encodeC2SOpcode62(0, command62Values);
+              ProtocolCommandVariantCodec.Decoded command62Decoded = ProtocolCommandVariantCodec.decodeC2SOpcode62(command62Encoded);
+              java.util.Map<String,Object> command62Text = new java.util.LinkedHashMap<>();
+              command62Text.put("text", "Kỹ năng và vật phẩm");
+              byte[] command62TextEncoded = ProtocolCommandVariantCodec.encodeC2SOpcode62(7, command62Text);
+              ProtocolCommandVariantCodec.Decoded command62TextDecoded = ProtocolCommandVariantCodec.decodeC2SOpcode62(command62TextEncoded);
+              ProtocolCommandVariantCodec.Decoded command62Unknown = ProtocolCommandVariantCodec.decodeC2SOpcode62(
+                new PacketWriter().writeI8(1).writeU8(7).writeU8(8).toByteArray());
+              if (!command62Decoded.fields().get("fieldShort").equals((short)-123)
+                  || !command62Decoded.fields().get("fieldIntB").equals(-654321)
+                  || !command62TextDecoded.fields().get("text").equals("Kỹ năng và vật phẩm")
+                  || command62Unknown.fields().size() != 0 || command62Unknown.unconsumedBytes().length != 2)
+                throw new AssertionError("C2S opcode 62 command variants");
               ProtocolWorldStateCodec.Opcode73 materials73 = ProtocolWorldStateCodec.decodeS2COpcode73(
                 new PacketWriter().writeI16(2).writeI16(501).writeI16(7).writeI16(12)
                   .writeI16(502).writeI16(-3).writeI16(0).writeI8(1).toByteArray());

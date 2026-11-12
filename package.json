@@ -40,7 +40,10 @@
     "test:opcode5": "node tools/test_opcode5_codec.mjs",
     "generate:world-state": "python tools/generate_world_state_codec.py",
     "check:world-state": "python tools/generate_world_state_codec.py --check",
-    "test:world-state": "node tools/test_world_state_codec.mjs"
+    "test:world-state": "node tools/test_world_state_codec.mjs",
+    "generate:command-variants": "python tools/generate_command_variants.py",
+    "check:command-variants": "python tools/generate_command_variants.py --check",
+    "test:command-variants": "node tools/test_command_variants.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"

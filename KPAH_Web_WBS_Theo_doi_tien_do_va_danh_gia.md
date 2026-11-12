@@ -974,3 +974,10 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Opcode 82: conditional counter update; parser takes explicit caller-state guard and does not consume payload when the source handler would skip its read.
 - CI `43188123419` passed material/equipment tests; CI `43188530604` passed the combined world-state codec and Java 21 smoke suite.
 - These remain protocol parsers, not server-authoritative game systems. Do not increase weighted project percentage without recalculating all 118 WBS tasks.
+
+
+### B7 — C2S opcode 62 collection action variants
+
+- **Trạng thái: Một phần (schema nguồn đã thêm; Java/JS codegen và CI đang triển khai).**
+- Đã xác định 7 mode được writer trong `jy.java` thực sự gửi: 0, 2, 3, 4, 5, 6, 7; field order/type được giữ đúng source. Mode 1 không có writer branch trong phần đã kiểm tra nên không tự tạo.
+- Các field giữ tên trung tính, không gán ý nghĩa nghiệp vụ khi chưa truy được callsite/handler đầy đủ.
