@@ -721,4 +721,39 @@ public final class ProtocolWorldStateCodec {
         return new Opcode13(count,null,List.copyOf(entries),readRemaining(in));
     }
 
+    public record ShopSubRecord15(int id,short value) {}
+    public record ShopItem15(byte fieldM,short fieldI,short fieldR,byte fieldS,byte fieldY,short fieldV,short fieldU,
+                             byte fieldK,Byte fieldL,byte fieldN,byte fieldO,byte fieldP,byte fieldQ,byte fieldC,
+                             String name,Integer unsignedValue,byte subRecordCount,List<ShopSubRecord15> subRecords) {}
+    public record ShopAuxiliary15(byte fieldR,short fieldS,byte fieldM,String label,int value) {}
+    public record Opcode15(byte mode,short shopId,byte itemCount,List<ShopItem15> items,Byte category,
+                           List<Short> shortFields,Byte textSelector,String optionalText,Byte optionalByte,
+                           Byte auxiliarySelector,ShopAuxiliary15 auxiliary,Byte frameCount,byte[] imageBytes,
+                           byte[] trailingBytes) {}
+    private static ShopItem15 readShopItem15(PacketReader in,boolean full) throws IOException {
+        byte m=in.readI8();short i=in.readI16(),r=in.readI16();byte s=in.readI8(),y=in.readI8();
+        short v=in.readI16(),u=in.readI16();byte k=in.readI8();Byte l=full?in.readI8():null;
+        byte n=in.readI8(),o=in.readI8(),p=in.readI8(),q=in.readI8(),c=in.readI8();String name=in.readUTF();
+        Integer unsigned=full?in.readU16():null;byte count=in.readI8();List<ShopSubRecord15> subs=new ArrayList<>();
+        for(int x=0;x<count;x++)subs.add(new ShopSubRecord15(in.readU8(),in.readI16()));
+        return new ShopItem15(m,i,r,s,y,v,u,k,l,n,o,p,q,c,name,unsigned,count,List.copyOf(subs));
+    }
+    public static Opcode15 decodeS2COpcode15(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte mode=in.readI8();short shopId=in.readI16();
+        if(mode==0){
+            byte count=in.readI8();List<ShopItem15> items=new ArrayList<>();for(int i=0;i<count;i++)items.add(readShopItem15(in,true));
+            byte category=in.readI8();List<Short> shorts=new ArrayList<>();for(int i=0;i<5;i++)shorts.add(in.readI16());
+            byte selector=in.readI8();String text=null;byte optional=0;if(selector!=-1){text=in.readUTF();optional=in.readI8();}
+            byte auxSelector=in.readI8();ShopAuxiliary15 aux=null;
+            if(auxSelector!=-1)aux=new ShopAuxiliary15(in.readI8(),in.readI16(),in.readI8(),in.readUTF(),in.readI32());
+            return new Opcode15(mode,shopId,count,List.copyOf(items),category,List.copyOf(shorts),selector,text,optional,
+                auxSelector,aux,null,null,readRemaining(in));
+        }
+        byte count=in.readI8();List<ShopItem15> items=new ArrayList<>();
+        if(count<0)return new Opcode15(mode,shopId,count,List.of(),null,null,null,null,null,null,null,null,null,readRemaining(in));
+        for(int i=0;i<count;i++)items.add(readShopItem15(in,false));
+        byte frames=in.readI8();return new Opcode15(mode,shopId,count,List.copyOf(items),null,null,null,null,null,null,null,
+            frames,readRemaining(in),new byte[0]);
+    }
+
 }

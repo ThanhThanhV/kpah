@@ -888,3 +888,10 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - **Trạng thái: Một phần (world event tuple decoders + signed-short ID list + CI PASS).**
 - -65 và -41: các tuple short/byte; 58: danh sách short ID.
 - CI run `43180797637` PASS. Chưa áp dụng vào world state; không tăng % tổng dự án khi chưa tính lại trọng số WBS.
+
+
+### B16 — S2C opcode 13: server character-selection roster
+
+- **Trạng thái: Một phần (roster decoder + optional resource payload + supplemental data + CI PASS).**
+- Giải mã danh sách nhân vật server và nhánh thông báo lỗi; giữ opaque resources, không thay thế local roster.
+- CI run `43181035721` PASS. Chưa tích hợp server/BE; không tăng % tổng dự án khi chưa tính lại trọng số WBS.

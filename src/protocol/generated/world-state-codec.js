@@ -780,3 +780,41 @@ export function decodeS2COpcode13(payload) {
   }
   return { count, message: null, entries, trailingBytes: readRemaining(reader) };
 }
+
+function readShopItem15(reader, full) {
+  const item = { fieldM: reader.readI8(), fieldI: reader.readI16(), fieldR: reader.readI16(),
+    fieldS: reader.readI8(), fieldY: reader.readI8(), fieldV: reader.readI16(), fieldU: reader.readI16(),
+    fieldK: reader.readI8(), fieldL: full ? reader.readI8() : null,
+    fieldN: reader.readI8(), fieldO: reader.readI8(), fieldP: reader.readI8(), fieldQ: reader.readI8(),
+    fieldC: reader.readI8(), name: reader.readUTF(), unsignedValue: full ? reader.readU16() : null };
+  const count = reader.readI8(), subRecords = [];
+  for (let i = 0; i < count; i += 1) subRecords.push({ id: reader.readU8(), value: reader.readI16() });
+  item.subRecordCount = count; item.subRecords = subRecords;
+  return item;
+}
+export function decodeS2COpcode15(payload) {
+  const reader = new PacketReader(payload), mode = reader.readI8(), shopId = reader.readI16();
+  if (mode === 0) {
+    const itemCount = reader.readI8(), items = [];
+    for (let i = 0; i < itemCount; i += 1) items.push(readShopItem15(reader, true));
+    const category = reader.readI8(), shortFields = Array.from({ length: 5 }, () => reader.readI16());
+    const textSelector = reader.readI8();
+    let optionalText = null, optionalByte = 0;
+    if (textSelector !== -1) { optionalText = reader.readUTF(); optionalByte = reader.readI8(); }
+    const auxiliarySelector = reader.readI8();
+    let auxiliary = null;
+    if (auxiliarySelector !== -1) auxiliary = { fieldR: reader.readI8(), fieldS: reader.readI16(),
+      fieldM: reader.readI8(), label: reader.readUTF(), value: reader.readI32() };
+    return { mode, shopId, itemCount, items, category, shortFields, textSelector, optionalText, optionalByte,
+      auxiliarySelector, auxiliary, frameCount: null, imageBytes: null, trailingBytes: readRemaining(reader) };
+  }
+  const itemCount = reader.readI8(), items = [];
+  if (itemCount < 0) return { mode, shopId, itemCount, items, category: null, shortFields: null,
+    textSelector: null, optionalText: null, optionalByte: null, auxiliarySelector: null, auxiliary: null,
+    frameCount: null, imageBytes: null, trailingBytes: readRemaining(reader) };
+  for (let i = 0; i < itemCount; i += 1) items.push(readShopItem15(reader, false));
+  const frameCount = reader.readI8(), imageBytes = readRemaining(reader);
+  return { mode, shopId, itemCount, items, category: null, shortFields: null, textSelector: null,
+    optionalText: null, optionalByte: null, auxiliarySelector: null, auxiliary: null, frameCount, imageBytes,
+    trailingBytes: new Uint8Array() };
+}

@@ -483,3 +483,8 @@ Added compact world-event tuple decoders and a signed-short ID-list decoder, inc
 ### S2C opcode 13: character-selection roster
 
 Added a Java/JavaScript decoder for server roster entries, optional opaque resource blobs and the matching second-pass supplemental data. The local browser roster remains client-only until server integration.
+
+
+### S2C opcode 15: shop catalog
+
+Added decoders for both shop catalog layouts, full/compact item records, counted subrecords, optional text/auxiliary data and opaque image payload.

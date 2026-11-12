@@ -531,3 +531,13 @@ The packet begins with a signed-byte count. A value of -1 is a UTF error/message
 A second pass reads one 32-bit key per roster entry. When it matches the entry key, nine supplemental scalar fields are read. The original client defaults all nine to -1 if that supplemental read fails. The browser decoder preserves the parse error and those defaults.
 
 This is the server roster payload used by the original character-selection screen. It is not yet wired to replace the browser's local roster, and the opaque resource blobs are not rendered.
+
+
+## S2C opcode 15 — shop catalog variants
+
+The signed mode byte selects two layouts:
+
+- **Mode 0:** shop ID, signed-byte item count, full item records (including unsigned-short value and counted subrecords), category byte, five short fields, optional UTF information and optional auxiliary record.
+- **Nonzero mode:** shop ID and signed-byte item count. For a nonnegative count, compact item records are followed by a frame-count byte and the remaining opaque image bytes. A negative count ends the branch without image data.
+
+Item records retain neutral field names. The browser decoder does not apply prices, stock, inventory or shop UI changes, and the image payload is not rendered.

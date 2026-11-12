@@ -3415,6 +3415,24 @@
         "second-pass-match-key",
         "supplemental-nine-fields"
       ]
+    },
+    {
+      "name": "SHOP_CATALOG_VARIANTS",
+      "direction": "S2C",
+      "opcode": 15,
+      "evidenceSource": "ka.java:case15; bo.java; bk.java",
+      "evidence": "Signed-byte mode. Mode 0 carries shop ID, signed-byte item count, full item records with unsigned-short value and counted unsigned-byte/short subrecords, followed by category, five short fields, optional UTF+byte info and optional auxiliary object. Nonzero mode carries shop ID and signed-byte item count; nonnegative count reads compact item records, frame count and remaining opaque image bytes. Negative count ends the branch without the image tail.",
+      "sections": [
+        "mode",
+        "shop-id",
+        "full-item-records",
+        "item-subrecords",
+        "category-and-five-shorts",
+        "optional-text-info",
+        "optional-auxiliary-object",
+        "compact-item-records",
+        "image-frame-count-and-opaque-bytes"
+      ]
     }
   ],
   "extensionSchemas": [

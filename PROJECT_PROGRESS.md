@@ -734,3 +734,10 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode 58: signed-byte count + signed-short ID list; negative counts rejected.
 - Added Java/JS codecs, schemas and synthetic vectors. CI run `43180797637` SUCCESS.
 - Downstream world mutations remain outside the decoder. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B16 — S2C opcode 13 — CI PASS
+
+- Opcode 13: server character-selection roster, including -1 UTF message branch, core entries, counted byte pairs, optional resource blobs and matching second-pass supplemental fields.
+- Added Java/JS codecs, schema, generator check and synthetic vectors for error and normal/resource variants. CI run `43181035721` SUCCESS.
+- Not connected to the local roster UI; opaque blobs are not rendered. Weighted project percentage unchanged; BE remains deferred.
