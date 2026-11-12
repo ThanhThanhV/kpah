@@ -626,3 +626,8 @@ The handler always clears the local popup reference. It reads one signed byte on
 ### Opcode 80 refinement menu consumer trace
 
 The refinement UI callback `oy.a()` calls `ku.c()` and builds menu entries from the selected `hp.a[]` values using the label table `ku.ae`. The corresponding `oz.a()` callback compares `hp.d[index]` against the character's currency before proceeding to a second option list. This establishes the first array as option IDs and the fourth as a cost threshold; arrays `b[]` and `c[]` remain neutral because the inspected callback does not consume them.
+
+
+## S2C opcode 82 consumer semantics
+
+The original handler clears a popup reference unconditionally, then reads one byte only if the current character counter `bS <= 0`. The byte is copied to both `cj` and `bS`, and the client sets its own local start time. When the counter is positive, no payload byte is read. The decoder's `canUpdate` parameter is therefore not a server-provided field: the integration layer must derive it from the current local character state.

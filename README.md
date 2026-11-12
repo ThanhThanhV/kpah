@@ -535,3 +535,6 @@ S2C opcode 82 is decoded with an explicit caller-state guard, preserving the ori
 
 
 The collection/material/equipment/refinement packet increment (S2C 62, 73, 76 and 80) is covered by generated JS/Java decoders and source-trace documentation. CI validation passed in run `43188530604`.
+
+
+The latest protocol increment also includes S2C opcode 82's caller-state-dependent counter update; CI run `43188530604` passed the generated world-state and Java smoke suites.

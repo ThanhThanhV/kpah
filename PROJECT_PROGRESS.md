@@ -797,3 +797,13 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode 80: decoded the four parallel arrays stored as `hp[]` in `ku.g`. Follow-up source trace in `oy.java`/ `oz.java` confirms the first array supplies option IDs for the refinement menu and the fourth array is checked against the character's currency before opening the next selection. Other columns remain neutrally named until their consumers are traced.
 - These protocol changes passed the validate job in CI run `43188530604` (Vite build, generated checks, JS protocol suites and Java 21 compile/smoke); original-JAR analysis also completed successfully.
 - Decoder-only: no authoritative market, inventory, storage, refinement or currency mutation. Overall weighted percentage unchanged pending full WBS recalculation; BE remains deferred.
+
+
+## B5/B7/B10 — Collection, inventory, refinement and conditional state packets — CI PASS
+
+- S2C opcode 62: collection/catalog records, nested item pairs, mode-3 extra long and pagination short; mode -1 closes the collection screen.
+- S2C opcode 73/76: material list and equipment/gear list decoders are now generated in Java/JavaScript with synthetic vectors (CI `43188123419` SUCCESS).
+- S2C opcode 80: four parallel refinement configuration arrays; consumer trace confirms the first array provides menu option IDs and the fourth is a currency threshold. Remaining columns stay neutral.
+- S2C opcode 82: state-dependent counter update; decoder accepts `canUpdate` from caller state and preserves all bytes when the original handler would not read the payload.
+- The combined world-state codec validation passed in CI `43188530604`: Vite build, generated checks, JS protocol tests, Java 21 compile/smoke and original-JAR analysis.
+- Parser-only scope; no authoritative inventory, market, currency or refinement side effects. Overall weighted project percentage unchanged; backend remains deferred.
