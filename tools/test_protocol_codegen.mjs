@@ -5,7 +5,8 @@ import { PacketReader, PacketWriter, encodePayload, decodePayload } from "../src
 assert.equal(Object.keys(C2S).length, 110);
 assert.equal(Object.keys(S2C).length, 142);
 assert.equal(COMMAND_CATALOG.length, 252);
-assert.equal(C2S.REFINE_ITEM, -25);
+assert.equal(C2S.EQUIPMENT_UPGRADE_ACTION, -25);
+assert.equal(C2S.REFINEMENT_ACTION, -68);
 assert.equal(C2S.USE_ITEM, 48);
 const useItem = encodePayload("C2S", "USE_ITEM", { itemId: 0x12345678 });
 assert.deepEqual([...useItem], [0x12, 0x34, 0x56, 0x78]);
@@ -17,9 +18,12 @@ assert.throws(() => encodePayload("C2S", "USE_ITEM", {}), /Missing field itemId/
 
 assert.equal(S2C.FARM_PANEL_DATA, -66);
 
-const refine = encodePayload("C2S", "REFINE_ITEM", { action: 10, itemId: 17 });
-assert.deepEqual([...refine], [10, 17]);
-assert.deepEqual(decodePayload("C2S", "REFINE_ITEM", refine), { action: 10, itemId: 17 });
+const upgradeNormal = encodePayload("C2S", "EQUIPMENT_UPGRADE_ACTION", { action: 10, itemId: 17 });
+assert.deepEqual([...upgradeNormal], [10, 17]);
+assert.deepEqual(decodePayload("C2S", "EQUIPMENT_UPGRADE_ACTION", upgradeNormal), { action: 10, itemId: 17 });
+const upgradeKeepStats = encodePayload("C2S", "EQUIPMENT_UPGRADE_ACTION", { action: 11, itemId: 255 });
+assert.deepEqual([...upgradeKeepStats], [11, 255]);
+assert.deepEqual(decodePayload("C2S", "EQUIPMENT_UPGRADE_ACTION", upgradeKeepStats), { action: 11, itemId: 255 });
 
 const move = encodePayload("C2S", "MOVE", { x: -320, y: 1024 });
 assert.deepEqual([...move], [0xfe, 0xc0, 0x04, 0x00]);
@@ -39,7 +43,7 @@ assert.equal(reader.readUTF(), "\u0000KPAH tiếng Việt 😀");
 assert.equal(reader.remaining(), 0);
 
 assert.throws(() => encodePayload("C2S", "OP_NEG_76", {}), /No verified payload schema/);
-assert.throws(() => decodePayload("C2S", "REFINE_ITEM", new Uint8Array([10, 17, 0])), /trailing/i);
+assert.throws(() => decodePayload("C2S", "EQUIPMENT_UPGRADE_ACTION", new Uint8Array([10, 17, 0])), /trailing/i);
 assert.throws(() => new PacketReader(new Uint8Array([0])).readU16(), /Truncated/);
 const partialShort = new PacketReader(new Uint8Array([0x12]));
 assert.throws(() => partialShort.readU16(), /Truncated/);
