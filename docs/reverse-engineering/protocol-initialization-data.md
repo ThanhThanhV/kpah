@@ -616,3 +616,8 @@ The source consumer `mj.y(acu)` treats mode -1 as a close action with no payload
 ## S2C opcode 80 — refinement configuration matrix
 
 Reads a signed-byte outer count. Each entry has a signed-byte length followed by four parallel arrays of that length: one signed-byte array and three signed-short arrays. The client stores these entries in `ku.g` as `hp[]`; `ku.c()` returns the currently selected entry using `hf.k`. The decoder preserves the matrix but does not assign undocumented meaning to the individual numeric columns or apply refinement rules.
+
+
+## S2C opcode 82 — state-dependent character counter
+
+The handler always clears the local popup reference. It reads one signed byte only when the current character's `bS` field is non-positive; that byte is assigned to both `cj` and `bS`, and the client records its own current timestamp. When `bS` is positive, the packet handler reads no payload byte. The generated decoder therefore requires a `canUpdate` argument derived from the caller's current state and returns the entire payload as unconsumed when false. It does not fabricate the client timestamp.

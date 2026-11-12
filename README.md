@@ -529,3 +529,6 @@ The trade/storage/refinement decoder increment (S2C 65–71 and -34) passed CI r
 ### S2C opcodes 62 and 80
 
 Added generated decoders for the collection/catalog item group (including nested item pairs and mode-3 long field) and the four-column refinement configuration matrix. Both Java and JavaScript synthetic vectors cover nested fields and signed values.
+
+
+S2C opcode 82 is decoded with an explicit caller-state guard, preserving the original conditional read behavior and exposing unconsumed bytes when the local counter blocks the update.

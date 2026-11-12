@@ -1026,3 +1026,11 @@ export function decodeS2COpcode76(payload) {
   for (let i = 0; i < recordCount; i += 1) records.push({ itemId: reader.readI16(), equipmentSlot: reader.readI8(), value: reader.readI16() });
   return { recordCount, records, trailingBytes: readRemaining(reader) };
 }
+
+export function decodeS2COpcode82(payload, canUpdate) {
+  const reader = new PacketReader(payload);
+  if (!canUpdate) return { canUpdate: false, counterByte: null, unconsumedBytes: readRemaining(reader),
+    trailingBytes: new Uint8Array() };
+  const counterByte = reader.readI8();
+  return { canUpdate: true, counterByte, unconsumedBytes: new Uint8Array(), trailingBytes: readRemaining(reader) };
+}

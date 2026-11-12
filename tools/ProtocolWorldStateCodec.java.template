@@ -941,4 +941,11 @@ public final class ProtocolWorldStateCodec {
         return new Opcode76(count,List.copyOf(records),readRemaining(in));
     }
 
+    public record Opcode82(boolean canUpdate,Byte counterByte,byte[] unconsumedBytes,byte[] trailingBytes) {}
+    public static Opcode82 decodeS2COpcode82(byte[] payload,boolean canUpdate) throws IOException {
+        PacketReader in=new PacketReader(payload);
+        if(!canUpdate)return new Opcode82(false,null,readRemaining(in),new byte[0]);
+        return new Opcode82(true,in.readI8(),new byte[0],readRemaining(in));
+    }
+
 }

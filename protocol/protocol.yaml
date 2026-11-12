@@ -3689,6 +3689,17 @@
         "record-count",
         "equipment-records-item-slot-value"
       ]
+    },
+    {
+      "name": "CONDITIONAL_CHARACTER_COUNTER_UPDATE",
+      "direction": "S2C",
+      "opcode": 82,
+      "evidenceSource": "ka.java:case82",
+      "evidence": "Always clears the local popup reference. Only when the current character's bS field is <= 0 does the handler read one signed byte and assign it to both cj and bS, then record the local current timestamp. If bS > 0 it reads no payload byte. The decoder therefore requires caller-supplied canUpdate context and preserves unconsumed bytes when false.",
+      "sections": [
+        "caller-state-guard",
+        "conditional-counter-byte"
+      ]
     }
   ],
   "extensionSchemas": [

@@ -523,6 +523,13 @@ jobs:
                   || catalog62Close.collectionIndex() != null || matrix80.entries().get(0).byteValues().get(0) != -1
                   || matrix80.entries().get(0).shortValuesD().get(1) != -300)
                 throw new AssertionError("S2C opcodes 62/80 collection catalog and refinement matrix");
+              ProtocolWorldStateCodec.Opcode82 counter82Update = ProtocolWorldStateCodec.decodeS2COpcode82(
+                new PacketWriter().writeI8(-7).toByteArray(), true);
+              ProtocolWorldStateCodec.Opcode82 counter82Guarded = ProtocolWorldStateCodec.decodeS2COpcode82(
+                new PacketWriter().writeI8(9).writeI8(10).toByteArray(), false);
+              if (counter82Update.counterByte() != -7 || counter82Guarded.counterByte() != null
+                  || counter82Guarded.unconsumedBytes().length != 2)
+                throw new AssertionError("S2C opcode 82 state-dependent counter guard");
               ProtocolWorldStateCodec.Opcode73 materials73 = ProtocolWorldStateCodec.decodeS2COpcode73(
                 new PacketWriter().writeI16(2).writeI16(501).writeI16(7).writeI16(12)
                   .writeI16(502).writeI16(-3).writeI16(0).writeI8(1).toByteArray());
