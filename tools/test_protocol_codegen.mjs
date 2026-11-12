@@ -6,6 +6,15 @@ assert.equal(Object.keys(C2S).length, 110);
 assert.equal(Object.keys(S2C).length, 142);
 assert.equal(COMMAND_CATALOG.length, 252);
 assert.equal(C2S.REFINE_ITEM, -25);
+assert.equal(C2S.USE_ITEM, 48);
+const useItem = encodePayload("C2S", "USE_ITEM", { itemId: 0x12345678 });
+assert.deepEqual([...useItem], [0x12, 0x34, 0x56, 0x78]);
+assert.deepEqual(decodePayload("C2S", "USE_ITEM", useItem), { itemId: 0x12345678 });
+const useItemNegative = encodePayload("C2S", "USE_ITEM", { itemId: -1 });
+assert.deepEqual([...useItemNegative], [0xff, 0xff, 0xff, 0xff]);
+assert.deepEqual(decodePayload("C2S", "USE_ITEM", useItemNegative), { itemId: -1 });
+assert.throws(() => encodePayload("C2S", "USE_ITEM", {}), /Missing field itemId/);
+
 assert.equal(S2C.FARM_PANEL_DATA, -66);
 
 const refine = encodePayload("C2S", "REFINE_ITEM", { action: 10, itemId: 17 });
