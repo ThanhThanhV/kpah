@@ -806,3 +806,11 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Nhánh subtype 0: pet header, full item list, 5 short pet stats và UTF tùy chọn. Nhánh khác: compact item list, frame count và raw image bytes; count âm trả nhánh "chưa có thông tin".
 - Bytecode/class `bo` xác nhận appearance arrays dài 10/3/15; compact item có thêm 2 short. CI run `43174961636` PASS.
 - Chưa mutate pet/inventory state hoặc render ảnh; không tăng % tổng dự án do chưa tính lại trọng số WBS.
+
+
+### B16 — S2C opcode 105: multi-level lookup tables
+
+- **Trạng thái: Một phần (3 nhóm bảng lồng nhau + Java/JS tests + CI PASS).**
+- Giải mã row width signed byte, nhóm 1 gồm group/entry counts và mỗi entry có width×3 short cùng UTF label mỗi 3 short; nhóm 2 có width short + short cuối; nhóm 3 lặp lại cấu trúc width×3 + label.
+- Map dữ liệu theo đích nguồn `ku.ab/aa`, `mj.aM/aL`, `ku.Y/Z`, không suy đoán ý nghĩa gameplay. CI run `43175388107` PASS.
+- Không tăng % tổng dự án do chưa tính lại trọng số WBS.

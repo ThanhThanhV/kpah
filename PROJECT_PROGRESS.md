@@ -647,3 +647,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Source class `bo` confirms appearance byte arrays are fixed lengths 10, 3 and 15; compact records also carry two extra shorts. The decoder retains all these values and leaves image bytes opaque.
 - Added schema, generator consistency, JS vectors for both branches and Java 21 smoke tests. CI run `43174961636` SUCCESS.
 - No pet model mutation, item catalog lookup or image rendering is applied. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B16 — S2C opcode 105 multi-level lookup tables — CI PASS
+
+- Added Java/JavaScript decoder for all three nested table families assigned by the original client to `ku.ab/aa`, `mj.aM/aL` and `ku.Y/Z`.
+- Preserves signed-byte dimensions, nested group/entry counts, width×3 signed-short sequences, UTF labels after every third short, and the second family's trailing short per row.
+- Added schema, generator checks, nested JS vectors, negative-width validation and Java 21 smoke test. CI run `43175388107` SUCCESS.
+- Decoder does not assign gameplay semantics to table columns. Weighted project percentage unchanged; BE remains deferred.
