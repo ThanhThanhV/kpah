@@ -8,6 +8,10 @@ assert.equal(COMMAND_CATALOG.length, 252);
 assert.equal(C2S.DROP_EQUIPPED_ITEM, -21);
 assert.equal(C2S.EQUIPMENT_UPGRADE_ACTION, -25);
 assert.equal(C2S.EQUIP_ITEM, 86);
+assert.equal(C2S.SHOP_BATCH_ACTION, 24);
+assert.equal(C2S.SHOP_PURCHASE_BATCH, 74);
+assert.equal(C2S.SHOP_PURCHASE_ITEM, 85);
+assert.equal(S2C.SHOP_PURCHASE_SUCCESS, 85);
 assert.equal(C2S.REFINEMENT_ACTION, -68);
 assert.equal(C2S.USE_ITEM, 48);
 const useItem = encodePayload("C2S", "USE_ITEM", { itemId: 0x12345678 });
@@ -21,6 +25,9 @@ assert.throws(() => encodePayload("C2S", "USE_ITEM", {}), /Missing field itemId/
 assert.equal(S2C.FARM_PANEL_DATA, -66);
 assert.equal(S2C.REFINEMENT_RESULT, -68);
 
+const shopPurchaseItem = encodePayload("C2S", "SHOP_PURCHASE_ITEM", { itemId: 37 });
+assert.deepEqual([...shopPurchaseItem], [37]);
+assert.deepEqual(decodePayload("C2S", "SHOP_PURCHASE_ITEM", shopPurchaseItem), { itemId: 37 });
 const equipItem = encodePayload("C2S", "EQUIP_ITEM", { itemId: 0x1234 });
 assert.deepEqual([...equipItem], [0x12, 0x34]);
 assert.deepEqual(decodePayload("C2S", "EQUIP_ITEM", equipItem), { itemId: 0x1234 });
