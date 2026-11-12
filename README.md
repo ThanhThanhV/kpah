@@ -433,3 +433,8 @@ Added Java/JavaScript decoders for layered portrait image updates and world spri
 ### S2C opcodes -38, -39 and -42
 
 Added source-backed world entity marker, counter and byte-pair map decoders, with signed field widths and odd-length validation. Java/JavaScript synthetic vectors cover each payload.
+
+
+### S2C opcodes -24, -26, -28, -30, -31 and -32
+
+Added Java/JavaScript decoders for world notice action, entity text/binary updates, option lists, text-option and confirmation payloads. Signed lengths/counts and UTF values are covered by synthetic vectors.

@@ -3081,6 +3081,72 @@
         "entity-or-context-short",
         "repeated-byte-pairs"
       ]
+    },
+    {
+      "name": "WORLD_NOTICE_ACTION",
+      "direction": "S2C",
+      "opcode": -24,
+      "evidenceSource": "ka.java:case-24",
+      "evidence": "Signed byte action and UTF text. Action 0 forwards the text to the original world notice panel; action 1 exits this branch without extra payload.",
+      "sections": [
+        "source-ordered-fields",
+        "conditional-or-counted-payload"
+      ]
+    },
+    {
+      "name": "WORLD_ENTITY_TEXT_UPDATE",
+      "direction": "S2C",
+      "opcode": -26,
+      "evidenceSource": "ka.java:case-26",
+      "evidence": "One UTF string passed to the world-state text consumer.",
+      "sections": [
+        "source-ordered-fields",
+        "conditional-or-counted-payload"
+      ]
+    },
+    {
+      "name": "WORLD_ENTITY_BINARY_UPDATE",
+      "direction": "S2C",
+      "opcode": -28,
+      "evidenceSource": "ka.java:case-28",
+      "evidence": "Signed-short length followed by raw binary bytes passed to the world-state consumer.",
+      "sections": [
+        "source-ordered-fields",
+        "conditional-or-counted-payload"
+      ]
+    },
+    {
+      "name": "WORLD_ENTITY_OPTION_LIST",
+      "direction": "S2C",
+      "opcode": -30,
+      "evidenceSource": "ka.java:case-30",
+      "evidence": "Signed short ID, signed byte type, signed-byte count, then that many UTF strings.",
+      "sections": [
+        "source-ordered-fields",
+        "conditional-or-counted-payload"
+      ]
+    },
+    {
+      "name": "WORLD_ENTITY_TEXT_OPTION",
+      "direction": "S2C",
+      "opcode": -31,
+      "evidenceSource": "ka.java:case-31",
+      "evidence": "Signed short ID, signed byte type, UTF text and signed byte option.",
+      "sections": [
+        "source-ordered-fields",
+        "conditional-or-counted-payload"
+      ]
+    },
+    {
+      "name": "WORLD_ENTITY_TEXT_CONFIRMATION",
+      "direction": "S2C",
+      "opcode": -32,
+      "evidenceSource": "ka.java:case-32",
+      "evidence": "Signed short ID, signed byte type and UTF text; original client opens a confirmation dialog.",
+      "sections": [
+        "source-ordered-fields",
+        "conditional-or-counted-payload"
+      ]
     }
   ],
   "extensionSchemas": [

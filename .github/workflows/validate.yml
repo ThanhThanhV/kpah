@@ -437,6 +437,23 @@ jobs:
                 ||counter39.typeByte()!=-2||counter39.entityId()!=321||counter39.counter()!=98765
                 ||pairs42.contextId()!=77||pairs42.pairs().get(1).second()!=-4)
                 throw new AssertionError("S2C opcodes -38/-39/-42 world entity events");
+
+              ProtocolWorldStateCodec.OpcodeMinus24 notice24=ProtocolWorldStateCodec.decodeS2COpcodeMinus24(
+                new PacketWriter().writeI8(0).writeUTF("event").toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus26 text26=ProtocolWorldStateCodec.decodeS2COpcodeMinus26(
+                new PacketWriter().writeUTF("entity label").toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus28 binary28=ProtocolWorldStateCodec.decodeS2COpcodeMinus28(
+                new PacketWriter().writeI16(3).writeU8(1).writeU8(2).writeU8(3).toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus30 options30=ProtocolWorldStateCodec.decodeS2COpcodeMinus30(
+                new PacketWriter().writeI16(10).writeI8(2).writeI8(2).writeUTF("one").writeUTF("two").toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus31 text31=ProtocolWorldStateCodec.decodeS2COpcodeMinus31(
+                new PacketWriter().writeI16(11).writeI8(3).writeUTF("detail").writeI8(-1).toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus32 confirm32=ProtocolWorldStateCodec.decodeS2COpcodeMinus32(
+                new PacketWriter().writeI16(12).writeI8(4).writeUTF("confirm").toByteArray());
+              if(notice24.action()!=0||!notice24.text().equals("event")||!text26.text().equals("entity label")
+                ||binary28.data().length!=3||!options30.options().equals(List.of("one","two"))
+                ||text31.option()!=-1||!confirm32.text().equals("confirm"))
+                throw new AssertionError("S2C opcodes -24/-26/-28/-30/-31/-32");
               PacketWriter catalog25Writer = new PacketWriter().writeU8(1).writeU8(7).writeUTF("lookup").writeI8(-1).writeI8(2)
                 .writeI8(1).writeI16(100).writeI16(200);
               for (int i = 0; i < 5; i++) catalog25Writer.writeI8(i - 2);

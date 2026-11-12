@@ -448,3 +448,15 @@ This packet populates `ku.ab/aa`, `mj.aM/aL` and `ku.Y/Z`. The decoder retains t
 - **-38:** boolean global flag, signed-byte record count, then two shorts and two UTF strings per world-entity marker record.
 - **-39:** signed byte, signed-short entity ID and signed int counter.
 - **-42:** signed-short context ID followed by repeated signed-byte pairs. The original client computes the pair count from remaining bytes divided by two; odd trailing lengths are invalid and are rejected by the decoder.
+
+
+## S2C opcodes -24, -26, -28, -30, -31 and -32 — world UI results
+
+- **-24:** action byte + UTF notice text.
+- **-26:** UTF text update.
+- **-28:** signed-short-length binary blob.
+- **-30:** short ID, byte type, signed-byte option count and UTF options.
+- **-31:** short ID, byte type, UTF text and option byte.
+- **-32:** short ID, byte type and UTF confirmation text.
+
+The decoder only exposes wire values; original panel navigation, confirmation prompts and entity mutations remain outside this layer.

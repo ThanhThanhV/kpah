@@ -474,4 +474,31 @@ public final class ProtocolWorldStateCodec {
         return new OpcodeMinus42(id,List.copyOf(pairs),readRemaining(in));
     }
 
+    public record OpcodeMinus24(byte action,String text,byte[] trailingBytes) {}
+    public static OpcodeMinus24 decodeS2COpcodeMinus24(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new OpcodeMinus24(in.readI8(),in.readUTF(),readRemaining(in));
+    }
+    public record OpcodeMinus26(String text,byte[] trailingBytes) {}
+    public static OpcodeMinus26 decodeS2COpcodeMinus26(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new OpcodeMinus26(in.readUTF(),readRemaining(in));
+    }
+    public record OpcodeMinus28(short length,byte[] data,byte[] trailingBytes) {}
+    public static OpcodeMinus28 decodeS2COpcodeMinus28(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);short length=in.readI16();return new OpcodeMinus28(length,readSizedBytes(in,length),readRemaining(in));
+    }
+    public record OpcodeMinus30(short id,byte type,byte count,List<String> options,byte[] trailingBytes) {}
+    public static OpcodeMinus30 decodeS2COpcodeMinus30(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);short id=in.readI16();byte type=in.readI8(),count=in.readI8();
+        if(count<0)throw new IOException("Negative opcode -30 option count");List<String> options=new ArrayList<>();
+        for(int i=0;i<count;i++)options.add(in.readUTF());return new OpcodeMinus30(id,type,count,List.copyOf(options),readRemaining(in));
+    }
+    public record OpcodeMinus31(short id,byte type,String text,byte option,byte[] trailingBytes) {}
+    public static OpcodeMinus31 decodeS2COpcodeMinus31(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new OpcodeMinus31(in.readI16(),in.readI8(),in.readUTF(),in.readI8(),readRemaining(in));
+    }
+    public record OpcodeMinus32(short id,byte type,String text,byte[] trailingBytes) {}
+    public static OpcodeMinus32 decodeS2COpcodeMinus32(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new OpcodeMinus32(in.readI16(),in.readI8(),in.readUTF(),readRemaining(in));
+    }
+
 }

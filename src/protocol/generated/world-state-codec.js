@@ -525,3 +525,25 @@ export function decodeS2COpcodeMinus42(payload) {
   while(reader.remaining()>0)pairs.push([reader.readI8(),reader.readI8()]);
   return {contextId,pairCount:pairs.length,pairs,trailingBytes:readRemaining(reader)};
 }
+
+export function decodeS2COpcodeMinus24(payload) {
+  const reader=new PacketReader(payload);return {action:reader.readI8(),text:reader.readUTF(),trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcodeMinus26(payload) {
+  const reader=new PacketReader(payload);return {text:reader.readUTF(),trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcodeMinus28(payload) {
+  const reader=new PacketReader(payload),length=reader.readI16();return {length,data:readSizedBytes(reader,length),trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcodeMinus30(payload) {
+  const reader=new PacketReader(payload),id=reader.readI16(),type=reader.readI8(),count=reader.readI8();
+  if(count<0)throw new RangeError("Negative opcode -30 option count");
+  const options=Array.from({length:count},()=>reader.readUTF());
+  return {id,type,count,options,trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcodeMinus31(payload) {
+  const reader=new PacketReader(payload);return {id:reader.readI16(),type:reader.readI8(),text:reader.readUTF(),option:reader.readI8(),trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcodeMinus32(payload) {
+  const reader=new PacketReader(payload);return {id:reader.readI16(),type:reader.readI8(),text:reader.readUTF(),trailingBytes:readRemaining(reader)};
+}
