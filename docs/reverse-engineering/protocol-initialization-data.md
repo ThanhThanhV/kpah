@@ -399,3 +399,17 @@ The packet fills the original `ic` static tables in a fixed order: 15×11 signed
 - Opcode 37: two UTF strings used by the original client for a message or confirmation dialog.
 - Opcode 38: one UTF world-notice string.
 - Opcode 39: UTF suffix, boolean success, UTF display text and UTF SMS destination. The original client opens the SMS action only on success; this decoder only parses the result.
+
+
+## S2C opcodes -8 through -20 — resource, social and ranking results
+
+- **-8:** binary resource transfer. Subtypes 1/3/4 carry the primary blob; subtype 2 adds a secondary blob and nested length-prefixed groups. The parser preserves all bytes and does not decode image formats.
+- **-9:** signed-short ID list followed by UTF message.
+- **-10:** short ID + UTF message.
+- **-11:** subtype 0 carries short ID + UTF; other subtypes carry UTF + boolean and, on true, two shorts.
+- **-12:** social/guild record with short ID, UTF fields, signed byte/short, three signed 64-bit values, two UTF fields, boolean, byte and conditional UTF.
+- **-17:** signed-short-counted announcement records (int + two UTF strings); **-18:** guild chat UTF message.
+- **-19:** ranking type + title; type 5 has a typed record list, other ranking payloads remain opaque for the type-specific parser.
+- **-20:** signed int guild currency reward.
+
+These are parsing boundaries only. UI prompts, guild/chat state changes, ranking display and resource rendering remain outside the decoder.

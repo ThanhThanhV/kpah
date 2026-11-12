@@ -2889,6 +2889,105 @@
         "display-text",
         "sms-destination"
       ]
+    },
+    {
+      "name": "RESOURCE_TRANSFER_VARIANTS",
+      "direction": "S2C",
+      "opcode": -8,
+      "evidenceSource": "ka.java:case-8",
+      "evidence": "Reads signed-byte subtype and category, signed-short primary byte length and raw data. Subtype 1 is primary blob only; subtype 2 adds a secondary blob and nested groups of blobs; subtype 3 forwards category plus primary blob; subtype 4 validates the primary image bytes. All resource bytes remain opaque.",
+      "sections": [
+        "source-ordered-fields",
+        "conditional-or-counted-payload"
+      ]
+    },
+    {
+      "name": "SHORT_ID_LIST_AND_MESSAGE",
+      "direction": "S2C",
+      "opcode": -9,
+      "evidenceSource": "ka.java:case-9",
+      "evidence": "Reads signed-short count, that many signed shorts, then one UTF message; the original client either applies the IDs directly or opens a message callback.",
+      "sections": [
+        "source-ordered-fields",
+        "conditional-or-counted-payload"
+      ]
+    },
+    {
+      "name": "CHARACTER_PANEL_MESSAGE",
+      "direction": "S2C",
+      "opcode": -10,
+      "evidenceSource": "ka.java:case-10",
+      "evidence": "Reads a signed short and a UTF message; updates the local character panel selection and displays the message.",
+      "sections": [
+        "source-ordered-fields",
+        "conditional-or-counted-payload"
+      ]
+    },
+    {
+      "name": "CONFIRMATION_RESULT_VARIANTS",
+      "direction": "S2C",
+      "opcode": -11,
+      "evidenceSource": "ka.java:case-11",
+      "evidence": "Subtype 0 reads a short ID and UTF message. Other subtypes read a UTF message and boolean; when true, two additional signed shorts follow.",
+      "sections": [
+        "source-ordered-fields",
+        "conditional-or-counted-payload"
+      ]
+    },
+    {
+      "name": "GUILD_OR_SOCIAL_RECORD",
+      "direction": "S2C",
+      "opcode": -12,
+      "evidenceSource": "ka.java:case-12",
+      "evidence": "Reads a short ID, two UTF strings, signed byte, short, three signed longs, two UTF strings, boolean and signed byte; an additional UTF field follows when the boolean is true.",
+      "sections": [
+        "source-ordered-fields",
+        "conditional-or-counted-payload"
+      ]
+    },
+    {
+      "name": "SYSTEM_ANNOUNCEMENT_LIST",
+      "direction": "S2C",
+      "opcode": -17,
+      "evidenceSource": "ka.java:case-17",
+      "evidence": "Signed-short count followed by records containing int ID and two UTF strings; the client displays the records as a system announcement list.",
+      "sections": [
+        "source-ordered-fields",
+        "conditional-or-counted-payload"
+      ]
+    },
+    {
+      "name": "GUILD_CHAT_MESSAGE",
+      "direction": "S2C",
+      "opcode": -18,
+      "evidenceSource": "ka.java:case-18",
+      "evidence": "One UTF string appended to guild chat.",
+      "sections": [
+        "source-ordered-fields",
+        "conditional-or-counted-payload"
+      ]
+    },
+    {
+      "name": "RANKING_RESULT_VARIANTS",
+      "direction": "S2C",
+      "opcode": -19,
+      "evidenceSource": "ka.java:case-19",
+      "evidence": "Reads ranking type byte and title UTF. Type 5 adds a signed-short-counted list of records (short ID, two UTF strings, byte, short, long, byte); other types delegate the remaining bytes to ranking-specific parsers.",
+      "sections": [
+        "source-ordered-fields",
+        "conditional-or-counted-payload"
+      ]
+    },
+    {
+      "name": "GUILD_CURRENCY_REWARD",
+      "direction": "S2C",
+      "opcode": -20,
+      "evidenceSource": "ka.java:case-20",
+      "evidence": "One signed int amount used by the original client to display a guild currency reward prompt.",
+      "sections": [
+        "source-ordered-fields",
+        "conditional-or-counted-payload"
+      ]
     }
   ],
   "extensionSchemas": [

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
-import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode12, decodeS2COpcode17, decodeS2COpcode7, decodeS2COpcode18, decodeS2COpcode19, decodeS2COpcode20, decodeS2COpcode21, decodeS2COpcode27, decodeS2COpcode28, decodeS2COpcode30, decodeS2COpcode32, decodeS2COpcode33, decodeS2COpcode2, decodeS2COpcode22, decodeS2COpcode23, decodeS2COpcode25, decodeS2COpcode26, decodeS2COpcode35, decodeS2COpcode64, decodeS2COpcodeMinus5, decodeS2COpcode37, decodeS2COpcode38, decodeS2COpcode39, decodeS2COpcode61, decodeS2COpcode78 } from "../src/protocol/generated/world-state-codec.js";
+import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode12, decodeS2COpcode17, decodeS2COpcode7, decodeS2COpcode18, decodeS2COpcode19, decodeS2COpcode20, decodeS2COpcode21, decodeS2COpcode27, decodeS2COpcode28, decodeS2COpcode30, decodeS2COpcode32, decodeS2COpcode33, decodeS2COpcode2, decodeS2COpcode22, decodeS2COpcode23, decodeS2COpcode25, decodeS2COpcode26, decodeS2COpcode35, decodeS2COpcode64, decodeS2COpcodeMinus5, decodeS2COpcode37, decodeS2COpcode38, decodeS2COpcode39, decodeS2COpcodeMinus8, decodeS2COpcodeMinus9, decodeS2COpcodeMinus10, decodeS2COpcodeMinus11, decodeS2COpcodeMinus12, decodeS2COpcodeMinus17, decodeS2COpcodeMinus18, decodeS2COpcodeMinus19, decodeS2COpcodeMinus20, decodeS2COpcode61, decodeS2COpcode78 } from "../src/protocol/generated/world-state-codec.js";
 const spawn=new PacketWriter().writeI8(1).writeU8(7).writeI16(123).writeI16(456).writeI16(789).writeI8(2)
  .writeI32(-99).writeI8(4).writeI8(5).writeBool(false)
  .writeI8(0).writeU8(8).writeI16(124).writeI16(500).writeI16(600).writeI8(1).writeI32(77).writeI8(6).writeBool(true).toUint8Array();
@@ -153,3 +153,31 @@ const notice38=decodeS2COpcode38(new PacketWriter().writeUTF("World notice").toU
 assert.equal(notice38.noticeText,"World notice");
 const sms39=decodeS2COpcode39(new PacketWriter().writeUTF("123").writeBool(true).writeUTF("Register").writeUTF("sms://1234").toUint8Array());
 assert.equal(sms39.success,true);assert.equal(sms39.smsDestination,"sms://1234");
+
+const resource8=decodeS2COpcodeMinus8(new PacketWriter().writeI8(2).writeI8(-3).writeI16(2).writeU8(1).writeU8(2)
+ .writeI16(1).writeU8(3).writeU8(1).writeI16(2).writeU8(4).writeU8(5)
+ .writeI16(1).writeI16(6).writeI8(1).writeI16(1).writeU8(7).toUint8Array());
+assert.equal(resource8.subtype,2);assert.deepEqual([...resource8.primaryData],[1,2]);
+assert.deepEqual([...resource8.secondaryData],[3]);assert.deepEqual([...resource8.groups[0].data],[4,5]);
+assert.deepEqual([...resource8.groups[0].nested[0]],[7]);
+const resource8Image=decodeS2COpcodeMinus8(new PacketWriter().writeI8(4).writeI8(1).writeI16(2).writeU8(8).writeU8(9).toUint8Array());
+assert.deepEqual([...resource8Image.primaryData],[8,9]);
+const list9=decodeS2COpcodeMinus9(new PacketWriter().writeI16(2).writeI16(10).writeI16(-20).writeUTF("done").toUint8Array());
+assert.deepEqual(list9.ids,[10,-20]);assert.equal(list9.message,"done");
+const panel10=decodeS2COpcodeMinus10(new PacketWriter().writeI16(33).writeUTF("updated").toUint8Array());
+assert.equal(panel10.id,33);assert.equal(panel10.message,"updated");
+const confirm11=decodeS2COpcodeMinus11(new PacketWriter().writeI8(0).writeI16(44).writeUTF("confirm").toUint8Array());
+assert.equal(confirm11.id,44);assert.equal(confirm11.success,null);
+const result11=decodeS2COpcodeMinus11(new PacketWriter().writeI8(1).writeUTF("ok").writeBool(true).writeI16(5).writeI16(6).toUint8Array());
+assert.equal(result11.firstShort,5);assert.equal(result11.secondShort,6);
+const social12=decodeS2COpcodeMinus12(new PacketWriter().writeI16(1).writeUTF("n").writeUTF("d").writeI8(-2).writeI16(3)
+ .writeI64(4).writeI64(5).writeI64(6).writeUTF("a").writeUTF("b").writeBool(true).writeI8(7).writeUTF("extra").toUint8Array());
+assert.equal(social12.longC,6n);assert.equal(social12.extraText,"extra");
+const announcements17=decodeS2COpcodeMinus17(new PacketWriter().writeI16(1).writeI32(99).writeUTF("title").writeUTF("message").toUint8Array());
+assert.equal(announcements17.records[0].id,99);
+assert.equal(decodeS2COpcodeMinus18(new PacketWriter().writeUTF("guild chat").toUint8Array()).message,"guild chat");
+const ranking19=decodeS2COpcodeMinus19(new PacketWriter().writeI8(5).writeUTF("Top guild").writeI16(1).writeI16(7).writeUTF("guild").writeUTF("desc").writeI8(2).writeI16(3).writeI64(4).writeI8(5).toUint8Array());
+assert.equal(ranking19.records[0].longValue,4n);assert.equal(ranking19.opaqueRankingPayload.length,0);
+const otherRanking19=decodeS2COpcodeMinus19(new PacketWriter().writeI8(4).writeUTF("Top").writeU8(1).writeU8(2).toUint8Array());
+assert.deepEqual([...otherRanking19.opaqueRankingPayload],[1,2]);
+assert.equal(decodeS2COpcodeMinus20(new PacketWriter().writeI32(12345).toUint8Array()).amount,12345);

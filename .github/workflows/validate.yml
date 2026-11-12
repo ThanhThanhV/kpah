@@ -343,6 +343,38 @@ jobs:
                 ||!dialog37.dialogBody().equals("Body")||!notice38.noticeText().equals("World notice")
                 ||!sms39.success()||!sms39.smsDestination().equals("sms://1234"))
                 throw new AssertionError("S2C opcode -5/35/37/38/39/64 decoders");
+
+              ProtocolWorldStateCodec.OpcodeMinus8 resource8=ProtocolWorldStateCodec.decodeS2COpcodeMinus8(
+                new PacketWriter().writeI8(2).writeI8(-3).writeI16(2).writeU8(1).writeU8(2)
+                  .writeI16(1).writeU8(3).writeU8(1).writeI16(2).writeU8(4).writeU8(5)
+                  .writeI16(1).writeI16(6).writeI8(1).writeI16(1).writeU8(7).toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus9 list9=ProtocolWorldStateCodec.decodeS2COpcodeMinus9(
+                new PacketWriter().writeI16(2).writeI16(10).writeI16(-20).writeUTF("done").toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus10 panel10=ProtocolWorldStateCodec.decodeS2COpcodeMinus10(
+                new PacketWriter().writeI16(33).writeUTF("updated").toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus11 confirm11=ProtocolWorldStateCodec.decodeS2COpcodeMinus11(
+                new PacketWriter().writeI8(0).writeI16(44).writeUTF("confirm").toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus11 result11=ProtocolWorldStateCodec.decodeS2COpcodeMinus11(
+                new PacketWriter().writeI8(1).writeUTF("ok").writeBool(true).writeI16(5).writeI16(6).toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus12 social12=ProtocolWorldStateCodec.decodeS2COpcodeMinus12(
+                new PacketWriter().writeI16(1).writeUTF("n").writeUTF("d").writeI8(-2).writeI16(3)
+                  .writeI64(4).writeI64(5).writeI64(6).writeUTF("a").writeUTF("b").writeBool(true).writeI8(7).writeUTF("extra").toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus17 announcements17=ProtocolWorldStateCodec.decodeS2COpcodeMinus17(
+                new PacketWriter().writeI16(1).writeI32(99).writeUTF("title").writeUTF("message").toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus18 guild18=ProtocolWorldStateCodec.decodeS2COpcodeMinus18(
+                new PacketWriter().writeUTF("guild chat").toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus19 ranking19=ProtocolWorldStateCodec.decodeS2COpcodeMinus19(
+                new PacketWriter().writeI8(5).writeUTF("Top guild").writeI16(1).writeI16(7).writeUTF("guild").writeUTF("desc")
+                  .writeI8(2).writeI16(3).writeI64(4).writeI8(5).toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus19 otherRanking19=ProtocolWorldStateCodec.decodeS2COpcodeMinus19(
+                new PacketWriter().writeI8(4).writeUTF("Top").writeU8(1).writeU8(2).toByteArray());
+              ProtocolWorldStateCodec.OpcodeMinus20 reward20=ProtocolWorldStateCodec.decodeS2COpcodeMinus20(new PacketWriter().writeI32(12345).toByteArray());
+              if(resource8.groups().get(0).nested().get(0)[0]!=7||!list9.ids().equals(List.of((short)10,(short)-20))
+                ||panel10.id()!=33||confirm11.id()!=44||result11.secondShort()!=6||social12.longC()!=6L
+                ||!social12.extraText().equals("extra")||announcements17.records().get(0).id()!=99
+                ||!guild18.message().equals("guild chat")||ranking19.records().get(0).longValue()!=4L
+                ||otherRanking19.opaqueRankingPayload().length!=2||reward20.amount()!=12345)
+                throw new AssertionError("S2C opcode -8..-20 resource/social decoders");
               PacketWriter catalog25Writer = new PacketWriter().writeU8(1).writeU8(7).writeUTF("lookup").writeI8(-1).writeI8(2)
                 .writeI8(1).writeI16(100).writeI16(200);
               for (int i = 0; i < 5; i++) catalog25Writer.writeI8(i - 2);

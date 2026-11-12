@@ -355,3 +355,67 @@ export function decodeS2COpcode39(payload) {
   const reader=new PacketReader(payload);
   return {accountSuffix:reader.readUTF(),success:reader.readBool(),displayText:reader.readUTF(),smsDestination:reader.readUTF(),trailingBytes:readRemaining(reader)};
 }
+
+export function decodeS2COpcodeMinus8(payload) {
+  const reader=new PacketReader(payload), subtype=reader.readI8(), category=reader.readI8(), primaryLength=reader.readI16();
+  const primaryData=readSizedBytes(reader,primaryLength);
+  if(subtype===1||subtype===3||subtype===4)return {subtype,category,primaryLength,primaryData,secondaryData:null,groups:[],trailingBytes:readRemaining(reader)};
+  if(subtype===2){
+    const secondaryLength=reader.readI16(),secondaryData=readSizedBytes(reader,secondaryLength),groupCount=reader.readI8();
+    if(groupCount<0)throw new RangeError("Negative opcode -8 group count");
+    const groups=[];
+    for(let i=0;i<groupCount;i++){
+      const dataLength=reader.readI16(),data=readSizedBytes(reader,dataLength),nestedCount=reader.readI8();
+      if(nestedCount<0)throw new RangeError("Negative opcode -8 nested blob count");
+      const nested=[];
+      for(let j=0;j<nestedCount;j++)nested.push(readSizedBytes(reader,reader.readI16()));
+      groups.push({data,nested});
+    }
+    return {subtype,category,primaryLength,primaryData,secondaryData,groups,trailingBytes:readRemaining(reader)};
+  }
+  return {subtype,category,primaryLength,primaryData,secondaryData:null,groups:[],trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcodeMinus9(payload) {
+  const reader=new PacketReader(payload),count=reader.readI16();
+  if(count<0)throw new RangeError("Negative opcode -9 short count");
+  const ids=Array.from({length:count},()=>reader.readI16());
+  return {count,ids,message:reader.readUTF(),trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcodeMinus10(payload) {
+  const reader=new PacketReader(payload);return {id:reader.readI16(),message:reader.readUTF(),trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcodeMinus11(payload) {
+  const reader=new PacketReader(payload),subtype=reader.readI8();
+  if(subtype===0)return {subtype,id:reader.readI16(),message:reader.readUTF(),success:null,firstShort:null,secondShort:null,trailingBytes:readRemaining(reader)};
+  const message=reader.readUTF(),success=reader.readBool();
+  const firstShort=success?reader.readI16():null,secondShort=success?reader.readI16():null;
+  return {subtype,id:null,message,success,firstShort,secondShort,trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcodeMinus12(payload) {
+  const reader=new PacketReader(payload),id=reader.readI16(),name=reader.readUTF(),description=reader.readUTF();
+  const typeByte=reader.readI8(),shortValue=reader.readI16(),longA=reader.readI64(),longB=reader.readI64(),longC=reader.readI64();
+  const textA=reader.readUTF(),textB=reader.readUTF(),hasExtra=reader.readBool(),stateByte=reader.readI8();
+  const extraText=hasExtra?reader.readUTF():null;
+  return {id,name,description,typeByte,shortValue,longA,longB,longC,textA,textB,hasExtra,stateByte,extraText,trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcodeMinus17(payload) {
+  const reader=new PacketReader(payload),count=reader.readI16();
+  if(count<0)throw new RangeError("Negative opcode -17 record count");
+  const records=[];
+  for(let i=0;i<count;i++)records.push({id:reader.readI32(),title:reader.readUTF(),message:reader.readUTF()});
+  return {count,records,trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcodeMinus18(payload) {
+  const reader=new PacketReader(payload);return {message:reader.readUTF(),trailingBytes:readRemaining(reader)};
+}
+export function decodeS2COpcodeMinus19(payload) {
+  const reader=new PacketReader(payload),rankingType=reader.readI8(),title=reader.readUTF(),records=[];
+  if(rankingType===5){
+    const count=reader.readI16();if(count<0)throw new RangeError("Negative opcode -19 ranking count");
+    for(let i=0;i<count;i++)records.push({id:reader.readI16(),name:reader.readUTF(),detail:reader.readUTF(),typeByte:reader.readI8(),shortValue:reader.readI16(),longValue:reader.readI64(),stateByte:reader.readI8()});
+  }
+  return {rankingType,title,records,opaqueRankingPayload:readRemaining(reader)};
+}
+export function decodeS2COpcodeMinus20(payload) {
+  const reader=new PacketReader(payload);return {amount:reader.readI32(),trailingBytes:readRemaining(reader)};
+}

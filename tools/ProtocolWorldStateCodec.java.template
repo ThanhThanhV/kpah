@@ -316,4 +316,61 @@ public final class ProtocolWorldStateCodec {
         PacketReader in=new PacketReader(payload);return new Opcode39(in.readUTF(),in.readBool(),in.readUTF(),in.readUTF(),readRemaining(in));
     }
 
+    public record ResourceGroup8(byte[] data,List<byte[]> nested) {}
+    public record OpcodeMinus8(byte subtype,byte category,short primaryLength,byte[] primaryData,byte[] secondaryData,List<ResourceGroup8> groups,byte[] trailingBytes) {}
+    public static OpcodeMinus8 decodeS2COpcodeMinus8(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte subtype=in.readI8(),category=in.readI8();short length=in.readI16();byte[] primary=readSizedBytes(in,length);
+        byte[] secondary=null;List<ResourceGroup8> groups=new ArrayList<>();
+        if(subtype==2){secondary=readSizedBytes(in,in.readI16());int count=in.readI8();if(count<0)throw new IOException("Negative opcode -8 group count");
+            for(int i=0;i<count;i++){byte[] data=readSizedBytes(in,in.readI16());int nestedCount=in.readI8();if(nestedCount<0)throw new IOException("Negative opcode -8 nested blob count");
+                List<byte[]> nested=new ArrayList<>();for(int j=0;j<nestedCount;j++)nested.add(readSizedBytes(in,in.readI16()));groups.add(new ResourceGroup8(data,List.copyOf(nested)));}}
+        return new OpcodeMinus8(subtype,category,length,primary,secondary,List.copyOf(groups),readRemaining(in));
+    }
+    public record OpcodeMinus9(short count,List<Short> ids,String message,byte[] trailingBytes) {}
+    public static OpcodeMinus9 decodeS2COpcodeMinus9(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);short count=in.readI16();if(count<0)throw new IOException("Negative opcode -9 short count");
+        List<Short> ids=new ArrayList<>();for(int i=0;i<count;i++)ids.add(in.readI16());return new OpcodeMinus9(count,List.copyOf(ids),in.readUTF(),readRemaining(in));
+    }
+    public record OpcodeMinus10(short id,String message,byte[] trailingBytes) {}
+    public static OpcodeMinus10 decodeS2COpcodeMinus10(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new OpcodeMinus10(in.readI16(),in.readUTF(),readRemaining(in));
+    }
+    public record OpcodeMinus11(byte subtype,Short id,String message,Boolean success,Short firstShort,Short secondShort,byte[] trailingBytes) {}
+    public static OpcodeMinus11 decodeS2COpcodeMinus11(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte subtype=in.readI8();
+        if(subtype==0)return new OpcodeMinus11(subtype,in.readI16(),in.readUTF(),null,null,null,readRemaining(in));
+        String message=in.readUTF();boolean success=in.readBool();Short a=success?in.readI16():null,b=success?in.readI16():null;
+        return new OpcodeMinus11(subtype,null,message,success,a,b,readRemaining(in));
+    }
+    public record OpcodeMinus12(short id,String name,String description,byte typeByte,short shortValue,long longA,long longB,long longC,String textA,String textB,boolean hasExtra,byte stateByte,String extraText,byte[] trailingBytes) {}
+    public static OpcodeMinus12 decodeS2COpcodeMinus12(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);short id=in.readI16();String name=in.readUTF(),description=in.readUTF();byte type=in.readI8();
+        short value=in.readI16();long a=in.readI64(),b=in.readI64(),c=in.readI64();String textA=in.readUTF(),textB=in.readUTF();
+        boolean has=in.readBool();byte state=in.readI8();String extra=has?in.readUTF():null;
+        return new OpcodeMinus12(id,name,description,type,value,a,b,c,textA,textB,has,state,extra,readRemaining(in));
+    }
+    public record Announcement17(int id,String title,String message) {}
+    public record OpcodeMinus17(short count,List<Announcement17> records,byte[] trailingBytes) {}
+    public static OpcodeMinus17 decodeS2COpcodeMinus17(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);short count=in.readI16();if(count<0)throw new IOException("Negative opcode -17 record count");
+        List<Announcement17> records=new ArrayList<>();for(int i=0;i<count;i++)records.add(new Announcement17(in.readI32(),in.readUTF(),in.readUTF()));
+        return new OpcodeMinus17(count,List.copyOf(records),readRemaining(in));
+    }
+    public record OpcodeMinus18(String message,byte[] trailingBytes) {}
+    public static OpcodeMinus18 decodeS2COpcodeMinus18(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new OpcodeMinus18(in.readUTF(),readRemaining(in));
+    }
+    public record RankingRecord19(short id,String name,String detail,byte typeByte,short shortValue,long longValue,byte stateByte) {}
+    public record OpcodeMinus19(byte rankingType,String title,List<RankingRecord19> records,byte[] opaqueRankingPayload) {}
+    public static OpcodeMinus19 decodeS2COpcodeMinus19(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte type=in.readI8();String title=in.readUTF();List<RankingRecord19> records=new ArrayList<>();
+        if(type==5){short count=in.readI16();if(count<0)throw new IOException("Negative opcode -19 ranking count");
+            for(int i=0;i<count;i++)records.add(new RankingRecord19(in.readI16(),in.readUTF(),in.readUTF(),in.readI8(),in.readI16(),in.readI64(),in.readI8()));}
+        return new OpcodeMinus19(type,title,List.copyOf(records),readRemaining(in));
+    }
+    public record OpcodeMinus20(int amount,byte[] trailingBytes) {}
+    public static OpcodeMinus20 decodeS2COpcodeMinus20(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new OpcodeMinus20(in.readI32(),readRemaining(in));
+    }
+
 }

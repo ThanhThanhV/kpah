@@ -408,3 +408,8 @@ Added source-backed Java/JavaScript decoders for server text/options, world-enti
 ### S2C opcodes -5, 35, 37, 38, 39 and 64
 
 Added generated Java/JavaScript decoders for batch chat, the fixed 15×11 skill progression tables, server dialog/notice/SMS registration responses, and the compact skill-record list. Tests cover dimensions, signed/unsigned values, Vietnamese UTF payloads and response variants.
+
+
+### S2C opcodes -8, -9, -10, -11, -12, -17, -18, -19 and -20
+
+Added source-backed decoders for binary resource transfer variants, short-ID/message results, conditional confirmation payloads, 64-bit social records, announcement lists, guild chat, ranking type-5 records and guild currency reward. Non-type-5 ranking payloads and resource bytes remain opaque.
