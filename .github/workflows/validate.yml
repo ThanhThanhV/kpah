@@ -89,6 +89,15 @@ jobs:
           import java.util.*;
           public class ProtocolCodegenSmoke {
             public static void main(String[] args) throws Exception {
+              byte[] equipItemPayload = ProtocolPacketCodec.encode("C2S_EQUIP_ITEM", Map.of("itemId", 0x1234));
+              byte[] dropEquippedPayload = ProtocolPacketCodec.encode("C2S_DROP_EQUIPPED_ITEM", Map.of("equipmentSlot", 21));
+              if (!Arrays.equals(equipItemPayload, new byte[]{0x12,0x34})
+                  || !ProtocolPacketCodec.decode("C2S_EQUIP_ITEM", equipItemPayload).get("itemId").equals(0x1234)
+                  || !Arrays.equals(dropEquippedPayload, new byte[]{0,21})
+                  || !ProtocolPacketCodec.decode("C2S_DROP_EQUIPPED_ITEM", dropEquippedPayload).get("equipmentSlot").equals(21)
+                  || ProtocolCommand.find(ProtocolCommand.Direction.C2S, 86).orElseThrow() != ProtocolCommand.C2S_EQUIP_ITEM
+                  || ProtocolCommand.find(ProtocolCommand.Direction.C2S, -21).orElseThrow() != ProtocolCommand.C2S_DROP_EQUIPPED_ITEM)
+                throw new AssertionError("C2S equip/drop equipped item commands");
               byte[] payload = ProtocolPacketCodec.encode("C2S_EQUIPMENT_UPGRADE_ACTION", Map.of("action", 10, "itemId", 17));
               if (!Arrays.equals(payload, new byte[]{10, 17})) throw new AssertionError(Arrays.toString(payload));
               Map<String,Object> decoded = ProtocolPacketCodec.decode("C2S_EQUIPMENT_UPGRADE_ACTION", payload);
