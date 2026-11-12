@@ -25,6 +25,7 @@ public final class ProtocolPacketCodec {
         SCHEMAS.put("C2S_OP_68", List.of(new Field("itemId", Type.I16)));
         SCHEMAS.put("C2S_OP_69", List.of(new Field("itemId", Type.I16)));
         SCHEMAS.put("C2S_OP_78", List.of(new Field("itemId", Type.I16), new Field("optionByte", Type.I8)));
+        SCHEMAS.put("C2S_SHOP_PURCHASE_ITEM", List.of(new Field("itemId", Type.I8)));
         SCHEMAS.put("C2S_EQUIP_ITEM", List.of(new Field("itemId", Type.I16)));
         SCHEMAS.put("C2S_OP_92", List.of(new Field("fieldBoolean", Type.BOOL), new Field("fieldByteA", Type.I8), new Field("fieldByteB", Type.I8), new Field("itemId", Type.I16), new Field("fieldInt", Type.I32), new Field("sourceSelector", Type.I8)));
         SCHEMAS.put("C2S_OP_95", List.of(new Field("fieldByteA", Type.I8), new Field("fieldByteB", Type.I8), new Field("itemId", Type.I16), new Field("fieldShortB", Type.I16), new Field("fieldByteC", Type.I8)));
