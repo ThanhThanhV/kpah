@@ -1021,17 +1021,26 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - CI run `43191399012` PASS. Chưa có server-side transaction hoặc authoritative market state.
 
 
-### B7 — C2S opcodes 48 and -25: use-item / refine-item request codecs
+### B7 — C2S opcodes 48 and -25: use-item / equipment-upgrade request codecs
 
 - **Trạng thái: Một phần (typed schema đã có; tăng cường JS vectors + Java 21 smoke assertions).**
 - Opcode 48 `USE_ITEM`: signed 32-bit item ID; test thêm positive multi-byte value, negative value và missing-field validation.
-- Opcode -25 `REFINE_ITEM`: action byte + item ID byte; JS round-trip hiện hữu được bổ sung Java smoke round-trip.
-- Chỉ xác minh payload serialization; chưa suy diễn tác dụng item, điều kiện hợp lệ, tiêu hao nguyên liệu/tiền hoặc kết quả luyện đồ phía server.
+- Opcode -25 `EQUIPMENT_UPGRADE_ACTION`: hai byte action + item ID; caller `xo` gửi action 10 (thăng cấp thường), `xp` gửi action 11 (giữ thuộc tính).
+- Opcode 48 caller `xj → xg.a(bo)` xác minh action Sử dụng và điều kiện nghề/lớp/cấp ở client; opcode -25 caller `xo/xp` xác minh hai lựa chọn thăng cấp 10/11. Opcode -68 mới là họ request luyện đồ, có mode 1/2/3 và biến thể 5; payload chưa typed. Chỉ xác minh client writer/callsite, chưa suy diễn server acceptance, tiêu hao nguyên liệu/tiền hay mutation inventory.
 
 
-### B7 — C2S opcodes 48 and -25: use-item / refine-item request codecs
+### B7 — C2S opcodes 48 and -25: use-item / equipment-upgrade request codecs
 
 - **Trạng thái: Một phần (typed schema đã có; bổ sung JS vectors + Java 21 smoke assertions; CI chờ kết quả cho commit mới).**
 - Opcode 48 `USE_ITEM`: signed 32-bit item ID; test positive multi-byte value, negative value và missing-field validation.
-- Opcode -25 `REFINE_ITEM`: action byte + item ID byte; JS round-trip hiện hữu được bổ sung Java smoke round-trip.
-- Chỉ xác minh payload serialization; chưa suy diễn tác dụng item, điều kiện hợp lệ, tiêu hao nguyên liệu/tiền hoặc kết quả luyện đồ phía server.
+- Opcode -25 `EQUIPMENT_UPGRADE_ACTION`: hai byte action + item ID; caller `xo` gửi action 10 (thăng cấp thường), `xp` gửi action 11 (giữ thuộc tính).
+- Opcode 48 caller `xj → xg.a(bo)` xác minh action Sử dụng và điều kiện nghề/lớp/cấp ở client; opcode -25 caller `xo/xp` xác minh hai lựa chọn thăng cấp 10/11. Opcode -68 mới là họ request luyện đồ, có mode 1/2/3 và biến thể 5; payload chưa typed. Chỉ xác minh client writer/callsite, chưa suy diễn server acceptance, tiêu hao nguyên liệu/tiền hay mutation inventory.
+
+
+### B7 — Corrected C2S item action mapping from CFR callers
+
+- Artifact nguồn: `kpah-original-jar-analysis` của CI run 43195783681, CFR 0.152.
+- Opcode 48: caller inventory `xj → xg.a(bo)`; nhãn “Sử dụng”, writer `jy.g(int)` ghi item ID i32.
+- Opcode -25: caller `xo`/`xp` từ hai menu “Thăng cấp thường”/“Thăng cấp giữ thuộc tính”; writer `jy.a(int,int)` ghi action 10/11 và item ID byte. Sửa command name từ `REFINE_ITEM` thành `EQUIPMENT_UPGRADE_ACTION`.
+- Opcode -68: writer `jy.a(short,int,int,int)` và caller `tx` thuộc luồng luyện đồ; có các mode 1/2/3 và nhánh 5 dài hơn. Đặt tên C2S `REFINEMENT_ACTION`, giữ payload opaque cho tới khi trace hết mode và response.
+- Bổ sung JS/Java vectors cho action 11 và lookup opcode -68. CI run mới sẽ xác nhận codegen, JS tests và Java 21 smoke; không đánh dấu B7 hoàn thành hoặc tăng phần trăm WBS.
