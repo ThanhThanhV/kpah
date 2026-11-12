@@ -672,3 +672,14 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode -42 decodes context short and repeated signed-byte pairs; odd remaining payload length is rejected to match the original client's pair indexing assumptions.
 - Added schema, generated Java/JS codecs, synthetic vectors and Java 21 smoke tests. CI run `43176262933` SUCCESS.
 - No entity marker/counter mutation is applied. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B16 — S2C opcodes -33, -37, -50, -52 and -59 — CI PASS
+
+- Opcode -33: signed-byte world coordinates, map ID and 16× pixel conversion.
+- Opcode -37: quest result type with three subtype branches, plus simple text and title/body variants.
+- Opcode -50: UTF world label, six shorts and two bytes.
+- Opcode -52: context label/ID, repeated choice records, selected index and optional mode defaulting to zero.
+- Opcode -59: NPC/world spawn records with UTF name, int value, flags and 16× coordinate conversion.
+- Added Java/JS codecs, schemas, synthetic tests and source trace. CI run `43178823238` SUCCESS.
+- These decoders do not mutate quest state, create world objects or open menus. Weighted project percentage unchanged; BE remains deferred.

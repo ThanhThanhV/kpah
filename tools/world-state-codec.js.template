@@ -598,3 +598,25 @@ export function decodeS2COpcodeMinus59(payload) {
   }
   return { count, records, trailingBytes: readRemaining(reader) };
 }
+
+export function decodeS2COpcodeMinus46(payload) {
+  const reader = new PacketReader(payload), variant = reader.readI8();
+  if (variant === 0) return { variant, text: reader.readUTF(), value: reader.readI8(), opaqueBytes: null, trailingBytes: readRemaining(reader) };
+  return { variant, text: null, value: null, fieldA: reader.readI8(), fieldB: reader.readI8(),
+    opaqueBytes: readRemaining(reader), trailingBytes: new Uint8Array() };
+}
+export function decodeS2COpcodeMinus47(payload) {
+  const reader = new PacketReader(payload), slotId = reader.readI16(), flag = reader.readBool(), length = reader.readI16();
+  return { slotId, flag, length, blob: readSizedBytes(reader, length), trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcodeMinus48(payload) {
+  const reader = new PacketReader(payload), target = reader.readI8();
+  if (target !== -1) {
+    const length = reader.readI16();
+    return { target, length, blob: readSizedBytes(reader, length), fieldA: null, fieldB: null,
+      opaqueBytes: null, trailingBytes: readRemaining(reader) };
+  }
+  const fieldA = reader.readI8(), fieldB = reader.readI8();
+  return { target, length: null, blob: null, fieldA, fieldB, opaqueBytes: readRemaining(reader),
+    trailingBytes: new Uint8Array() };
+}

@@ -831,3 +831,14 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - -38: boolean + signed-byte count + record hai short/hai UTF; -39: byte + short entity ID + int; -42: context short + các cặp signed byte, kiểm tra payload lẻ.
 - CI run `43176262933` PASS: Vite build, generator consistency, JS tests, Java 21 compile/smoke và original-JAR analysis.
 - Chưa mutate world entity state; không tăng % tổng dự án khi chưa tính lại trọng số WBS.
+
+
+### B16 — S2C opcodes -33, -37, -50, -52 and -59
+
+- **Trạng thái: Một phần (world marker, quest result, world context/NPC payload decoders + CI PASS).**
+- -33: tọa độ marker và map ID; giữ raw byte và đổi pixel ×16.
+- -37: ba subtype kết quả nhiệm vụ và hai dạng thông báo.
+- -50: nhãn world, sáu short và hai byte.
+- -52: context + danh sách lựa chọn + selected index + mode tùy chọn.
+- -59: batch NPC/world records, gồm tên, dữ liệu số, flags và tọa độ ×16.
+- CI run `43178823238` PASS. Chưa mutate world/quest/UI state; không tăng % tổng dự án khi chưa tính lại trọng số WBS.

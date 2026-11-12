@@ -3212,6 +3212,43 @@
         "npc-records",
         "pixel-coordinate-conversion"
       ]
+    },
+    {
+      "name": "RESOURCE_PANEL_VARIANT",
+      "direction": "S2C",
+      "opcode": -46,
+      "evidenceSource": "ka.java:case-46",
+      "evidence": "Reads a signed variant byte. Variant 0 carries a UTF string and one signed byte; all other variants carry two signed bytes followed by the remaining payload bytes.",
+      "sections": [
+        "variant",
+        "variant-0-text-and-byte",
+        "other-variant-two-bytes-and-opaque-tail"
+      ]
+    },
+    {
+      "name": "RESOURCE_SLOT_BLOB",
+      "direction": "S2C",
+      "opcode": -47,
+      "evidenceSource": "ka.java:case-47",
+      "evidence": "Reads a signed-short resource slot, boolean flag, signed-short blob length and exactly that many bytes. The client applies the blob only when the slot already has a local resource object.",
+      "sections": [
+        "slot-id",
+        "flag",
+        "signed-length",
+        "blob"
+      ]
+    },
+    {
+      "name": "RESOURCE_TARGET_BLOB_VARIANT",
+      "direction": "S2C",
+      "opcode": -48,
+      "evidenceSource": "ka.java:case-48",
+      "evidence": "Reads a signed target byte. Non -1 targets carry signed-short length plus blob; target -1 carries two signed bytes followed by all remaining payload bytes.",
+      "sections": [
+        "target-selector",
+        "target-blob",
+        "broadcast-two-bytes-and-opaque-tail"
+      ]
     }
   ],
   "extensionSchemas": [

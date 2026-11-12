@@ -554,4 +554,24 @@ public final class ProtocolWorldStateCodec {
         return new OpcodeMinus59(count,List.copyOf(records),readRemaining(in));
     }
 
+    public record OpcodeMinus46(byte variant,String text,Byte value,Byte fieldA,Byte fieldB,
+                                byte[] opaqueBytes,byte[] trailingBytes) {}
+    public static OpcodeMinus46 decodeS2COpcodeMinus46(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte variant=in.readI8();
+        if(variant==0)return new OpcodeMinus46(variant,in.readUTF(),in.readI8(),null,null,null,readRemaining(in));
+        byte a=in.readI8(),b=in.readI8();return new OpcodeMinus46(variant,null,null,a,b,readRemaining(in),new byte[0]);
+    }
+    public record OpcodeMinus47(short slotId,boolean flag,short length,byte[] blob,byte[] trailingBytes) {}
+    public static OpcodeMinus47 decodeS2COpcodeMinus47(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);short slot=in.readI16();boolean flag=in.readBool();short length=in.readI16();
+        return new OpcodeMinus47(slot,flag,length,readSizedBytes(in,length),readRemaining(in));
+    }
+    public record OpcodeMinus48(byte target,Short length,byte[] blob,Byte fieldA,Byte fieldB,
+                                byte[] opaqueBytes,byte[] trailingBytes) {}
+    public static OpcodeMinus48 decodeS2COpcodeMinus48(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte target=in.readI8();
+        if(target!=-1){short length=in.readI16();return new OpcodeMinus48(target,length,readSizedBytes(in,length),null,null,null,readRemaining(in));}
+        byte a=in.readI8(),b=in.readI8();return new OpcodeMinus48(target,null,null,a,b,readRemaining(in),new byte[0]);
+    }
+
 }

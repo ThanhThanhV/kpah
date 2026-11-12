@@ -475,3 +475,11 @@ The decoder only exposes wire values; original panel navigation, confirmation pr
 - **Opcode -52:** UTF context label, signed-short context ID, signed-byte count of choice records (UTF label, short ID, byte type), selected-index byte and optional mode byte (default 0 when absent).
 - **Opcode -59:** signed-byte record count; each NPC/world record contains two bytes, UTF name, byte type, int value, two signed coordinate bytes, boolean and two trailing bytes. The client shifts coordinate bytes left four bits to obtain pixel coordinates.
 - The decoders retain neutral field names and do not spawn NPCs, open menus, or mutate world state.
+
+
+## S2C opcodes -46, -47 and -48 — resource transfer variants
+
+- **Opcode -46:** signed variant byte. Variant 0 carries UTF text plus one signed byte; other variants carry two signed bytes followed by opaque remaining bytes.
+- **Opcode -47:** signed-short slot ID, boolean, signed-short blob length and blob bytes. The client applies the payload only if the corresponding local resource slot exists.
+- **Opcode -48:** signed target byte. A target other than -1 carries a signed-short length and blob; target -1 carries two signed bytes and the remaining opaque payload.
+- Blob bytes are preserved without attempting image/resource decoding or applying local resource updates.

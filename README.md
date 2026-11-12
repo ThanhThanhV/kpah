@@ -448,3 +448,8 @@ Added Java/JavaScript decoders for map-coordinate markers and quest-result varia
 ### S2C opcodes -50, -52 and -59
 
 Added source-backed decoders for world labels/context choices and NPC spawn batches. Preserves signed widths, optional mode default and 16× coordinate conversion; no NPC or UI state mutation is applied.
+
+
+### S2C opcodes -46, -47 and -48: resource transfer
+
+Added Java/JavaScript decoders for resource-panel variant payloads, slot-targeted blobs and broadcast blobs. Lengths remain signed shorts and raw data stays opaque until resource semantics are independently verified.
