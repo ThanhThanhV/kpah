@@ -881,4 +881,43 @@ public final class ProtocolWorldStateCodec {
         return new OpcodeMinus34(id,optional,readRemaining(in));
     }
 
+    public record CatalogPair62(int firstByte,short secondShort) {}
+    public record CatalogRecord62(byte fieldD,short fieldR,byte fieldS,byte fieldY,short fieldV,short fieldU,
+        byte fieldI,byte fieldJ,byte fieldK,byte fieldN,byte fieldO,byte fieldP,byte fieldQ,byte fieldC,
+        String fieldTextD,String fieldTextE,String fieldTextF,int fieldB,int fieldNInt,long fieldOLong,
+        String fieldPText,byte pairCount,List<CatalogPair62> pairs) {}
+    public record Opcode62(byte mode,Integer collectionIndex,Byte recordCount,List<CatalogRecord62> records,
+        Long extraLong,Short paginationShort,byte[] trailingBytes) {}
+    public static Opcode62 decodeS2COpcode62(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte mode=in.readI8();
+        if(mode==-1)return new Opcode62(mode,null,null,null,null,null,readRemaining(in));
+        int collectionIndex=mode==3?4:mode==4?5:mode;byte count=in.readI8();List<CatalogRecord62> records=new ArrayList<>();
+        for(int i=0;i<count;i++){
+            byte d=in.readI8();short r=in.readI16();byte s=in.readI8(),y=in.readI8();short v=in.readI16(),u=in.readI16();
+            byte fi=in.readI8(),fj=in.readI8(),fk=in.readI8(),fn=in.readI8(),fo=in.readI8(),fp=in.readI8(),fq=in.readI8(),fc=in.readI8();
+            String td=in.readUTF(),te=in.readUTF(),tf=in.readUTF();int b=in.readI32(),ni=in.readI32();long ol=in.readI64();String pt=in.readUTF();
+            byte pairsCount=in.readI8();List<CatalogPair62> pairs=new ArrayList<>();
+            for(int j=0;j<pairsCount;j++)pairs.add(new CatalogPair62(in.readU8(),in.readI16()));
+            records.add(new CatalogRecord62(d,r,s,y,v,u,fi,fj,fk,fn,fo,fp,fq,fc,td,te,tf,b,ni,ol,pt,pairsCount,List.copyOf(pairs)));
+        }
+        Long extra=mode==3?in.readI64():null;short page=in.readI16();
+        return new Opcode62(mode,collectionIndex,count,List.copyOf(records),extra,page,readRemaining(in));
+    }
+    public record RefinementMatrixEntry80(byte valueCount,List<Byte> byteValues,List<Short> shortValuesB,
+        List<Short> shortValuesC,List<Short> shortValuesD) {}
+    public record Opcode80(byte entryCount,List<RefinementMatrixEntry80> entries,byte[] trailingBytes) {}
+    public static Opcode80 decodeS2COpcode80(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte count=in.readI8();List<RefinementMatrixEntry80> entries=new ArrayList<>();
+        for(int i=0;i<count;i++){
+            byte valueCount=in.readI8();if(valueCount<0)throw new IOException("Negative opcode 80 value count");
+            List<Byte> bytes=new ArrayList<>();List<Short> b=new ArrayList<>(),c=new ArrayList<>(),d=new ArrayList<>();
+            for(int j=0;j<valueCount;j++)bytes.add(in.readI8());
+            for(int j=0;j<valueCount;j++)b.add(in.readI16());
+            for(int j=0;j<valueCount;j++)c.add(in.readI16());
+            for(int j=0;j<valueCount;j++)d.add(in.readI16());
+            entries.add(new RefinementMatrixEntry80(valueCount,List.copyOf(bytes),List.copyOf(b),List.copyOf(c),List.copyOf(d)));
+        }
+        return new Opcode80(count,List.copyOf(entries),readRemaining(in));
+    }
+
 }

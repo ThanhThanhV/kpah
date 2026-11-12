@@ -507,6 +507,22 @@ jobs:
                   || storage68.itemId() != 500 || storage69.itemId() != 501 || refine71.optionalModeByte() != 2
                   || refine34.optionalModeByte() != -1)
                 throw new AssertionError("S2C opcodes 65-71 and -34 interaction/inventory events");
+              PacketWriter catalog62Writer = new PacketWriter().writeI8(3).writeI8(1)
+                .writeI8(4).writeI16(101).writeI8(-2).writeI8(3).writeI16(202).writeI16(303);
+              for (int value : new int[]{-4, 5, 6, 7, 8, 9, 10, 11}) catalog62Writer.writeI8(value);
+              catalog62Writer.writeUTF("name").writeUTF("description").writeUTF("icon").writeI32(404).writeI32(-505)
+                .writeI64(606L).writeUTF("extra").writeI8(1).writeU8(12).writeI16(707).writeI64(808L).writeI16(9);
+              ProtocolWorldStateCodec.Opcode62 catalog62 = ProtocolWorldStateCodec.decodeS2COpcode62(catalog62Writer.toByteArray());
+              ProtocolWorldStateCodec.Opcode62 catalog62Close = ProtocolWorldStateCodec.decodeS2COpcode62(
+                new PacketWriter().writeI8(-1).toByteArray());
+              ProtocolWorldStateCodec.Opcode80 matrix80 = ProtocolWorldStateCodec.decodeS2COpcode80(
+                new PacketWriter().writeI8(1).writeI8(2).writeI8(-1).writeI8(2).writeI16(100).writeI16(-100)
+                  .writeI16(200).writeI16(-200).toByteArray());
+              if (catalog62.collectionIndex() != 4 || catalog62.records().get(0).fieldOLong() != 606L
+                  || catalog62.extraLong() != 808L || catalog62.records().get(0).pairs().get(0).firstByte() != 12
+                  || catalog62Close.collectionIndex() != null || matrix80.entries().get(0).byteValues().get(0) != -1
+                  || matrix80.entries().get(0).shortValuesD().get(1) != -200)
+                throw new AssertionError("S2C opcodes 62/80 collection catalog and refinement matrix");
               PacketWriter extension3 = new PacketWriter().writeI16(123).writeI8(0).writeBool(true).writeBool(false)
                 .writeI8(1).writeI8(2).writeI8(3).writeI16(4).writeI32(5).writeI16(6).writeI32(7).writeUTF("title").writeBool(true)
                 .writeI16(11).writeI8(12).writeI16(21).writeI8(22).writeI16(23).writeI16(31).writeI16(32).writeI16(33)

@@ -607,3 +607,12 @@ The generated codecs only parse wire values. They do not mutate inventory, open 
 ### Consumer trace details for opcodes 65–71 and -34
 
 The opcode 65 consumer stores the supplied state byte only when the selector equals 1; otherwise it clears the state. Opcode 67 locates the player by ID, updates its trade flag from the selector and stores the short value. Opcode 68 moves an item from `z.bx` (inventory) to `z.bA` (storage); opcode 69 reverses the move. Both close the active panel after handling the item. Opcode 71 discards its leading byte before forwarding the short and optional byte; opcode -34 forwards its short and optional byte to a separate refinement handler. The decoder remains side-effect free.
+
+
+## S2C opcode 62 — collection/catalog group
+
+The source consumer `mj.y(acu)` treats mode -1 as a close action with no payload. Other modes select one of the local collection vectors (mode 3 maps to index 4; mode 4 maps to index 5), clear it, and read a signed-byte count of item records. Each record contains the ordered neutral fields preserved by the decoder: D/r/s/y/v/u, eight further bytes, three UTF strings, two ints, one long, one UTF string, and a signed-byte count of nested (unsigned byte, short) pairs. Mode 3 additionally reads a long before the final pagination short. The consumer updates the selected collection and resets its current page when it is at or beyond the received total.
+
+## S2C opcode 80 — refinement configuration matrix
+
+Reads a signed-byte outer count. Each entry has a signed-byte length followed by four parallel arrays of that length: one signed-byte array and three signed-short arrays. The client stores these entries in `ku.g` as `hp[]`; `ku.c()` returns the currently selected entry using `hf.k`. The decoder preserves the matrix but does not assign undocumented meaning to the individual numeric columns or apply refinement rules.

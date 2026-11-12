@@ -971,3 +971,41 @@ export function decodeS2COpcodeMinus34(payload) {
   try { optionalModeByte = reader.readI8(); } catch {}
   return { itemOrContextId, optionalModeByte, trailingBytes: readRemaining(reader) };
 }
+
+export function decodeS2COpcode62(payload) {
+  const reader = new PacketReader(payload), mode = reader.readI8();
+  if (mode === -1) return { mode, collectionIndex: null, recordCount: null, records: null,
+    extraLong: null, paginationShort: null, trailingBytes: readRemaining(reader) };
+  const collectionIndex = mode === 3 ? 4 : mode === 4 ? 5 : mode;
+  const recordCount = reader.readI8(), records = [];
+  for (let i = 0; i < recordCount; i += 1) {
+    const fieldD = reader.readI8(), fieldR = reader.readI16(), fieldS = reader.readI8(), fieldY = reader.readI8(),
+      fieldV = reader.readI16(), fieldU = reader.readI16();
+    const fieldI = reader.readI8(), fieldJ = reader.readI8(), fieldK = reader.readI8(), fieldN = reader.readI8(),
+      fieldO = reader.readI8(), fieldP = reader.readI8(), fieldQ = reader.readI8(), fieldC = reader.readI8();
+    const fieldTextD = reader.readUTF(), fieldTextE = reader.readUTF(), fieldTextF = reader.readUTF(),
+      fieldB = reader.readI32(), fieldNInt = reader.readI32(), fieldOLong = reader.readI64(), fieldPText = reader.readUTF();
+    const pairCount = reader.readI8(), pairs = [];
+    for (let j = 0; j < pairCount; j += 1) pairs.push({ firstByte: reader.readU8(), secondShort: reader.readI16() });
+    records.push({ fieldD, fieldR, fieldS, fieldY, fieldV, fieldU, fieldI, fieldJ, fieldK, fieldN,
+      fieldO, fieldP, fieldQ, fieldC, fieldTextD, fieldTextE, fieldTextF, fieldB, fieldNInt,
+      fieldOLong, fieldPText, pairCount, pairs });
+  }
+  const extraLong = mode === 3 ? reader.readI64() : null;
+  const paginationShort = reader.readI16();
+  return { mode, collectionIndex, recordCount, records, extraLong, paginationShort, trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcode80(payload) {
+  const reader = new PacketReader(payload), entryCount = reader.readI8(), entries = [];
+  for (let i = 0; i < entryCount; i += 1) {
+    const valueCount = reader.readI8();
+    if (valueCount < 0) throw new RangeError("Negative opcode 80 value count");
+    const byteValues = [], shortValuesB = [], shortValuesC = [], shortValuesD = [];
+    for (let j = 0; j < valueCount; j += 1) byteValues.push(reader.readI8());
+    for (let j = 0; j < valueCount; j += 1) shortValuesB.push(reader.readI16());
+    for (let j = 0; j < valueCount; j += 1) shortValuesC.push(reader.readI16());
+    for (let j = 0; j < valueCount; j += 1) shortValuesD.push(reader.readI16());
+    entries.push({ valueCount, byteValues, shortValuesB, shortValuesC, shortValuesD });
+  }
+  return { entryCount, entries, trailingBytes: readRemaining(reader) };
+}

@@ -3636,6 +3636,36 @@
         "item-or-context-id",
         "optional-mode-byte"
       ]
+    },
+    {
+      "name": "WORLD_COLLECTION_CATALOG_GROUP",
+      "direction": "S2C",
+      "opcode": 62,
+      "evidenceSource": "ka.java:case62",
+      "evidence": "Mode -1 closes the collection screen with no payload. Other modes map 3→4 and 4→5 for the target collection index, clear that collection, then read a signed-byte count of records. Each record is a bo-like item: signed byte D, short r, bytes s/y, shorts v/u, eight signed bytes I/J/K/n/o/p/q/C, three UTF strings d/e/f, ints B/N, long O, UTF P, then a signed-byte count of nested pairs (unsigned byte + short). Mode 3 carries an extra long before the final pagination short. The final short is stored per collection; if current page is at or beyond total, page resets to zero.",
+      "sections": [
+        "mode-and-collection-index",
+        "record-count",
+        "item-record-fields",
+        "nested-short-pairs",
+        "mode-3-extra-long",
+        "pagination-short"
+      ]
+    },
+    {
+      "name": "REFINEMENT_CONFIGURATION_MATRIX",
+      "direction": "S2C",
+      "opcode": 80,
+      "evidenceSource": "ka.java:case80",
+      "evidence": "Reads signed-byte outer count; each entry reads a signed-byte value count and then four parallel arrays of that length: first array signed bytes, remaining three arrays signed shorts. Stored as hp[] in ku.g; ku.c() returns the selected entry indexed by hf.k.",
+      "sections": [
+        "entry-count",
+        "entry-value-count",
+        "byte-values",
+        "short-values-b",
+        "short-values-c",
+        "short-values-d"
+      ]
     }
   ],
   "extensionSchemas": [

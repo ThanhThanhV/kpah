@@ -524,3 +524,8 @@ Added source-backed Java/JavaScript decoders for opcodes 65, 66, 67, 68, 69, 71 
 
 
 The trade/storage/refinement decoder increment (S2C 65–71 and -34) passed CI run `43187383635`, including Java 21 compilation and smoke vectors.
+
+
+### S2C opcodes 62 and 80
+
+Added generated decoders for the collection/catalog item group (including nested item pairs and mode-3 long field) and the four-column refinement configuration matrix. Both Java and JavaScript synthetic vectors cover nested fields and signed values.
