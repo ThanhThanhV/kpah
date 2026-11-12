@@ -830,3 +830,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Added typed command payloads for opcodes 61 (short item ID), 68/69 (inventory/storage item ID), 78 (item ID + option byte), 92 (boolean, two bytes, item ID, int, selector byte), 95 (two bytes, item ID, short, byte), and 100 (mode byte + item ID).
 - Field widths/order are traced to jy.java writer methods; branch-dependent values on opcode 92 are represented by the final selector byte rather than guessed semantics.
 - JS and Java tests are added; CI validation is queued for this increment. This does not implement purchase/sale authority or inventory mutation.
+
+
+## B7 — C2S inventory and market writer schemas — CI PASS
+
+- Typed C2S opcodes 61, 68, 69, 78, 92, 95 and 100 from the original writer methods; field order and signed widths are represented in the canonical command catalog.
+- Opcode 92's conditional item source is represented as a single item ID plus a final source selector byte, preserving both writer branches without duplicating fields.
+- Added JS payload round trips and Java 21 smoke assertions. CI run `43190442561` SUCCESS: Vite build, generated protocol consistency, all JS protocol suites, Java compile/smoke and original-JAR analysis.
+- The codec serializes requests only; transaction validation, inventory mutation and persistence remain server responsibilities. Weighted project progress unchanged; BE remains deferred.

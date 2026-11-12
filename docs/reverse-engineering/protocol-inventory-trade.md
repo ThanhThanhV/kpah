@@ -125,3 +125,8 @@ The following outbound writer layouts are now represented as typed command schem
 | 100 | signed mode byte, signed short item ID | jy.d(int,int); inspected writer uses mode 0 |
 
 These layouts describe client packet serialization only. The actual item transfer, listing, purchase, sale and persistence rules remain server-authoritative and are not implemented by this codec.
+
+
+### C2S inventory/market schema validation
+
+C2S command catalog now includes typed payload schemas for opcodes 61, 68, 69, 78, 92, 95 and 100, plus a dedicated generated variant codec for opcode 62. JS vectors and Java 21 smoke tests passed in CI run `43190442561`. These are wire codecs only; they do not authorize or persist transactions.
