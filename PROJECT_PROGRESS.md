@@ -854,9 +854,12 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Still packet serialization only; market-panel state and server transaction behavior remain open. Weighted progress unchanged; BE deferred.
 
 
-## B7 — C2S opcodes 48 and -25: use-item / refine-item codec tests
+## B7 — item, equipment and shop request mapping — CI PASS
 
-- Added positive/negative 32-bit item ID vectors and missing-field validation for opcode 48 `USE_ITEM`.
-- Added Java 21 smoke round-trip for opcode -25 `REFINE_ITEM` (action byte + item ID byte); existing JS round-trip retained.
-- Updated CI smoke assertions to compare unsigned-byte decode values as Java integers.
-- CI for this increment is pending; previous protocol suites remain documented as passing. No server-side use/refinement semantics or inventory mutation implemented.
+- Corrected opcode -25 from the misleading `REFINE_ITEM` label to `EQUIPMENT_UPGRADE_ACTION`: action 10 = normal upgrade; action 11 = keep attributes. Both JS and Java 21 vectors pass.
+- Opcode 48 `USE_ITEM` is source-traced to the inventory “Sử dụng” action and carries an i32 item ID.
+- C2S -68 is `REFINEMENT_ACTION`; S2C -68 is `REFINEMENT_RESULT`. The response handler reads a result byte; result 4 carries a short + two bytes into a screen callback. Payload remains opaque pending callback contract.
+- Added typed C2S `EQUIP_ITEM` (86, i16 item ID), `DROP_EQUIPPED_ITEM` (-21, i16 equipment slot), and `SHOP_PURCHASE_ITEM` (85, i8 item ID). S2C 85 is `SHOP_PURCHASE_SUCCESS`.
+- Named C2S 74 `SHOP_PURCHASE_BATCH` (short total quantity + repeated short item IDs) and C2S 24 `SHOP_BATCH_ACTION` (two record layouts); kept both payloads opaque until variable-list/variant codecs are implemented.
+- CI run `43201997578` on commit `515fb0d05a7686fecbf6e29d61495c60e03a5459` SUCCESS: Vite build, generated protocol consistency, JS protocol suites, Java 21 compile/smoke and original-JAR analysis.
+- Still open: unequip-to-bag, full purchase transaction semantics, opcode 24/74 payload codecs, refinement callback payload, warehouse completion and server-authoritative inventory/equipment mutation. Weighted project progress unchanged; BE remains deferred.
