@@ -391,4 +391,4 @@ assert.deepEqual([social7.category,social7.characters[0].name,social7.characters
 const social53=decodeS2COpcodeMinus53(new PacketWriter().writeI16(1).writeUTF("member").writeI8(1).writeI8(2).writeI8(0)
  .writeI16(3).writeI8(4).toUint8Array());
 assert.deepEqual([social53.category,social53.characters[0].fieldI],[6,3]);
-const socialType7=decodeSocialCharacterListForTest;
+
