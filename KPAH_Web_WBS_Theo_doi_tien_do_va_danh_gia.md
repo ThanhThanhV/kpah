@@ -990,3 +990,10 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Mode 1 không có writer branch được xác minh, vì vậy decoder bảo toàn payload chưa đọc cho mode không hỗ trợ và encoder từ chối mode lạ.
 - CI run `43189624674` PASS: Vite build, generated checks, protocol/transport/prefix/initialization/world-state tests, Java 21 compile/smoke và original-JAR analysis.
 - Không suy diễn semantics giao dịch hay gọi server; không tăng % tổng dự án trước khi tái tính WBS.
+
+
+### B7 — C2S inventory / market command payloads
+
+- **Trạng thái: Một phần (typed source-backed command schema + JS/Java tests; CI đang chạy).**
+- Typed thêm C2S opcode 61, 68, 69, 78, 92, 95 và 100. Payload order/width theo writer trong jy.java; giữ tên field trung tính.
+- Chưa thực hiện giao dịch, cập nhật inventory hay kiểm tra authoritative ở server.

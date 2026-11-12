@@ -108,3 +108,20 @@ The outbound writer in `jy.java` has seven distinct mode branches:
 | 7 | `g(String)` | modified UTF string |
 
 The schema records the source method and line for each branch. The argument names remain neutral because the complete UI call graph and server-side handling have not yet been tied to these values. No mode 1 writer was found; it is not treated as a supported variant. Generated JS/Java codecs include encode/decode round trips and preserve unknown-mode payload bytes. CI run `43189624674` passed.
+
+
+## C2S inventory / market command payloads
+
+The following outbound writer layouts are now represented as typed command schemas:
+
+| Opcode | Writer payload after opcode | Source evidence |
+|---:|---|---|
+| 61 | signed short item ID | jy.h(short) |
+| 68 | signed short item ID | jy.d(short) |
+| 69 | signed short item ID | jy.e(short) |
+| 78 | signed short item ID, signed byte option | jy.d(short, byte) |
+| 92 | boolean, two signed bytes, signed short item ID, signed int, signed selector byte | jy.a(int,int,bo,short,int,boolean); the short is taken from the item record or fallback argument, and the final byte distinguishes those branches |
+| 95 | two signed bytes, two signed shorts with the first short as item ID, one signed byte | jy.a(int,int,int,int,int) |
+| 100 | signed mode byte, signed short item ID | jy.d(int,int); inspected writer uses mode 0 |
+
+These layouts describe client packet serialization only. The actual item transfer, listing, purchase, sale and persistence rules remain server-authoritative and are not implemented by this codec.

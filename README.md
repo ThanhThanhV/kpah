@@ -546,3 +546,8 @@ Added a source-backed command-variant schema for seven observed opcode 62 modes 
 
 
 C2S opcode 62 now has generated Java/JavaScript codecs for seven source-observed modes. CI run `43189624674` passed all protocol checks and Java 21 smoke tests.
+
+
+### C2S inventory and market commands
+
+Added verified writer payload schemas for C2S opcodes 61, 68, 69, 78, 92, 95 and 100. Field names remain neutral where the original source only exposes positional arguments; JS and Java protocol-codec vectors cover each layout.

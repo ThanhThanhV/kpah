@@ -47,3 +47,21 @@ assert.equal(partialUtf.remaining(), 0);
 
 
 console.log("Generated JavaScript protocol codec: PASS (catalog, payload vectors, modified UTF-8, bounds)");
+
+const item61=encodePayload("C2S","OP_61",{itemId:501});
+assert.deepEqual([...item61],[0x01,0xf5]);
+assert.deepEqual(decodePayload("C2S","OP_61",item61),{itemId:501});
+const storage68=encodePayload("C2S","OP_68",{itemId:502});
+const storage69=encodePayload("C2S","OP_69",{itemId:503});
+assert.deepEqual(decodePayload("C2S","OP_68",storage68),{itemId:502});
+assert.deepEqual(decodePayload("C2S","OP_69",storage69),{itemId:503});
+const sell78=encodePayload("C2S","OP_78",{itemId:504,optionByte:-2});
+assert.deepEqual([...sell78],[0x01,0xf8,0xfe]);
+assert.deepEqual(decodePayload("C2S","OP_78",sell78),{itemId:504,optionByte:-2});
+const market92=encodePayload("C2S","OP_92",{fieldBoolean:true,fieldByteA:-1,fieldByteB:2,itemId:505,fieldInt:-600,sourceSelector:1});
+assert.deepEqual(decodePayload("C2S","OP_92",market92),{fieldBoolean:true,fieldByteA:-1,fieldByteB:2,itemId:505,fieldInt:-600,sourceSelector:1});
+const market95=encodePayload("C2S","OP_95",{fieldByteA:1,fieldByteB:-2,itemId:506,fieldShortB:507,fieldByteC:3});
+assert.deepEqual(decodePayload("C2S","OP_95",market95),{fieldByteA:1,fieldByteB:-2,itemId:506,fieldShortB:507,fieldByteC:3});
+const item100=encodePayload("C2S","OP_100",{mode:0,itemId:508});
+assert.deepEqual([...item100],[0,1,0xfc]);
+assert.deepEqual(decodePayload("C2S","OP_100",item100),{mode:0,itemId:508});

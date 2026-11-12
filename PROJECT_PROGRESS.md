@@ -823,3 +823,10 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Mode 1 remains intentionally unsupported because no matching outbound writer branch was found in the inspected source.
 - CI run `43189624674` SUCCESS: Vite build, all generated-source checks, protocol/transport/prefix/initialization/world-state suites, JS tests, Java 21 compilation/smoke and original-JAR analysis.
 - These are packet encoders only; server-side transaction semantics remain unimplemented. Weighted project progress unchanged; BE remains deferred.
+
+
+## B7 — C2S inventory / market command payloads — implementation added
+
+- Added typed command payloads for opcodes 61 (short item ID), 68/69 (inventory/storage item ID), 78 (item ID + option byte), 92 (boolean, two bytes, item ID, int, selector byte), 95 (two bytes, item ID, short, byte), and 100 (mode byte + item ID).
+- Field widths/order are traced to jy.java writer methods; branch-dependent values on opcode 92 are represented by the final selector byte rather than guessed semantics.
+- JS and Java tests are added; CI validation is queued for this increment. This does not implement purchase/sale authority or inventory mutation.

@@ -759,8 +759,13 @@
       "name": "OP_61",
       "opcode": 61,
       "direction": "C2S",
-      "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "payload": [
+        {
+          "name": "itemId",
+          "type": "i16"
+        }
+      ],
+      "evidence": "verified-client-writer: jy.java; payload order and widths source-checked"
     },
     {
       "name": "OP_62",
@@ -787,15 +792,25 @@
       "name": "OP_68",
       "opcode": 68,
       "direction": "C2S",
-      "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "payload": [
+        {
+          "name": "itemId",
+          "type": "i16"
+        }
+      ],
+      "evidence": "verified-client-writer: jy.java; payload order and widths source-checked"
     },
     {
       "name": "OP_69",
       "opcode": 69,
       "direction": "C2S",
-      "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "payload": [
+        {
+          "name": "itemId",
+          "type": "i16"
+        }
+      ],
+      "evidence": "verified-client-writer: jy.java; payload order and widths source-checked"
     },
     {
       "name": "OP_70",
@@ -850,8 +865,17 @@
       "name": "OP_78",
       "opcode": 78,
       "direction": "C2S",
-      "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "payload": [
+        {
+          "name": "itemId",
+          "type": "i16"
+        },
+        {
+          "name": "optionByte",
+          "type": "i8"
+        }
+      ],
+      "evidence": "verified-client-writer: jy.java; payload order and widths source-checked"
     },
     {
       "name": "OP_79",
@@ -906,8 +930,33 @@
       "name": "OP_92",
       "opcode": 92,
       "direction": "C2S",
-      "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "payload": [
+        {
+          "name": "fieldBoolean",
+          "type": "bool"
+        },
+        {
+          "name": "fieldByteA",
+          "type": "i8"
+        },
+        {
+          "name": "fieldByteB",
+          "type": "i8"
+        },
+        {
+          "name": "itemId",
+          "type": "i16"
+        },
+        {
+          "name": "fieldInt",
+          "type": "i32"
+        },
+        {
+          "name": "sourceSelector",
+          "type": "i8"
+        }
+      ],
+      "evidence": "verified-client-writer: jy.java; payload order and widths source-checked"
     },
     {
       "name": "OP_94",
@@ -920,15 +969,45 @@
       "name": "OP_95",
       "opcode": 95,
       "direction": "C2S",
-      "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "payload": [
+        {
+          "name": "fieldByteA",
+          "type": "i8"
+        },
+        {
+          "name": "fieldByteB",
+          "type": "i8"
+        },
+        {
+          "name": "itemId",
+          "type": "i16"
+        },
+        {
+          "name": "fieldShortB",
+          "type": "i16"
+        },
+        {
+          "name": "fieldByteC",
+          "type": "i8"
+        }
+      ],
+      "evidence": "verified-client-writer: jy.java; payload order and widths source-checked"
     },
     {
       "name": "OP_100",
       "opcode": 100,
       "direction": "C2S",
-      "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "payload": [
+        {
+          "name": "mode",
+          "type": "i8"
+        },
+        {
+          "name": "itemId",
+          "type": "i16"
+        }
+      ],
+      "evidence": "verified-client-writer: jy.java; payload order and widths source-checked"
     },
     {
       "name": "OP_101",
