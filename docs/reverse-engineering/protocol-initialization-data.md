@@ -507,3 +507,10 @@ The decoder only exposes wire values; original panel navigation, confirmation pr
 - **Opcode -60:** one UTF string passed to the world notice handler.
 - **Opcode -61:** three signed bytes, one signed short, one signed byte and an optional final signed byte (default 0 if absent).
 - These decoders preserve source order and widths; no world object, notice UI or event state is mutated.
+
+
+## S2C opcodes -62 and -63 — lucky-box / grid-selection panels
+
+- **Opcode -62:** source identifies the consumer as the “Hộp may mắn” panel. Type 0 carries box count, text count and UTF labels; type 1 carries selected box, text and UTF options; type 2 ends the flow without more payload.
+- **Opcode -63:** signed-byte count followed by signed-byte values; the consumer opens a 10×10 grid-selection panel and renders the values.
+- These are packet decoders only; no lucky-box purchase/reward or grid selection is executed.

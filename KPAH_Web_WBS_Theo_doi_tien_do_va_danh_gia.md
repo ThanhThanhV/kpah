@@ -867,3 +867,10 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - -56: hai danh sách record ID/label/flags.
 - -57: trạng thái companion hoặc image + ba nhóm frame tuple 4 byte.
 - CI run `43179931960` PASS. Chưa apply companion/world state và chưa render sprite; không tăng % tổng dự án khi chưa tính lại trọng số WBS.
+
+
+### B16 — S2C opcodes -55, -60 and -61: world object and notice packets
+
+- **Trạng thái: Một phần (world object batch, notice and event marker decoders + CI PASS).**
+- -55: danh sách world object records; -60: UTF notice; -61: event marker scalar fields và optional byte.
+- CI run `43180272168` PASS. Chưa mutate world state/UI; không tăng % tổng dự án khi chưa tính lại trọng số WBS.

@@ -708,3 +708,12 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode -57: companion state update or sprite bundle with image bytes and three four-byte frame groups.
 - Added Java/JS codecs, schema, generator consistency, JS vectors and Java 21 smoke tests. CI run `43179931960` SUCCESS.
 - No companion state or image rendering is applied. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B16 — S2C opcodes -55, -60 and -61 — CI PASS
+
+- Opcode -55: world-object batch with signed-byte count and four-short object coordinates/data.
+- Opcode -60: UTF world notice.
+- Opcode -61: three bytes, short, byte and optional final byte defaulting to zero.
+- Java/JS codecs, schemas, tests and source trace added. CI run `43180272168` SUCCESS.
+- No world objects or notices are created in the browser client. Weighted project percentage unchanged; BE remains deferred.

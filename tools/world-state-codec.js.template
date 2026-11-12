@@ -700,3 +700,26 @@ export function decodeS2COpcodeMinus61(payload) {
   return { firstByte, secondByte, thirdByte, shortValue, fifthByte, optionalByte,
     trailingBytes: readRemaining(reader) };
 }
+
+export function decodeS2COpcodeMinus62(payload) {
+  const reader = new PacketReader(payload), resultType = reader.readI8();
+  if (resultType === 0) {
+    const boxCount = reader.readI8(), textCount = reader.readI8(), labels = [];
+    for (let i = 0; i < textCount; i += 1) labels.push(reader.readUTF());
+    return { resultType, boxCount, textCount, labels, selectedBox: null, text: null, options: null,
+      trailingBytes: readRemaining(reader) };
+  }
+  if (resultType === 1) {
+    const selectedBox = reader.readI8(), text = reader.readUTF(), optionCount = reader.readI8(), options = [];
+    for (let i = 0; i < optionCount; i += 1) options.push(reader.readUTF());
+    return { resultType, boxCount: null, textCount: null, labels: null, selectedBox, text, optionCount, options,
+      trailingBytes: readRemaining(reader) };
+  }
+  return { resultType, boxCount: null, textCount: null, labels: null, selectedBox: null, text: null,
+    options: null, trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcodeMinus63(payload) {
+  const reader = new PacketReader(payload), count = reader.readI8(), values = [];
+  for (let i = 0; i < count; i += 1) values.push(reader.readI8());
+  return { count, values, trailingBytes: readRemaining(reader) };
+}

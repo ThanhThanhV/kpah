@@ -468,3 +468,8 @@ Added decoders for companion record lists, companion state changes and sprite/fr
 ### S2C opcodes -55, -60 and -61: world objects and notices
 
 Added world-object spawn record, notice text and event-marker decoders with source-compatible signed fields and optional-byte default.
+
+
+### S2C opcodes -62 and -63: lucky-box and grid-selection payloads
+
+Added decoders for the lucky-box result variants and 10×10 grid-selection value list. The lucky-box identity is source-confirmed; grid panel purpose is described only as observed in the consumer.

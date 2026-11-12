@@ -652,4 +652,22 @@ public final class ProtocolWorldStateCodec {
         return new OpcodeMinus61(a,b,c,value,fifth,optional,readRemaining(in));
     }
 
+    public record OpcodeMinus62(byte resultType,Byte boxCount,Byte textCount,List<String> labels,
+                                Byte selectedBox,String text,Byte optionCount,List<String> options,byte[] trailingBytes) {}
+    public static OpcodeMinus62 decodeS2COpcodeMinus62(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte type=in.readI8();
+        if(type==0){byte boxes=in.readI8(),count=in.readI8();List<String> labels=new ArrayList<>();
+            for(int i=0;i<count;i++)labels.add(in.readUTF());
+            return new OpcodeMinus62(type,boxes,count,List.copyOf(labels),null,null,null,null,readRemaining(in));}
+        if(type==1){byte selected=in.readI8();String text=in.readUTF();byte count=in.readI8();List<String> options=new ArrayList<>();
+            for(int i=0;i<count;i++)options.add(in.readUTF());
+            return new OpcodeMinus62(type,null,null,null,selected,text,count,List.copyOf(options),readRemaining(in));}
+        return new OpcodeMinus62(type,null,null,null,null,null,null,null,readRemaining(in));
+    }
+    public record OpcodeMinus63(byte count,List<Byte> values,byte[] trailingBytes) {}
+    public static OpcodeMinus63 decodeS2COpcodeMinus63(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte count=in.readI8();List<Byte> values=new ArrayList<>();
+        for(int i=0;i<count;i++)values.add(in.readI8());return new OpcodeMinus63(count,List.copyOf(values),readRemaining(in));
+    }
+
 }
