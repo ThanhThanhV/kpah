@@ -156,7 +156,7 @@ assert.equal(sms39.success,true);assert.equal(sms39.smsDestination,"sms://1234")
 
 const resource8=decodeS2COpcodeMinus8(new PacketWriter().writeI8(2).writeI8(-3).writeI16(2).writeU8(1).writeU8(2)
  .writeI16(1).writeU8(3).writeU8(1).writeI16(2).writeU8(4).writeU8(5)
- .writeI16(1).writeI16(6).writeI8(1).writeI16(1).writeU8(7).toUint8Array());
+ .writeI8(1).writeI16(1).writeU8(7).toUint8Array());
 assert.equal(resource8.subtype,2);assert.deepEqual([...resource8.primaryData],[1,2]);
 assert.deepEqual([...resource8.secondaryData],[3]);assert.deepEqual([...resource8.groups[0].data],[4,5]);
 assert.deepEqual([...resource8.groups[0].nested[0]],[7]);
