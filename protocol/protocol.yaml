@@ -3278,6 +3278,33 @@
         "resource-id",
         "opaque-image-bytes"
       ]
+    },
+    {
+      "name": "COMPANION_RECORD_GROUPS",
+      "direction": "S2C",
+      "opcode": -56,
+      "evidenceSource": "ka.java:case-56; gy.java",
+      "evidence": "Two consecutive signed-byte-counted lists. Each record contains a signed short ID, signed byte field, UTF label and signed byte field. The client assigns a local receive timestamp not carried on the wire.",
+      "sections": [
+        "first-record-list",
+        "second-record-list"
+      ]
+    },
+    {
+      "name": "COMPANION_STATE_AND_SPRITE_DATA",
+      "direction": "S2C",
+      "opcode": -57,
+      "evidenceSource": "ka.java:case-57; bn.java",
+      "evidence": "Signed variant byte. Variant 0 carries boolean enabled, signed-short entity ID and signed-byte companion type. Other variants carry signed-byte slot, signed-short image length and image bytes, then three signed-byte-counted arrays of four-byte tuples and two trailing signed bytes.",
+      "sections": [
+        "variant",
+        "state-update",
+        "sprite-slot-and-image",
+        "frame-group-a",
+        "frame-group-b",
+        "frame-group-c",
+        "sprite-offset-bytes"
+      ]
     }
   ],
   "extensionSchemas": [

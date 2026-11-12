@@ -458,3 +458,8 @@ Added Java/JavaScript decoders for resource-panel variant payloads, slot-targete
 ### S2C opcodes -49 and -51: animation assets and image refresh
 
 Added Java/JavaScript decoders for animation timing/offset variants, packed image/descriptor bundles and resource image refresh. Raw image payloads remain opaque; runtime asset replacement is not performed.
+
+
+### S2C opcodes -56 and -57: companion data
+
+Added decoders for companion record lists, companion state changes and sprite/frame-group payloads. The three frame groups retain four-byte tuples and image data remains opaque.

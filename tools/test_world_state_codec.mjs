@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
-import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode12, decodeS2COpcode17, decodeS2COpcode7, decodeS2COpcode18, decodeS2COpcode19, decodeS2COpcode20, decodeS2COpcode21, decodeS2COpcode27, decodeS2COpcode28, decodeS2COpcode30, decodeS2COpcode32, decodeS2COpcode33, decodeS2COpcode2, decodeS2COpcode22, decodeS2COpcode23, decodeS2COpcode25, decodeS2COpcode26, decodeS2COpcode35, decodeS2COpcode64, decodeS2COpcodeMinus5, decodeS2COpcode37, decodeS2COpcode38, decodeS2COpcode39, decodeS2COpcodeMinus8, decodeS2COpcodeMinus9, decodeS2COpcodeMinus10, decodeS2COpcodeMinus11, decodeS2COpcodeMinus12, decodeS2COpcodeMinus17, decodeS2COpcodeMinus18, decodeS2COpcodeMinus19, decodeS2COpcodeMinus20, decodeS2COpcodeMinus22, decodeS2COpcode105, decodeS2COpcodeMinus27, decodeS2COpcodeMinus43, decodeS2COpcodeMinus38, decodeS2COpcodeMinus39, decodeS2COpcodeMinus42, decodeS2COpcodeMinus24, decodeS2COpcodeMinus26, decodeS2COpcodeMinus28, decodeS2COpcodeMinus30, decodeS2COpcodeMinus31, decodeS2COpcodeMinus32, decodeS2COpcodeMinus33, decodeS2COpcodeMinus37, decodeS2COpcodeMinus50, decodeS2COpcodeMinus52, decodeS2COpcodeMinus59, decodeS2COpcodeMinus46, decodeS2COpcodeMinus47, decodeS2COpcodeMinus48, decodeS2COpcodeMinus49, decodeS2COpcodeMinus51, decodeS2COpcode61, decodeS2COpcode78 } from "../src/protocol/generated/world-state-codec.js";
+import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode12, decodeS2COpcode17, decodeS2COpcode7, decodeS2COpcode18, decodeS2COpcode19, decodeS2COpcode20, decodeS2COpcode21, decodeS2COpcode27, decodeS2COpcode28, decodeS2COpcode30, decodeS2COpcode32, decodeS2COpcode33, decodeS2COpcode2, decodeS2COpcode22, decodeS2COpcode23, decodeS2COpcode25, decodeS2COpcode26, decodeS2COpcode35, decodeS2COpcode64, decodeS2COpcodeMinus5, decodeS2COpcode37, decodeS2COpcode38, decodeS2COpcode39, decodeS2COpcodeMinus8, decodeS2COpcodeMinus9, decodeS2COpcodeMinus10, decodeS2COpcodeMinus11, decodeS2COpcodeMinus12, decodeS2COpcodeMinus17, decodeS2COpcodeMinus18, decodeS2COpcodeMinus19, decodeS2COpcodeMinus20, decodeS2COpcodeMinus22, decodeS2COpcode105, decodeS2COpcodeMinus27, decodeS2COpcodeMinus43, decodeS2COpcodeMinus38, decodeS2COpcodeMinus39, decodeS2COpcodeMinus42, decodeS2COpcodeMinus24, decodeS2COpcodeMinus26, decodeS2COpcodeMinus28, decodeS2COpcodeMinus30, decodeS2COpcodeMinus31, decodeS2COpcodeMinus32, decodeS2COpcodeMinus33, decodeS2COpcodeMinus37, decodeS2COpcodeMinus50, decodeS2COpcodeMinus52, decodeS2COpcodeMinus59, decodeS2COpcodeMinus46, decodeS2COpcodeMinus47, decodeS2COpcodeMinus48, decodeS2COpcodeMinus49, decodeS2COpcodeMinus51, decodeS2COpcodeMinus56, decodeS2COpcodeMinus57, decodeS2COpcode61, decodeS2COpcode78 } from "../src/protocol/generated/world-state-codec.js";
 const spawn=new PacketWriter().writeI8(1).writeU8(7).writeI16(123).writeI16(456).writeI16(789).writeI8(2)
  .writeI32(-99).writeI8(4).writeI8(5).writeBool(false)
  .writeI8(0).writeU8(8).writeI16(124).writeI16(500).writeI16(600).writeI8(1).writeI32(77).writeI8(6).writeBool(true).toUint8Array();
@@ -291,3 +291,16 @@ assert.deepEqual([...asset49Decoded.imageBytes],[1,2]);assert.equal(asset49Decod
 assert.deepEqual(asset49Decoded.groups[0].triples,[[8,9,10]]);assert.deepEqual(asset49Decoded.finalBytes,[11,12]);
 const image51=decodeS2COpcodeMinus51(new PacketWriter().writeI16(77).writeU8(1).writeU8(2).writeU8(3).toUint8Array());
 assert.deepEqual([image51.resourceId,[...image51.imageBytes]],[77,[1,2,3]]);
+
+const companion56=decodeS2COpcodeMinus56(new PacketWriter().writeI8(1).writeI16(7).writeI8(-2).writeUTF("pet A").writeI8(3)
+ .writeI8(1).writeI16(8).writeI8(4).writeUTF("pet B").writeI8(-5).toUint8Array());
+assert.equal(companion56.first.records[0].label,"pet A");assert.equal(companion56.second.records[0].fieldE,-5);
+const companionState57=decodeS2COpcodeMinus57(new PacketWriter().writeI8(0).writeBool(true).writeI16(123).writeI8(4).toUint8Array());
+assert.deepEqual([companionState57.enabled,companionState57.entityId,companionState57.companionType],[true,123,4]);
+const companionSpriteWriter=new PacketWriter().writeI8(1).writeI8(2).writeI16(2).writeU8(9).writeU8(8);
+for(let g=0;g<3;g++)companionSpriteWriter.writeI8(1).writeI8(g).writeI8(g+1).writeI8(g+2).writeI8(g+3);
+companionSpriteWriter.writeI8(-1).writeI8(5);
+const companionSprite57=decodeS2COpcodeMinus57(companionSpriteWriter.toUint8Array());
+assert.deepEqual([companionSprite57.imageSlot,[...companionSprite57.imageBytes],companionSprite57.frameGroups.length,
+ companionSprite57.frameGroups[2].tuples[0],companionSprite57.offsetA,companionSprite57.offsetB],
+ [2,[9,8],3,[2,3,4,5],-1,5]);

@@ -654,3 +654,30 @@ export function decodeS2COpcodeMinus51(payload) {
   const reader = new PacketReader(payload), resourceId = reader.readI16();
   return { resourceId, imageBytes: readRemaining(reader), trailingBytes: new Uint8Array() };
 }
+
+export function decodeS2COpcodeMinus56(payload) {
+  const reader = new PacketReader(payload);
+  const readRecords = () => {
+    const count = reader.readI8(), records = [];
+    for (let i = 0; i < count; i += 1)
+      records.push({ id: reader.readI16(), fieldD: reader.readI8(), label: reader.readUTF(), fieldE: reader.readI8() });
+    return { count, records };
+  };
+  return { first: readRecords(), second: readRecords(), trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcodeMinus57(payload) {
+  const reader = new PacketReader(payload), variant = reader.readI8();
+  if (variant === 0) return { variant, enabled: reader.readBool(), entityId: reader.readI16(),
+    companionType: reader.readI8(), imageSlot: null, imageBytes: null, frameGroups: null,
+    trailingBytes: readRemaining(reader) };
+  const imageSlot = reader.readI8(), imageLength = reader.readI16(), imageBytes = readSizedBytes(reader, imageLength);
+  const frameGroups = [];
+  for (let group = 0; group < 3; group += 1) {
+    const count = reader.readI8(), tuples = [];
+    for (let i = 0; i < count; i += 1) tuples.push([reader.readI8(), reader.readI8(), reader.readI8(), reader.readI8()]);
+    frameGroups.push({ count, tuples });
+  }
+  const offsetA = reader.readI8(), offsetB = reader.readI8();
+  return { variant, enabled: null, entityId: null, companionType: null, imageSlot, imageLength,
+    imageBytes, frameGroups, offsetA, offsetB, trailingBytes: readRemaining(reader) };
+}

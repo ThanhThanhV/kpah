@@ -491,3 +491,11 @@ The decoder only exposes wire values; original panel navigation, confirmation pr
 - **Opcode -49, other variants:** signed-short image length and image bytes, then five-byte descriptors, groups of signed-byte-counted triples, and a final signed-byte-counted byte array. This matches the source structure in `ar.a(acu)`.
 - **Opcode -51:** signed-short resource ID followed by all remaining bytes as the replacement image payload.
 - Decoders preserve source fields and opaque image bytes. They do not instantiate animation objects, decode images, or replace runtime resources.
+
+
+## S2C opcodes -56 and -57 — companion records and sprite data
+
+- **Opcode -56:** two sequential signed-byte-counted lists. Each record is a short ID, signed byte, UTF label and signed byte. Receive timestamps are assigned locally by the original client and are not transmitted.
+- **Opcode -57, variant 0:** enabled boolean, entity ID short and companion type byte.
+- **Opcode -57, other variants:** sprite slot byte, signed-short image length and image bytes; then three signed-byte-counted groups, each record containing four bytes; finally two offset bytes.
+- Image bytes and frame tuples are decoded but not rendered or applied to companion entities.

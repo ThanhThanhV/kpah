@@ -607,4 +607,30 @@ public final class ProtocolWorldStateCodec {
         PacketReader in=new PacketReader(payload);short id=in.readI16();return new OpcodeMinus51(id,readRemaining(in),new byte[0]);
     }
 
+    public record CompanionRecord56(short id,byte fieldD,String label,byte fieldE) {}
+    public record RecordGroup56(byte count,List<CompanionRecord56> records) {}
+    public record OpcodeMinus56(RecordGroup56 first,RecordGroup56 second,byte[] trailingBytes) {}
+    private static RecordGroup56 readRecordGroup56(PacketReader in) throws IOException {
+        byte count=in.readI8();List<CompanionRecord56> records=new ArrayList<>();
+        for(int i=0;i<count;i++)records.add(new CompanionRecord56(in.readI16(),in.readI8(),in.readUTF(),in.readI8()));
+        return new RecordGroup56(count,List.copyOf(records));
+    }
+    public static OpcodeMinus56 decodeS2COpcodeMinus56(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);return new OpcodeMinus56(readRecordGroup56(in),readRecordGroup56(in),readRemaining(in));
+    }
+    public record FrameGroup57(byte count,List<List<Byte>> tuples) {}
+    public record OpcodeMinus57(byte variant,Boolean enabled,Short entityId,Byte companionType,Byte imageSlot,
+                                Short imageLength,byte[] imageBytes,List<FrameGroup57> frameGroups,
+                                Byte offsetA,Byte offsetB,byte[] trailingBytes) {}
+    public static OpcodeMinus57 decodeS2COpcodeMinus57(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);byte variant=in.readI8();
+        if(variant==0)return new OpcodeMinus57(variant,in.readBool(),in.readI16(),in.readI8(),null,null,null,null,null,null,readRemaining(in));
+        byte slot=in.readI8();short length=in.readI16();byte[] image=readSizedBytes(in,length);List<FrameGroup57> groups=new ArrayList<>();
+        for(int group=0;group<3;group++){byte count=in.readI8();List<List<Byte>> tuples=new ArrayList<>();
+            for(int i=0;i<count;i++)tuples.add(List.of(in.readI8(),in.readI8(),in.readI8(),in.readI8()));
+            groups.add(new FrameGroup57(count,List.copyOf(tuples)));}
+        byte offsetA=in.readI8(),offsetB=in.readI8();
+        return new OpcodeMinus57(variant,null,null,null,slot,length,image,List.copyOf(groups),offsetA,offsetB,readRemaining(in));
+    }
+
 }

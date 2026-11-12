@@ -692,3 +692,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode -48: target byte; targeted blob branch or broadcast branch with two bytes and opaque tail.
 - Java/JS codecs, schema, generator consistency and branch vectors added. CI run `43178993630` SUCCESS.
 - Resource bytes are not decoded or applied to runtime assets. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B16 — S2C opcodes -49 and -51 — CI PASS
+
+- Opcode -49: animation timing/phase payload with mode-dependent distance or short-pair offsets; asset branch contains image bytes, five-byte descriptors, groups of byte triples and final byte array.
+- Opcode -51: resource ID short plus remaining image bytes.
+- Added Java/JS codecs, schema, generator check and synthetic vectors. CI run `43179606039` SUCCESS.
+- Image bytes remain opaque and no runtime animation/image replacement is applied. Weighted project percentage unchanged; BE remains deferred.
