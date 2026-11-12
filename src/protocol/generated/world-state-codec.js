@@ -425,7 +425,7 @@ function readPetAppearance22(reader) {
   for(let i=0;i<a.length;i++)a[i]=reader.readI8();
   for(let i=0;i<c.length;i++)c[i]=reader.readI8();
   for(let i=0;i<b.length;i++)b[i]=reader.readI8();
-  return {a,c,b};
+  return {appearanceA:a,appearanceC:c,appearanceB:b};
 }
 function readPetItem22(reader,full) {
   const itemType=reader.readI8();
