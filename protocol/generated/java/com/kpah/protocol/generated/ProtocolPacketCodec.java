@@ -10,8 +10,8 @@ public final class ProtocolPacketCodec {
     static {
         SCHEMAS.put("C2S_OPEN_ARTIFACT_PANEL", List.of(new Field("sentinel", Type.I16)));
         SCHEMAS.put("C2S_FARM_PANEL_ACTION", List.of(new Field("action", Type.U8), new Field("index", Type.U8)));
-        SCHEMAS.put("C2S_DROP_EQUIPPED_ITEM", List.of(new Field("equipmentSlot", Type.I16)));
         SCHEMAS.put("C2S_EQUIPMENT_UPGRADE_ACTION", List.of(new Field("action", Type.U8), new Field("itemId", Type.U8)));
+        SCHEMAS.put("C2S_DROP_EQUIPPED_ITEM", List.of(new Field("equipmentSlot", Type.I16)));
         SCHEMAS.put("C2S_GUILD_CHAT", List.of(new Field("message", Type.UTF)));
         SCHEMAS.put("C2S_REMOVE_FRIEND", List.of(new Field("friendName", Type.UTF)));
         SCHEMAS.put("C2S_CHAT", List.of(new Field("channel", Type.UTF), new Field("message", Type.UTF)));
