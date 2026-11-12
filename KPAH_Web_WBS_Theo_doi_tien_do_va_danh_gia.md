@@ -902,3 +902,10 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - **Trạng thái: Một phần (2 shop catalog layouts + item/subrecord decode + CI PASS).**
 - Mode 0: full items + subrecords + optional text/auxiliary object; mode khác 0: compact items + image/frame payload.
 - CI run `43181452453` PASS. Chưa xử lý giao dịch/stock/tiền hoặc UI; không tăng % tổng dự án khi chưa tính lại trọng số WBS.
+
+
+### B16 — S2C opcode 100: resource slot metadata
+
+- **Trạng thái: Một phần (resource image/metadata decoder + optional blob + CI PASS).**
+- Subtype 0: image bytes, label, scalar metadata và blob tùy mode; subtype khác giữ phần còn lại.
+- CI run `43181677911` PASS. Chưa cập nhật resource runtime; không tăng % tổng dự án khi chưa tính lại trọng số WBS.

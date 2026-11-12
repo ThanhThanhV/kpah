@@ -832,3 +832,28 @@ export function decodeS2COpcode100(payload) {
   return { subtype, resourceId, imageLength, imageBytes, label, fieldM, valueP, fieldN, fieldO, mode,
     optionalBlob, trailingBytes: readRemaining(reader) };
 }
+
+export function decodeS2COpcode106(payload) {
+  const reader = new PacketReader(payload), sourceEntityId = reader.readI16(), actionByte = reader.readI8(),
+    damageValue = reader.readI32(), effectBytes = [reader.readI8(), reader.readI8(), reader.readI8()],
+    targetCount = reader.readI8(), targets = [], targetErrors = [];
+  for (let i = 0; i < targetCount; i += 1) {
+    try { targets.push({ targetId: reader.readI16(), value: reader.readI32() }); }
+    catch (error) { targetErrors.push({ index: i, error: String(error?.message ?? error) }); }
+  }
+  return { sourceEntityId, actionByte, damageValue, effectBytes, targetCount, targets, targetErrors,
+    trailingBytes: readRemaining(reader) };
+}
+export function decodeS2COpcode83(payload, entityExists) {
+  const reader = new PacketReader(payload), sourceEntityId = reader.readI16(), actionByte = reader.readI8();
+  if (!entityExists) return { sourceEntityId, actionByte, entityExists: false, targetCount: null,
+    targets: [], optionalByteA: null, optionalByteB: null, unconsumedBytes: readRemaining(reader), trailingBytes: new Uint8Array() };
+  const targetCount = reader.readI8(), targets = [];
+  for (let i = 0; i < targetCount; i += 1)
+    targets.push({ targetId: reader.readI16(), firstValue: reader.readI32(), secondValue: reader.readI32() });
+  let optionalByteA = null, optionalByteB = null;
+  try { optionalByteA = reader.readU8(); } catch {}
+  try { optionalByteB = reader.readU8(); } catch {}
+  return { sourceEntityId, actionByte, entityExists: true, targetCount, targets, optionalByteA, optionalByteB,
+    unconsumedBytes: new Uint8Array(), trailingBytes: readRemaining(reader) };
+}

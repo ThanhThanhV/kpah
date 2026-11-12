@@ -493,3 +493,8 @@ Added decoders for both shop catalog layouts, full/compact item records, counted
 ### S2C opcode 100: resource-slot metadata
 
 Added a source-backed decoder for subtype 0 image/label/scalar payload and optional mode-1 blob; nonzero subtype remains an empty branch.
+
+
+### S2C opcodes 106 and 83: multi-target combat and target-group updates
+
+Added context-aware decoders for multi-target attack records and entity-existence-guarded target-group state packets, including optional byte defaults.

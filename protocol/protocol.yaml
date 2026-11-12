@@ -3447,6 +3447,36 @@
         "resource-label-and-scalars",
         "optional-mode-1-blob"
       ]
+    },
+    {
+      "name": "MULTI_TARGET_COMBAT_EVENT",
+      "direction": "S2C",
+      "opcode": 106,
+      "evidenceSource": "ka.java:case106; mj.java:method a(acu)",
+      "evidence": "Reads source entity short, action byte, damage int, three effect bytes, signed-byte target count and repeated target short plus int value. Each target record is independently guarded by a catch in the original consumer.",
+      "sections": [
+        "source-entity-id",
+        "action-byte",
+        "damage-value",
+        "three-effect-bytes",
+        "target-count",
+        "target-id-and-value-records"
+      ]
+    },
+    {
+      "name": "TARGET_GROUP_STATE_UPDATE",
+      "direction": "S2C",
+      "opcode": 83,
+      "evidenceSource": "ka.java:case83",
+      "evidence": "Reads a source entity short and action byte. Only if that entity exists in the active world does the handler read a signed-byte target count and repeated target ID short plus two ints. Two optional unsigned bytes follow, each guarded by one try/catch read.",
+      "sections": [
+        "source-entity-id",
+        "action-byte",
+        "entity-exists-guard",
+        "target-state-records",
+        "optional-unsigned-byte-a",
+        "optional-unsigned-byte-b"
+      ]
     }
   ],
   "extensionSchemas": [

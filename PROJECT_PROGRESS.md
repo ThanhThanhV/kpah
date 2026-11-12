@@ -748,3 +748,10 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode 15: shop catalog mode 0 full item records, subrecords, category/five shorts and optional text/auxiliary object; nonzero mode compact item records and frame-count/image payload.
 - Added Java/JS codecs, schema, generator check and synthetic vectors. CI run `43181452453` SUCCESS.
 - No shop transactions, stock, currency or UI changes are applied. Weighted project percentage unchanged; BE remains deferred.
+
+
+## B16 — S2C opcode 100 — CI PASS
+
+- Opcode 100 delegates to the resource-slot handler: unsigned subtype + resource ID; subtype 0 carries image bytes, UTF label, scalar metadata and optional mode-1 blob.
+- Added Java/JS codec, schema, generator check and synthetic vectors. CI run `43181677911` SUCCESS.
+- Resource data remains opaque and is not applied to the browser runtime. Weighted project percentage unchanged; BE remains deferred.

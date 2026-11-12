@@ -767,4 +767,28 @@ public final class ProtocolWorldStateCodec {
         return new Opcode100(subtype,resourceId,length,image,label,fieldM,value,fieldN,fieldO,mode,optional,readRemaining(in));
     }
 
+    public record Target106(short targetId,int value) {}
+    public record TargetError106(int index,String error) {}
+    public record Opcode106(short sourceEntityId,byte actionByte,int damageValue,List<Byte> effectBytes,byte targetCount,
+                            List<Target106> targets,List<TargetError106> targetErrors,byte[] trailingBytes) {}
+    public static Opcode106 decodeS2COpcode106(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);short source=in.readI16();byte action=in.readI8();int damage=in.readI32();
+        List<Byte> effects=List.of(in.readI8(),in.readI8(),in.readI8());byte count=in.readI8();
+        List<Target106> targets=new ArrayList<>();List<TargetError106> errors=new ArrayList<>();
+        for(int i=0;i<count;i++){try{targets.add(new Target106(in.readI16(),in.readI32()));}
+            catch(IOException ex){errors.add(new TargetError106(i,ex.getMessage()));}}
+        return new Opcode106(source,action,damage,effects,count,List.copyOf(targets),List.copyOf(errors),readRemaining(in));
+    }
+    public record Target83(short targetId,int firstValue,int secondValue) {}
+    public record Opcode83(short sourceEntityId,byte actionByte,boolean entityExists,Byte targetCount,List<Target83> targets,
+                           Integer optionalByteA,Integer optionalByteB,byte[] unconsumedBytes,byte[] trailingBytes) {}
+    public static Opcode83 decodeS2COpcode83(byte[] payload,boolean entityExists) throws IOException {
+        PacketReader in=new PacketReader(payload);short source=in.readI16();byte action=in.readI8();
+        if(!entityExists)return new Opcode83(source,action,false,null,List.of(),null,null,readRemaining(in),new byte[0]);
+        byte count=in.readI8();List<Target83> targets=new ArrayList<>();
+        for(int i=0;i<count;i++)targets.add(new Target83(in.readI16(),in.readI32(),in.readI32()));
+        Integer a=null,b=null;try{a=in.readU8();}catch(IOException ignored){}try{b=in.readU8();}catch(IOException ignored){}
+        return new Opcode83(source,action,true,count,List.copyOf(targets),a,b,new byte[0],readRemaining(in));
+    }
+
 }

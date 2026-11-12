@@ -548,3 +548,10 @@ Item records retain neutral field names. The browser decoder does not apply pric
 The opcode handler delegates to `mj.z(acu)`. The packet begins with an unsigned subtype byte and signed-short resource ID. Subtype 0 carries an image byte array, UTF label, one signed byte, an int, two signed bytes and a mode byte. Mode 1 adds a signed-short length-prefixed blob. Other subtypes have no additional fields in the observed handler.
 
 The decoder keeps image and optional blob bytes opaque; it does not update the original resource table or browser asset runtime.
+
+
+## S2C opcodes 106 and 83 — multi-target combat / target-group state
+
+- **Opcode 106:** source entity ID, action byte, damage int, three effect bytes, signed-byte target count and target ID/value pairs. The original consumer catches errors per target record.
+- **Opcode 83:** source entity ID and action byte are always read. The remaining payload is read only if that source entity exists in the active world; otherwise the decoder exposes the untouched remainder. For an existing entity, the packet carries target IDs with two ints each and up to two optional unsigned bytes.
+- The decoder does not apply HP changes, damage, effects or entity grouping.
