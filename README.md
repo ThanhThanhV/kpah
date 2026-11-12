@@ -560,3 +560,6 @@ C2S opcode 94 now has a generated two-mode market-panel command codec, based on 
 
 
 C2S opcode 94's two market-panel writer modes now have generated Java/JavaScript codecs; CI run `43191399012` passed.
+
+
+C2S opcode 48 (use item) now has positive/negative signed-32 payload vectors and missing-field validation; opcode -25 (refine item) has matching Java 21 smoke coverage. These remain serialization checks only; server-side item/refinement rules are not implemented.
