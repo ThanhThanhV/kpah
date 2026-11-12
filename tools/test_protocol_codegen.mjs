@@ -5,7 +5,9 @@ import { PacketReader, PacketWriter, encodePayload, decodePayload } from "../src
 assert.equal(Object.keys(C2S).length, 110);
 assert.equal(Object.keys(S2C).length, 142);
 assert.equal(COMMAND_CATALOG.length, 252);
+assert.equal(C2S.DROP_EQUIPPED_ITEM, -21);
 assert.equal(C2S.EQUIPMENT_UPGRADE_ACTION, -25);
+assert.equal(C2S.EQUIP_ITEM, 86);
 assert.equal(C2S.REFINEMENT_ACTION, -68);
 assert.equal(C2S.USE_ITEM, 48);
 const useItem = encodePayload("C2S", "USE_ITEM", { itemId: 0x12345678 });
@@ -19,6 +21,12 @@ assert.throws(() => encodePayload("C2S", "USE_ITEM", {}), /Missing field itemId/
 assert.equal(S2C.FARM_PANEL_DATA, -66);
 assert.equal(S2C.REFINEMENT_RESULT, -68);
 
+const equipItem = encodePayload("C2S", "EQUIP_ITEM", { itemId: 0x1234 });
+assert.deepEqual([...equipItem], [0x12, 0x34]);
+assert.deepEqual(decodePayload("C2S", "EQUIP_ITEM", equipItem), { itemId: 0x1234 });
+const dropEquipped = encodePayload("C2S", "DROP_EQUIPPED_ITEM", { equipmentSlot: 21 });
+assert.deepEqual([...dropEquipped], [0, 21]);
+assert.deepEqual(decodePayload("C2S", "DROP_EQUIPPED_ITEM", dropEquipped), { equipmentSlot: 21 });
 const upgradeNormal = encodePayload("C2S", "EQUIPMENT_UPGRADE_ACTION", { action: 10, itemId: 17 });
 assert.deepEqual([...upgradeNormal], [10, 17]);
 assert.deepEqual(decodePayload("C2S", "EQUIPMENT_UPGRADE_ACTION", upgradeNormal), { action: 10, itemId: 17 });
