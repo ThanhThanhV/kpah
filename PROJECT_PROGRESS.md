@@ -867,7 +867,10 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 ### B7 — shop batch variable-list codecs (CI pending)
 
-- Opcode 24 caller-selected `catalog`/`category4_fixed` codecs generated in Java/JavaScript; no wire discriminator exists. Catalog writes category/templateId/quantity=1 and conditional option byte for category 3. Premium writes fixed category 4, item ID and quantity.
+- Opcode 24 caller-selected `catalog`/`category4_fixed` codecs generated in Java/JavaScript; no wire discriminator exists. Catalog writes category/templateId/quantity=1 and conditional option byte for category 3. The `category4_fixed` layout writes fixed category 4, item ID and quantity.
 - Opcode 74 typed expanded list: signed-short total item count followed by repeated signed-short item IDs; quantity is expanded by repeating IDs.
 - Added JS round-trip and Java 21 smoke coverage. Source: `jy.java:756-780`, `816-865`; `xg.java:3257-3265`.
-- CI pending. Still open: unequip-to-bag, full purchase transaction semantics, refinement callback payload, warehouse completion and server-authoritative inventory/equipment mutation. Weighted progress unchanged; BE deferred.
+- CI run `43403732922` on commit `306ccd0e6c992a107c8ae3c7e80ed4fb70ef8223` SUCCESS: generated command-variant consistency, JavaScript codec tests, Vite build, Java 21 compile/smoke and original-JAR analysis. Still open: unequip-to-bag, full purchase transaction semantics, refinement callback payload, warehouse completion and server-authoritative inventory/equipment mutation. Weighted progress unchanged; BE deferred.
+
+
+- Shop batch implementation verified by [CI run 43403732922](https://github.com/ThanhThanhV/kpah/actions/runs/43403732922), commit `306ccd0e6c992a107c8ae3c7e80ed4fb70ef8223`.
