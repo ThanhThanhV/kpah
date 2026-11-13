@@ -15,6 +15,17 @@ import { createMailState } from './mail-state.js';
 import { createLocalSave } from './local-save.js';
 import { mountProtocolConnectionPanel } from './protocol/connection-panel.js';
 import { projectServerWorldEntities } from './protocol/server-world-projection.js';
+import { decodeTemplateSpriteAtlas } from './protocol/template-assets.js';
+import { resolveOriginalEntityFrameIndex } from './protocol/original-entity-factory.js';
+
+
+function bytesToDataUrl(bytes,mimeType){
+  let binary='';
+  for(let offset=0;offset<bytes.length;offset+=0x8000){
+    binary+=String.fromCharCode(...bytes.subarray(offset,Math.min(offset+0x8000,bytes.length)));
+  }
+  return 'data:'+mimeType+';base64,'+btoa(binary);
+}
 
 // Keep the game shell inside the actually visible mobile viewport, including
 // browsers that do not resize 100dvh consistently when the virtual keyboard opens.
@@ -910,7 +921,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverWorldViews=new Map();}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldDisposed=false;}
   create(){
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
@@ -939,7 +950,45 @@ class WorldScene extends Phaser.Scene {
       window.removeEventListener('kpah:protocol-state',this.onProtocolState);
       for(const view of this.serverWorldViews.values())view.destroy();
       this.serverWorldViews.clear();
+      this.serverWorldDisposed=true;
     });
+  }
+  ensureServerTemplateTexture(entity){
+    if(entity.factoryClass!=='cd'||!entity.templateReady||!Number.isInteger(entity.templateId)
+      ||!Number.isInteger(entity.frameWidth)||!Number.isInteger(entity.frameHeight)
+      ||entity.frameWidth<=0||entity.frameHeight<=0)return;
+    const template=this.serverWorldState?.templatesById?.[String(entity.templateId)];
+    const packed=this.serverWorldState?.templateAssetPayloadsById?.[String(entity.templateId)];
+    if(!template||!(packed instanceof Uint8Array))return;
+    const key='kpah-server-template-'+entity.templateId;
+    if(this.textures.exists(key)||this.serverWorldTextureLoads.has(key))return;
+    let decoded;
+    try{decoded=decodeTemplateSpriteAtlas(template,packed);}
+    catch(error){console.warn('KPAH template asset decode failed',entity.templateId,error);return;}
+    if(decoded.kind!=='image')return;
+    this.serverWorldTextureLoads.add(key);
+    const image=new window.Image();
+    image.onload=()=>{
+      this.serverWorldTextureLoads.delete(key);
+      if(this.serverWorldDisposed||this.textures.exists(key))return;
+      const frameWidth=entity.frameWidth,frameHeight=entity.frameHeight;
+      const frameCount=Math.floor(image.naturalHeight/frameHeight);
+      if(image.naturalWidth<frameWidth||frameCount<1)return;
+      const strip=document.createElement('canvas');
+      strip.width=frameWidth;
+      strip.height=frameCount*frameHeight;
+      const context=strip.getContext('2d');
+      if(!context)return;
+      // Original cd renderer always draws source X=0 and advances only Y.
+      context.drawImage(image,0,0,frameWidth,strip.height,0,0,frameWidth,strip.height);
+      this.textures.addSpriteSheet(key,strip,{frameWidth,frameHeight});
+      this.syncServerWorldViews();
+    };
+    image.onerror=()=>{
+      this.serverWorldTextureLoads.delete(key);
+      console.warn('KPAH template image could not be loaded',entity.templateId);
+    };
+    image.src=bytesToDataUrl(decoded.imageBytes,decoded.mimeType);
   }
   syncServerWorldViews(){
     const projected=projectServerWorldEntities(this.serverWorldState);
@@ -948,6 +997,7 @@ class WorldScene extends Phaser.Scene {
       if(!present.has(id)){view.destroy();this.serverWorldViews.delete(id);}
     }
     for(const entity of projected){
+      this.ensureServerTemplateTexture(entity);
       const id=String(entity.entityId);
       let view=this.serverWorldViews.get(id);
       const tint=entity.presentation==='player-like'?0x6bb7e8:
@@ -957,21 +1007,49 @@ class WorldScene extends Phaser.Scene {
         : 'T'+(entity.templateId??'?');
       const labelText='#'+entity.entityId+' · '+(entity.factoryClass??('K'+(entity.kind??'?')))
         +' / '+templateLabel;
+      const textureKey='kpah-server-template-'+entity.templateId;
+      const textureReady=entity.factoryClass==='cd'&&entity.templateReady
+        &&this.textures.exists(textureKey)&&Number.isInteger(entity.templateType);
+      const frameIndex=textureReady?resolveOriginalEntityFrameIndex(entity.templateType,0,0):null;
+      const texture=textureReady?this.textures.get(textureKey):null;
+      const canRenderSprite=frameIndex!==null&&texture?.has(frameIndex);
       if(!view){
-        const marker=this.add.circle(0,0,9,tint,0.92).setStrokeStyle(2,0x171b22,0.95);
-        const label=this.add.text(0,-19,labelText,{
+        view=this.add.container(entity.x,entity.y,[]);
+        if(canRenderSprite){
+          const sprite=this.add.sprite(-(entity.frameOffsetX??0),-(entity.frameOffsetY??0),textureKey,frameIndex).setOrigin(0,1);
+          view.add(sprite);
+          view.setData('visualType','sprite');
+          view.setData('sprite',sprite);
+        }else{
+          const marker=this.add.circle(0,0,9,tint,0.92).setStrokeStyle(2,0x171b22,0.95);
+          view.add(marker);
+          view.setData('visualType','marker');
+          view.setData('marker',marker);
+        }
+        const label=this.add.text(0,-Math.max(19,entity.frameHeight??0)-4,labelText,{
           fontFamily:'Arial',fontSize:'10px',color:'#ffffff',
           stroke:'#171b22',strokeThickness:3
         }).setOrigin(0.5,1);
-        view=this.add.container(entity.x,entity.y,[marker,label]);
+        view.add(label);
         view.setDepth(entity.y+3).setAlpha(0.9);
         view.setData('label',label);
-        view.setData('marker',marker);
         this.serverWorldViews.set(id,view);
       }else{
         view.setPosition(entity.x,entity.y).setDepth(entity.y+3);
-        view.getData('label')?.setText(labelText);
-        view.getData('marker')?.setFillStyle(tint,0.92);
+        view.getData('label')?.setText(labelText).setPosition(0,-Math.max(19,entity.frameHeight??0)-4);
+        if(canRenderSprite&&view.getData('visualType')!=='sprite'){
+          const marker=view.getData('marker');
+          if(marker){view.remove(marker,true);view.setData('marker',null);}
+          const sprite=this.add.sprite(-(entity.frameOffsetX??0),-(entity.frameOffsetY??0),textureKey,frameIndex).setOrigin(0,1);
+          view.addAt(sprite,0);
+          view.setData('visualType','sprite');
+          view.setData('sprite',sprite);
+        }else if(canRenderSprite){
+          view.getData('sprite')?.setFrame(frameIndex)
+            .setPosition(-(entity.frameOffsetX??0),-(entity.frameOffsetY??0));
+        }else if(view.getData('visualType')==='marker'){
+          view.getData('marker')?.setFillStyle(tint,0.92);
+        }
       }
     }
   }
