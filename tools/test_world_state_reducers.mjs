@@ -101,4 +101,32 @@ assert.equal(beforeCombat.serverWorld.entitiesById["124"].currentHp, 900,
   "combat reducer must not mutate the previous world snapshot");
 assert.equal(state.serverWorld.combatEventSequence, 2);
 
+// Opcode 10 forwards two shorts and two ints to the world scene without guessing their meaning.
+const opcode10 = new PacketWriter().writeI16(12).writeI16(34).writeI32(560).writeI32(780).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 10, payload: opcode10 }).state;
+assert.equal(state.serverWorld.worldEvents.at(-1).opcode, 10);
+assert.deepEqual([state.serverWorld.worldEvents.at(-1).first, state.serverWorld.worldEvents.at(-1).second, state.serverWorld.worldEvents.at(-1).valueA, state.serverWorld.worldEvents.at(-1).valueB], [12, 34, 560, 780]);
+
+// Opcode 83 only decodes when the source entity exists, matching the original handler guard.
+const opcode83 = new PacketWriter().writeI16(124).writeI8(7).writeI8(1).writeI16(124).writeI32(111).writeI32(222).writeU8(3).writeU8(4).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 83, payload: opcode83 }).state;
+assert.deepEqual(state.serverWorld.entitiesById["124"].opcode83State, { valueA: 111, valueB: 222 });
+assert.equal(state.serverWorld.worldEvents.at(-1).targets[0].entityId, 124);
+const missingSource83 = new PacketWriter().writeI16(999).writeI8(7).writeI8(1).writeI16(124).writeI32(1).writeI32(2).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 83, payload: missingSource83 }).state;
+assert.equal(state.serverWorld.worldEvents.at(-1).handledByOriginalGuard, false);
+assert.deepEqual([...state.serverWorld.worldEvents.at(-1).opaquePayload], [...missingSource83]);
+
+// Opcode 106 carries shared damage plus target/current-HP records.
+const opcode106 = new PacketWriter().writeI16(124).writeI8(8).writeI32(75).writeI8(1).writeI8(2).writeI8(3).writeI8(2).writeI16(124).writeI32(800).writeI16(123).writeI32(0).toUint8Array();
+const before106 = state;
+state = applyInboundWorldPacket(state, { opcode: 106, payload: opcode106 }).state;
+const multiHit = state.serverWorld.combatEvents.at(-1);
+assert.equal(multiHit.opcode, 106);
+assert.equal(multiHit.sequence, 3);
+assert.equal(multiHit.attackerEntityId, 124);
+assert.equal(multiHit.damage, 75);
+assert.deepEqual(multiHit.targets.map(target => target.entityId), [124, 123]);
+assert.equal(state.serverWorld.entitiesById["124"].currentHp, 800);
+assert.equal(before106.serverWorld.entitiesById["124"].currentHp, 875, "opcode 106 must preserve previous world snapshot");
 console.log("Inbound world-state reducers: PASS (spawn/update, guarded snapshot, combat event, despawn, unknown opcode)");
