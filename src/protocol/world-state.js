@@ -148,6 +148,17 @@ export function applyS2COpcode5World(world, payload) {
 function applyCharacterResources(world, packet) {
   const next = cloneWorld(world);
   const id = String(packet.characterId);
+  const entity = next.entitiesById[id];
+  if (entity?.kind !== 0) {
+    next.worldEvents.push({
+      opcode: 32,
+      sequence: (next.worldEvents.at(-1)?.sequence ?? 0) + 1,
+      characterId: packet.characterId,
+      entityResolved: false,
+    });
+    if (next.worldEvents.length > 100) next.worldEvents.splice(0, next.worldEvents.length - 100);
+    return next;
+  }
   const previous = next.characterResourcesById[id] ?? { statsByKey: {} };
   const statsByKey = { ...(previous.statsByKey ?? {}) };
   for (const record of packet.stats ?? []) {
@@ -162,16 +173,20 @@ function applyCharacterResources(world, packet) {
     localStateByte: Number.isInteger(packet.localStateByte) ? packet.localStateByte : previous.localStateByte ?? null,
     localShortValue: Number.isInteger(packet.localShortValue) ? packet.localShortValue : previous.localShortValue ?? null,
   };
-  const entity = next.entitiesById[id];
-  if (entity?.kind === 0) {
-    const hp = statsByKey.hp?.value;
-    const mp = statsByKey.mp?.value;
-    next.entitiesById[id] = {
-      ...entity,
-      ...(Number.isFinite(hp) ? { currentHp: hp } : {}),
-      ...(Number.isFinite(mp) ? { currentMp: mp } : {}),
-    };
-  }
+  const hp = statsByKey.hp?.value;
+  const mp = statsByKey.mp?.value;
+  next.entitiesById[id] = {
+    ...entity,
+    ...(Number.isFinite(hp) ? { currentHp: hp } : {}),
+    ...(Number.isFinite(mp) ? { currentMp: mp } : {}),
+  };
+  next.worldEvents.push({
+    opcode: 32,
+    sequence: (next.worldEvents.at(-1)?.sequence ?? 0) + 1,
+    characterId: packet.characterId,
+    entityResolved: true,
+  });
+  if (next.worldEvents.length > 100) next.worldEvents.splice(0, next.worldEvents.length - 100);
   return next;
 }
 
