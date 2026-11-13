@@ -17,7 +17,7 @@ assert.equal(state.serverWorld.entitiesById["123"].templateId, 7);
 assert.equal(state.serverWorld.entitiesById["123"].x, 456);
 assert.deepEqual(state.serverWorld.entityOrder, [123, 124]);
 
-const snapshot = new PacketWriter().writeI16(123).writeUTF("Hero").writeI16(900).writeI16(901);
+const snapshot = new PacketWriter().writeI16(124).writeUTF("Hero").writeI16(900).writeI16(901);
 for (const n of [100, 200, 300, 400]) snapshot.writeI32(n);
 snapshot.writeI8(1).writeI8(2);
 for (let i = 0; i < 7; i++) snapshot.writeI8(i);
@@ -29,8 +29,8 @@ snapshot.writeBool(true).writeBool(false).writeI8(11).writeI8(12).writeBool(true
 const snapshotPayload = snapshot.toUint8Array();
 applied = applyInboundWorldPacket(state, { opcode: 5, payload: snapshotPayload });
 state = applied.state;
-assert.equal(state.serverWorld.entitiesById["123"].snapshot.name, "Hero");
-assert.equal(state.serverWorld.entitiesById["123"].snapshot.x, 900);
+assert.equal(state.serverWorld.entitiesById["124"].snapshot.name, "Hero");
+assert.equal(state.serverWorld.entitiesById["124"].snapshot.x, 900);
 
 // Opcode 5 for an entity that has not spawned is retained as opaque bytes,
 // matching the original handler's existing-entity guard.
@@ -38,6 +38,13 @@ const unknownPayload = new PacketWriter().writeI16(999).writeU8(0xaa).writeU8(0x
 state = applyInboundWorldPacket(state, { opcode: 5, payload: unknownPayload }).state;
 assert.equal(state.serverWorld.unknownEntitySnapshots[0].entityId, 999);
 assert.deepEqual([...state.serverWorld.unknownEntitySnapshots[0].unconsumedBytes], [0xaa, 0xbb]);
+
+// Opcode 5 is the original kind-0 z player update path, not a generic cd monster snapshot.
+const monsterSnapshot = new PacketWriter().writeI16(123).writeU8(0xcc).writeU8(0xdd).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 5, payload: monsterSnapshot }).state;
+assert.equal(state.serverWorld.entitiesById["123"].snapshot, undefined);
+assert.equal(state.serverWorld.unknownEntitySnapshots.at(-1).entityId, 123);
+assert.deepEqual([...state.serverWorld.unknownEntitySnapshots.at(-1).unconsumedBytes], [0xcc, 0xdd]);
 
 const combat = new PacketWriter().writeI16(123).writeI16(124).writeI8(3).writeI32(400).writeI32(900)
   .writeI8(1).writeI8(2).writeI8(3).writeI8(4).toUint8Array();
