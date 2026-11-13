@@ -20,6 +20,9 @@ import { resolveOriginalEntityFactoryClass, resolveOriginalEntityFrameIndex } fr
 import { advanceOriginalCdMovement, advanceOriginalPlayerMovement } from './protocol/original-entity-motion.js';
 import { getServerCombatEventsAfter } from './protocol/server-world-combat.js';
 import { advanceEffectPlayback, createEffectPlayback, getEffectFrameParts } from './protocol/effect-playback.js';
+import { actorEffectImageResourceId } from './protocol/effect-assets.js';
+import { getActorEffectFrameParts } from './protocol/actor-effect-playback.js';
+import { advanceTargetLinkedActorPlayback, createTargetLinkedActorPlayback } from './protocol/target-linked-actor.js';
 
 
 function bytesToDataUrl(bytes,mimeType){
@@ -924,7 +927,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldDisposed=false;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldDisposed=false;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;this.serverActorEffectImages=new Map();this.serverActorEffectImageLoads=new Set();this.serverActorEffectTextures=new Map();this.serverActorEffectViews=new Map();this.serverActorEffectPlayback=new Map();this.serverActorEffectCompleted=new Set();this.serverActorEffectAccumulator=0;}
   create(){
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
@@ -948,6 +951,7 @@ class WorldScene extends Phaser.Scene {
       this.serverWorldState=world;
       this.syncServerWorldViews();
       this.syncServerEffectViews();
+      this.syncServerActorEffectViews();
       this.syncServerCombatFeedback();
     };
     window.addEventListener('kpah:protocol-state',this.onProtocolState);
@@ -964,6 +968,14 @@ class WorldScene extends Phaser.Scene {
       }
       this.serverEffectTextures.clear();
       this.serverEffectTextureLoads.clear();
+      for(const texture of this.serverActorEffectTextures.values())this.textures.remove(texture.key);
+      this.serverActorEffectTextures.clear();
+      for(const view of this.serverActorEffectViews.values())view.destroy();
+      this.serverActorEffectViews.clear();
+      this.serverActorEffectPlayback.clear();
+      this.serverActorEffectCompleted.clear();
+      this.serverActorEffectImages.clear();
+      this.serverActorEffectImageLoads.clear();
       this.serverWorldDisposed=true;
     });
   }
@@ -1115,6 +1127,100 @@ class WorldScene extends Phaser.Scene {
       }else{
         this.serverEffectPlayback.set(key,next);
       }
+    }
+  }
+  getServerActorProjections(){
+    const projected=projectServerWorldEntities(this.serverWorldState);
+    return new Map(projected.map(entity=>{
+      const motion=this.serverWorldMotion.get(String(entity.entityId));
+      return [String(entity.entityId),{...entity,x:motion?.x??entity.x,y:motion?.y??entity.y}];
+    }));
+  }
+  ensureServerActorEffectImage(animationId,definition,imageBytes){
+    const key=String(animationId);
+    if(this.serverActorEffectImages.has(key)||this.serverActorEffectImageLoads.has(key))return;
+    if(!(imageBytes instanceof Uint8Array)||!imageBytes.length)return;
+    this.serverActorEffectImageLoads.add(key);
+    const image=new window.Image();
+    image.onload=()=>{
+      this.serverActorEffectImageLoads.delete(key);
+      if(this.serverWorldDisposed)return;
+      this.serverActorEffectImages.set(key,image);
+      this.syncServerActorEffectViews();
+    };
+    image.onerror=()=>{this.serverActorEffectImageLoads.delete(key);console.warn('KPAH actor effect image could not be decoded',animationId);};
+    const mime=imageBytes[0]===0x89&&imageBytes[1]===0x50?'image/png':imageBytes[0]===0xff&&imageBytes[1]===0xd8?'image/jpeg':imageBytes[0]===0x47&&imageBytes[1]===0x49?'image/gif':'image/png';
+    image.src=bytesToDataUrl(imageBytes,mime);
+  }
+  ensureServerActorEffectTexture(animationId,definition,image,frameIndex,direction,verticalOffset){
+    const textureKey='kpah-actor-effect-'+animationId+'-'+frameIndex+'-'+direction+'-'+verticalOffset;
+    const cached=this.serverActorEffectTextures.get(textureKey);
+    if(cached&&this.textures.exists(textureKey))return cached;
+    const parts=getActorEffectFrameParts(definition,frameIndex,direction,verticalOffset).filter(part=>
+      part.sourceX>=0&&part.sourceY>=0&&part.sourceX+part.width<=image.naturalWidth&&part.sourceY+part.height<=image.naturalHeight);
+    if(!parts.length)return null;
+    const minX=Math.min(0,...parts.map(part=>part.x)),minY=Math.min(0,...parts.map(part=>part.y));
+    const maxX=Math.max(1,...parts.map(part=>part.x+part.width)),maxY=Math.max(1,...parts.map(part=>part.y+part.height));
+    const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.ceil(maxX-minX));canvas.height=Math.max(1,Math.ceil(maxY-minY));
+    const context=canvas.getContext('2d');if(!context)return null;
+    for(const part of parts){
+      if(part.transform===2){
+        context.save();context.translate(part.x-minX+part.width,part.y-minY);context.scale(-1,1);
+        context.drawImage(image,part.sourceX,part.sourceY,part.width,part.height,0,0,part.width,part.height);context.restore();
+      }else context.drawImage(image,part.sourceX,part.sourceY,part.width,part.height,part.x-minX,part.y-minY,part.width,part.height);
+    }
+    if(!this.textures.exists(textureKey))this.textures.addCanvas(textureKey,canvas);
+    const result={key:textureKey,bounds:{x:minX,y:minY}};this.serverActorEffectTextures.set(textureKey,result);return result;
+  }
+  syncServerActorEffectViews(){
+    const world=this.serverWorldState;if(!world)return;
+    const events=world.targetLinkedEffectEvents??[],active=new Set(),projections=this.getServerActorProjections();
+    for(let index=0;index<events.length;index++){
+      const event=events[index],eventKey=String(event.sequence??(index+1));active.add(eventKey);
+      if(this.serverActorEffectCompleted.has(eventKey))continue;
+      const animationId=event.effectId,definition=world.parsedActorEffectDefinitionsById?.[String(animationId)];
+      if(!Number.isInteger(animationId)||!definition)continue;
+      let playback=this.serverActorEffectPlayback.get(eventKey);
+      if(!playback){playback=createTargetLinkedActorPlayback(event,world,projections,definition);if(!playback)continue;this.serverActorEffectPlayback.set(eventKey,playback);}
+      let resourceId;try{resourceId=actorEffectImageResourceId(animationId);}catch(error){console.warn('Invalid KPAH actor effect image resource ID',animationId,error);continue;}
+      const imageBytes=world.effectImagePayloadsById?.[String(resourceId)];
+      if(imageBytes)this.ensureServerActorEffectImage(animationId,definition,imageBytes);
+      const image=this.serverActorEffectImages.get(String(animationId));
+      if(!image||!Number.isInteger(playback.frameIndex))continue;
+      const texture=this.ensureServerActorEffectTexture(animationId,definition,image,playback.frameIndex,playback.transform,playback.verticalOffset);
+      if(!texture)continue;
+      const x=playback.x+texture.bounds.x,y=playback.y+texture.bounds.y;
+      let view=this.serverActorEffectViews.get(eventKey);
+      if(!view){view=this.add.image(x,y,texture.key).setOrigin(0,0);this.serverActorEffectViews.set(eventKey,view);}
+      view.setPosition(x,y).setTexture(texture.key).setDepth(playback.y+2);
+    }
+    for(const [key,view] of this.serverActorEffectViews){if(!active.has(key)){view.destroy();this.serverActorEffectViews.delete(key);this.serverActorEffectPlayback.delete(key);this.serverActorEffectCompleted.delete(key);}}
+    for(const key of this.serverActorEffectPlayback.keys()){if(!active.has(key))this.serverActorEffectPlayback.delete(key);}
+  }
+  advanceServerActorEffectPlayback(delta){
+    this.serverActorEffectAccumulator+=Math.max(0,delta);
+    while(this.serverActorEffectAccumulator>=40){
+      this.serverActorEffectAccumulator-=40;
+      const world=this.serverWorldState;if(!world)return;
+      const events=world.targetLinkedEffectEvents??[],projections=this.getServerActorProjections();
+      for(const [eventKey,playback] of this.serverActorEffectPlayback){
+        const event=events.find((item,index)=>String(item.sequence??(index+1))===eventKey);
+        const definition=world.parsedActorEffectDefinitionsById?.[String(playback.animationId)];
+        if(!event||!definition){this.serverActorEffectViews.get(eventKey)?.destroy();this.serverActorEffectViews.delete(eventKey);this.serverActorEffectPlayback.delete(eventKey);continue;}
+        const result=advanceTargetLinkedActorPlayback(playback,world,projections,definition);
+        this.serverActorEffectPlayback.set(eventKey,result.playback);
+        if(result.impact){
+          for(const target of result.impact.targets){
+            const point=projections.get(String(target.entityId));if(!point)continue;
+            const damage=this.add.text(point.x,point.y-26,String(target.damageValue),{fontFamily:'Arial',fontSize:'16px',fontStyle:'bold',color:'#ffffff',stroke:'#211b18',strokeThickness:3}).setOrigin(0.5).setDepth(point.y+120);
+            this.tweens.add({targets:damage,y:point.y-56,alpha:0,duration:720,ease:'Cubic.easeOut',onComplete:()=>damage.destroy()});
+          }
+          this.serverActorEffectCompleted.add(eventKey);this.serverActorEffectViews.get(eventKey)?.destroy();this.serverActorEffectViews.delete(eventKey);this.serverActorEffectPlayback.delete(eventKey);
+        }else if(result.playback.finished){
+          this.serverActorEffectCompleted.add(eventKey);this.serverActorEffectViews.get(eventKey)?.destroy();this.serverActorEffectViews.delete(eventKey);this.serverActorEffectPlayback.delete(eventKey);
+        }
+      }
+      this.syncServerActorEffectViews();
     }
   }
   syncServerCombatFeedback(){
@@ -1599,6 +1705,7 @@ class WorldScene extends Phaser.Scene {
   update(time,delta=40){
     this.advanceServerEffectPlayback(delta);
     this.advanceServerWorldMotion(delta);
+    this.advanceServerActorEffectPlayback(delta);
     this.syncMonsterViews();
     if(!this.playerSprite||characterState.snapshot().hp<=0)return;
     const {x,y}=this.playerSprite;

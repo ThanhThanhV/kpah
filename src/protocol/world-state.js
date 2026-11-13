@@ -402,6 +402,7 @@ export function applyInboundWorldPacket(state, frame) {
         });
         const linkedEvent = {
           ...event,
+          sequence: (nextWorld.targetLinkedEffectEvents.at(-1)?.sequence ?? 0) + 1,
           targets,
           resolvedTargetEntityIds: targets.filter(target => target.resolved).map(target => target.targetEntityId),
           effectActorResolved: false,

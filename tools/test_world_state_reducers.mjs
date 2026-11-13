@@ -208,6 +208,7 @@ const beforeLinkedEffect = state;
 state = applyInboundWorldPacket(state, { opcode: -73, payload: linkedEffect }).state;
 const linkedEvent = state.serverWorld.targetLinkedEffectEvents.at(-1);
 assert.equal(linkedEvent.sourceEntityId, 124);
+assert.equal(linkedEvent.sequence, 1, "target-linked events need stable identities for actor playback");
 assert.equal(linkedEvent.effectId, 909);
 assert.equal(linkedEvent.targets.length, 2);
 assert.equal(linkedEvent.targets[0].resolved, true);
