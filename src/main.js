@@ -14,7 +14,7 @@ import { createSocialState } from './social-state.js';
 import { createGuildState } from './guild-state.js';
 import { createMailState } from './mail-state.js';
 import { createLocalSave } from './local-save.js';
-import { mountProtocolConnectionPanel } from './protocol/connection-panel.js';
+import { mountProtocolConnectionPanel, sendPlayerMovement } from './protocol/connection-panel.js';
 import { projectServerWorldEntities } from './protocol/server-world-projection.js';
 import { decodeTemplateSpriteAtlas } from './protocol/template-assets.js';
 import { resolveOriginalEntityFactoryClass, resolveOriginalEntityFrameIndex } from './protocol/original-entity-factory.js';
@@ -929,12 +929,12 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldDisposed=false;this.serverInitializationState=null;this.serverCharacterPartTextures=new Map();this.serverCharacterPartTextureLoads=new Set();this.serverCharacterPartPlayback=new Map();this.serverCharacterPartAccumulator=0;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;this.serverActorEffectImages=new Map();this.serverActorEffectImageLoads=new Set();this.serverActorEffectTextures=new Map();this.serverActorEffectViews=new Map();this.serverActorEffectShadows=new Map();this.serverActorShadowLoad=null;this.serverActorShadowUnavailable=false;this.serverActorEffectPlayback=new Map();this.serverActorEffectCompleted=new Set();this.serverActorEffectAccumulator=0;}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverLocalPlayerEntityId=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldDisposed=false;this.serverInitializationState=null;this.serverCharacterPartTextures=new Map();this.serverCharacterPartTextureLoads=new Set();this.serverCharacterPartPlayback=new Map();this.serverCharacterPartAccumulator=0;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;this.serverActorEffectImages=new Map();this.serverActorEffectImageLoads=new Set();this.serverActorEffectTextures=new Map();this.serverActorEffectViews=new Map();this.serverActorEffectShadows=new Map();this.serverActorShadowLoad=null;this.serverActorShadowUnavailable=false;this.serverActorEffectPlayback=new Map();this.serverActorEffectCompleted=new Set();this.serverActorEffectAccumulator=0;}
   create(){
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
     this.drawZone(initialZone);
-    this.playerSprite=this.add.container(this.player.x,this.player.y);const shadow=this.add.ellipse(0,19,28,9,0x111510,0.35);const cape=this.add.triangle(0,2,0,-2,-17,20,13,20,0x9b3f32);const body=this.add.rectangle(0,0,17,25,0xd5d0b9).setStrokeStyle(2,0x42372b);const head=this.add.circle(0,-17,8,0xe0b88d).setStrokeStyle(2,0x42372b);const hair=this.add.triangle(0,-23,-8,-16,0,-31,9,-15,0x29232a);const sword=this.add.rectangle(13,-3,4,27,0xd6d8d1).setAngle(25).setStrokeStyle(1,0x514d48);this.playerSprite.add([shadow,cape,body,head,hair,sword]);setWorldEntityDepth(this.playerSprite);
+    this.demoPlayerSprite=this.add.container(this.player.x,this.player.y);const shadow=this.add.ellipse(0,19,28,9,0x111510,0.35);const cape=this.add.triangle(0,2,0,-2,-17,20,13,20,0x9b3f32);const body=this.add.rectangle(0,0,17,25,0xd5d0b9).setStrokeStyle(2,0x42372b);const head=this.add.circle(0,-17,8,0xe0b88d).setStrokeStyle(2,0x42372b);const hair=this.add.triangle(0,-23,-8,-16,0,-31,9,-15,0x29232a);const sword=this.add.rectangle(13,-3,4,27,0xd6d8d1).setAngle(25).setStrokeStyle(1,0x514d48);this.demoPlayerSprite.add([shadow,cape,body,head,hair,sword]);setWorldEntityDepth(this.demoPlayerSprite);this.playerSprite=this.demoPlayerSprite;
     this.playerLabel=this.add.text(this.player.x,this.player.y-52,'Kiếm Khách',{fontFamily:'Arial',fontSize:'12px',color:'#fff3c6',stroke:'#34251d',strokeThickness:3}).setOrigin(.5).setDepth(999);
     this.destinationMarker=this.add.circle(0,0,12,0xf4d58c,0.18)
       .setStrokeStyle(2,0xf4d58c,0.9).setDepth(500).setVisible(false);
@@ -1521,6 +1521,20 @@ class WorldScene extends Phaser.Scene {
         }else originalShadow.setPosition(shadowX,-10).setTexture('kpah-actor-shadow');
       }
     }
+    const localEntity=projected.find(entity=>entity.isLocalPlayer);
+    const nextLocalId=localEntity?String(localEntity.entityId):null;
+    const nextLocalView=nextLocalId?this.serverWorldViews.get(nextLocalId):null;
+    if(nextLocalView&&this.playerSprite!==nextLocalView){
+      this.serverLocalPlayerEntityId=nextLocalId;
+      this.playerSprite=nextLocalView;
+      this.demoPlayerSprite?.setVisible(false);
+      this.configureCamera();
+    }else if(!nextLocalView&&this.serverLocalPlayerEntityId){
+      this.serverLocalPlayerEntityId=null;
+      this.playerSprite=this.demoPlayerSprite;
+      this.demoPlayerSprite?.setVisible(true);
+      this.configureCamera();
+    }
   }
   drawZone(zone){
     this.zoneObjects=[];
@@ -1779,6 +1793,18 @@ class WorldScene extends Phaser.Scene {
   }
   movePlayerTo(x,y,duration=120,showDestination=false){
     if(!this.playerSprite||characterState.snapshot().hp<=0)return;
+    if(this.serverLocalPlayerEntityId){
+      try{
+        sendPlayerMovement(Math.round(x),Math.round(y));
+      }catch(error){
+        console.warn('KPAH server movement request failed',error);
+      }
+      if(showDestination&&this.destinationMarker){
+        this.destinationMarker.setPosition(x,y+18).setScale(1).setAlpha(0.9).setVisible(true);
+        this.destinationPulse?.restart();
+      }
+      return;
+    }
     const destination=this.resolveWalkDestination(x,y);
     if(showDestination&&this.destinationMarker){
       this.destinationMarker.setPosition(destination.x,destination.y+18).setScale(1).setAlpha(0.9).setVisible(true);
@@ -1891,6 +1917,24 @@ class WorldScene extends Phaser.Scene {
     this.advanceServerActorEffectPlayback(delta);
     this.syncMonsterViews();
     if(!this.playerSprite||characterState.snapshot().hp<=0)return;
+    if(this.serverLocalPlayerEntityId){
+      const {x,y}=this.playerSprite,now=Date.now();
+      if(!this.lastMapPinSyncAt||now-this.lastMapPinSyncAt>=100){
+        this.lastMapPinSyncAt=now;
+        this.syncWorldMapPins(x,y);
+      }
+      if(this.playerLabel){
+        this.playerLabel.setPosition(x,y-52);
+        this.playerLabel.setDepth(this.playerSprite.depth+1);
+        this.playerLabel.setVisible(displaySettings.playerName);
+      }
+      if(this.coordsLabel)this.coordsLabel.textContent='X: '+Math.round(x)+' · Y: '+Math.round(y);
+      if(this.mapPlayerMarker){
+        this.mapPlayerMarker.style.left=(x/this.worldBounds.width*100)+'%';
+        this.mapPlayerMarker.style.top=(y/this.worldBounds.height*100)+'%';
+      }
+      return;
+    }
     const {x,y}=this.playerSprite;
     const now=Date.now();
     // Demo monster AI: acquire the player, close distance, then attack on cooldown.
