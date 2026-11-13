@@ -1211,3 +1211,12 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Session tiếp tục chạy khi đóng panel; người dùng phải chủ động nhấn Ngắt kết nối để đóng.
 - Thêm URL guard test, npm script và GitHub Actions; cập nhật README hướng dẫn chạy bridge/client.
 - Giới hạn: chưa có TCP endpoint production; không xác nhận login/gameplay. UI hiện chỉ là công cụ kết nối transport và quan sát packet/state đã hỗ trợ.
+
+
+### B16 — Nhận world-state S2C vào client protocol state
+
+- Thêm `src/protocol/world-state.js`: reducer cho S2C opcode 4 (spawn/update), 5 (snapshot có guard entity tồn tại), 8 (remove), 6/9 (combat event trung tính).
+- Entity được lưu theo wire entity ID; giữ nguyên kind/template/state và các trường chưa rõ nghĩa, không tự gán thành monster/player nếu chưa có mapping.
+- Opcode 5 chỉ decode body đầy đủ khi opcode 4 đã tạo entity tương ứng; nếu chưa có thì giữ phần payload còn lại dưới dạng opaque bytes, đúng guard của original handler.
+- Kết nối `KpahProtocolSession` để route các packet world-state vào `state.serverWorld`; thêm test reducer và CI.
+- Giới hạn: chưa map template ID sang sprite/animation, chưa nội suy movement, chưa xác định local player hoặc áp dụng combat event lên HP/UI Phaser.
