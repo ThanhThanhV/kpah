@@ -1658,7 +1658,7 @@ class WorldScene extends Phaser.Scene {
     const knownStats=new Map((localEntity?.resourceStats??[])
       .filter(item=>item&&typeof item.key==="string"&&Number.isFinite(item.value))
       .map(item=>[item.key.toLowerCase(),item.value]));
-    const resourceLabels=[["hp","HP"],["mp","MP"],["bp","BP"],["sp","SP"]]
+    const resourceLabels=[["bp","BP"],["sp","SP"]]
       .filter(([key])=>knownStats.has(key))
       .map(([key,label])=>label+" "+Math.trunc(knownStats.get(key)).toLocaleString("vi-VN"));
     if(resourceLabels.length){
