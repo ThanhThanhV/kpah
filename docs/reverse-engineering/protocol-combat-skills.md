@@ -108,3 +108,11 @@ element, or status semantics.
 This does not calculate damage, mutate local character progression, or claim
 server-authoritative combat simulation. Opcode 10's separately documented
 zero-damage MISS behavior is not inferred for opcodes 6/9.
+
+## Browser world-state integration — opcodes 10/83/106
+
+- Opcode 10 is decoded as two signed shorts and two signed ints, then retained as a bounded neutral world event. The dispatcher forwards the four values to the active world scene; no position/effect meaning is assigned in the browser until the scene consumer is traced.
+- Opcode 83 is decoded only when the source entity exists, matching the original handler guard. Each target record retains its entity ID and two integer values without assigning speculative field names; the two optional unsigned bytes are preserved. Known targets retain these values under opcode83State.
+- Opcode 106 retains the shared damage value, three effect bytes, and the list of target/current-HP records. Known targets receive the source-backed current HP update. One multi-target combat event is emitted for the Phaser combat-event consumer; the effect bytes remain uninterpreted.
+
+All three packet variants preserve unknown/trailing data where available. These reducers do not calculate damage, infer critical hits, or assign animation semantics to opaque bytes.
