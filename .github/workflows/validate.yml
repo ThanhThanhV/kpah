@@ -137,6 +137,16 @@ jobs:
                   || ProtocolCommand.find(ProtocolCommand.Direction.S2C, 68).orElseThrow() != ProtocolCommand.S2C_STORAGE_DEPOSIT_RESULT
                   || ProtocolCommand.find(ProtocolCommand.Direction.S2C, 69).orElseThrow() != ProtocolCommand.S2C_STORAGE_WITHDRAW_RESULT)
                 throw new AssertionError("C2S/S2C storage deposit, withdraw and refresh");
+              Map<String,Object> sellItemValues = Map.of("itemId", 504, "sourceSelector", 1);
+              byte[] sellItemRequest = ProtocolPacketCodec.encode("C2S_SELL_ITEM", sellItemValues);
+              byte[] sellItemResponse = ProtocolPacketCodec.encode("S2C_SELL_ITEM_RESULT", Map.of("itemId", 504));
+              if (!Arrays.equals(sellItemRequest, new byte[]{1,(byte)0xf8,1})
+                  || ((Number)ProtocolPacketCodec.decode("C2S_SELL_ITEM", sellItemRequest).get("sourceSelector")).intValue() != 1
+                  || !Arrays.equals(sellItemResponse, new byte[]{1,(byte)0xf8})
+                  || ((Number)ProtocolPacketCodec.decode("S2C_SELL_ITEM_RESULT", sellItemResponse).get("itemId")).intValue() != 504
+                  || ProtocolCommand.find(ProtocolCommand.Direction.C2S, 78).orElseThrow() != ProtocolCommand.C2S_SELL_ITEM
+                  || ProtocolCommand.find(ProtocolCommand.Direction.S2C, 78).orElseThrow() != ProtocolCommand.S2C_SELL_ITEM_RESULT)
+                throw new AssertionError("C2S/S2C item sale request and result");
               Map<String,Object> market92Values = Map.of("fieldBoolean", true, "fieldByteA", -1, "fieldByteB", 2,
                 "itemId", 505, "fieldInt", -600, "sourceSelector", 1);
               Map<String,Object> market92Decoded = ProtocolPacketCodec.decode("C2S_OP_92", ProtocolPacketCodec.encode("C2S_OP_92", market92Values));
