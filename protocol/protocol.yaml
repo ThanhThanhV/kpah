@@ -3964,6 +3964,25 @@
       ],
       "evidence": "CFR source ka.java:case-73 dispatches to mj.A(acu). Branch 0 reads effect-object entity ID (short), branch byte 0, effect ID (short), signed-byte target count, then each target entity kind (byte), entity ID (short), and two ints; it resolves the source as entity kind 12 and each target by kind+ID, then calls j.a(Vector,byte,short,int[],int[]). Branch 1 reads entity ID (short), branch byte 1, effect ID (short), and long expiry/time; it resolves the entity by ID and calls bu.a(effectId, entity.x, entity.y, long), which updates/adds the matching d record in bu.dg. Other branch values are not decoded.",
       "evidenceSource": "ka.java:case-73"
+    },
+    {
+      "name": "WORLD_EFFECT_IMAGE_RESOURCE",
+      "opcode": -51,
+      "direction": "S2C",
+      "payload": "short-resource-id-followed-by-opaque-image-bytes",
+      "fields": [
+        {
+          "name": "resourceId",
+          "type": "i16"
+        },
+        {
+          "name": "imageBytes",
+          "type": "bytes",
+          "length": "remaining"
+        }
+      ],
+      "evidence": "CFR ka.java:case-51 reads a signed short resource ID, then consumes all remaining payload bytes and passes them to Image.createImage; the matching C2S writer jy.j(short) sends opcode -51 with only that short ID.",
+      "evidenceSource": "ka.java:case-51"
     }
   ],
   "extensionSchemas": [
