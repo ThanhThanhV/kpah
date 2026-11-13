@@ -93,3 +93,16 @@ CI đã chạy self-test thành công cho codec tham chiếu (key derivation, C2
 - Maintains the receive XOR cursor across all bytes and packet boundaries.
 - Supports a caller-controlled frame limit so the cleartext `-40` key handshake can be emitted first; the caller can then call `setKey(decodedKey)` before parsing buffered encrypted bytes.
 - The decoder accepts chunks, not sockets. The TCP reader, connection lifecycle, timeout and send queue remain separate work.
+
+
+## Client protocol session
+
+`KpahProtocolSession` composes a WebSocket-compatible binary transport with the verified frame and payload layers.
+
+- Waits for the cleartext S2C `-40` key frame, decodes the prefix-XOR key, installs it in the receive stream and creates an independent send cursor.
+- Sends the empty C2S `-40` acknowledgement encrypted with the new key. This represents the original client's queued acknowledgement becoming writable after key activation.
+- Handles a clear handshake and encrypted application frames coalesced into one transport message by pausing after the first frame, installing the key, then draining buffered bytes.
+- Sends caller-supplied C2S opcode/payload pairs using the verified short C2S frame encoder. It deliberately does not invent login credentials or send a login automatically.
+- Applies the implemented initialization reducers for S2C opcodes 1, 3, 15 and 16; forwards other decoded frames to `onPacket` without assigning unverified semantics.
+
+In a browser this class requires a WebSocket-compatible binary transport, normally supplied by a separately deployed TCP-to-WebSocket bridge. It is not a raw browser TCP socket, does not implement the bridge/server, and has not been tested against a production KPAH endpoint. Send and receive XOR cursors remain independent.
