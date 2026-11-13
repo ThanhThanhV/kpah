@@ -85,8 +85,9 @@ export function decodeS2CTemplateCatalog(payload) {
     animationData = reader.readBytes(animationLength);
   }
   if (reader.remaining !== 0) throw new RangeError("Unexpected trailing bytes in opcode 100 template catalog");
+  const signedConfig = [...config].map(value => value > 127 ? value - 256 : value);
   const [directionFrameType, movementStep, actorType, frameWidth, frameHeight,
-    shadowOffsetX, shadowOffsetY, spriteOffsetX, spriteOffsetY] = config;
+    shadowOffsetX, shadowOffsetY, spriteOffsetX, spriteOffsetY] = signedConfig;
   return {
     handled: true,
     catalogType,
