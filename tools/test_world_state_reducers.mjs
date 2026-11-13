@@ -161,4 +161,34 @@ state = applyInboundWorldPacket(state, { opcode: -74, payload: otherEffectVarian
 assert.equal(state.serverWorld.worldEvents.at(-1).handled, false);
 assert.deepEqual([...state.serverWorld.worldEvents.at(-1).unconsumedBytes], [0xaa, 0xbb]);
 
+
+// Opcode -71 action 1 / attach mode 0 creates or refreshes an effect record.
+// Its 64-bit time value remains BigInt and is not reinterpreted as duration.
+const effectCreate = new PacketWriter().writeI8(1).writeI16(701).writeI16(124)
+  .writeI64(123456789n).writeI8(5).writeI8(6).writeI8(0).writeI8(0).writeI8(7)
+  .writeI32(88).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: -71, payload: effectCreate }).state;
+const effect701 = state.serverWorld.entitiesById["124"].activeEffects.find(effect => effect.effectId === 701);
+assert.equal(effect701.expiryValue, 123456789n);
+assert.equal(effect701.xTile, 5);
+assert.equal(effect701.yTile, 6);
+assert.equal(effect701.state, 7);
+assert.equal(effect701.auxiliary, 88);
+assert.equal(state.serverWorld.worldEvents.at(-1).lifecycleApplied, true);
+
+// Source branch mode 1 marks the matching effect expiry as zero rather than
+// deleting it immediately; the original runtime owns expiry/removal timing.
+const effectRemove = new PacketWriter().writeI8(1).writeI16(701).writeI16(124)
+  .writeI64(999999999n).writeI8(5).writeI8(6).writeI8(0).writeI8(1).writeI8(7).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: -71, payload: effectRemove }).state;
+assert.equal(state.serverWorld.entitiesById["124"].activeEffects.find(effect => effect.effectId === 701).expiryValue, 0n);
+assert.equal(state.serverWorld.worldEvents.at(-1).lifecycleApplied, true);
+
+// A same-ID entity with the wrong kind is not mutated.
+const wrongEffectKind = new PacketWriter().writeI8(1).writeI16(702).writeI16(124)
+  .writeI64(111n).writeI8(1).writeI8(2).writeI8(1).writeI8(0).writeI8(3).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: -71, payload: wrongEffectKind }).state;
+assert.equal(state.serverWorld.worldEvents.at(-1).entityKindMatches, false);
+assert.equal(state.serverWorld.entitiesById["124"].activeEffects.some(effect => effect.effectId === 702), false);
+
 console.log("Inbound world-state reducers: PASS (spawn/update, guarded snapshot, combat event, despawn, unknown opcode)");
