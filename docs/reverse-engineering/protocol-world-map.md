@@ -144,7 +144,7 @@ npm run test:world-state
 `src/protocol/world-state.js` now applies only the already source-backed world packet layouts:
 
 - Opcode 4 merges spawn/update records by entity ID and preserves wire fields without guessing template semantics.
-- Opcode 5 decodes a full entity snapshot only when opcode 4 has already established that entity ID. For an unknown entity, the bytes after the ID remain opaque, matching the original handler's existence guard.
+- Opcode 5 decodes a player snapshot only when opcode 4 has established a kind-0 entity ID. The original handler calls mj.b(short), which searches kind 0 and casts to z; kind-1 cd monsters are not valid targets. For unknown IDs or kind-1 entities, the bytes after the ID remain opaque.
 - Opcode 8 removes the listed entity IDs.
 - Opcodes 6 and 9 append neutral combat-event records (bounded to the latest 100); no damage, animation or combat meaning is inferred from the fields.
 
@@ -168,3 +168,9 @@ Important limitation: the browser still retains the returned packed image payloa
 
 The browser implementation has now added the common image branch of ba/cg: it decodes the indexed resource archive, applies the exact repeating XOR key, extracts resource <resourceId>_h and data, concatenates them and recognizes PNG signatures. Special bj payload branches remain opaque. The Phaser scene loads the common image branch as a vertical spritesheet and displays the original idle frame for generic cd entities using the exact cd.c table (direction 0, animation state 0). This is static idle rendering only; facing, action-state animation and specialized renderer classes are not yet reproduced.
 
+
+## Original cd movement projection
+
+For an existing kind-1 entity, mj.a(...) calls cd.a(x,y), which stores target M/N rather than teleporting current l/m. This path is active only when cd.L >= 0; L is initialized from the opcode-4 extra int on spawn. The browser reducer now preserves current coordinates and stores targetX/targetY for that verified branch.
+
+The Phaser adapter advances this target using template movement step cg.c on a 40 ms tick, following cd.y(): snap X when abs(dx) <= step, snap Y when abs(dy) < step, then move X before Y by one step and update facing (right=3, left=2, up=1, down=0). Template type 4 is stationary in the original cd.y() branch. The movement frame counter follows the source O cycle and uses frame states 0/1 from cd.c. This does not yet reproduce Q() pauses caused by status/effect flags or the random vertical target jitter applied to non-type-4 templates.
