@@ -3,6 +3,7 @@ import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
 import { actorEffectImageResourceId, encodeEffectAssetRequest } from "../src/protocol/effect-assets.js";
 import { decodeEffectDefinition } from "../src/protocol/effect-definition.js";
 import { decodeActorEffectDefinition, resolveActorEffectFrameIndex, resolveActorEffectSequenceIndex } from "../src/protocol/actor-effect-definition.js";
+import { advanceActorEffectPlayback, createActorEffectPlayback, getActorEffectFrameParts, setActorEffectAnimationState } from "../src/protocol/actor-effect-playback.js";
 import { advanceEffectPlayback, createEffectPlayback, getEffectFrameParts } from "../src/protocol/effect-playback.js";
 import { applyInboundWorldPacket } from "../src/protocol/world-state.js";
 import { createInitializationState } from "../src/protocol/initialization-state.js";
@@ -351,6 +352,16 @@ assert.equal(resolveActorEffectSequenceIndex(1, 3), 6);
 assert.equal(resolveActorEffectFrameIndex(parsedActorDefinition, 3, 0, 1), 0);
 assert.equal(resolveActorEffectFrameIndex(parsedActorDefinition, 3, 2, 0), null);
 assert.throws(() => decodeActorEffectDefinition(actorDefinitionFixture.slice(0, -1)), /Truncated/);
+const actorPlayback = createActorEffectPlayback(parsedActorDefinition, 3, 0);
+assert.equal(actorPlayback.frameIndex, 0);
+const actorPlaybackNext = advanceActorEffectPlayback(actorPlayback, parsedActorDefinition);
+assert.equal(actorPlaybackNext.cursor, 1);
+assert.equal(actorPlaybackNext.frameIndex, 0);
+const actorPlaybackState = setActorEffectAnimationState(actorPlaybackNext, parsedActorDefinition, 3, 0);
+assert.equal(actorPlaybackState.sequenceIndex, 2);
+const actorParts = getActorEffectFrameParts(parsedActorDefinition, 0, 2, 5);
+assert.deepEqual(actorParts, [{ x: -12, y: -37, sourceX: 2, sourceY: 3, width: 16, height: 12, transform: 2 }]);
+assert.deepEqual(getActorEffectFrameParts(parsedActorDefinition, 0, 1, 0), []);
 
 // Opcode 26 independently carries class-i indexedImages and class-d indexedGraphics.
 const opcode26ActorWriter = new PacketWriter().writeU8(0).writeI16(0).writeU8(0)

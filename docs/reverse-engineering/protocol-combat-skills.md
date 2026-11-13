@@ -167,3 +167,8 @@ The actor parser intentionally does not reuse `decodeEffectDefinition`: the bina
 ### Resource request for target-linked actor images
 
 For each opcode -73 branch-0 event with a known class-`i` animation definition, the browser derives the source image resource ID exactly as `hz.a(Graphics)`: animation ID + 8700 when ID < 301, otherwise +14100. It reuses C2S -51 and the shared resource-ID deduplication set; response bytes continue to be stored by the returned resource ID. Requests are skipped until the actor animation definition is present, and invalid signed-short derived IDs are reported rather than truncated.
+
+
+### Actor `i` frame playback helpers
+
+Added source-backed cursor helpers for class `hz`: select the 3x14 animation sequence by direction group and state, advance one entry per actor update, and switch animation state without resetting the cursor beyond the new sequence length. `getActorEffectFrameParts` projects only primary atlas crop and x/y offsets consumed by `i.a(Graphics,...)`; it mirrors for source transform 2 and applies `dD` only to parts with y < -40. Auxiliary part metadata remains opaque. These helpers are not yet connected to Phaser or the actor movement/impact state machine.
