@@ -4025,7 +4025,7 @@
           ]
         },
         {
-          "name": "premium",
+          "name": "category4_fixed",
           "method": "jy.c(Vector)",
           "sourceLines": "jy.java:846-865",
           "fields": [
