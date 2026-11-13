@@ -41,8 +41,25 @@ export function applyS2COpcode4World(world, packet) {
   for (const record of packet.entities) {
     if (!Number.isInteger(record.entityId)) continue;
     const id = String(record.entityId);
-    const previous = next.entitiesById[id] ?? {};
-    const entity = { ...previous, ...record };
+    const previous = next.entitiesById[id] ?? null;
+    let entity;
+    if (previous && previous.kind === 1 && record.kind === 1) {
+      // Original mj spawn/update handler calls cd.a(x,y) for an existing kind-1
+      // actor. cd stores M/N targets; current l/m move later in cd.y().
+      const movementEnabled = Number.isInteger(previous.extraInt) && previous.extraInt >= 0;
+      const targetX = movementEnabled ? record.x : null;
+      const targetY = movementEnabled ? record.y : null;
+      entity = {
+        ...previous,
+        active: record.active,
+        targetX,
+        targetY,
+        movementPending: movementEnabled && record.active !== false
+          && (record.x !== previous.x || record.y !== previous.y),
+      };
+    } else {
+      entity = { ...previous, ...record, targetX: null, targetY: null, movementPending: false };
+    }
     next.entitiesById[id] = entity;
     if (!next.entityOrder.includes(record.entityId)) next.entityOrder.push(record.entityId);
     batch.push({ ...entity });
