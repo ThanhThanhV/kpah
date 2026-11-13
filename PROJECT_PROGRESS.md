@@ -50,7 +50,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 - B8 NPC/menu/quest slice: documented entity speech opcode 27, help/information -24, world message -26, quest collection -64, quest detail/objectives -30/-31 and generic accept/reject prompt -32. Traced quest model `cy`, menu `tb`, world state `mj` and prompt callbacks `kk/kc`. NPC action trees and reward schema remain open.
 
-- B7 inventory/equipment/trade slice: documented material/recipe list opcode 73, equipment list 76, trade/market panel 94, market listing request/response 92 and item update/remove 95. Traced item models `bo`, `be`, `de` and client collections `xg.E`, `ca.N/O/P`. NPC shop purchase, use-item, equip/unequip, upgrade/refine and warehouse flows remain open.
+- B7 inventory/equipment/trade slice: documented material/recipe list 73, equipment list 76, trade/market panel 94, market listing 92 and update/remove 95. Item use/equip/drop/upgrade requests and inventory↔storage request/response 68/69 plus refresh 70 are source-traced. Still open: NPC purchase transaction, unequip-to-bag, refinement callback details, warehouse sale completion and server-authoritative persistence.
 
 - B6 combat/skill protocol slice: documented C2S skill cast opcode 51 and S2C damage events 6/9/10/83/106 plus timed effect/buff events -74/-71 and extended effect -73. Traced target HP mutation, floating damage/MISS, attacker animation callbacks and entity effect-list lifecycle. Damage formula, crit/defense rules, complete skill-code mapping and buff stacking remain unverified.
 
@@ -862,7 +862,7 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Added typed C2S `EQUIP_ITEM` (86, i16 item ID), `DROP_EQUIPPED_ITEM` (-21, i16 equipment slot), and `SHOP_PURCHASE_ITEM` (85, i8 item ID). S2C 85 is `SHOP_PURCHASE_SUCCESS`.
 - Added typed C2S 74 `SHOP_PURCHASE_BATCH` codec (signed-short expanded count + repeated signed-short item IDs) and caller-selected C2S 24 `SHOP_BATCH_ACTION` codecs (catalog/category4_fixed layouts, u8 record count, conditional category-3 option byte).
 - CI run `43201997578` on commit `515fb0d05a7686fecbf6e29d61495c60e03a5459` SUCCESS: Vite build, generated protocol consistency, JS protocol suites, Java 21 compile/smoke and original-JAR analysis.
-- Still open: unequip-to-bag, full purchase transaction semantics, opcode 24/74 payload codecs, refinement callback payload, warehouse completion and server-authoritative inventory/equipment mutation. Weighted project progress unchanged; BE remains deferred.
+- Still open: unequip-to-bag, full purchase transaction semantics, refinement callback payload, warehouse sale completion and server-authoritative inventory/equipment mutation. Opcode 24/74 and storage 68/69/70 codecs are implemented and CI-verified. Weighted project progress unchanged; BE remains deferred.
 
 
 ### B7 — shop batch variable-list codecs (CI PASS)
@@ -874,3 +874,11 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 
 - Shop batch implementation verified by [CI run 43403732922](https://github.com/ThanhThanhV/kpah/actions/runs/43403732922), commit `306ccd0e6c992a107c8ae3c7e80ed4fb70ef8223`.
+
+
+### B7 — storage request/response mapping (CI PASS)
+
+- C2S 68 `STORAGE_DEPOSIT_ITEM` and S2C 68 `STORAGE_DEPOSIT_RESULT` carry signed-short item IDs. The original client moves the matching item from inventory `z.bx` to storage `z.bA` after S2C 68.
+- C2S 69 `STORAGE_WITHDRAW_ITEM` and S2C 69 `STORAGE_WITHDRAW_RESULT` carry signed-short item IDs. The original client moves the matching item from storage `z.bA` to inventory `z.bx` after S2C 69.
+- C2S 70 `STORAGE_REFRESH` has an empty payload and is sent when leaving storage tab 22; no S2C 70 handler was identified.
+- CI run `43404517017` on commit `42637282a5489416aa41bb6377d96ce38a7305a4` SUCCESS: generated protocol check, JS payload tests, Java 21 compile/smoke, Vite build and original-JAR analysis. These are client protocol mappings only; no server persistence is claimed.
