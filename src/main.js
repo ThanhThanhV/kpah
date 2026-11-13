@@ -17,7 +17,7 @@ import { mountProtocolConnectionPanel } from './protocol/connection-panel.js';
 import { projectServerWorldEntities } from './protocol/server-world-projection.js';
 import { decodeTemplateSpriteAtlas } from './protocol/template-assets.js';
 import { resolveOriginalEntityFactoryClass, resolveOriginalEntityFrameIndex } from './protocol/original-entity-factory.js';
-import { advanceOriginalCdMovement } from './protocol/original-entity-motion.js';
+import { advanceOriginalCdMovement, advanceOriginalPlayerMovement } from './protocol/original-entity-motion.js';
 
 
 function bytesToDataUrl(bytes,mimeType){
@@ -1005,9 +1005,15 @@ class WorldScene extends Phaser.Scene {
       if(!motion){
         motion={x:entity.x,y:entity.y,direction:0,frameState:0,animationCounter:0,
           targetX:entity.targetX,targetY:entity.targetY,moving:entity.movementPending,
-          serverTargetX:entity.targetX,serverTargetY:entity.targetY};
+          serverTargetX:entity.targetX,serverTargetY:entity.targetY,
+          serverX:entity.x,serverY:entity.y,coordinateSource:entity.coordinateSource};
         this.serverWorldMotion.set(id,motion);
-      }else if(entity.targetX!==motion.serverTargetX||entity.targetY!==motion.serverTargetY){
+      }else{
+        if(entity.coordinateSource==='opcode5'&&(entity.x!==motion.serverX||entity.y!==motion.serverY)){
+          motion.x=entity.x;motion.y=entity.y;motion.serverX=entity.x;motion.serverY=entity.y;
+          motion.coordinateSource=entity.coordinateSource;
+        }
+        if(entity.targetX!==motion.serverTargetX||entity.targetY!==motion.serverTargetY){
         motion.targetX=entity.targetX;
         motion.targetY=entity.targetY;
         motion.serverTargetX=entity.targetX;
@@ -1015,6 +1021,7 @@ class WorldScene extends Phaser.Scene {
         motion.moving=entity.movementPending;
         motion.animationCounter=0;
         motion.frameState=0;
+        }
       }
       let view=this.serverWorldViews.get(id);
       const tint=entity.presentation==='player-like'?0x6bb7e8:
@@ -1377,19 +1384,26 @@ class WorldScene extends Phaser.Scene {
         const motion=this.serverWorldMotion.get(id);
         if(!entity||!motion||!motion.moving)continue;
         const factoryClass=resolveOriginalEntityFactoryClass(entity.kind,entity.templateId,entity.state,entity.kind1Subtype??0);
-        if(factoryClass!=='cd')continue;
-        const template=this.serverWorldState.templatesById?.[String(entity.templateId)];
-        if(!template||!Number.isInteger(template.movementStep))continue;
-        const next=advanceOriginalCdMovement(motion,template);
+        let next;
+        let template=null;
+        if(factoryClass==='cd'){
+          template=this.serverWorldState.templatesById?.[String(entity.templateId)];
+          if(!template||!Number.isInteger(template.movementStep))continue;
+          next=advanceOriginalCdMovement(motion,template);
+        }else if(factoryClass==='hd'||factoryClass==='z'){
+          next=advanceOriginalPlayerMovement(motion,entity.playerMovementStep);
+        }else continue;
         this.serverWorldMotion.set(id,next);
         const view=this.serverWorldViews.get(id);
         if(!view)continue;
         view.setPosition(next.x,next.y).setDepth(next.y+3);
-        const frameIndex=resolveOriginalEntityFrameIndex(template.directionFrameType,next.direction??0,next.frameState??0);
-        const sprite=view.getData('sprite');
-        const textureKey='kpah-server-template-'+entity.templateId;
-        const texture=this.textures.exists(textureKey)?this.textures.get(textureKey):null;
-        if(sprite&&frameIndex!==null&&texture?.has(frameIndex))sprite.setFrame(frameIndex);
+        if(factoryClass==='cd'&&template){
+          const frameIndex=resolveOriginalEntityFrameIndex(template.directionFrameType,next.direction??0,next.frameState??0);
+          const sprite=view.getData('sprite');
+          const textureKey='kpah-server-template-'+entity.templateId;
+          const texture=this.textures.exists(textureKey)?this.textures.get(textureKey):null;
+          if(sprite&&frameIndex!==null&&texture?.has(frameIndex))sprite.setFrame(frameIndex);
+        }
       }
     }
   }
