@@ -98,9 +98,14 @@ assert.deepEqual(decodePayload("S2C","STORAGE_WITHDRAW_RESULT",storageWithdrawRe
 const storageRefresh=encodePayload("C2S","STORAGE_REFRESH",{});
 assert.deepEqual([...storageRefresh],[]);
 assert.deepEqual(decodePayload("C2S","STORAGE_REFRESH",storageRefresh),{});
-const sell78=encodePayload("C2S","OP_78",{itemId:504,optionByte:-2});
-assert.deepEqual([...sell78],[0x01,0xf8,0xfe]);
-assert.deepEqual(decodePayload("C2S","OP_78",sell78),{itemId:504,optionByte:-2});
+assert.equal(C2S.SELL_ITEM,78);
+assert.equal(S2C.SELL_ITEM_RESULT,78);
+const sell78=encodePayload("C2S","SELL_ITEM",{itemId:504,sourceSelector:1});
+assert.deepEqual([...sell78],[0x01,0xf8,0x01]);
+assert.deepEqual(decodePayload("C2S","SELL_ITEM",sell78),{itemId:504,sourceSelector:1});
+const sell78Response=encodePayload("S2C","SELL_ITEM_RESULT",{itemId:504});
+assert.deepEqual([...sell78Response],[0x01,0xf8]);
+assert.deepEqual(decodePayload("S2C","SELL_ITEM_RESULT",sell78Response),{itemId:504});
 const market92=encodePayload("C2S","OP_92",{fieldBoolean:true,fieldByteA:-1,fieldByteB:2,itemId:505,fieldInt:-600,sourceSelector:1});
 assert.deepEqual(decodePayload("C2S","OP_92",market92),{fieldBoolean:true,fieldByteA:-1,fieldByteB:2,itemId:505,fieldInt:-600,sourceSelector:1});
 const market95=encodePayload("C2S","OP_95",{fieldByteA:1,fieldByteB:-2,itemId:506,fieldShortB:507,fieldByteC:3});
