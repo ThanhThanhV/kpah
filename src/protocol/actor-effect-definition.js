@@ -63,7 +63,8 @@ export function resolveActorEffectFrameIndex(definition, animationState, directi
   const sequenceIndex = resolveActorEffectSequenceIndex(directionGroup, animationState);
   if (sequenceIndex === null) return null;
   const sequence = definition && definition.animationSequences && definition.animationSequences[sequenceIndex];
-  if (!(sequence instanceof Uint8Array) || sequence.length === 0 || !Number.isInteger(cursor) || cursor < 0) return null;
+  if (!(sequence instanceof Int8Array) && !(sequence instanceof Uint8Array)) return null;
+  if (sequence.length === 0 || !Number.isInteger(cursor) || cursor < 0) return null;
   const frameIndex = sequence[cursor % sequence.length];
   return Number.isInteger(frameIndex) && frameIndex >= 0 && frameIndex < (definition.frames ? definition.frames.length : 0) ? frameIndex : null;
 }
