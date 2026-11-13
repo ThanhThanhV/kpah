@@ -107,3 +107,64 @@ export function decodeC2SOpcode94(payload) {
   else return { mode, fields: null, unconsumedBytes: readRemaining(reader), trailingBytes: new Uint8Array() };
   return { mode, fields, unconsumedBytes: new Uint8Array(), trailingBytes: readRemaining(reader) };
 }
+// Source-backed variable-list codecs generated from protocol/protocol.yaml.
+const SHOP_WRITE = {u8: "writeU8", i8: "writeI8", i16: "writeI16"};
+const SHOP_READ = {u8: "readU8", i8: "readI8", i16: "readI16"};
+const OPCODE24_VARIANTS = Object.freeze({"catalog":{"name":"catalog","method":"jy.b(Vector)","sourceLines":"jy.java:816-844","fields":[{"name":"category","type":"i8","source":"bo.g"},{"name":"templateId","type":"i16","source":"ku.b(bo.r).n"},{"name":"quantity","type":"i16","constant":1},{"name":"optionByte","type":"i8","condition":{"field":"category","equals":3},"source":"xg.B if nonnegative, otherwise br.m"}]},"premium":{"name":"premium","method":"jy.c(Vector)","sourceLines":"jy.java:846-865","fields":[{"name":"category","type":"i8","constant":4},{"name":"itemId","type":"i16","source":"bo.l"},{"name":"quantity","type":"i16","source":"bo.j"}]}});
+export const C2S_OPCODE24_VARIANTS = Object.freeze(["catalog","premium"]);
+export function encodeC2SOpcode24(variant, values) {
+  const definition = OPCODE24_VARIANTS[variant];
+  if (!definition) throw new RangeError("Unknown C2S opcode 24 variant: " + variant);
+  if (!values || !Array.isArray(values.records)) throw new TypeError("opcode 24 values.records must be an array");
+  if (values.records.length > 255) throw new RangeError("opcode 24 record count exceeds u8");
+  const writer = new PacketWriter().writeU8(values.records.length);
+  for (const record of values.records) {
+    if (!record || typeof record !== "object") throw new TypeError("opcode 24 record must be an object");
+    for (const field of definition.fields) {
+      if (field.condition && record[field.condition.field] !== field.condition.equals) continue;
+      let value;
+      if (Object.prototype.hasOwnProperty.call(field, "constant")) {
+        if (Object.prototype.hasOwnProperty.call(record, field.name) && record[field.name] !== field.constant) throw new Error("Invalid constant field " + field.name);
+        value = field.constant;
+      } else {
+        if (!Object.prototype.hasOwnProperty.call(record, field.name)) throw new Error("Missing opcode 24 field " + field.name);
+        value = record[field.name];
+      }
+      writer[SHOP_WRITE[field.type]](value);
+    }
+  }
+  return writer.toUint8Array();
+}
+export function decodeC2SOpcode24(variant, payload) {
+  const definition = OPCODE24_VARIANTS[variant];
+  if (!definition) throw new RangeError("Unknown C2S opcode 24 variant: " + variant);
+  const reader = new PacketReader(payload), count = reader.readU8(), records = [];
+  for (let i = 0; i < count; i += 1) {
+    const record = {};
+    for (const field of definition.fields) {
+      if (field.condition && record[field.condition.field] !== field.condition.equals) continue;
+      record[field.name] = Object.prototype.hasOwnProperty.call(field, "constant") ? field.constant : reader[SHOP_READ[field.type]]();
+    }
+    records.push(record);
+  }
+  const trailingBytes = new Uint8Array(reader.remaining());
+  for (let i = 0; i < trailingBytes.length; i += 1) trailingBytes[i] = reader.readU8();
+  return { variant, records, trailingBytes };
+}
+export function encodeC2SOpcode74(values) {
+  const itemIds = values && values.itemIds;
+  if (!Array.isArray(itemIds)) throw new TypeError("opcode 74 itemIds must be an array");
+  if (itemIds.length > 32767) throw new RangeError("opcode 74 item count exceeds signed short");
+  const writer = new PacketWriter().writeI16(itemIds.length);
+  for (const itemId of itemIds) writer.writeI16(itemId);
+  return writer.toUint8Array();
+}
+export function decodeC2SOpcode74(payload) {
+  const reader = new PacketReader(payload), count = reader.readI16();
+  if (count < 0) throw new RangeError("Negative opcode 74 item count");
+  const itemIds = [];
+  for (let i = 0; i < count; i += 1) itemIds.push(reader.readI16());
+  const trailingBytes = new Uint8Array(reader.remaining());
+  for (let i = 0; i < trailingBytes.length; i += 1) trailingBytes[i] = reader.readU8();
+  return { itemIds, trailingBytes };
+}
