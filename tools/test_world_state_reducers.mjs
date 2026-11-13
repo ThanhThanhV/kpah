@@ -73,7 +73,10 @@ assert.equal(state.serverWorld.entitiesById["124"].currentHp, 1234,
   "opcode 32 hp updates current HP without changing max HP");
 assert.equal(state.serverWorld.entitiesById["124"].currentMp, 567,
   "opcode 32 mp updates current MP without changing max MP");
-assert.equal(state.serverWorld.entitiesById["124"].maxHp, undefined);
+assert.equal(state.serverWorld.entitiesById["124"].maxHp, 200,
+  "opcode 32 preserves snapshot maximum HP");
+assert.equal(state.serverWorld.entitiesById["124"].maxMp, 400,
+  "opcode 32 preserves snapshot maximum MP");
 
 const remoteResources = new PacketWriter()
   .writeI16(123).writeI8(1).writeUTF("hp").writeI32(88).toUint8Array();
