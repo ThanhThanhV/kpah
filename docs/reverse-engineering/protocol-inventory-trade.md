@@ -232,3 +232,26 @@ Generated Java/JavaScript codecs use the corrected command names and cover both 
 
 - `SHOP_PURCHASE_SUCCESS` (S2C 85) có payload rỗng, đã schema hóa; đây chỉ là thông báo UI.
 - Inventory update và currency update sau mua NPC vẫn chưa xác định; cần tiếp tục trace server push và state snapshot trước khi đặt tên opcode.
+
+
+## Source trace — S2C opcode 16 character state/inventory refresh
+
+The previously unresolved inventory/currency snapshot path is now narrowed to S2C opcode 16 (ka.java:1233-1340). Its first signed byte selects four independent payload branches; after parsing, the client calls mj.a(long, int[], Vector, Vector, type) (ka.java:1334-1335; mj.java:4274-4302).
+
+| Type | Wire data observed in ka.java | Client-side destination |
+|---:|---|---|
+| 0 | signed long; unsigned-byte count; repeated unsigned-byte resource index + signed int amount; common trailing two signed ints | ca.bt receives the indexed resource array and ca.bu receives the long value (mj.java:4283-4286) |
+| 1 | signed-short count; repeated item records: type byte, short/byte fields, UTF description, unsigned-short field, stat count + repeated unsigned-byte/short pairs, final byte; common trailing two signed ints | replaces z.bx, the character inventory collection (mj.java:4287-4290) |
+| 2 | common signed int; two signed-byte-counted record groups of k; common trailing signed int | second group replaces z.by; first group is passed through the common callback but is not assigned by this method (mj.java:4291-4294) |
+| 3 | signed-byte count followed by that many signed shorts; common trailing two signed ints | populates ca.T before the common callback (ka.java:1326-1334); no further semantic label is assigned here |
+
+Important details and limits:
+
+- Type 0 is definitively a currency/resource state refresh at the client model level: the long is stored in ca.bu, and indexed integer values are stored in ca.bt. The exact resource names/units are not established by this parser alone.
+- Type 1 is definitively a full inventory replacement, not a one-item delta: the handler clears z.bx and replaces it with the parsed vector.
+- Type 2's second k group replaces z.by; keep record fields neutral until their consumers are traced.
+- Type 3's short list is stored in ca.T; its gameplay label remains unknown.
+- The common trailing ints are assigned to ca.aY and ca.aZ before the callback (ka.java:1292, 1334); this method's consumer does not establish their business meanings.
+- This proves opcode 16 is a candidate state-refresh mechanism for inventory and currency, but does not prove that the server sends type 0 and type 1 specifically after NPC purchase. The S2C 85 handler still only displays the success notice. To close purchase behavior, the server-side send sequence or a captured transaction exchange is still required.
+
+The schema already has mode entries for opcode 16 types 0, 1 and 2. Type 3 is now source-traced above but has not yet been added to generated codecs; no unsupported field names or purchase coupling have been introduced. Weighted project progress remains unchanged because this increment is reverse-engineering evidence, not an implemented transaction flow.
