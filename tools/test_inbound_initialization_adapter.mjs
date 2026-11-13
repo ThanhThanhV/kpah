@@ -9,9 +9,14 @@ function opcode1Payload() {
     .writeU8(31).writeUTF("Skill").writeUTF("Desc").writeI16(900).writeBool(true);
   for (const n of [2, 3, 4, 5, 6]) p.writeI8(n);
   for (let i = 0; i < 5; i += 1) p.writeI8(0);
-  p.writeI8(0).writeI8(0).writeI8(0).writeI8(0);
+  p.writeI16(77).writeU8(2).writeU8(5).writeU8(9);
+  for (let i = 0; i < 100; i += 1) p.writeI8((i % 9) - 4);
+  p.writeI8(11).writeI8(12).writeI8(13).writeI8(14);
   p.writeI8(0).writeUTF("help").writeI8(0);
-  p.writeUTF("https://example.invalid").writeI8(0).writeI8(0);
+  p.writeI8(0).writeUTF("https://example.invalid").writeI8(2);
+  p.writeI16(3).writeU8(1).writeU8(2).writeU8(3)
+    .writeI16(2).writeU8(4).writeU8(5).writeU8(6);
+  p.writeI8(1).writeI16(3).writeU8(8).writeU8(9).writeU8(10);
   return p.toUint8Array();
 }
 
