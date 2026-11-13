@@ -1,5 +1,6 @@
 import { KpahProtocolSession } from "./kpah-protocol-session.js";
 import { encodeTemplateAssetRequest } from "./template-assets.js";
+import { encodeEffectAssetRequest } from "./effect-assets.js";
 
 let activeSession = null;
 let currentView = null;
@@ -8,6 +9,7 @@ let packetCount = 0;
 let lastState = null;
 let lastError = "";
 let requestedTemplateAssets = new Set();
+let requestedEffectAssets = new Set();
 
 export function normalizeLocalBridgeUrl(value) {
   const url = new URL(String(value || "").trim());
@@ -98,6 +100,7 @@ export function mountProtocolConnectionPanel(root) {
     packetCount = 0;
     lastState = null;
     requestedTemplateAssets = new Set();
+    requestedEffectAssets = new Set();
     renderStatus();
     const socket = new WebSocket(url);
     const session = new KpahProtocolSession(socket, {
@@ -120,6 +123,22 @@ export function mountProtocolConnectionPanel(root) {
           } catch (error) {
             requestedTemplateAssets.delete(templateId);
             lastError = "Không thể yêu cầu asset template " + templateId + ": " + error.message;
+          }
+        }
+        for (const entityId of world?.entityOrder ?? []) {
+          const entity = world.entitiesById?.[String(entityId)];
+          for (const effect of entity?.effectOverlays ?? []) {
+            const effectId = effect.effectId;
+            const key = String(effectId);
+            if (!Number.isInteger(effectId) || !world.effectDefinitionsById?.[key]
+              || world.effectImagePayloadsById?.[key] || requestedEffectAssets.has(effectId)) continue;
+            requestedEffectAssets.add(effectId);
+            try {
+              session.sendPacket(-51, encodeEffectAssetRequest(effectId));
+            } catch (error) {
+              requestedEffectAssets.delete(effectId);
+              lastError = "Không thể yêu cầu effect image " + effectId + ": " + error.message;
+            }
           }
         }
         window.dispatchEvent(new CustomEvent("kpah:protocol-state", { detail: { state } }));
