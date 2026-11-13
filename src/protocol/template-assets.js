@@ -144,3 +144,75 @@ export function encodeTemplateAssetRequest(template) {
     .writeI16(template.templateId)
     .toUint8Array();
 }
+
+
+const PACK_XOR_KEY = Uint8Array.from("NguyenVanMinh", character => character.charCodeAt(0));
+
+/**
+ * Decodes the same indexed packed-resource container used by ba(byte[]).
+ * Each name is XORed independently from key index 0; concatenated payload
+ * bytes are XORed continuously from key index 0.
+ */
+export function decodeKpahPackedResourceArchive(packedBytes) {
+  const reader = new Reader(packedBytes);
+  const count = reader.readU8();
+  const entries = [];
+  let totalPayloadLength = 0;
+  for (let index = 0; index < count; index += 1) {
+    const nameLength = reader.readI8();
+    if (nameLength <= 0) throw new RangeError("Invalid packed-resource name length");
+    const encryptedName = reader.readBytes(nameLength);
+    const nameBytes = encryptedName.map((value, i) => value ^ PACK_XOR_KEY[i % PACK_XOR_KEY.length]);
+    const name = String.fromCharCode(...nameBytes);
+    const length = reader.readU16();
+    entries.push({ name, length });
+    totalPayloadLength += length;
+  }
+  if (reader.remaining !== totalPayloadLength) throw new RangeError("Packed-resource payload length does not match its index");
+  const payload = reader.readBytes(totalPayloadLength);
+  for (let i = 0; i < payload.length; i += 1) payload[i] ^= PACK_XOR_KEY[i % PACK_XOR_KEY.length];
+  const resources = new Map();
+  let offset = 0;
+  for (const entry of entries) {
+    if (resources.has(entry.name)) throw new Error("Duplicate packed-resource name: " + entry.name);
+    resources.set(entry.name, payload.slice(offset, offset + entry.length));
+    offset += entry.length;
+  }
+  return resources;
+}
+
+function sniffImageMime(bytes) {
+  if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50
+    && bytes[2] === 0x4e && bytes[3] === 0x47 && bytes[4] === 0x0d
+    && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a) return "image/png";
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
+  if (bytes.length >= 6 && String.fromCharCode(...bytes.slice(0, 6)).startsWith("GIF8")) return "image/gif";
+  return null;
+}
+
+/**
+ * Mirrors cg.a(byte[]) common image branch. Special bj formats stay opaque.
+ * Returns a reconstructed image byte stream only when both source resources
+ * are present and the concatenated bytes have a recognized image signature.
+ */
+export function decodeTemplateSpriteAtlas(template, packedBytes) {
+  if (!template || !Number.isInteger(template.resourceId) || !Number.isInteger(template.requestType)) {
+    throw new TypeError("Template sprite metadata is incomplete");
+  }
+  const specialRequest = (template.requestType >= 70 && template.requestType <= 88)
+    || [39, 40, 90, 91, 92].includes(template.requestType)
+    || template.assetMode === 1;
+  if (specialRequest) return { kind: "special", payload: new Uint8Array(packedBytes) };
+  const resources = decodeKpahPackedResourceArchive(packedBytes);
+  const header = resources.get(String(template.resourceId) + "_h");
+  const data = resources.get("data");
+  if (!header || !data) {
+    return { kind: "opaque", reason: "required sprite resources are missing", resourceNames: [...resources.keys()] };
+  }
+  const imageBytes = new Uint8Array(header.length + data.length);
+  imageBytes.set(header, 0);
+  imageBytes.set(data, header.length);
+  const mimeType = sniffImageMime(imageBytes);
+  if (!mimeType) return { kind: "opaque", reason: "reconstructed sprite bytes are not a recognized image", imageBytes };
+  return { kind: "image", mimeType, imageBytes, resourceNames: [String(template.resourceId) + "_h", "data"] };
+}
