@@ -4,6 +4,7 @@ import {
   decodeCharacterPartCatalog,
   decodeCharacterPartData,
   DIRECTION_STATE_TO_SEQUENCE,
+  characterPartImageResourceId,
 } from "../src/protocol/character-part-data.js";
 
 const writer = new PacketWriter()
@@ -55,6 +56,10 @@ assert.deepEqual(decoded.optionalFrameMetadata, {
 assert.deepEqual(decoded.additionalSequences, [[4], [5], [6], [7]]);
 assert.deepEqual([...decoded.trailingBytes], [0xaa, 0xbb]);
 assert.deepEqual(DIRECTION_STATE_TO_SEQUENCE[1], [4, 4, 5, 6, 7, 5, 5, 5, 5, 5, 5, 5, 5]);
+assert.equal(characterPartImageResourceId(0), 12000);
+assert.equal(characterPartImageResourceId(127), 12127);
+assert.throws(() => characterPartImageResourceId(-1), /signed byte/);
+assert.throws(() => characterPartImageResourceId(128), /signed byte/);
 
 assert.throws(() => decodeCharacterPartData(new Uint8Array([1, 0])), /Truncated character part data/);
 const catalog = decodeCharacterPartCatalog([
