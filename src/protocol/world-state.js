@@ -156,11 +156,11 @@ function applyOpcode106Combat(world, packet) {
   const next = cloneWorld(world);
   const sequence = next.combatEventSequence + 1;
   for (const targetRecord of packet.targets) {
-    const target = next.entitiesById[String(targetRecord.entityId)];
+    const target = next.entitiesById[String(targetRecord.targetId)];
     if (target) {
-      next.entitiesById[String(targetRecord.entityId)] = {
+      next.entitiesById[String(targetRecord.targetId)] = {
         ...target,
-        currentHp: targetRecord.targetCurrentHp,
+        currentHp: targetRecord.value,
       };
     }
   }
@@ -169,10 +169,10 @@ function applyOpcode106Combat(world, packet) {
     opcode: 106,
     attackerEntityId: packet.sourceEntityId,
     actionByte: packet.actionByte,
-    damage: packet.damage,
+    damage: packet.damageValue,
     effectBytes: [...packet.effectBytes],
-    targets: packet.targets.map(target => ({ ...target })),
-    malformedTargetBytes: new Uint8Array(packet.malformedTargetBytes),
+    targets: packet.targets.map(target => ({ entityId: target.targetId, targetCurrentHp: target.value })),
+    targetErrors: [...packet.targetErrors],
     trailingBytes: new Uint8Array(packet.trailingBytes),
   };
   next.combatEventSequence = sequence;
@@ -217,7 +217,7 @@ export function applyInboundWorldPacket(state, frame) {
       break;
     case 10:
       event = decodeS2COpcode10(frame.payload);
-      nextWorld = appendWorldEvent(world, 10, event);
+      nextWorld = appendWorldEvent(world, 10, { first: event.firstShort, second: event.secondShort, valueA: event.firstInt, valueB: event.secondInt, trailingBytes: event.trailingBytes });
       break;
     case 83: {
       const reader = frame.payload;
@@ -225,20 +225,20 @@ export function applyInboundWorldPacket(state, frame) {
       const sourceId = (reader[0] << 8) | reader[1];
       const sourceEntityId = sourceId > 0x7fff ? sourceId - 0x10000 : sourceId;
       if (!world.entitiesById[String(sourceEntityId)]) {
+        event = decodeS2COpcode83(frame.payload, false);
         nextWorld = appendWorldEvent(world, 83, {
-          sourceEntityId, handledByOriginalGuard: false,
-          opaquePayload: copyBytes(frame.payload),
+          ...event, handledByOriginalGuard: false,
+          opaquePayload: copyBytes(event.unconsumedBytes),
         });
-        event = { sourceEntityId, handledByOriginalGuard: false };
         break;
       }
-      event = decodeS2COpcode83(frame.payload);
+      event = decodeS2COpcode83(frame.payload, true);
       nextWorld = cloneWorld(world);
       for (const target of event.targets) {
-        const existing = nextWorld.entitiesById[String(target.entityId)];
+        const existing = nextWorld.entitiesById[String(target.targetId)];
         if (existing) {
-          nextWorld.entitiesById[String(target.entityId)] = {
-            ...existing, opcode83State: { valueA: target.valueA, valueB: target.valueB },
+          nextWorld.entitiesById[String(target.targetId)] = {
+            ...existing, opcode83State: { valueA: target.firstValue, valueB: target.secondValue },
           };
         }
       }
