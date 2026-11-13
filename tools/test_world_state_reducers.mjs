@@ -213,13 +213,13 @@ state = applyInboundWorldPacket(state, { opcode: -71, payload: attachedEffect })
 assert.equal(state.serverWorld.entitiesById["124"].attachedEffects[0].effectId, 702);
 assert.equal(state.serverWorld.entitiesById["124"].activeEffects.some(effect => effect.effectId === 702), false);
 
-// action 0 creates a world effect; tile coordinates are multiplied by 16.
+// action 0 creates a world effect; a resolved entity supplies its world coordinates.
 const worldEffect = new PacketWriter().writeI8(0).writeI16(703).writeI16(124)
   .writeI64(555n).writeI8(3).writeI8(4).writeI8(0).writeI8(0).writeI8(0).toUint8Array();
 state = applyInboundWorldPacket(state, { opcode: -71, payload: worldEffect }).state;
 assert.equal(state.serverWorld.worldEffects.at(-1).effectId, 703);
-assert.equal(state.serverWorld.worldEffects.at(-1).x, 48);
-assert.equal(state.serverWorld.worldEffects.at(-1).y, 64);
+assert.equal(state.serverWorld.worldEffects.at(-1).x, 500);
+assert.equal(state.serverWorld.worldEffects.at(-1).y, 600);
 assert.equal(state.serverWorld.worldEvents.at(-1).worldEffectAdded, true);
 
 // A same-ID entity with the wrong kind is not mutated.
