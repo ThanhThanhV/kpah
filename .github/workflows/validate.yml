@@ -741,8 +741,8 @@ jobs:
                 throw new AssertionError("opcode 5 unknown entity guard: " + unknownWorld);
               ProtocolInitializationCodec.Decoded init = ProtocolInitializationCodec.decodeS2COpcode16(initPacket.toByteArray());
               if (!init.decoded() || init.mode() != 0 || init.currency() != 9_007_199_254_740_993L
-                  || !init.skills().equals(List.of(new ProtocolInitializationCodec.SkillValue(3, -1200),
-                                                    new ProtocolInitializationCodec.SkillValue(8, 250000)))
+                  || !init.resources().equals(List.of(new ProtocolInitializationCodec.ResourceAmount(3, -1200),
+                                                    new ProtocolInitializationCodec.ResourceAmount(8, 250000)))
                   || init.aY() != 123456 || init.aZ() != 654321
                   || !Arrays.equals(init.trailingBytes(), new byte[]{(byte)0xde}))
                 throw new AssertionError("opcode 16 mode 0 decode: " + init);
