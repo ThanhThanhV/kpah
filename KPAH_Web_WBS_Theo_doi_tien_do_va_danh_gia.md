@@ -1252,3 +1252,12 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Render fallback remains diagnostic marker for specialized entity classes and special asset formats.
 - Remaining: facing/direction source mapping, moving/attack/death frame state mapping, tick-accurate frame timing, template-specific interpolation, shadow assets, and renderers for specialized classes.
 
+
+### B16 — Source-based generic cd movement interpolation
+
+- Corrected opcode 5: original handler resolves through mj.b(short), which only returns kind-0 z player actors; kind-1 monster snapshots are retained opaque instead of overwriting monster coordinates.
+- For existing kind-1 entities, opcode 4 now preserves current coordinates and records target M/N only when original cd.L (spawn extra int) is non-negative.
+- Added a pure cd.y() movement tick: source template step, X-first then Y, original snap thresholds, facing direction and 0/1 walk frame-state cycle.
+- Phaser advances these server targets on a 40 ms accumulator and updates position/depth plus directional sprite frame.
+- Added reducer and movement unit tests to CI.
+- Remaining: Q() pauses from effects/status flags, random vertical target jitter for non-type-4 templates, kind-0 remote-player interpolation, special entity class renderers and action/death animation states.
