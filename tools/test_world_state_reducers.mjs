@@ -136,7 +136,7 @@ assert.equal(state.serverWorld.entitiesById["123"], undefined);
 assert.deepEqual(state.serverWorld.entityOrder, [124]);
 assert.deepEqual(state.serverWorld.removedEntityIds, [123]);
 
-const ignored = applyInboundWorldPacket(state, { opcode: 7, payload: new Uint8Array() });
+const ignored = applyInboundWorldPacket(state, { opcode: 111, payload: new Uint8Array() });
 assert.equal(ignored.handled, false);
 assert.equal(ignored.state, state);
 
