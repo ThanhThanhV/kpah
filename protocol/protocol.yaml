@@ -2827,7 +2827,7 @@
       "direction": "S2C",
       "opcode": 32,
       "evidenceSource": "ka.java:case32",
-      "evidence": "Reads character ID short, signed-byte-counted records of UTF key + int value; if the ID is the local character, reads an additional byte and short before calling mj.a(id,cx[]). The consumer recognizes hp/mp/bp/sp keys.",
+      "evidence": "Reads character ID short, signed-byte-counted UTF-key + signed-int records; if the ID is the local character, reads an additional byte and short. mj.a(short,cx[]) resolves an existing kind-0 player: hp sets cE=cG (current HP), mp sets bC (current MP), bp sets aC and sp sets aD. The extra byte/short are local-character-only trailer fields.",
       "sections": [
         "character-id",
         "signed-stat-count",
@@ -2840,7 +2840,7 @@
       "direction": "S2C",
       "opcode": 33,
       "evidenceSource": "ka.java:case33",
-      "evidence": "Reads character ID short, level byte and two signed ints passed to mj.a(id,level,int,int), which updates level and character HP/MP state.",
+      "evidence": "Reads character ID short, level byte, valueA and valueB as signed ints. mj.a(short,byte,int,int) resolves an existing kind-0 player, assigns cY=level, cH=cG=valueA (max/current HP) and bB=bC=valueB (max/current MP), then emits the level-up visual. Missing/non-player IDs are ignored.",
       "sections": [
         "character-id",
         "level-byte",
