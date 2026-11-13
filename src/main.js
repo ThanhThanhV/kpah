@@ -14,6 +14,7 @@ import { createGuildState } from './guild-state.js';
 import { createMailState } from './mail-state.js';
 import { createLocalSave } from './local-save.js';
 import { mountProtocolConnectionPanel } from './protocol/connection-panel.js';
+import { projectServerWorldEntities } from './protocol/server-world-projection.js';
 
 // Keep the game shell inside the actually visible mobile viewport, including
 // browsers that do not resize 100dvh consistently when the virtual keyboard opens.
@@ -909,7 +910,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverWorldViews=new Map();}
   create(){
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
@@ -927,6 +928,48 @@ class WorldScene extends Phaser.Scene {
     this.mapPlayerMarker=document.querySelector('.map-player');
     this.input.on('pointerdown',p=>this.movePlayerTo(p.worldX,p.worldY,450,true));
     this.scale.on('resize',()=>this.cameras.main.setSize(this.scale.width,this.scale.height));
+    this.onProtocolState=event=>{
+      const world=event.detail?.state?.serverWorld;
+      if(!world)return;
+      this.serverWorldState=world;
+      this.syncServerWorldViews();
+    };
+    window.addEventListener('kpah:protocol-state',this.onProtocolState);
+    this.events.once('shutdown',()=>{
+      window.removeEventListener('kpah:protocol-state',this.onProtocolState);
+      for(const view of this.serverWorldViews.values())view.destroy();
+      this.serverWorldViews.clear();
+    });
+  }
+  syncServerWorldViews(){
+    const projected=projectServerWorldEntities(this.serverWorldState);
+    const present=new Set(projected.map(entity=>String(entity.entityId)));
+    for(const [id,view] of this.serverWorldViews){
+      if(!present.has(id)){view.destroy();this.serverWorldViews.delete(id);}
+    }
+    for(const entity of projected){
+      const id=String(entity.entityId);
+      let view=this.serverWorldViews.get(id);
+      const tint=entity.presentation==='player-like'?0x6bb7e8:
+        entity.presentation==='monster-npc-family'?0xd58a5e:0xb6b6b6;
+      const labelText='#'+entity.entityId+' · K'+(entity.kind??'?')+' / T'+(entity.templateId??'?');
+      if(!view){
+        const marker=this.add.circle(0,0,9,tint,0.92).setStrokeStyle(2,0x171b22,0.95);
+        const label=this.add.text(0,-19,labelText,{
+          fontFamily:'Arial',fontSize:'10px',color:'#ffffff',
+          stroke:'#171b22',strokeThickness:3
+        }).setOrigin(0.5,1);
+        view=this.add.container(entity.x,entity.y,[marker,label]);
+        view.setDepth(entity.y+3).setAlpha(0.9);
+        view.setData('label',label);
+        view.setData('marker',marker);
+        this.serverWorldViews.set(id,view);
+      }else{
+        view.setPosition(entity.x,entity.y).setDepth(entity.y+3);
+        view.getData('label')?.setText(labelText);
+        view.getData('marker')?.setFillStyle(tint,0.92);
+      }
+    }
   }
   drawZone(zone){
     this.zoneObjects=[];
