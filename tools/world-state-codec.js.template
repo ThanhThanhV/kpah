@@ -1053,3 +1053,20 @@ export function decodeS2COpcodeMinus74(payload) {
     durationValue, durationIsPositive: durationValue > 0, flagA, flagB,
     effectVariant, trailingBytes: readRemaining(reader) };
 }
+
+/** Opcode -71: effect object lifecycle prefix from the original handler. */
+export function decodeS2COpcodeMinus71(payload) {
+  const reader = new PacketReader(payload);
+  const action = reader.readI8();
+  const effectId = reader.readI16();
+  const entityId = reader.readI16();
+  const expiryValue = reader.readI64();
+  const xTile = reader.readI8();
+  const yTile = reader.readI8();
+  const entityKind = reader.readI8();
+  const attachMode = reader.readI8();
+  const state = reader.readI8();
+  const auxiliary = reader.remaining() >= 4 ? reader.readI32() : null;
+  return { action, effectId, entityId, expiryValue, xTile, yTile, entityKind,
+    attachMode, state, auxiliary, trailingBytes: readRemaining(reader) };
+}
