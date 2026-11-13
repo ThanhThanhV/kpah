@@ -216,6 +216,64 @@ export function decodeCharacterPartCatalog(partData) {
 
 export { DIRECTION_STATE_TO_SEQUENCE };
 
+/** Original hd.a(bu, o, skill, action) enters one-shot state 3 at frame zero. */
+export function triggerCharacterPartAction(playback = null) {
+  return {
+    ...(playback ?? {}),
+    state: 3,
+    frameCursor: 0,
+    direction: Number.isInteger(playback?.direction) ? playback.direction : 0,
+    transform: playback?.transform === 2 ? 2 : 0,
+  };
+}
+
+/**
+ * Advance one original 40 ms hd.b() animation tick.
+ * State 3 is one-shot: the final action frame is followed by idle state 0.
+ */
+export function advanceCharacterPartPlayback(playback, metadata, motion) {
+  const next = {
+    state: Number.isInteger(playback?.state) ? playback.state : 0,
+    direction: playback?.direction === 1 ? 1 : 0,
+    transform: playback?.transform === 2 ? 2 : 0,
+    frameCursor: Number.isInteger(playback?.frameCursor) && playback.frameCursor >= 0
+      ? playback.frameCursor : 0,
+  };
+  if (!metadata || typeof metadata.getSequenceIndex !== "function") return next;
+
+  const sequenceFor = state => {
+    const index = metadata.getSequenceIndex(next.direction, state);
+    return index === null ? null : metadata.animationSequences[index] ?? null;
+  };
+
+  if (next.state === 3) {
+    const actionSequence = sequenceFor(3);
+    if (!actionSequence?.length || next.frameCursor >= actionSequence.length - 1) {
+      next.state = 0;
+      next.frameCursor = 0;
+    } else {
+      next.frameCursor += 1;
+    }
+    return next;
+  }
+
+  const moving = motion?.moving === true;
+  const nextState = moving ? 2 : 0;
+  if (moving) {
+    const dx = Number.isFinite(motion.targetX) ? motion.targetX - motion.x : 0;
+    const dy = Number.isFinite(motion.targetY) ? motion.targetY - motion.y : 0;
+    if (Math.abs(dy) > 0) next.direction = dy < 0 ? 1 : 0;
+    if (Math.abs(dx) > 0) next.transform = dx < 0 ? 2 : 0;
+  }
+  if (next.state !== nextState) {
+    next.state = nextState;
+    next.frameCursor = 0;
+  }
+  const sequence = sequenceFor(next.state);
+  if (sequence?.length) next.frameCursor = (next.frameCursor + 1) % sequence.length;
+  return next;
+}
+
 /** Original hd renderer looks up the corresponding atlas through mi.a(partIndex + 12000). */
 export function characterPartImageResourceId(partIndex) {
   if (!Number.isInteger(partIndex) || partIndex < 0 || partIndex > 127) {
