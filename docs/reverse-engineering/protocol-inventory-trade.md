@@ -163,6 +163,13 @@ Generated Java/JavaScript codecs use the corrected command names and cover both 
 ## C2S — shop purchase request families
 
 - Opcode 85 `SHOP_PURCHASE_ITEM`: tab 20 purchase confirmation callbacks `abv`/`gt` call `jy.c(itemId)`; the writer emits one byte. S2C opcode 85 is a separate direction and its handler displays “Đã mua, món đồ đang ở trong hành trang.”, so it is named `SHOP_PURCHASE_SUCCESS` and remains payload-opaque.
-- Opcode 74 `SHOP_PURCHASE_BATCH`: tab 10 “Gian hàng” accumulates selected item quantities; closing the panel invokes `xg.p()` → `jy.a(Vector)`. The writer emits total quantity as a short, then repeats each item ID as a short for every purchased unit. The request is named but kept opaque until a dedicated variable-list codec is added.
-- Opcode 24 `SHOP_BATCH_ACTION`: `xg.p()` selects `jy.b(Vector)` or `jy.c(Vector)` by tab. The former writes count + records (category byte, template ID short, quantity short, optional byte for category 3); the latter writes count + fixed category 4, item ID short and quantity short. Both layouts share opcode 24; keep opaque until variant-aware encoding is added.
+- Opcode 74 `SHOP_PURCHASE_BATCH`: tab 10 “Gian hàng” accumulates selected item quantities; `xg.p()` → `jy.a(Vector)` (source: `xg.java:3257-3265`, `jy.java:756-780`). The wire payload is a signed-short expanded total quantity followed by that many signed-short item IDs; each selected item ID is repeated `bd.n` times. Added a typed variable-list codec; negative decoded counts are rejected and the signed-short count is bounded to 32767.
+- Opcode 24 `SHOP_BATCH_ACTION`: `xg.p()` selects `jy.c(Vector)` for tab 19, otherwise `jy.b(Vector)` (source: `xg.java:3257-3265`). Both begin with an unsigned-byte record count, but there is no wire discriminator between layouts, so the caller must select the variant. `catalog` (`jy.java:816-844`) writes category byte, template ID short, constant quantity 1, and an option byte only when category = 3 (selected global option when nonnegative, otherwise the item template default). `premium` (`jy.java:846-865`) writes constant category 4, item ID short and quantity short. Added caller-selected typed codecs; unknown variant names fail closed.
 - These are client request/response paths only. Do not treat local optimistic currency/inventory updates in the UI callbacks as authoritative server results.
+
+
+### Shop batch codec implementation
+
+- `protocol.yaml` now declares both source-backed opcode 24 variants and the opcode 74 expanded item-ID collection.
+- Generated JS/Java APIs: `encode/decodeC2SOpcode24(variant, ...)` and `encode/decodeC2SOpcode74(...)`. Opcode 24 variant selection is explicit because no variant tag exists in the packet. Opcode 74 represents quantity expansion directly as repeated item IDs.
+- JavaScript round-trip and Java 21 smoke vectors cover category-3 conditional option bytes, category-4 premium records, signed item IDs, empty lists, unknown variants, and count bounds.
