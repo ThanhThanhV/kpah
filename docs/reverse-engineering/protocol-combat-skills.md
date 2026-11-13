@@ -122,3 +122,9 @@ All three packet variants preserve unknown/trailing data where available. These 
 The generated decoder handles the verified mj.C(acu) subcommand 0 layout: entity kind, entity ID, effect ID, signed duration value, two booleans and an optional variant byte. Other subcommands are retained as unconsumed bytes and are not interpreted as this variant.
 
 The reducer attaches the raw effect record only when both entity ID and entity kind match a currently known world entity. It preserves the original duration value and flags; it does not invent a local expiry clock, classify the effect as buff/debuff, or apply stat changes. If the target is not present or the kind differs, the packet remains in the bounded world-event history with attachedToKnownEntity=false.
+
+## Browser world-state integration — opcode -71
+
+The decoder retains the verified common prefix: action, effect ID, entity ID, signed 64-bit expiry/time value, tile coordinates, entity kind, attach/remove mode, state byte and an optional auxiliary int. The 64-bit value remains a BigInt and is not converted to a local duration or clock.
+
+For the source-confirmed action 1 branch, attach mode 0 adds or refreshes the matching effect record on a known entity; attach mode 1 sets the matching record expiry value to zero, mirroring the original lifecycle behavior rather than deleting it immediately. The reducer requires both entity ID and entity kind to match. Other actions/modes remain recorded but do not mutate entity state. This does not implement visual effect assets, stat modifiers, buff/debuff classification or client-side expiry scheduling.
