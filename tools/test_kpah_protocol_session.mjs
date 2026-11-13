@@ -52,10 +52,19 @@ assert.equal(sent.opcode, -1);
 assert.equal(transport.sent.length, 2);
 assert.equal(session.sendCursor, sent.cursor);
 
+const worldSpawn = new PacketWriter().writeI8(1).writeU8(7).writeI16(321)
+  .writeI16(120).writeI16(240).writeI8(2).writeI32(900).writeI8(1).writeI8(2).writeBool(true).toUint8Array();
+const worldFrame = encodeServerFrame(4, worldSpawn, key, session.stream.cursor).data;
+transport.emit("message", { data: worldFrame.buffer });
+await session.receiveChain;
+assert.equal(session.state.serverWorld.entitiesById["321"].templateId, 7);
+assert.equal(received[1].opcode, 4);
+assert.equal(received[1].handled, true);
+
 const unsupported = encodeServerFrame(17, Uint8Array.from([9]), key, session.stream.cursor).data;
 transport.emit("message", { data: unsupported.buffer });
 await session.receiveChain;
-assert.deepEqual(received[1], { opcode: 17, handled: false });
+assert.deepEqual(received[2], { opcode: 17, handled: false });
 
 session.dispose();
 assert.equal(transport.listeners.get("message").size, 0);
