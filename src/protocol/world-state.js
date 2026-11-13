@@ -149,9 +149,9 @@ export function applyS2COpcode5World(world, payload) {
 }
 
 /**
- * Opcode 32 is a keyed resource update. The original consumer recognizes
- * hp/mp/bp/sp; retain every key/value pair and the local-only trailer without
- * inventing a max/current interpretation for those values.
+ * Opcode 32 is a keyed resource update for an existing kind-0 player.
+ * hp/mp update current HP/MP only; bp/sp update auxiliary resource fields.
+ * Preserve the local-only trailer and all source key/value records.
  */
 function applyCharacterResources(world, packet) {
   const next = cloneWorld(world);
