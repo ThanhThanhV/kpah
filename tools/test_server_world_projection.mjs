@@ -19,7 +19,8 @@ assert.deepEqual(projected, [
     frameOffsetX: null, frameOffsetY: null, shadowOffsetX: null, shadowOffsetY: null, templateReady: false },
   { entityId: 11, kind: 1, templateId: 7, x: 320, y: 410, state: 2,
     coordinateSource: "opcode5", presentation: "monster-npc-family", factoryClass: "cd", templateName: null,
-    frameWidth: null, frameHeight: null, movementStep: null, templateReady: false },
+    frameWidth: null, frameHeight: null, movementStep: null, templateType: null,
+    frameOffsetX: null, frameOffsetY: null, shadowOffsetX: null, shadowOffsetY: null, templateReady: false },
 ]);
 const withTemplate = projectServerWorldEntities({
   entityOrder: [46],
@@ -54,4 +55,4 @@ assert.equal(resolveOriginalEntityFrameIndex(4, 2, 3), 0);
 assert.equal(resolveOriginalEntityFrameIndex(5, 0, 0), null);
 assert.equal(resolveOriginalEntityFrameIndex(0, 4, 0), null);
 assert.deepEqual(projectServerWorldEntities(null), []);
-console.log("Server world projection: PASS (verified kind, entity/template IDs, opcode 4/5 coordinates, no template-to-sprite guesses)");
+console.log("Server world projection: PASS (verified kind, entity/template IDs, opcode 4/5 coordinates, verified template metadata and original idle frame mapping)");
