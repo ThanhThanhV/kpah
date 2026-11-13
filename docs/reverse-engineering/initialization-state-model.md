@@ -89,3 +89,8 @@ Unknown event types are no-ops. This layer remains disconnected from transport/s
 - Unknown/non-initialization opcodes are returned as unhandled without mutating state; malformed transport frames or strict payload decoders throw instead of silently mutating state.
 
 This is a pure frame-to-state adapter. It does not open a TCP socket, negotiate a production key, buffer partial stream reads, connect to Phaser, or persist local state. The caller must provide one complete frame and maintain the receive key/cursor for a live stream.
+
+
+## Incremental stream boundary
+
+The frame-to-state adapter consumes complete frames. `ServerFrameStreamDecoder` now provides the preceding byte-stream layer: it buffers split TCP reads, emits coalesced complete frames, and preserves the encrypted receive cursor. It can pause after a caller-selected number of frames to allow the cleartext `-40` handshake to be handled and the receive key installed before buffered encrypted bytes are parsed. It remains a pure byte-stream utility, not a socket connection or Phaser integration.
