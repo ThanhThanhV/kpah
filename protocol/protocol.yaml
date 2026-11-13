@@ -3836,6 +3836,49 @@
         "caller-state-guard",
         "conditional-counter-byte"
       ]
+    },
+    {
+      "name": "ENTITY_TIMED_EFFECT_ATTACHMENT",
+      "opcode": -74,
+      "direction": "S2C",
+      "payload": [
+        {
+          "name": "subcommand",
+          "type": "i8",
+          "value": 0
+        },
+        {
+          "name": "entityKind",
+          "type": "i8"
+        },
+        {
+          "name": "entityId",
+          "type": "i16"
+        },
+        {
+          "name": "effectId",
+          "type": "i16"
+        },
+        {
+          "name": "durationValue",
+          "type": "i32"
+        },
+        {
+          "name": "flagA",
+          "type": "bool"
+        },
+        {
+          "name": "flagB",
+          "type": "bool"
+        },
+        {
+          "name": "effectVariant",
+          "type": "i8",
+          "optional": true
+        }
+      ],
+      "evidence": "verified-client-handler",
+      "evidenceSource": "ka.java:case-74 -> mj.C(acu); subcommand 0 reads entity kind/id, effect id, duration, two booleans and optional variant"
     }
   ],
   "extensionSchemas": [
