@@ -136,29 +136,42 @@ assert.deepEqual(multiHit.targets.map(target => target.entityId), [124, 123]);
 assert.equal(state.serverWorld.entitiesById["124"].currentHp, 800);
 assert.equal(before106.serverWorld.entitiesById["124"].currentHp, 875, "opcode 106 must preserve previous world snapshot");
 
-// Opcode -74 subcommand 0 attaches the timed effect only to a matching
-// entity ID and entity kind. Duration remains raw; client does not invent
-// expiry clock semantics or classify the effect as a buff/debuff.
+// Opcode -74 subcommand 0 attaches the timed visual overlay through bu.a().
 const timedEffect = new PacketWriter().writeI8(0).writeI8(0).writeI16(124)
   .writeI16(701).writeI32(15000).writeBool(true).writeBool(false).writeI8(2).toUint8Array();
+const timedEffectNow = 1_700_000_000_000;
 const beforeTimedEffect = state;
-state = applyInboundWorldPacket(state, { opcode: -74, payload: timedEffect }).state;
+state = applyInboundWorldPacket(state, { opcode: -74, payload: timedEffect }, timedEffectNow).state;
 const attachedEntity = state.serverWorld.entitiesById["124"];
-assert.equal(attachedEntity.activeEffects.at(-1).effectId, 701);
-assert.equal(attachedEntity.activeEffects.at(-1).durationValue, 15000);
-assert.equal(attachedEntity.activeEffects.at(-1).durationIsPositive, true);
-assert.equal(attachedEntity.activeEffects.at(-1).flagA, true);
-assert.equal(attachedEntity.activeEffects.at(-1).flagB, false);
-assert.equal(attachedEntity.activeEffects.at(-1).effectVariant, 2);
-assert.equal(beforeTimedEffect.serverWorld.entitiesById["124"].activeEffects, undefined,
-  "timed effect reducer must preserve previous entity snapshot");
-assert.equal(state.serverWorld.worldEvents.at(-1).attachedToKnownEntity, true);
+const attachedOverlay = attachedEntity.effectOverlays.at(-1);
+assert.equal(attachedOverlay.effectId, 701);
+assert.equal(attachedOverlay.expiryValue, 1_700_000_015_000n);
+assert.equal(attachedOverlay.flagA, true);
+assert.equal(attachedOverlay.flagB, false);
+assert.equal(attachedOverlay.effectVariant, 2);
+assert.ok(attachedOverlay.loopHoldSeconds >= 1 && attachedOverlay.loopHoldSeconds <= 7);
+assert.equal(attachedEntity.activeEffects, undefined, "-74 must not enter the -71 status/effect-object collection");
+assert.equal(beforeTimedEffect.serverWorld.entitiesById["124"].effectOverlays, undefined,
+  "timed overlay reducer must preserve previous entity snapshot");
+assert.equal(state.serverWorld.worldEvents.at(-1).overlayApplied, true);
+
+// A duplicate effect ID refreshes only expiry, retaining constructor flags,
+// variant and the random hold interval as original bu.a() does.
+const timedEffectRefresh = new PacketWriter().writeI8(0).writeI8(0).writeI16(124)
+  .writeI16(701).writeI32(5000).writeBool(false).writeBool(true).writeI8(6).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: -74, payload: timedEffectRefresh }, timedEffectNow + 100).state;
+const refreshedOverlay = state.serverWorld.entitiesById["124"].effectOverlays.at(-1);
+assert.equal(refreshedOverlay.expiryValue, 1_700_000_005_100n);
+assert.equal(refreshedOverlay.flagA, true);
+assert.equal(refreshedOverlay.flagB, false);
+assert.equal(refreshedOverlay.effectVariant, 2);
+assert.equal(refreshedOverlay.loopHoldSeconds, attachedOverlay.loopHoldSeconds);
 
 // Same ID with a different entity kind must not receive the effect.
 const wrongKindEffect = new PacketWriter().writeI8(0).writeI8(1).writeI16(124)
   .writeI16(702).writeI32(3000).writeBool(false).writeBool(false).toUint8Array();
-state = applyInboundWorldPacket(state, { opcode: -74, payload: wrongKindEffect }).state;
-assert.equal(state.serverWorld.entitiesById["124"].activeEffects.length, 1);
+state = applyInboundWorldPacket(state, { opcode: -74, payload: wrongKindEffect }, timedEffectNow).state;
+assert.equal(state.serverWorld.entitiesById["124"].effectOverlays.length, 1);
 assert.equal(state.serverWorld.worldEvents.at(-1).attachedToKnownEntity, false);
 
 // Unsupported subcommands are retained opaque and never parsed as subtype 0.
@@ -309,6 +322,15 @@ const loopStep2 = advanceEffectPlayback(loopStep1, parsedEffectFixture, 1000);
 const loopStep3 = advanceEffectPlayback(loopStep2, parsedEffectFixture, 1000);
 assert.equal(loopStep3.finished, false);
 assert.equal(loopStep3.sequenceCursor, 0);
+const delayedLoop = createEffectPlayback(parsedEffectFixture, -1n, 2);
+const delayedLoop1 = advanceEffectPlayback(delayedLoop, parsedEffectFixture, 1000);
+const delayedLoop2 = advanceEffectPlayback(delayedLoop1, parsedEffectFixture, 1000);
+assert.equal(delayedLoop2.sequenceCursor, 2, "p=3 holds on the last frame after stepping to sequence length");
+const delayedLoop3 = advanceEffectPlayback(delayedLoop2, parsedEffectFixture, 1000);
+assert.equal(delayedLoop3.sequenceCursor, 3, "d.e delay keeps the cursor past the sequence tail");
+const delayedLoop4 = advanceEffectPlayback(delayedLoop3, parsedEffectFixture, 2100);
+assert.equal(delayedLoop4.sequenceCursor, 0, "d.e delay resets the sequence after the source hold interval");
+
 const timedPlayback = createEffectPlayback(parsedEffectFixture, 2000n);
 assert.equal(timedPlayback.mode, "until-expiry");
 assert.equal(advanceEffectPlayback(timedPlayback, parsedEffectFixture, 1999).finished, false);

@@ -1070,7 +1070,7 @@ class WorldScene extends Phaser.Scene {
         if(!textureSet?.keys?.length)continue;
         let playback=this.serverEffectPlayback.get(playbackKey);
         if(!playback){
-          playback=createEffectPlayback(definition,effect.expiryValue??0n);
+          playback=createEffectPlayback(definition,effect.expiryValue??0n,effect.loopHoldSeconds??0);
           if(playback.finished)continue;
           this.serverEffectPlayback.set(playbackKey,playback);
         }else if(playback.expiryValue!==(effect.expiryValue??0n)){

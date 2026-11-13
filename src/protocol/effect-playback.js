@@ -3,7 +3,7 @@
  * One call to advanceEffectPlayback represents one original d.a() invocation;
  * callers choose the game-loop cadence rather than this module inventing one.
  */
-export function createEffectPlayback(definition, expiryValue = 0n) {
+export function createEffectPlayback(definition, expiryValue = 0n, loopHoldSeconds = 0) {
   if (!definition || !Array.isArray(definition.frameSequence)) {
     throw new TypeError("A decoded effect definition is required");
   }
@@ -13,6 +13,8 @@ export function createEffectPlayback(definition, expiryValue = 0n) {
     frameIndex: 0,
     finished: definition.frameSequence.length === 0,
     expiryValue: expiry,
+    loopHoldSeconds: Number.isFinite(loopHoldSeconds) ? Math.max(0, Math.trunc(loopHoldSeconds)) : 0,
+    loopHoldStartedAt: 0,
     mode: expiry === -1n ? "loop" : expiry === 0n ? "once" : "until-expiry",
   };
 }
@@ -45,9 +47,19 @@ export function advanceEffectPlayback(playback, definition, nowMs = Date.now()) 
     if (cursor < sequence.length) frameIndex = sequence[cursor];
     if (playback.expiryValue < BigInt(Math.trunc(nowMs))) finished = true;
   } else {
-    // Original p=3 path resets after stepping one past the sequence tail.
+    // Original p=3 path holds the final frame after stepping beyond the
+    // sequence tail; opcode -74 supplies d.e in seconds (1..7). The first
+    // pass starts with q=0, so its first wrap is immediate.
     if (cursor < sequence.length) frameIndex = sequence[cursor];
-    else if (cursor > sequence.length) cursor = 0;
+    else if (cursor > sequence.length) {
+      if (playback.loopHoldSeconds > 0
+        && nowMs - playback.loopHoldStartedAt <= playback.loopHoldSeconds * 1000) {
+        cursor = Math.max(cursor, sequence.length + 1);
+      } else {
+        cursor = 0;
+        playback = { ...playback, loopHoldStartedAt: nowMs };
+      }
+    }
   }
 
   return { ...playback, sequenceCursor: cursor, frameIndex, finished };

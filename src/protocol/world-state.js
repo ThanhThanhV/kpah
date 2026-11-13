@@ -232,7 +232,7 @@ function applyOpcode106Combat(world, packet) {
  * source-backed original handler paths. Asset payloads remain opaque until
  * their proprietary image/atlas container is decoded.
  */
-export function applyInboundWorldPacket(state, frame) {
+export function applyInboundWorldPacket(state, frame, nowMs = Date.now()) {
   if (!state || typeof state !== "object") throw new TypeError("Client state is required");
   if (!frame || !Number.isInteger(frame.opcode) || !(frame.payload instanceof Uint8Array)) {
     throw new TypeError("A decoded S2C frame is required");
@@ -334,21 +334,34 @@ export function applyInboundWorldPacket(state, frame) {
       nextWorld = cloneWorld(world);
       const target = nextWorld.entitiesById[String(event.entityId)];
       const entityKindMatches = target && target.kind === event.entityKind;
+      let overlayApplied = false;
+      let expiryValue = null;
       if (entityKindMatches) {
-        const activeEffects = [...(target.activeEffects ?? [])];
-        const effect = {
-          effectId: event.effectId,
-          durationValue: event.durationValue,
-          durationIsPositive: event.durationIsPositive,
-          flagA: event.flagA,
-          flagB: event.flagB,
-          effectVariant: event.effectVariant,
-        };
-        activeEffects.push(effect);
-        nextWorld.entitiesById[String(event.entityId)] = { ...target, activeEffects };
+        if (!Number.isFinite(nowMs)) throw new TypeError("Opcode -74 receive time must be finite");
+        expiryValue = event.durationValue > 0 ? BigInt(Math.trunc(nowMs) + event.durationValue) : 0n;
+        const effectOverlays = [...(target.effectOverlays ?? [])];
+        const index = effectOverlays.findIndex(effect => effect.effectId === event.effectId);
+        if (index >= 0) {
+          // bu.a(effectId,...,expiry,flags,...) refreshes only d.l on an
+          // existing ID; constructor flags/variant/random hold stay intact.
+          effectOverlays[index] = { ...effectOverlays[index], expiryValue };
+        } else {
+          effectOverlays.push({
+            effectId: event.effectId,
+            expiryValue,
+            flagA: event.flagA,
+            flagB: event.flagB,
+            effectVariant: event.effectVariant,
+            loopHoldSeconds: 1 + Math.floor(Math.random() * 7),
+          });
+        }
+        nextWorld.entitiesById[String(event.entityId)] = { ...target, effectOverlays };
+        overlayApplied = true;
       }
       nextWorld = appendWorldEvent(nextWorld, -74, {
         ...event,
+        expiryValue,
+        overlayApplied,
         attachedToKnownEntity: Boolean(entityKindMatches),
       });
       break;
