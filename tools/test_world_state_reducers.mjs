@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
 import { encodeEffectAssetRequest } from "../src/protocol/effect-assets.js";
 import { decodeEffectDefinition } from "../src/protocol/effect-definition.js";
+import { decodeActorEffectDefinition, resolveActorEffectFrameIndex, resolveActorEffectSequenceIndex } from "../src/protocol/actor-effect-definition.js";
 import { advanceEffectPlayback, createEffectPlayback, getEffectFrameParts } from "../src/protocol/effect-playback.js";
 import { applyInboundWorldPacket } from "../src/protocol/world-state.js";
 import { createInitializationState } from "../src/protocol/initialization-state.js";
@@ -317,6 +318,46 @@ assert.equal(state.serverWorld.parsedEffectDefinitionsById["910"].frames.length,
 assert.equal(state.serverWorld.effectDefinitionErrorsById["910"], undefined);
 assert.deepEqual([...encodeEffectAssetRequest(910)], [0x03, 0x8e]);
 assert.throws(() => encodeEffectAssetRequest(40000), /signed short/);
+
+// Class i/hz target-linked actor catalog is opcode-26 indexedImages; it has
+// a distinct parser and 3x14 animation selector from class d overlays.
+const actorDefinitionWriter = new PacketWriter()
+  .writeI8(1).writeU8(0).writeU8(2).writeU8(3).writeU8(16).writeU8(12)
+  .writeI16(1).writeI8(1)
+  .writeI16(-4).writeI16(-42).writeI8(0)
+  .writeI16(7).writeI16(8).writeI8(1).writeI8(1).writeI8(9)
+  .writeI16(1).writeI16(0);
+for (let index = 0; index < 8; index += 1) actorDefinitionWriter.writeI8(2).writeU8(index).writeU8(index + 1);
+actorDefinitionWriter.writeI8(99).writeI8(-2).writeI8(3);
+for (let index = 0; index < 4; index += 1) actorDefinitionWriter.writeI8(1).writeU8(20 + index);
+const actorDefinitionFixture = actorDefinitionWriter.toUint8Array();
+const parsedActorDefinition = decodeActorEffectDefinition(actorDefinitionFixture);
+assert.equal(parsedActorDefinition.regions[0].width, 16);
+assert.deepEqual(parsedActorDefinition.frames[0].parts[0], { x: -4, y: -42, regionIndex: 0, auxiliaryX: 7, auxiliaryY: 8, auxiliaryRegionIndex: 1, auxiliaryFlag: 1, partFlag: 9 });
+assert.equal(parsedActorDefinition.frames[0].offsetX, -2);
+assert.equal(parsedActorDefinition.frames[0].offsetY, 3);
+assert.deepEqual([...parsedActorDefinition.animationSequences[3]], [3, 4]);
+assert.deepEqual([...parsedActorDefinition.optionalSequences[2]], [22]);
+assert.equal(parsedActorDefinition.firstFrameMaxBottom, -30);
+assert.equal(resolveActorEffectSequenceIndex(0, 3), 2);
+assert.equal(resolveActorEffectSequenceIndex(1, 3), 6);
+assert.equal(resolveActorEffectFrameIndex(parsedActorDefinition, 3, 0, 1), 1);
+assert.equal(resolveActorEffectFrameIndex(parsedActorDefinition, 3, 2, 0), null);
+assert.throws(() => decodeActorEffectDefinition(actorDefinitionFixture.slice(0, -1)), /Truncated/);
+
+// Opcode 26 independently carries class-i indexedImages and class-d indexedGraphics.
+const opcode26ActorWriter = new PacketWriter().writeU8(0).writeI16(0).writeU8(0)
+  .writeU8(1).writeI16(920).writeI16(actorDefinitionFixture.length);
+opcode26ActorWriter.bytes.push(...actorDefinitionFixture);
+opcode26ActorWriter.writeI16(1).writeI16(910).writeI16(effectDefinitionFixture.length);
+opcode26ActorWriter.bytes.push(...effectDefinitionFixture);
+const opcode26ActorPacket = opcode26ActorWriter.writeI8(0)
+  .writeI8(0).writeI8(0).writeI8(0).writeI8(0).writeI8(0).writeI8(0).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 26, payload: opcode26ActorPacket }).state;
+assert.deepEqual([...state.serverWorld.actorEffectDefinitionsById["920"]], [...actorDefinitionFixture]);
+assert.equal(state.serverWorld.parsedActorEffectDefinitionsById["920"].frames.length, 1);
+assert.equal(state.serverWorld.actorEffectDefinitionErrorsById["920"], undefined);
+assert.deepEqual([...state.serverWorld.effectDefinitionsById["910"]], [...effectDefinitionFixture]);
 
 // S2C -51 is short resource ID + all remaining opaque image bytes.
 const effectImageResponse = new PacketWriter().writeI16(910).writeU8(0x89).writeU8(0x50).writeU8(0x4e).writeU8(0x47).toUint8Array();

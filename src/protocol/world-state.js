@@ -2,6 +2,7 @@ import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9,
 import { decodeS2COpcode5 } from "./generated/opcode5-codec.js";
 import { decodeS2CTemplateCatalog, decodeS2CTemplateAsset } from "./template-assets.js";
 import { decodeEffectDefinition } from "./effect-definition.js";
+import { decodeActorEffectDefinition } from "./actor-effect-definition.js";
 
 export function createServerWorldState() {
   return {
@@ -11,6 +12,9 @@ export function createServerWorldState() {
     templateAssetPayloadsById: {},
     effectDefinitionsById: {},
     parsedEffectDefinitionsById: {},
+    actorEffectDefinitionsById: {},
+    parsedActorEffectDefinitionsById: {},
+    actorEffectDefinitionErrorsById: {},
     effectDefinitionErrorsById: {},
     effectImagePayloadsById: {},
     targetLinkedEffectEvents: [],
@@ -37,6 +41,9 @@ function cloneWorld(world) {
     templateAssetPayloadsById: { ...(source.templateAssetPayloadsById ?? {}) },
     effectDefinitionsById: { ...(source.effectDefinitionsById ?? {}) },
     parsedEffectDefinitionsById: { ...(source.parsedEffectDefinitionsById ?? {}) },
+    actorEffectDefinitionsById: { ...(source.actorEffectDefinitionsById ?? {}) },
+    parsedActorEffectDefinitionsById: { ...(source.parsedActorEffectDefinitionsById ?? {}) },
+    actorEffectDefinitionErrorsById: { ...(source.actorEffectDefinitionErrorsById ?? {}) },
     effectDefinitionErrorsById: { ...(source.effectDefinitionErrorsById ?? {}) },
     effectImagePayloadsById: { ...(source.effectImagePayloadsById ?? {}) },
     targetLinkedEffectEvents: [...(source.targetLinkedEffectEvents ?? [])],
@@ -331,6 +338,21 @@ export function applyInboundWorldPacket(state, frame) {
       event = decodeS2COpcode26(frame.payload);
       nextWorld = cloneWorld(world);
       const definitionErrors = new Set((event.sectionErrors ?? []).map(item => item.section));
+      // Source ka.case 26 loads indexedImages into i/hz.dj (target-linked actor catalog).
+      if (!definitionErrors.has("indexedImages")) {
+        for (const definition of event.indexedImages ?? []) {
+          const key = String(definition.id);
+          const bytes = copyBytes(definition.data);
+          nextWorld.actorEffectDefinitionsById[key] = bytes;
+          try {
+            nextWorld.parsedActorEffectDefinitionsById[key] = decodeActorEffectDefinition(bytes);
+            delete nextWorld.actorEffectDefinitionErrorsById[key];
+          } catch (error) {
+            delete nextWorld.parsedActorEffectDefinitionsById[key];
+            nextWorld.actorEffectDefinitionErrorsById[key] = error.message;
+          }
+        }
+      }
       if (!definitionErrors.has("indexedGraphics")) {
         for (const definition of event.indexedGraphics ?? []) {
           const key = String(definition.id);
@@ -347,6 +369,9 @@ export function applyInboundWorldPacket(state, frame) {
       }
       nextWorld = appendWorldEvent(nextWorld, 26, {
         templateCount: event.templateCount,
+        actorEffectDefinitionCount: definitionErrors.has("indexedImages") ? 0 : (event.indexedImages?.length ?? 0),
+        parsedActorEffectDefinitionCount: Object.keys(nextWorld.parsedActorEffectDefinitionsById).length,
+        actorEffectDefinitionsError: definitionErrors.has("indexedImages"),
         effectDefinitionCount: definitionErrors.has("indexedGraphics") ? 0 : (event.indexedGraphics?.length ?? 0),
         parsedEffectDefinitionCount: Object.keys(nextWorld.parsedEffectDefinitionsById).length,
         indexedGraphicsError: definitionErrors.has("indexedGraphics"),

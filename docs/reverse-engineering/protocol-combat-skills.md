@@ -151,3 +151,14 @@ The reducer attaches the raw effect record only when both entity ID and entity k
 The decoder retains the verified common prefix: action, effect ID, entity ID, signed 64-bit expiry/time value, tile coordinates, entity kind, attach/remove mode, state byte and an optional auxiliary int. The 64-bit value remains a BigInt and is not converted to a local duration or clock.
 
 For the source-confirmed action 1 branch, attach mode 0 adds or refreshes the matching effect record on a known entity; attach mode 1 sets the matching record expiry value to zero, mirroring the original lifecycle behavior rather than deleting it immediately. The reducer requires both entity ID and entity kind to match. Other actions/modes remain recorded but do not mutate entity state. This does not implement visual effect assets, stat modifiers, buff/debuff classification or client-side expiry scheduling.
+
+
+### Opcode 26: actor animation catalog `i` is separate from overlay catalog `d`
+
+The original `ka.case 26` has two distinct indexed catalogs:
+- The first indexed section (`indexedImages`: count U8, then repeated signed-short ID + signed-short length + bytes) constructs `new i(bytes, id)` and stores it in `hz.dj`. This is the actor animation used by target-linked effect actor `hz`.
+- The following section (`indexedGraphics`: count I16, then repeated signed-short ID + signed-short length + bytes) constructs `new g(id, bytes)` and stores it in `d.i`, the existing entity-attached overlay catalog decoded by `decodeEffectDefinition`.
+
+Browser now decodes `indexedImages` with a dedicated `decodeActorEffectDefinition`: region table, frame parts (retaining both triplets and flags), frame sequence, eight animation sequences, optional per-frame offsets, and four optional sequences. The exact 3x14 sequence-index table from `i` is exported as `resolveActorEffectSequenceIndex`; frame resolution is bounded and does not infer missing sequences. The renderer consumes the primary part triplet only, as observed in `i.a(Graphics,...)`; auxiliary part data is preserved.
+
+The actor parser intentionally does not reuse `decodeEffectDefinition`: the binary layouts and consumers are different. This commit adds decoding and state storage only; actor movement, timing, and rendering remain separate work.
