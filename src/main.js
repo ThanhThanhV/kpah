@@ -18,6 +18,7 @@ import { projectServerWorldEntities } from './protocol/server-world-projection.j
 import { decodeTemplateSpriteAtlas } from './protocol/template-assets.js';
 import { resolveOriginalEntityFactoryClass, resolveOriginalEntityFrameIndex } from './protocol/original-entity-factory.js';
 import { advanceOriginalCdMovement, advanceOriginalPlayerMovement } from './protocol/original-entity-motion.js';
+import { getServerCombatEventsAfter } from './protocol/server-world-combat.js';
 
 
 function bytesToDataUrl(bytes,mimeType){
@@ -922,7 +923,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldDisposed=false;}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldDisposed=false;}
   create(){
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
@@ -945,6 +946,7 @@ class WorldScene extends Phaser.Scene {
       if(!world)return;
       this.serverWorldState=world;
       this.syncServerWorldViews();
+      this.syncServerCombatFeedback();
     };
     window.addEventListener('kpah:protocol-state',this.onProtocolState);
     this.events.once('shutdown',()=>{
@@ -954,6 +956,26 @@ class WorldScene extends Phaser.Scene {
       this.serverWorldMotion.clear();
       this.serverWorldDisposed=true;
     });
+  }
+  syncServerCombatFeedback(){
+    const batch=getServerCombatEventsAfter(this.serverWorldState,this.serverWorldCombatSequence);
+    this.serverWorldCombatSequence=batch.lastSequence;
+    for(const event of batch.events){
+      const id=String(event.targetEntityId);
+      const entity=this.serverWorldState?.entitiesById?.[id];
+      const motion=this.serverWorldMotion.get(id);
+      const x=motion?.x??entity?.snapshot?.x??entity?.x;
+      const y=motion?.y??entity?.snapshot?.y??entity?.y;
+      if(!Number.isFinite(x)||!Number.isFinite(y))continue;
+      const damage=this.add.text(x,y-26,String(event.damage),{
+        fontFamily:'Arial',fontSize:'16px',fontStyle:'bold',color:'#ffffff',
+        stroke:'#211b18',strokeThickness:3
+      }).setOrigin(0.5).setDepth(y+120);
+      this.tweens.add({
+        targets:damage,y:y-56,alpha:0,duration:720,ease:'Cubic.easeOut',
+        onComplete:()=>damage.destroy()
+      });
+    }
   }
   ensureServerTemplateTexture(entity){
     if(entity.factoryClass!=='cd'||!entity.templateReady||!Number.isInteger(entity.templateId)
