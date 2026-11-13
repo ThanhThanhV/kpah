@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { KpahProtocolSession } from "../src/protocol/kpah-protocol-session.js";
-import { encodeServerFrame, encodeHandshakePayload, deriveXorKey } from "../src/protocol/generated/transport-codec.js";
+import { encodeServerFrame, encodeHandshakePayload, deriveXorKey, decodeClientFrame } from "../src/protocol/generated/transport-codec.js";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
 
 class FakeTransport {
@@ -39,7 +39,9 @@ await session.receiveChain;
 assert.equal(session.ready, true);
 assert.deepEqual(handshakes, [{ keyLength: key.length }]);
 assert.equal(transport.sent.length, 1);
-assert.equal(transport.sent[0][0], (-40 & 255));
+const ack = decodeClientFrame(transport.sent[0], key, 0);
+assert.equal(ack.opcode, -40);
+assert.equal(ack.payload.length, 0);
 assert.equal(received.length, 1);
 assert.deepEqual(received[0], { opcode: 16, handled: true });
 assert.equal(states[0].currency, 1000n);
