@@ -37,7 +37,8 @@ function renderStatus() {
       const resources = Object.keys(lastState.resourcesByIndex || {}).length;
       state.textContent = "Xu: " + (lastState.currency == null ? "chưa có" : String(lastState.currency))
         + " · Vật phẩm: " + (lastState.inventory?.length ?? 0)
-        + " · Resource index: " + resources;
+        + " · Resource index: " + resources
+        + " · World entities: " + (lastState.serverWorld?.entityOrder?.length ?? 0);
     }
   }
 }
@@ -98,7 +99,11 @@ export function mountProtocolConnectionPanel(root) {
       onOpen: () => { statusText = "WebSocket đã mở · chờ handshake -40"; renderStatus(); },
       onHandshake: () => { statusText = "Đã handshake · protocol sẵn sàng"; renderStatus(); },
       onPacket: () => { packetCount += 1; renderStatus(); },
-      onState: state => { lastState = state; renderStatus(); },
+      onState: state => {
+        lastState = state;
+        window.dispatchEvent(new CustomEvent("kpah:protocol-state", { detail: { state } }));
+        renderStatus();
+      },
       onClose: () => { statusText = "Kết nối đã đóng"; activeSession = null; renderStatus(); },
       onError: error => { statusText = "Lỗi kết nối/protocol"; lastError = error?.message || "Lỗi không xác định"; renderStatus(); },
     });
