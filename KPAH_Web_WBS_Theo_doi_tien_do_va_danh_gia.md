@@ -1182,3 +1182,13 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Giữ `applyInboundInitializationFrame` làm wrapper cho một frame hoàn chỉnh.
 - Thêm integration test stream chunk → decoded frame → opcode 16 reducer; cập nhật tài liệu pipeline.
 - Vẫn chưa kết nối TCP socket thực, Phaser runtime hoặc local-save.
+
+
+### B16 — Protocol session and handshake over binary transport
+
+- Thêm `KpahProtocolSession`: nhận WebSocket-compatible binary transport (hoặc adapter tương đương), quản lý connection callbacks và message ordering.
+- Nhận S2C `-40` cleartext, decode prefix-XOR key, cài receive key và gửi C2S `-40` ACK rỗng đã mã hóa.
+- Xử lý trường hợp handshake và encrypted frame cùng nằm trong một message; duy trì send/receive XOR cursor độc lập.
+- Cung cấp `sendPacket(opcode, payload)`, không tự gửi login hoặc tự tạo credential; route opcode 1/3/15/16 vào state reducers, opcode khác được chuyển cho callback thô.
+- Thêm fake-transport test, npm script, CI và tài liệu.
+- Giới hạn: browser cần TCP-to-WebSocket bridge riêng; chưa triển khai bridge, endpoint production, auth flow, reconnect/heartbeat hay Phaser binding.
