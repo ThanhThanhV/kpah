@@ -1,10 +1,13 @@
 import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9 } from "./generated/world-state-codec.js";
 import { decodeS2COpcode5 } from "./generated/opcode5-codec.js";
+import { decodeS2CTemplateCatalog, decodeS2CTemplateAsset } from "./template-assets.js";
 
 export function createServerWorldState() {
   return {
     entitiesById: {},
     entityOrder: [],
+    templatesById: {},
+    templateAssetPayloadsById: {},
     unknownEntitySnapshots: [],
     combatEvents: [],
     lastSpawnBatch: [],
@@ -22,6 +25,8 @@ function cloneWorld(world) {
     ...source,
     entitiesById: { ...(source.entitiesById ?? {}) },
     entityOrder: [...(source.entityOrder ?? [])],
+    templatesById: { ...(source.templatesById ?? {}) },
+    templateAssetPayloadsById: { ...(source.templateAssetPayloadsById ?? {}) },
     unknownEntitySnapshots: [...(source.unknownEntitySnapshots ?? [])],
     combatEvents: [...(source.combatEvents ?? [])],
     lastSpawnBatch: [...(source.lastSpawnBatch ?? [])],
@@ -88,8 +93,9 @@ function applyCombatEvent(world, opcode, packet) {
 }
 
 /**
- * Applies only world packets with verified decoders and source-backed handler
- * paths. Wire fields remain neutral; this layer does not animate Phaser sprites.
+ * Applies only world/template packets with verified decoder layouts and
+ * source-backed original handler paths. Asset payloads remain opaque until
+ * their proprietary image/atlas container is decoded.
  */
 export function applyInboundWorldPacket(state, frame) {
   if (!state || typeof state !== "object") throw new TypeError("Client state is required");
@@ -119,6 +125,21 @@ export function applyInboundWorldPacket(state, frame) {
     case 9:
       event = decodeS2COpcode9(frame.payload);
       nextWorld = applyCombatEvent(world, 9, event);
+      break;
+    case 100:
+      event = decodeS2CTemplateCatalog(frame.payload);
+      if (!event.handled) return { state, opcode: frame.opcode, handled: false, events: [] };
+      nextWorld = cloneWorld(world);
+      nextWorld.templatesById[String(event.templateId)] = event.template;
+      break;
+    case -47:
+      event = decodeS2CTemplateAsset(frame.payload);
+      nextWorld = cloneWorld(world);
+      if (Object.prototype.hasOwnProperty.call(nextWorld.templatesById, String(event.templateId))) {
+        nextWorld.templateAssetPayloadsById[String(event.templateId)] = copyBytes(event.payload);
+      } else {
+        return { state, opcode: frame.opcode, handled: false, events: [], packet: { templateId: event.templateId } };
+      }
       break;
     default:
       return { state, opcode: frame.opcode, handled: false, events: [] };
