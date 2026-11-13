@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
 import { encodeServerFrame } from "../src/protocol/generated/transport-codec.js";
-import { applyInboundInitializationFrame } from "../src/protocol/inbound-initialization-adapter.js";
+import { ServerFrameStreamDecoder } from "../src/protocol/server-frame-stream.js";
+import { applyInboundInitializationFrame, applyInboundInitializationPacket } from "../src/protocol/inbound-initialization-adapter.js";
 import { createInitializationState } from "../src/protocol/initialization-state.js";
 
 function opcode1Payload() {
@@ -68,6 +69,14 @@ let encrypted = applyInboundInitializationFrame(createInitializationState(), fir
 encrypted = applyInboundInitializationFrame(encrypted.state, secondEncrypted.data, { key, cursor: encrypted.cursor });
 assert.equal(encrypted.state.currency, 1000n);
 assert.equal(encrypted.cursor, secondEncrypted.cursor);
+
+// Stream output can be passed directly into the state adapter without re-decoding its frame.
+const stream = new ServerFrameStreamDecoder();
+const streamedFrame = stream.push(encodeServerFrame(16, balancePayload).data).frames[0];
+const streamed = applyInboundInitializationPacket(createInitializationState(), streamedFrame);
+assert.equal(streamed.handled, true);
+assert.equal(streamed.state.currency, 1000n);
+assert.deepEqual(streamed.events, ["S2C_OPCODE_16"]);
 
 const unsupported = applyInboundInitializationFrame(encrypted.state, encodeServerFrame(17, new Uint8Array()).data);
 assert.equal(unsupported.handled, false);
