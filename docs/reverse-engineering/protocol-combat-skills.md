@@ -92,7 +92,14 @@ Source trace confirms the resource-fetch path used by entity effect overlays:
 - When the original overlay renderer asks `mi.a(effectId)` for its image and no image is cached, `mi.a(short)` sends C2S opcode -51 with only that signed-short resource ID (`jy.j(short)`).
 - S2C opcode -51 reads the same short ID and treats every remaining byte as an image passed to `Image.createImage`.
 
-The browser now retains opcode 26 effect-definition bytes, requests each active branch-1 overlay image once when its definition is available, and stores S2C -51 image bytes by resource ID. The bytes are intentionally not drawn yet: the original `d` frame/atlas definition must be decoded and its frame lifecycle ported before rendering can be considered source-faithful.
+The browser retains opcode 26 effect-definition bytes and now parses the source-backed `d.a(byte[])` format:
+
+- A signed-byte region count followed by five unsigned bytes per region; the original `h` object uses bytes 2–5 as atlas x/y/width/height while byte 1 is retained as `headerTag`.
+- A signed-short frame count; each frame has a signed-byte part count. Each part contains destination x/y shorts, region index byte, four auxiliary bytes/shorts as present in source, and a group flag byte. Group flag zero and nonzero are retained separately, matching the original `f.c` / `f.b` vectors.
+- An unsigned-byte frame-sequence count followed by short entries (the original casts these to byte), one preserved header byte, then three signed-byte-length auxiliary arrays corresponding to `m[0]`, `m[1]`, and `m[3]`.
+- Bounds and negative-count checks reject truncated or invalid definitions. Unconsumed tail bytes remain visible.
+
+The browser still retains opcode 26 effect-definition bytes, requests each active branch-1 overlay image once when its definition is available, and stores S2C -51 image bytes by resource ID. **It does not yet render the parsed frames.** The original `d.a(Graphics,...)` renderer crops each region rectangle from the image returned by `mi.a(effectId)`, applies per-part placement and optional horizontal flip, and draws the two frame groups in separate passes. Frame advance is one source update per call to `d.a()`; exact browser tick cadence and lifecycle policy are not yet connected.
 
 ## Các giới hạn gameplay
 
