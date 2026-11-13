@@ -865,7 +865,7 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Still open: unequip-to-bag, full purchase transaction semantics, opcode 24/74 payload codecs, refinement callback payload, warehouse completion and server-authoritative inventory/equipment mutation. Weighted project progress unchanged; BE remains deferred.
 
 
-### B7 — shop batch variable-list codecs (CI pending)
+### B7 — shop batch variable-list codecs (CI PASS)
 
 - Opcode 24 caller-selected `catalog`/`category4_fixed` codecs generated in Java/JavaScript; no wire discriminator exists. Catalog writes category/templateId/quantity=1 and conditional option byte for category 3. The `category4_fixed` layout writes fixed category 4, item ID and quantity.
 - Opcode 74 typed expanded list: signed-short total item count followed by repeated signed-short item IDs; quantity is expanded by repeating IDs.
