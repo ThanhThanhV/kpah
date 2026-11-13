@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
+import { encodeEffectAssetRequest } from "../src/protocol/effect-assets.js";
 import { applyInboundWorldPacket } from "../src/protocol/world-state.js";
 import { createInitializationState } from "../src/protocol/initialization-state.js";
 
@@ -233,5 +234,28 @@ const unsupportedMinus73 = new PacketWriter().writeI16(124).writeI8(2).writeU8(0
 state = applyInboundWorldPacket(state, { opcode: -73, payload: unsupportedMinus73 }).state;
 assert.equal(state.serverWorld.worldEvents.at(-1).handled, false);
 assert.deepEqual([...state.serverWorld.worldEvents.at(-1).unconsumedBytes], [0xaa, 0xbb]);
+
+// Opcode 26 indexedGraphics carries d.i effect definitions. Branch-1
+// effect IDs use the same ID as the C2S -51 image resource request.
+const opcode26Definition = new PacketWriter()
+  .writeU8(0).writeI16(0)
+  .writeU8(0)
+  .writeU8(0)
+  .writeI16(1).writeI16(910).writeI16(3).writeU8(1).writeU8(2).writeU8(3)
+  .writeI8(0)
+  .writeI8(0).writeI8(0)
+  .writeI8(0).writeI8(0)
+  .writeI8(0).writeI8(0)
+  .toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 26, payload: opcode26Definition }).state;
+assert.deepEqual([...state.serverWorld.effectDefinitionsById["910"]], [1, 2, 3]);
+assert.deepEqual([...encodeEffectAssetRequest(910)], [0x03, 0x8e]);
+assert.throws(() => encodeEffectAssetRequest(40000), /signed short/);
+
+// S2C -51 is short resource ID + all remaining opaque image bytes.
+const effectImageResponse = new PacketWriter().writeI16(910).writeU8(0x89).writeU8(0x50).writeU8(0x4e).writeU8(0x47).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: -51, payload: effectImageResponse }).state;
+assert.deepEqual([...state.serverWorld.effectImagePayloadsById["910"]], [0x89, 0x50, 0x4e, 0x47]);
+assert.equal(state.serverWorld.worldEvents.at(-1).imageByteLength, 4);
 
 console.log("Inbound world-state reducers: PASS (spawn/update, guarded snapshot, combat event, despawn, unknown opcode)");
