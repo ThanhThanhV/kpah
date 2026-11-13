@@ -3983,6 +3983,84 @@
           ]
         }
       ]
+    },
+    {
+      "name": "SHOP_BATCH_ACTION",
+      "direction": "C2S",
+      "opcode": 24,
+      "evidenceSource": "jy.java;xg.java",
+      "evidence": "xg.p() dispatches tab 19 to jy.c(Vector), other non-tab-10 purchase tabs to jy.b(Vector). jy.b writes u8 record count then category i8, template ID i16, quantity i16 fixed 1, plus option i8 only for category 3. jy.c writes u8 record count then fixed category 4, item ID i16, quantity i16.",
+      "selection": "caller",
+      "countType": "u8",
+      "variants": [
+        {
+          "name": "catalog",
+          "method": "jy.b(Vector)",
+          "sourceLines": "jy.java:816-844",
+          "fields": [
+            {
+              "name": "category",
+              "type": "i8",
+              "source": "bo.g"
+            },
+            {
+              "name": "templateId",
+              "type": "i16",
+              "source": "ku.b(bo.r).n"
+            },
+            {
+              "name": "quantity",
+              "type": "i16",
+              "constant": 1
+            },
+            {
+              "name": "optionByte",
+              "type": "i8",
+              "condition": {
+                "field": "category",
+                "equals": 3
+              },
+              "source": "xg.B if nonnegative, otherwise br.m"
+            }
+          ]
+        },
+        {
+          "name": "premium",
+          "method": "jy.c(Vector)",
+          "sourceLines": "jy.java:846-865",
+          "fields": [
+            {
+              "name": "category",
+              "type": "i8",
+              "constant": 4
+            },
+            {
+              "name": "itemId",
+              "type": "i16",
+              "source": "bo.l"
+            },
+            {
+              "name": "quantity",
+              "type": "i16",
+              "source": "bo.j"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SHOP_PURCHASE_BATCH",
+      "direction": "C2S",
+      "opcode": 74,
+      "evidenceSource": "jy.java;xg.java",
+      "evidence": "xg.p() dispatches tab 10 to jy.a(Vector). jy.a writes signed-short total quantity, then repeats each bd.o item ID as a signed short bd.n times.",
+      "collection": {
+        "name": "itemIds",
+        "countType": "i16",
+        "itemType": "i16",
+        "sourceLines": "jy.java:756-780",
+        "countSemantic": "expanded total quantity"
+      }
     }
   ]
 }
