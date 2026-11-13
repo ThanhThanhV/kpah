@@ -1101,3 +1101,12 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - C2S 78 `SELL_ITEM`: `itemId` signed short + `sourceSelector` signed byte. Original UI confirmation sends 1 for `ca.O` and 0 for `ca.N` (`xg.java:3070-3101`, `acn.java:16-20`, `acp.java:16-20`; writer `jy.java:931-942`).
 - S2C 78 `SELL_ITEM_RESULT`: signed-short item ID. Original handler `ka.java:1771-1774` calls `mj.h`, decrements the matching `ca.N` stack, removes it when quantity reaches zero, credits local template price `/5`, and displays sale success (`be.java:30-40`, `mj.java:4678-4688`).
 - CI run `43404903857` on commit `62f6672cbc4e80b5934b06ad92d8434fe6cecf80` SUCCESS: generated protocol checks, JS payload tests, Java 21 smoke, Vite build and original-JAR analysis. Server-side validation/persistence remains unverified.
+
+### B7 — NPC shop purchase + item drop trace (source verified; CI pending)
+
+- C2S 85 `SHOP_PURCHASE_ITEM`: one-byte item/catalog value written by `jy.c(int)`; shop UI callers `abv` and `gt` send `bd.o` after purchase confirmation (`jy.java:207-214`; `abv.java:12-15`; `gt.java:12-15`).
+- S2C 85 `SHOP_PURCHASE_SUCCESS`: empty payload. Dispatcher only displays a success notice and reads no response fields (`ka.java:195-197`). The protocol schema and generated JS/Java codecs now represent an empty payload.
+- S2C 18 adds a picked-up ground item to inventory through `mj.a(characterId, item)` (`ka.java:1343-1355`; `mj.java:4311-4344`). This is a ground-pickup path; no source evidence connects it to NPC purchase.
+- Inventory/currency update packet after NPC purchase remains unresolved. Do not infer from success notice, ground pickup, or the large S2C 3 character snapshot. No gameplay/WBS completion percentage awarded for source trace alone.
+- C2S -21 drop-equipped-item is distinct from C2S 61 drop-inventory-item. Generic unequip-to-bag remains unverified.
+- CI: latest run [43407904828](https://github.com/ThanhThanhV/kpah/actions/runs/43407904828) is queued/pending at the time of this update; do not mark PASS until completed.
