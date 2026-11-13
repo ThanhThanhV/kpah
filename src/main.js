@@ -1551,12 +1551,33 @@ class WorldScene extends Phaser.Scene {
   syncServerCharacterHud(localEntity){
     const serverName=typeof localEntity?.name==="string"?localEntity.name.trim():"";
     const name=serverName||(!this.serverLocalPlayerEntityId?activeCharacterName:"");
-    if(!name||name===this.serverHudCharacterName)return;
-    this.serverHudCharacterName=name;
-    this.playerLabel?.setText(name);
-    document.querySelectorAll(".hero-name").forEach(element=>{element.textContent=name;});
-    const heading=document.querySelector(".character-details h2");
-    if(heading)heading.textContent=name;
+    if(name&&name!==this.serverHudCharacterName){
+      this.serverHudCharacterName=name;
+      this.playerLabel?.setText(name);
+      document.querySelectorAll(".hero-name").forEach(element=>{element.textContent=name;});
+      const heading=document.querySelector(".character-details h2");
+      if(heading)heading.textContent=name;
+    }
+    // Opcode 6/9 and opcode 106 provide post-combat current HP. No max-HP
+    // source is established for kind-0 players, so never reuse demo bar ratios.
+    const profile=document.querySelector(".profile-info");
+    if(!profile)return;
+    let hpValue=profile.querySelector(".server-hp-value");
+    if(Number.isFinite(localEntity?.currentHp)){
+      if(!hpValue){
+        hpValue=document.createElement("small");
+        hpValue.className="server-hp-value";
+        hpValue.setAttribute("aria-live","polite");
+        const firstMeter=profile.querySelector(".meter");
+        if(firstMeter)profile.insertBefore(hpValue,firstMeter);
+        else profile.appendChild(hpValue);
+      }
+      hpValue.textContent="HP hiện tại từ server: "+Math.max(0,Math.trunc(localEntity.currentHp)).toLocaleString("vi-VN");
+      hpValue.hidden=false;
+    }else if(hpValue){
+      hpValue.hidden=true;
+      hpValue.textContent="";
+    }
   }
   drawZone(zone){
     this.zoneObjects=[];
