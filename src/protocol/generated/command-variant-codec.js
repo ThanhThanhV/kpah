@@ -90,6 +90,7 @@ export function decodeC2SOpcode62(payload) {
   }
   return { mode, fields, unconsumedBytes: new Uint8Array(), trailingBytes: readRemaining(reader) };
 }
+
 export function encodeC2SOpcode94(values) {
   if (!values || !Number.isInteger(values.mode)) throw new TypeError("opcode 94 values.mode required");
   const writer = new PacketWriter().writeI8(values.mode);
@@ -111,7 +112,7 @@ export function decodeC2SOpcode94(payload) {
 const SHOP_WRITE = {u8: "writeU8", i8: "writeI8", i16: "writeI16"};
 const SHOP_READ = {u8: "readU8", i8: "readI8", i16: "readI16"};
 const OPCODE24_VARIANTS = Object.freeze({"catalog":{"name":"catalog","method":"jy.b(Vector)","sourceLines":"jy.java:816-844","fields":[{"name":"category","type":"i8","source":"bo.g"},{"name":"templateId","type":"i16","source":"ku.b(bo.r).n"},{"name":"quantity","type":"i16","constant":1},{"name":"optionByte","type":"i8","condition":{"field":"category","equals":3},"source":"xg.B if nonnegative, otherwise br.m"}]},"premium":{"name":"premium","method":"jy.c(Vector)","sourceLines":"jy.java:846-865","fields":[{"name":"category","type":"i8","constant":4},{"name":"itemId","type":"i16","source":"bo.l"},{"name":"quantity","type":"i16","source":"bo.j"}]}});
-export const C2S_OPCODE24_VARIANTS = Object.freeze(["catalog","premium"]);
+export const C2S_OPCODE24_VARIANTS = Object.freeze(["catalog", "premium"]);
 export function encodeC2SOpcode24(variant, values) {
   const definition = OPCODE24_VARIANTS[variant];
   if (!definition) throw new RangeError("Unknown C2S opcode 24 variant: " + variant);
