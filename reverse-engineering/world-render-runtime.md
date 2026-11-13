@@ -45,6 +45,12 @@ part metadata and the matching opcode -51 image resource are available:
   draw order and plays source idle state 0 / walking state 2 sequences at
   the 40 ms client update cadence; horizontal-left orientation mirrors the
   composition.
+- CFR confirms `hd.a(bu, o, byte, byte)` sets action state 3 and resets its
+  frame cursor. Original `ka` dispatches S2C opcodes 6/9 into `mj.a/b`, whose
+  attacker path invokes that actor action method; opcode 106's multi-target
+  handler also invokes the attack method on its source actor. The browser now
+  starts the one-shot state-3 sequence for a kind-0 attacker on combat events,
+  then returns to idle state 0 after the final action frame.
 The renderer preserves the auxiliary per-piece tuple without interpreting its
 transform flag because CFR constructs it through a temporary `g` object while
 `hd` reads the primary `g.d`. It also loads the original `/shadow.png` asset and
@@ -62,8 +68,9 @@ pointer/keyboard movement through the original C2S opcode 4 payload (two
 big-endian signed shorts: target X and target Y). The scene waits for server
 world updates to move the actor; it does not locally teleport the authoritative
 sprite. If the actor despawns, the scene falls back to the offline demo actor.
-Attack/death states, equipment appearance changes and live-server visual
-comparison remain open. Kind-1 generic `cd` movement continues to use the
+Death states, equipment appearance changes and live-server visual
+comparison remain open; the action trigger is source-mapped but still requires
+live packet and visual confirmation. Kind-1 generic `cd` movement continues to use the
 separately verified movement adapter below.
 
 
