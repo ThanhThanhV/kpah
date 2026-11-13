@@ -13,6 +13,7 @@ import { createSocialState } from './social-state.js';
 import { createGuildState } from './guild-state.js';
 import { createMailState } from './mail-state.js';
 import { createLocalSave } from './local-save.js';
+import { mountProtocolConnectionPanel } from './protocol/connection-panel.js';
 
 // Keep the game shell inside the actually visible mobile viewport, including
 // browsers that do not resize 100dvh consistently when the virtual keyboard opens.
@@ -32,7 +33,7 @@ app.innerHTML = `
     <header class="topbar">
       <div class="brand"><span class="brand-mark">K</span><div><b>KHÍ PHÁCH ANH HÙNG</b><small>PHIÊN BẢN TÁI HIỆN WEB</small></div></div>
       <div class="server"><i class="offline-dot"></i><span>Máy chủ: <b>Long Kiếm</b></span><span class="offline">Demo offline</span></div>
-      <div class="top-actions"><button data-window="settings" title="Cài đặt">⚙</button><button data-window="help" title="Trợ giúp">?</button><button class="exit" id="logout">Thoát</button></div>
+      <div class="top-actions"><button data-window="connection" title="Kết nối protocol">↔</button><button data-window="settings" title="Cài đặt">⚙</button><button data-window="help" title="Trợ giúp">?</button><button class="exit" id="logout">Thoát</button></div>
     </header>
     <section class="game-layout">
       <aside class="left-rail">
@@ -92,6 +93,7 @@ const panelData = {
   guild:{title:'Bang hội',html:`<div class="empty-state"><span>⚑</span><b>Chưa gia nhập bang hội</b><p>Gia nhập bang hội để cùng bằng hữu khám phá thế giới.</p><button class="gold-button">Tìm bang hội</button></div>`},
   ranking:{title:'Bảng xếp hạng',html:`<div class="tabs"><button class="chosen">Cấp độ</button><button>Chiến lực</button><button>Bang hội</button></div><div class="rank-list"><p>① <b>ThiênMệnh</b><span>Cấp 68</span></p><p>② <b>PhongVân</b><span>Cấp 27</span></p><p>③ <b>HỏaLong</b><span>Cấp 31</span></p></div>`},
   events:{title:'Sự kiện',html:`<div class="quest-card"><b>✦ Đua top tân thủ</b><p>Nhận thưởng khi đạt mốc cấp độ trong thời gian sự kiện.</p><small>Thời gian còn lại: 5 ngày 12 giờ</small></div><div class="quest-card"><b>✦ Săn boss cuối tuần</b><p>Đánh bại boss thế giới cùng những người chơi khác.</p></div>`},
+  connection:{title:'Kết nối máy chủ thử nghiệm',html:'<div data-protocol-connection-root></div>'},
   settings:{title:'Cài đặt hiển thị',html:`<div class="settings-list"><label for="setting-player-name">Hiển thị tên nhân vật <input id="setting-player-name" data-setting="playerName" type="checkbox" checked></label><label for="setting-coordinates">Hiển thị tọa độ <input id="setting-coordinates" data-setting="coordinates" type="checkbox" checked></label><label for="setting-minimap">Hiển thị bản đồ nhỏ <input id="setting-minimap" data-setting="minimap" type="checkbox" checked></label><p class="settings-note">Tùy chọn được lưu trên trình duyệt này. Âm thanh và hiệu ứng chiến đấu sẽ được bổ sung khi có runtime tương ứng.</p><button type="button" class="gold-button" data-reset-display-settings>Khôi phục mặc định</button></div>`},
   help:{title:'Trợ giúp',html:`<div class="help-copy"><b>Điều khiển</b><p>Dùng cụm phím mũi tên để di chuyển nhân vật. Nhấn Tab / Shift+Tab để đổi mục tiêu quái vật; chọn kỹ năng ở thanh thao tác hoặc phím 1–5 để sử dụng. Nhấn E khi đứng gần vật phẩm rơi để nhặt.</p><b>Tương tác</b><p>Chạm vào NPC, người chơi hoặc quái vật trong bản đồ để xem các hành động khả dụng.</p></div>`},
   party:{title:'Tổ đội',html:`<div class="empty-state"><span>♙</span><b>Bạn chưa tham gia tổ đội</b><p>Tạo tổ đội hoặc nhận lời mời từ người chơi khác.</p><button class="gold-button">Tạo tổ đội</button></div>`},
@@ -186,7 +188,10 @@ function saveGameProgress(){
   return localSave.save({character:characterState.snapshot(),zone:worldMapState.snapshot().current.id,worldPosition,quests:questState.snapshot(),skills:{skills:skills.skills.map(skill=>({id:skill.id,level:skill.level})),skillPoints:skills.skillPoints,loadout:skills.loadout},social:socialState.snapshot(),guild:guildState.snapshot(),mail:mailState.snapshot()});
 }
 
+let disposeProtocolConnectionPanel = null;
 function openWindow(key){
+  disposeProtocolConnectionPanel?.();
+  disposeProtocolConnectionPanel = null;
   const p=panelData[key]||panelData.help;
   document.querySelector('#window-title').textContent=p.title;
   const html=['character','inventory','equipment'].includes(key)?renderCharacterPanel(key):key==='skills'?renderSkillPanel():key==='quests'?renderQuestPanel():key==='shop'?renderShopPanel():key==='map'?renderWorldMapPanel():key==='friends'?renderFriendsPanel():key==='party'?renderPartyPanel():key==='guild'?renderGuildPanel():key==='mail'?renderMailPanel():p.html;
@@ -196,8 +201,9 @@ function openWindow(key){
   document.querySelectorAll('.side-nav button').forEach(b=>b.classList.toggle('active',b.dataset.window===key));
   if(key==='resources')renderResourceViewer(document.querySelector('#resource-viewer'));
   if(key==='settings')syncDisplaySettings();
+  if(key==='connection')disposeProtocolConnectionPanel=mountProtocolConnectionPanel(document.querySelector('[data-protocol-connection-root]'));
 }
-function closeWindow(){document.querySelector('#game-window').classList.remove('open');document.querySelector('#modal-backdrop').classList.remove('show');}
+function closeWindow(){disposeProtocolConnectionPanel?.();disposeProtocolConnectionPanel=null;document.querySelector('#game-window').classList.remove('open');document.querySelector('#modal-backdrop').classList.remove('show');}
 const DISPLAY_SETTINGS_KEY='kpah.display-settings.v1';
 const displaySettings={playerName:true,coordinates:true,minimap:true};
 function loadDisplaySettings(){try{const saved=JSON.parse(localStorage.getItem(DISPLAY_SETTINGS_KEY)||'null');if(saved&&typeof saved==='object'){for(const key of Object.keys(displaySettings)){if(typeof saved[key]==='boolean')displaySettings[key]=saved[key];}}}catch(error){console.warn('Không thể đọc cài đặt hiển thị đã lưu.',error);}}
