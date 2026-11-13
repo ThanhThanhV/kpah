@@ -3877,8 +3877,8 @@
           "optional": true
         }
       ],
-      "evidence": "verified-client-handler",
-      "evidenceSource": "ka.java:case-74 -> mj.C(acu); subcommand 0 reads entity kind/id, effect id, duration, two booleans and optional variant"
+      "evidence": "verified-client-handler: ka.java:case-74 -> mj.C(acu); subcommand 0 reads entity kind/id, effect id, duration, two booleans and optional variant",
+      "evidenceSource": "ka.java:case-74"
     }
   ],
   "extensionSchemas": [
