@@ -867,7 +867,7 @@
       "evidence": "dispatcher-only"
     },
     {
-      "name": "OP_78",
+      "name": "SELL_ITEM",
       "opcode": 78,
       "direction": "C2S",
       "payload": [
@@ -876,11 +876,11 @@
           "type": "i16"
         },
         {
-          "name": "optionByte",
+          "name": "sourceSelector",
           "type": "i8"
         }
       ],
-      "evidence": "verified-client-writer: jy.java; payload order and widths source-checked"
+      "evidence": "verified-client-writer: jy.java:931-942 writes itemId i16 + sourceSelector i8; xg.java:3070-3101 confirms sell action, flag 1 for ca.O and 0 for ca.N"
     },
     {
       "name": "OP_79",
@@ -1933,11 +1933,16 @@
       "evidence": "dispatcher-only"
     },
     {
-      "name": "OP_78",
+      "name": "SELL_ITEM_RESULT",
       "opcode": 78,
       "direction": "S2C",
-      "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "payload": [
+        {
+          "name": "itemId",
+          "type": "i16"
+        }
+      ],
+      "evidence": "verified-client-handler: ka.java:1771-1774 reads itemId i16; mj.java:4678-4688 decrements ca.N stack, credits bd.r/5 when exhausted and displays sale-success notice"
     },
     {
       "name": "OP_80",
