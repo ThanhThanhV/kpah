@@ -1976,8 +1976,8 @@
       "name": "SHOP_PURCHASE_SUCCESS",
       "opcode": 85,
       "direction": "S2C",
-      "payload": "opaque",
-      "evidence": "verified-client-handler: ka.java:case-85 displays purchase-success notice"
+      "payload": [],
+      "evidence": "verified-client-handler: ka.java:195-197 displays purchase-success notice without reading payload"
     },
     {
       "name": "OP_86",
