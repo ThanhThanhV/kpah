@@ -90,6 +90,8 @@ jobs:
         run: npm run test:template-assets
       - name: Test original cd movement
         run: npm run test:original-entity-motion
+      - name: Test KPAH character part decoder
+        run: npm run test:character-part-data
       - name: Verify generated opcode 1 codec
         run: npm run check:opcode1
       - name: Test generated opcode 1 codec
