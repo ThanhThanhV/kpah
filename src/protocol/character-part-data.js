@@ -215,3 +215,11 @@ export function decodeCharacterPartCatalog(partData) {
 }
 
 export { DIRECTION_STATE_TO_SEQUENCE };
+
+/** Original hd renderer looks up the corresponding atlas through mi.a(partIndex + 12000). */
+export function characterPartImageResourceId(partIndex) {
+  if (!Number.isInteger(partIndex) || partIndex < 0 || partIndex > 127) {
+    throw new RangeError("Character part index must fit the original non-negative signed byte range");
+  }
+  return 12000 + partIndex;
+}
