@@ -794,7 +794,7 @@
       "evidence": "dispatcher-only"
     },
     {
-      "name": "OP_68",
+      "name": "STORAGE_DEPOSIT_ITEM",
       "opcode": 68,
       "direction": "C2S",
       "payload": [
@@ -803,10 +803,10 @@
           "type": "i16"
         }
       ],
-      "evidence": "verified-client-writer: jy.java; payload order and widths source-checked"
+      "evidence": "verified-client-writer: jy.java:892-903; aaa.java:15-20 invokes with selected inventory item on tab 22"
     },
     {
-      "name": "OP_69",
+      "name": "STORAGE_WITHDRAW_ITEM",
       "opcode": 69,
       "direction": "C2S",
       "payload": [
@@ -815,14 +815,14 @@
           "type": "i16"
         }
       ],
-      "evidence": "verified-client-writer: jy.java; payload order and widths source-checked"
+      "evidence": "verified-client-writer: jy.java:905-915; aaa.java:35-40 invokes with selected storage item on tab 22"
     },
     {
-      "name": "OP_70",
+      "name": "STORAGE_REFRESH",
       "opcode": 70,
       "direction": "C2S",
-      "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "payload": [],
+      "evidence": "verified-client-writer: jy.java:880-890 writes no payload; xg.java:3291-3293 and dh.java:2097-2100 invoke after tab-22 storage flow"
     },
     {
       "name": "OP_71",
@@ -1874,18 +1874,28 @@
       "evidence": "dispatcher-only"
     },
     {
-      "name": "OP_68",
+      "name": "STORAGE_DEPOSIT_RESULT",
       "opcode": 68,
       "direction": "S2C",
-      "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "payload": [
+        {
+          "name": "itemId",
+          "type": "i16"
+        }
+      ],
+      "evidence": "verified-client-handler: ka.java:252-255 reads itemId i16; mj.java:4562-4573 moves item from inventory z.bx to storage z.bA"
     },
     {
-      "name": "OP_69",
+      "name": "STORAGE_WITHDRAW_RESULT",
       "opcode": 69,
       "direction": "S2C",
-      "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "payload": [
+        {
+          "name": "itemId",
+          "type": "i16"
+        }
+      ],
+      "evidence": "verified-client-handler: ka.java:257-260 reads itemId i16; mj.java:4576-4584 moves item from storage z.bA to inventory z.bx"
     },
     {
       "name": "OP_71",
