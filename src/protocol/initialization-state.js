@@ -63,3 +63,59 @@ export function applyOpcode16(state, packet) {
   if (Number.isInteger(packet.aZ)) next.commonFields.aZ = packet.aZ;
   return next;
 }
+
+/**
+ * Applies the global catalogs/configuration decoded from S2C opcode 1.
+ * Catalog indices and opaque byte blobs are preserved exactly as received.
+ */
+export function applyOpcode1(state, packet) {
+  if (!state || typeof state !== "object") throw new TypeError("Initialization state is required");
+  if (!packet || !Array.isArray(packet.skills) || !Array.isArray(packet.professionSkillCatalogs)) {
+    throw new TypeError("Decoded opcode 1 packet is required");
+  }
+  if (!Array.isArray(packet.tileBlobs) || !Array.isArray(packet.partData)) {
+    throw new TypeError("Opcode 1 tile and part data arrays are required");
+  }
+
+  const cloneBytes = value => {
+    if (!(value instanceof Uint8Array)) throw new TypeError("Expected opcode 1 binary data as Uint8Array");
+    return new Uint8Array(value);
+  };
+  const cloneRecords = (records, field) => {
+    if (!Array.isArray(records)) throw new TypeError("Expected " + field + " to be an array");
+    return records.map(record => ({ ...record }));
+  };
+
+  return {
+    ...state,
+    globalConfig: {
+      wireMovementStep: packet.wireMovementStep,
+      movementStep: packet.movementStep,
+      boatTicketPrice: packet.boatTicketPrice,
+      globalConfigBytes: [...packet.globalConfigBytes],
+      optionalBlock: packet.optionalBlock == null ? null : {
+        auxiliaryShort: packet.optionalBlock.auxiliaryShort,
+        unlockedIds: [...packet.optionalBlock.unlockedIds],
+        matrices: packet.optionalBlock.matrices.map(row => row.map(cell => [...cell])),
+      },
+      supportHotline: packet.supportHotline,
+      externalUrl: packet.externalUrl,
+      partDataFlag: packet.partDataFlag,
+      partDataError: packet.partDataError ?? null,
+      trailingBytes: cloneBytes(packet.trailingBytes),
+    },
+    skillCatalog: cloneRecords(packet.skills, "skills"),
+    professionSkillSlotCounts: [...packet.professionSkillSlotCounts],
+    professionSkillCatalogs: packet.professionSkillCatalogs.map((records, index) =>
+      cloneRecords(records, "profession skill catalog " + index)),
+    statLabels: cloneRecords(packet.statLabels, "stat labels"),
+    pairedLookupRows: cloneRecords(packet.pairedLookupRows, "paired lookup rows"),
+    questObjectives: cloneRecords(packet.questObjectives, "quest objectives"),
+    tileBlobs: packet.tileBlobs.map(blob => ({
+      index: blob.index, key: blob.key, data: cloneBytes(blob.data),
+    })),
+    partData: packet.partData.map(blob => ({
+      index: blob.index, data: cloneBytes(blob.data),
+    })),
+  };
+}
