@@ -48,7 +48,8 @@
     "test:world-state": "node tools/test_world_state_codec.mjs",
     "generate:command-variants": "python tools/generate_command_variants.py",
     "check:command-variants": "python tools/generate_command_variants.py --check",
-    "test:command-variants": "node tools/test_command_variants.mjs"
+    "test:command-variants": "node tools/test_command_variants.mjs",
+    "test:inbound-initialization": "node tools/test_inbound_initialization_adapter.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"
