@@ -19,6 +19,7 @@ import { decodeTemplateSpriteAtlas } from './protocol/template-assets.js';
 import { resolveOriginalEntityFactoryClass, resolveOriginalEntityFrameIndex } from './protocol/original-entity-factory.js';
 import { advanceOriginalCdMovement, advanceOriginalPlayerMovement } from './protocol/original-entity-motion.js';
 import { getServerCombatEventsAfter } from './protocol/server-world-combat.js';
+import { advanceEffectPlayback, createEffectPlayback, getEffectFrameParts } from './protocol/effect-playback.js';
 
 
 function bytesToDataUrl(bytes,mimeType){
@@ -923,7 +924,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldDisposed=false;}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldDisposed=false;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;}
   create(){
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
@@ -946,6 +947,7 @@ class WorldScene extends Phaser.Scene {
       if(!world)return;
       this.serverWorldState=world;
       this.syncServerWorldViews();
+      this.syncServerEffectViews();
       this.syncServerCombatFeedback();
     };
     window.addEventListener('kpah:protocol-state',this.onProtocolState);
@@ -954,8 +956,166 @@ class WorldScene extends Phaser.Scene {
       for(const view of this.serverWorldViews.values())view.destroy();
       this.serverWorldViews.clear();
       this.serverWorldMotion.clear();
+      for(const view of this.serverEffectViews.values())view.destroy();
+      this.serverEffectViews.clear();
+      this.serverEffectPlayback.clear();
+      for(const textureSet of this.serverEffectTextures.values()){
+        for(const key of textureSet.keys)this.textures.remove(key);
+      }
+      this.serverEffectTextures.clear();
+      this.serverEffectTextureLoads.clear();
       this.serverWorldDisposed=true;
     });
+  }
+  ensureServerEffectTextures(effectId,definition,imageBytes){
+    const key=String(effectId);
+    if(this.serverEffectTextures.has(key)||this.serverEffectTextureLoads.has(key))return;
+    if(!(imageBytes instanceof Uint8Array)||!imageBytes.length||!definition?.frames?.length)return;
+    this.serverEffectTextureLoads.add(key);
+    const image=new window.Image();
+    image.onload=()=>{
+      this.serverEffectTextureLoads.delete(key);
+      if(this.serverWorldDisposed)return;
+      const keys=[],bounds=[];
+      for(let frameIndex=0;frameIndex<definition.frames.length;frameIndex++){
+        const parts=getEffectFrameParts(definition,frameIndex);
+        const drawable=[...parts.groupNonZero,...parts.groupZero]
+          .filter(part=>part.drawable&&part.region
+            &&part.region.x>=0&&part.region.y>=0
+            &&part.region.x+part.region.width<=image.naturalWidth
+            &&part.region.y+part.region.height<=image.naturalHeight);
+        if(!drawable.length){
+          const canvas=document.createElement('canvas');canvas.width=1;canvas.height=1;
+          const textureKey='kpah-effect-'+key+'-'+frameIndex;
+          if(!this.textures.exists(textureKey))this.textures.addCanvas(textureKey,canvas);
+          keys.push(textureKey);bounds.push({x:0,y:0});
+          continue;
+        }
+        const minX=Math.min(0,...drawable.map(part=>part.x));
+        const minY=Math.min(0,...drawable.map(part=>part.y));
+        const maxX=Math.max(1,...drawable.map(part=>part.x+part.region.width));
+        const maxY=Math.max(1,...drawable.map(part=>part.y+part.region.height));
+        const canvas=document.createElement('canvas');
+        canvas.width=Math.max(1,Math.ceil(maxX-minX));
+        canvas.height=Math.max(1,Math.ceil(maxY-minY));
+        const context=canvas.getContext('2d');
+        if(!context)continue;
+        // Original bu render methods draw the non-zero and zero groups in
+        // separate passes. Preserve that pass order; unknown flip metadata is
+        // deliberately not interpreted.
+        for(const group of [parts.groupNonZero,parts.groupZero]){
+          for(const part of group){
+            if(!part.drawable||!part.region||part.region.x<0||part.region.y<0
+              ||part.region.x+part.region.width>image.naturalWidth
+              ||part.region.y+part.region.height>image.naturalHeight)continue;
+            context.drawImage(image,part.region.x,part.region.y,
+              part.region.width,part.region.height,
+              part.x-minX,part.y-minY,part.region.width,part.region.height);
+          }
+        }
+        const textureKey='kpah-effect-'+key+'-'+frameIndex;
+        if(!this.textures.exists(textureKey))this.textures.addCanvas(textureKey,canvas);
+        keys.push(textureKey);bounds.push({x:minX,y:minY});
+      }
+      this.serverEffectTextures.set(key,{keys,bounds});
+      this.syncServerEffectViews();
+    };
+    image.onerror=()=>{
+      this.serverEffectTextureLoads.delete(key);
+      console.warn('KPAH effect image could not be decoded',effectId);
+    };
+    const mime=imageBytes[0]===0x89&&imageBytes[1]===0x50?'image/png'
+      :imageBytes[0]===0xff&&imageBytes[1]===0xd8?'image/jpeg'
+      :imageBytes[0]===0x47&&imageBytes[1]===0x49?'image/gif':'image/png';
+    image.src=bytesToDataUrl(imageBytes,mime);
+  }
+  syncServerEffectViews(){
+    const world=this.serverWorldState;
+    if(!world)return;
+    const active=new Set();
+    for(const entityId of world.entityOrder??[]){
+      const entity=world.entitiesById?.[String(entityId)];
+      if(!entity)continue;
+      const motion=this.serverWorldMotion.get(String(entityId));
+      const x=motion?.x??entity.snapshot?.x??entity.x;
+      const y=motion?.y??entity.snapshot?.y??entity.y;
+      if(!Number.isFinite(x)||!Number.isFinite(y))continue;
+      for(const effect of entity.effectOverlays??[]){
+        const effectId=effect.effectId;
+        if(!Number.isInteger(effectId))continue;
+        const effectKey=String(effectId);
+        const playbackKey=String(entityId)+':'+effectKey;
+        active.add(playbackKey);
+        const definition=world.parsedEffectDefinitionsById?.[effectKey];
+        const imageBytes=world.effectImagePayloadsById?.[effectKey];
+        if(definition&&imageBytes)this.ensureServerEffectTextures(effectId,definition,imageBytes);
+        const textureSet=this.serverEffectTextures.get(effectKey);
+        if(!textureSet?.keys?.length)continue;
+        let playback=this.serverEffectPlayback.get(playbackKey);
+        if(!playback){
+          playback=createEffectPlayback(definition,effect.expiryValue??0n);
+          if(playback.finished)continue;
+          this.serverEffectPlayback.set(playbackKey,playback);
+        }else if(playback.expiryValue!==(effect.expiryValue??0n)){
+          // Original bu.a() refreshes d.l but leaves its constructor mode/cursor intact.
+          playback={...playback,expiryValue:effect.expiryValue??0n};
+          this.serverEffectPlayback.set(playbackKey,playback);
+        }
+        const frameIndex=playback.frameIndex;
+        const textureKey=textureSet.keys[frameIndex];
+        if(!textureKey||!this.textures.exists(textureKey))continue;
+        const offset=textureSet.bounds[frameIndex]??{x:0,y:0};
+        let view=this.serverEffectViews.get(playbackKey);
+        if(!view){
+          view=this.add.image(x+offset.x,y+offset.y,textureKey).setOrigin(0,0);
+          view.setDepth(y+2);
+          this.serverEffectViews.set(playbackKey,view);
+        }else{
+          view.setPosition(x+offset.x,y+offset.y).setDepth(y+2).setTexture(textureKey);
+        }
+      }
+    }
+    for(const [key,view] of this.serverEffectViews){
+      if(!active.has(key)){
+        view.destroy();this.serverEffectViews.delete(key);this.serverEffectPlayback.delete(key);
+      }
+    }
+  }
+  advanceServerEffectPlayback(delta){
+    this.serverEffectAccumulator+=Math.max(0,delta);
+    if(this.serverEffectAccumulator<40)return;
+    this.serverEffectAccumulator%=40;
+    const world=this.serverWorldState;
+    if(!world)return;
+    for(const [key,playback] of this.serverEffectPlayback){
+      const split=key.indexOf(':');
+      const entityId=key.slice(0,split),effectId=key.slice(split+1);
+      const entity=world.entitiesById?.[entityId];
+      const effect=(entity?.effectOverlays??[]).find(item=>String(item.effectId)===effectId);
+      const definition=world.parsedEffectDefinitionsById?.[effectId];
+      if(!effect||!definition){this.serverEffectViews.get(key)?.destroy();this.serverEffectViews.delete(key);this.serverEffectPlayback.delete(key);continue;}
+      const next=advanceEffectPlayback(playback,definition,Date.now());
+      if(next.finished){
+        this.serverEffectViews.get(key)?.destroy();this.serverEffectViews.delete(key);this.serverEffectPlayback.delete(key);
+        continue;
+      }
+      if(next.frameIndex!==playback.frameIndex){
+        this.serverEffectPlayback.set(key,next);
+        const textureSet=this.serverEffectTextures.get(effectId);
+        const textureKey=textureSet?.keys?.[next.frameIndex];
+        const view=this.serverEffectViews.get(key);
+        if(view&&textureKey&&this.textures.exists(textureKey)){
+          const offset=textureSet.bounds[next.frameIndex]??{x:0,y:0};
+          const motion=this.serverWorldMotion.get(entityId);
+          const current=world.entitiesById?.[entityId];
+          const x=motion?.x??current?.snapshot?.x??current?.x??0;
+          const y=motion?.y??current?.snapshot?.y??current?.y??0;
+          view.setTexture(textureKey).setPosition(x+offset.x,y+offset.y).setDepth(y+2);
+        }
+      }else{
+        this.serverEffectPlayback.set(key,next);
+      }
+    }
   }
   syncServerCombatFeedback(){
     const batch=getServerCombatEventsAfter(this.serverWorldState,this.serverWorldCombatSequence);
@@ -1437,6 +1597,7 @@ class WorldScene extends Phaser.Scene {
     }
   }
   update(time,delta=40){
+    this.advanceServerEffectPlayback(delta);
     this.advanceServerWorldMotion(delta);
     this.syncMonsterViews();
     if(!this.playerSprite||characterState.snapshot().hp<=0)return;
