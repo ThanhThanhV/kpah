@@ -1398,8 +1398,9 @@ class WorldScene extends Phaser.Scene {
     const projected=projectServerWorldEntities(this.serverWorldState);
     const present=new Set(projected.map(entity=>String(entity.entityId)));
     for(const [id,view] of this.serverWorldViews){
-      if(!present.has(id)){view.destroy();this.serverWorldViews.delete(id);this.serverWorldMotion.delete(id);}
+      if(!present.has(id)){view.destroy();this.serverWorldViews.delete(id);this.serverWorldMotion.delete(id);this.serverCharacterPartPlayback.delete(id);}
     }
+    for(const id of this.serverCharacterPartPlayback.keys())if(!present.has(id))this.serverCharacterPartPlayback.delete(id);
     for(const entity of projected){
       this.ensureServerTemplateTexture(entity);
       const id=String(entity.entityId);
@@ -1448,7 +1449,7 @@ class WorldScene extends Phaser.Scene {
       const partFrameIndex=partIndex===null||!partRecord?.decoded?null:
         partRecord.metadata.getFrameIndex(partPlayback?.direction??0,partPlayback?.state??0,partPlayback?.frameCursor??0);
       const partTransform=partPlayback?.transform??0;
-      const partTexture=partIndex===null?null:this.serverCharacterPartTextures.get(String(partIndex))?.textures.get(partFrameIndex+':'+partTransform);
+      const partTexture=partIndex===null||partFrameIndex===null?null:this.serverCharacterPartTextures.get(String(partIndex))?.textures.get(partFrameIndex+':'+partTransform);
       const canRenderCharacterPart=partTexture&&this.textures.exists(partTexture.key);
       if(!view){
         view=this.add.container(motion.x,motion.y,[]);
