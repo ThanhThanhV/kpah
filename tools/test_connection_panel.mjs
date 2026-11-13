@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { encodePlayerMovementPayload } from "../src/protocol/connection-panel.js";
+assert.deepEqual([...encodePlayerMovementPayload(0x1234, -2)], [0x12, 0x34, 0xff, 0xfe]);
+assert.throws(() => encodePlayerMovementPayload(32768, 0), /signed 16-bit/);
 import { normalizeLocalBridgeUrl } from "../src/protocol/connection-panel.js";
 
 assert.equal(normalizeLocalBridgeUrl("ws://127.0.0.1:22101/kpah"), "ws://127.0.0.1:22101/kpah");
