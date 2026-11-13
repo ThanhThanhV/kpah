@@ -18,7 +18,8 @@ export function createServerWorldState() {
     effectDefinitionErrorsById: {},
     effectImagePayloadsById: {},
     targetLinkedEffectEvents: [],
-    targetLinkedActorsBySourceId: {},
+    worldEffects: [],
+    targetLinkedActorsBySourceId: {}
     targetLinkedActorSpawnSequence: 0,
     unknownEntitySnapshots: [],
     combatEvents: [],
@@ -49,7 +50,8 @@ function cloneWorld(world) {
     effectDefinitionErrorsById: { ...(source.effectDefinitionErrorsById ?? {}) },
     effectImagePayloadsById: { ...(source.effectImagePayloadsById ?? {}) },
     targetLinkedEffectEvents: [...(source.targetLinkedEffectEvents ?? [])],
-    targetLinkedActorsBySourceId: { ...(source.targetLinkedActorsBySourceId ?? {}) },
+    worldEffects: [...(source.worldEffects ?? [])],
+    targetLinkedActorsBySourceId: { ...(source.targetLinkedActorsBySourceId ?? {}) }
     unknownEntitySnapshots: [...(source.unknownEntitySnapshots ?? [])],
     combatEvents: [...(source.combatEvents ?? [])],
     worldEvents: [...(source.worldEvents ?? [])],
@@ -372,33 +374,33 @@ export function applyInboundWorldPacket(state, frame, nowMs = Date.now()) {
       const target = nextWorld.entitiesById[String(event.entityId)];
       const entityKindMatches = target && target.kind === event.entityKind;
       let lifecycleApplied = false;
-      if (event.action === 1 && entityKindMatches && (event.attachMode === 0 || event.attachMode === 1)) {
-        const activeEffects = [...(target.activeEffects ?? [])];
-        const effectIndex = activeEffects.findIndex(effect => effect.effectId === event.effectId);
-        if (event.attachMode === 1) {
-          if (effectIndex >= 0) {
-            activeEffects[effectIndex] = { ...activeEffects[effectIndex], expiryValue: 0n };
-            lifecycleApplied = true;
-          }
-        } else {
-          const effect = {
-            effectId: event.effectId,
-            expiryValue: event.expiryValue,
-            xTile: event.xTile,
-            yTile: event.yTile,
-            state: event.state,
-            auxiliary: event.auxiliary,
-          };
-          if (effectIndex >= 0) activeEffects[effectIndex] = effect;
-          else activeEffects.push(effect);
+      let worldEffectAdded = false;
+      // mj.B routes action 1 to bu.df (attachMode 0) or bu.de (nonzero).
+      // State 0 adds if absent; state 1 sets expiry to zero on an existing record.
+      if (event.action === 1 && entityKindMatches) {
+        const collectionName = event.attachMode === 0 ? "activeEffects" : "attachedEffects";
+        const effects = [...(target[collectionName] ?? [])];
+        const effectIndex = effects.findIndex(effect => effect.effectId === event.effectId);
+        if (effectIndex >= 0) {
+          if (event.state === 1) { effects[effectIndex] = { ...effects[effectIndex], expiryValue: 0n }; lifecycleApplied = true; }
+        } else if (event.state === 0) {
+          effects.push({ effectId: event.effectId, expiryValue: event.expiryValue,
+            x: event.xTile << 4, y: event.yTile << 4, entityKind: event.entityKind,
+            state: event.state, auxiliary: event.auxiliary });
           lifecycleApplied = true;
         }
-        if (lifecycleApplied) nextWorld.entitiesById[String(event.entityId)] = { ...target, activeEffects };
+        if (lifecycleApplied) nextWorld.entitiesById[String(event.entityId)] = { ...target, [collectionName]: effects };
       }
-      nextWorld = appendWorldEvent(nextWorld, -71, {
-        ...event, lifecycleApplied: Boolean(lifecycleApplied),
-        entityKindMatches: Boolean(entityKindMatches),
-      });
+      // Action 0 or a short entity ID > 32000 creates a world effect object.
+      if (event.action === 0 || event.entityId > 32000) {
+        nextWorld.worldEffects.push({ effectId: event.effectId, expiryValue: event.expiryValue,
+          entityId: event.entityId, entityKind: event.entityKind,
+          x: entityKindMatches ? target.x : event.xTile << 4,
+          y: entityKindMatches ? target.y : event.yTile << 4, state: event.state, auxiliary: event.auxiliary });
+        worldEffectAdded = true;
+      }
+      nextWorld = appendWorldEvent(nextWorld, -71, { ...event, lifecycleApplied, worldEffectAdded,
+        entityKindMatches: Boolean(entityKindMatches) });
       break;
     }
     case 26: {

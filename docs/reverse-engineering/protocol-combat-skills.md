@@ -69,8 +69,8 @@ Handler `mj.C` tìm entity theo ID/kind rồi gọi `bu.a(effectId,x,y,expiry,fl
 Payload prefix được đọc theo thứ tự: byte action, short effect ID, short entity ID, long expiry/time, byte X tile, byte Y tile, byte entity kind, byte attach/remove mode, byte state; int auxiliary có thể có thêm.
 
 - Entity kind `0` được tra trong player/entity lookup; kind khác tra trong NPC/monster lookup.
-- Nếu action bằng `1` và attach mode bằng `0`, handler tìm effect cùng ID trong entity effect list; mode `1` đặt expiry về `0` để loại effect; mode `0` thêm effect mới.
-- Các nhánh khác có thể gắn effect trực tiếp vào entity hoặc thêm effect object vào world effect list.
+- Handler tìm entity theo kind: kind `0` tra player, kind khác tra NPC/monster. Với action `1`, attach mode `0` thao tác collection `bu.df`; attach mode khác thao tác collection riêng `bu.de`. Trong cả hai collection, state `0` chỉ thêm nếu chưa có effect cùng ID; state `1` chỉ đặt expiry về `0` nếu effect đã tồn tại. State khác không làm thay đổi collection.
+- Nếu action bằng `0` hoặc entity ID lớn hơn `32000`, handler thêm effect vào world list `mj.o`; tọa độ lấy từ entity nếu resolve được, nếu không lấy từ tile coordinates nhân `16`. Đây là object lifecycle riêng, không phải visual overlay `-74/-73`.
 
 Không dùng field `long` như cooldown duration khi chưa xác định clock semantics; source lưu nó vào `e.b` và effect runtime tự kiểm tra expiry.
 
