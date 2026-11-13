@@ -133,9 +133,17 @@ export function applyS2COpcode5World(world, payload) {
     if (next.unknownEntitySnapshots.length > 50) next.unknownEntitySnapshots.shift();
     return next;
   }
+  const entity = next.entitiesById[String(snapshot.entityId)];
+  const combatState = Array.isArray(snapshot.combatState) ? snapshot.combatState : [];
+  const stateBytes = Array.isArray(snapshot.stateBytes) ? snapshot.stateBytes : [];
   next.entitiesById[String(snapshot.entityId)] = {
-    ...next.entitiesById[String(snapshot.entityId)],
+    ...entity,
     snapshot,
+    ...(Number.isFinite(combatState[0]) ? { currentHp: combatState[0] } : {}),
+    ...(Number.isFinite(combatState[1]) ? { maxHp: combatState[1] } : {}),
+    ...(Number.isFinite(combatState[2]) ? { currentMp: combatState[2] } : {}),
+    ...(Number.isFinite(combatState[3]) ? { maxMp: combatState[3] } : {}),
+    ...(Number.isInteger(stateBytes[0]) ? { level: stateBytes[0] } : {}),
   };
   return next;
 }
