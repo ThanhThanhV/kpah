@@ -563,3 +563,20 @@ C2S opcode 94's two market-panel writer modes now have generated Java/JavaScript
 
 
 C2S opcode 48 (use item) now has positive/negative signed-32 payload vectors and missing-field validation; opcode -25 (refine item) has matching Java 21 smoke coverage. These remain serialization checks only; server-side item/refinement rules are not implemented.
+
+
+## Thử kết nối protocol qua local bridge
+
+Client Web có panel **↔ Kết nối protocol** trên thanh trên cùng. Panel chỉ nhận WebSocket loopback và không gửi thông tin đăng nhập.
+
+1. Cài dependency: `npm install`.
+2. Khởi động local bridge, trỏ tới TCP host/port do bạn có quyền sử dụng:
+
+   ```bash
+   npm run bridge:tcp-ws -- --upstream-host 127.0.0.1 --upstream-port 22100
+   ```
+
+3. Khởi động client: `npm run dev`.
+4. Mở panel **Kết nối protocol**, giữ URL mặc định `ws://127.0.0.1:22101/kpah`, rồi nhấn **Kết nối**.
+
+Bridge mặc định chỉ bind `127.0.0.1`, giới hạn Origin dev/preview và chuyển tiếp binary bytes nguyên trạng. Địa chỉ TCP trong ví dụ chỉ là loopback minh họa, không phải endpoint game production. Chưa có endpoint production được cấu hình trong repo; handshake thành công chỉ chứng minh transport handshake, không chứng minh đăng nhập hay gameplay.
