@@ -2087,11 +2087,11 @@
   ],
   "modeSchemas": [
     {
-      "name": "CHARACTER_INVENTORY_SKILL_MODE_0",
+      "name": "CHARACTER_RESOURCE_CURRENCY_MODE_0",
       "direction": "S2C",
       "opcode": 16,
       "mode": 0,
-      "evidence": "CFR opcode 16 handler: mode byte, readLong currency, unsigned-byte skill count, repeated unsigned-byte skill index + int skill value, then common aY/aZ ints; modes 1/2/3 have separate mode-specific decoders.",
+      "evidence": "CFR ka.java:1240-1251 reads a signed long currency balance and an unsigned-byte count of (unsigned-byte resourceIndex, signed-int resourceAmount) records; each amount is assigned to ca.S[resourceIndex].a and the common callback stores the indexed array in ca.bt and the long in ca.bu (mj.java:4283-4286). Common trailing aY/aZ ints.",
       "fields": [
         {
           "name": "currency",
@@ -2109,15 +2109,15 @@
         }
       ],
       "records": {
-        "countName": "skillCount",
+        "countName": "resourceCount",
         "countType": "u8",
         "fields": [
           {
-            "name": "skillIndex",
+            "name": "resourceIndex",
             "type": "u8"
           },
           {
-            "name": "skillValue",
+            "name": "resourceAmount",
             "type": "i32"
           }
         ]
@@ -2172,6 +2172,33 @@
           "name": "secondCollection",
           "countType": "i8",
           "record": "k-second"
+        }
+      ],
+      "commonFields": [
+        {
+          "name": "aZ",
+          "type": "i32"
+        }
+      ]
+    },
+    {
+      "name": "CHARACTER_NAMED_COUNTERS_MODE_3",
+      "direction": "S2C",
+      "opcode": 16,
+      "mode": 3,
+      "evidence": "CFR ka.java:1326-1334 reads a signed-byte count followed by that many signed shorts into ca.T; opcode 1 initializes the parallel display-name and icon catalog bq.d/bq.e (ka.java:439-448), and xg.java:2965-2975 renders positive values with those names/icons. The count is followed by common aZ; aY precedes the mode-specific data.",
+      "fields": [
+        {
+          "name": "aY",
+          "type": "i32"
+        },
+        {
+          "name": "counterCount",
+          "type": "i8"
+        },
+        {
+          "name": "counterValues",
+          "type": "i16-list"
         }
       ],
       "commonFields": [

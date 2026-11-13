@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
 import { decodeS2CInitialization, INITIALIZATION_MODE_SCHEMAS } from "../src/protocol/generated/initialization-codec.js";
 
-assert.equal(INITIALIZATION_MODE_SCHEMAS.length, 3);
+assert.equal(INITIALIZATION_MODE_SCHEMAS.length, 4);
 const currency = 9_007_199_254_740_993n;
 const payload = new PacketWriter()
   .writeU8(0)
   .writeI64(currency)
-  .writeU8(2)
+   .writeU8(2)
   .writeU8(3).writeI32(-1200)
   .writeU8(8).writeI32(250000)
   .writeI32(123456).writeI32(654321)
@@ -17,9 +17,9 @@ const decoded = decodeS2CInitialization(16, payload);
 assert.equal(decoded.mode, 0);
 assert.equal(decoded.decoded, true);
 assert.equal(decoded.currency, currency);
-assert.deepEqual(decoded.skills, [
-  { skillIndex: 3, skillValue: -1200 },
-  { skillIndex: 8, skillValue: 250000 },
+assert.deepEqual(decoded.resources, [
+  { resourceIndex: 3, resourceAmount: -1200 },
+  { resourceIndex: 8, resourceAmount: 250000 },
 ]);
 assert.equal(decoded.aY, 123456);
 assert.equal(decoded.aZ, 654321);
@@ -75,10 +75,10 @@ const mode3 = decodeS2CInitialization(16, mode3Payload);
 assert.equal(mode3.mode, 3);
 assert.equal(mode3.decoded, true);
 assert.equal(mode3.aY, 111);
-assert.deepEqual(mode3.values, [101, 202, -303]);
+assert.deepEqual(mode3.counterValues, [101, 202, -303]);
 assert.equal(mode3.aZ, 222);
 assert.deepEqual([...mode3.trailingBytes], [0xbe]);
-assert.throws(() => decodeS2CInitialization(16, Uint8Array.from([3, 0,0,0,0, 255])), /Negative opcode 16 mode 3 item count/);
+assert.throws(() => decodeS2CInitialization(16, Uint8Array.from([3, 0,0,0,0, 255])), /Negative opcode 16 mode 3 counter count/);
 
 const opaque = decodeS2CInitialization(16, Uint8Array.from([4, 0x10, 0x20]));
 assert.equal(opaque.mode, 4);

@@ -896,3 +896,6 @@ GitHub file updates were confirmed on main. The current environment did not run 
 
 
 - Follow-up NPC purchase investigation: S2C opcode 16 is a four-type character-state refresh. Type 0 writes the client currency/resource model (ca.bt, ca.bu); type 1 replaces inventory z.bx; type 2 replaces auxiliary collection z.by from its second record group; type 3 loads ca.T. Source: ka.java:1233-1340, mj.java:4274-4302. This identifies the inventory/currency snapshot packet family but does not prove it is sent immediately after NPC purchase. S2C 85 remains a payload-free notification. Type 3 is documented but not yet added to generated codecs. Weighted progress unchanged.
+
+
+- Opcode 16 follow-up: mode 0's payload was mislabeled as skill values; source confirms it is a signed-long `$` balance plus indexed resource amounts mirrored into `ca.S[].a`/`ca.bt[]`. Corrected JS/Java decoder model names to `resources`. Mode 3's existing short-list decoder is now declared in canonical `modeSchemas` and validated by the generator; opcode 1 supplies its labels/icons through `bq.d`/`bq.e`, and the UI displays positive counts. Modes 0–3 are now all explicit in the schema. No WBS percentage increase: decoder-only work.

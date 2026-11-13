@@ -255,3 +255,11 @@ Important details and limits:
 - This proves opcode 16 is a candidate state-refresh mechanism for inventory and currency, but does not prove that the server sends type 0 and type 1 specifically after NPC purchase. The S2C 85 handler still only displays the success notice. To close purchase behavior, the server-side send sequence or a captured transaction exchange is still required.
 
 The schema already has mode entries for opcode 16 types 0, 1 and 2. Type 3 is now source-traced above but has not yet been added to generated codecs; no unsupported field names or purchase coupling have been introduced. Weighted project progress remains unchanged because this increment is reverse-engineering evidence, not an implemented transaction flow.
+
+
+### Opcode 16 follow-up — resource and named-counter consumers
+
+- Mode 0's long balance is `ca.bu`, rendered with `$`; the counted pairs update resource catalog entries by unsigned-byte catalog index and signed-int amount. The metadata is loaded from opcode 1 into `ca.S`, and the current amount is mirrored in `ca.bt`. Corrected the previous decoder's misleading `skills` naming to `resources`.
+- Mode 3 is a named-counter list. Opcode 1 loads its parallel labels/icons into `bq.d`/`bq.e`; opcode 16 loads signed-short values into `ca.T`; the inventory UI displays positive values with the matching label/icon. Domain meaning remains intentionally neutral.
+- Mode 2's second `k` collection is stored in `z.by` and displayed with a use action; the first group is parsed but not retained by the shared callback. Its semantics remain open.
+- Canonical schema now declares all four opcode 16 modes, and generator validation requires the mode 3 layout. Weighted progress unchanged; this remains protocol decoding, not server-authoritative purchase implementation.

@@ -631,3 +631,14 @@ The refinement UI callback `oy.a()` calls `ku.c()` and builds menu entries from 
 ## S2C opcode 82 consumer semantics
 
 The original handler clears a popup reference unconditionally, then reads one byte only if the current character counter `bS <= 0`. The byte is copied to both `cj` and `bS`, and the client sets its own local start time. When the counter is positive, no payload byte is read. The decoder's `canUpdate` parameter is therefore not a server-provided field: the integration layer must derive it from the current local character state.
+
+
+## S2C opcode 16 — consumer semantics and mode 3 catalog
+
+- Mode 0 is a currency/resource balance refresh. The first signed long is assigned to `ca.bu`, which the UI renders with `$` (`dh.java:1631`, `xg.java:1718`). The following unsigned-byte-counted entries are `(resourceIndex:u8, resourceAmount:i32)`; the original handler assigns each amount to both `ca.S[resourceIndex].a` and the matching `ca.bt[resourceIndex]` slot (`ka.java:1240-1251`, `mj.java:4283-4286`). `ca.S` metadata is initialized by opcode 1: each resource catalog entry includes ID, display name, unit/description and cooldown-related metadata (`ka.java:349-360`). The index is a catalog position; do not replace it with a resource ID without further evidence.
+- Mode 1 replaces the complete inventory `z.bx`; it is not a single-item delta (`ka.java:1254-1290`, `mj.java:4287-4290`).
+- Mode 2 carries two `k` collections. The second is stored as `z.by` and shown as a separate group in the inventory UI; its action callback sends the record's `e` and `d` fields (`xg.java:2949-2955`, `3104-3109`, `acr.java:13-20`). The first collection is parsed but is not retained by the shared state callback. Keep the `k` fields neutral; the full gameplay meaning is not established.
+- Mode 3 is a named-counter list: a signed-byte count followed by signed-short values loaded into `ca.T`. The parallel catalog comes from opcode 1 (`bq.e` icon IDs and `bq.d` labels, `ka.java:439-448`); the inventory panel renders each positive count with its corresponding label and icon (`xg.java:2965-2975`, `3023-3026`). The exact game subsystem name for this catalog is not established, so the schema uses `counterValues` rather than an invented domain label.
+- Both `aY` and `aZ` are common signed ints. The mode-specific parser and shared callback assign them to `ca.aY` and `ca.aZ`; their business meanings remain unknown.
+
+The generated mode schema now explicitly covers all four observed branches (0–3). Mode 0's former misleading `skills` labels were corrected to `resources`; mode 3's already-present decoder branch is now represented in the canonical schema and generator validation. These decoders remain parse-only and do not apply authoritative inventory or currency state.

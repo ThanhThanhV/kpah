@@ -4,14 +4,14 @@ import java.io.IOException;
 import java.util.*;
 public final class ProtocolInitializationCodec {
     private ProtocolInitializationCodec() {}
-    public record SkillValue(int skillIndex, int skillValue) {}
+    public record ResourceAmount(int resourceIndex, int resourceAmount) {}
     public record InventoryStat(int statId, short statValue) {}
     public record AuxiliaryFirstRecord(short discardedShort, byte discardedByte, byte h, byte c, String b, String a, byte d) {}
     public record AuxiliarySecondRecord(short discardedShort, byte discardedByte, byte h, String b, byte discardedMiddleByte, String a, int g, byte d) {}
     public record InventoryItem(byte discardedTypeByte, short i, short r, byte s, byte y, short v, short u,
                                  byte D, byte I, byte J, byte K, byte n, byte o, byte p, byte q, byte C,
                                  String d, int w, List<InventoryStat> stats, byte h) {}
-    public record Decoded(int mode, boolean decoded, Long currency, List<SkillValue> skills,
+    public record Decoded(int mode, boolean decoded, Long currency, List<ResourceAmount> resources,
                           Integer aY, Integer aZ, byte[] opaquePayload, byte[] trailingBytes,
                           short[] values, List<InventoryItem> items, List<AuxiliaryFirstRecord> firstCollection,
                           List<AuxiliarySecondRecord> secondCollection) {}
@@ -71,7 +71,7 @@ public final class ProtocolInitializationCodec {
         if (mode == 3) {
             int aY = in.readI32();
             int count = in.readI8();
-            if (count < 0) throw new IOException("Negative opcode 16 mode 3 item count");
+            if (count < 0) throw new IOException("Negative opcode 16 mode 3 counter count");
             short[] values = new short[count];
             for (int i = 0; i < count; i++) values[i] = in.readI16();
             int aZ = in.readI32();
@@ -86,14 +86,14 @@ public final class ProtocolInitializationCodec {
         }
         long currency = in.readI64();
         int count = in.readU8();
-        List<SkillValue> skills = new ArrayList<>(count);
+        List<ResourceAmount> resources = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
-            skills.add(new SkillValue(in.readU8(), in.readI32()));
+            resources.add(new ResourceAmount(in.readU8(), in.readI32()));
         }
         int aY = in.readI32();
         int aZ = in.readI32();
         byte[] trailing = new byte[in.remaining()];
         for (int i = 0; i < trailing.length; i++) trailing[i] = (byte) in.readU8();
-        return new Decoded(mode, true, currency, List.copyOf(skills), aY, aZ, new byte[0], trailing, new short[0], List.of(), List.of(), List.of());
+        return new Decoded(mode, true, currency, List.copyOf(resources), aY, aZ, new byte[0], trailing, new short[0], List.of(), List.of(), List.of());
     }
 }
