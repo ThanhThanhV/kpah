@@ -1098,3 +1098,10 @@ export function decodeS2COpcodeMinus73(payload) {
   }
   return { entityId, branch, handled: false, unconsumedBytes: readRemaining(reader), trailingBytes: new Uint8Array() };
 }
+
+/** Opcode -51: image resource bytes returned for a previously requested short resource ID. */
+export function decodeS2COpcodeMinus51(payload) {
+  const reader = new PacketReader(payload);
+  const resourceId = reader.readI16();
+  return { resourceId, imageBytes: readRemaining(reader), trailingBytes: new Uint8Array() };
+}
