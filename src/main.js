@@ -955,7 +955,8 @@ class WorldScene extends Phaser.Scene {
       const templateLabel=entity.templateName
         ? entity.templateName+' '+entity.frameWidth+'x'+entity.frameHeight
         : 'T'+(entity.templateId??'?');
-      const labelText='#'+entity.entityId+' · K'+(entity.kind??'?')+' / '+templateLabel;
+      const labelText='#'+entity.entityId+' · '+(entity.factoryClass??('K'+(entity.kind??'?')))
+        +' / '+templateLabel;
       if(!view){
         const marker=this.add.circle(0,0,9,tint,0.92).setStrokeStyle(2,0x171b22,0.95);
         const label=this.add.text(0,-19,labelText,{
