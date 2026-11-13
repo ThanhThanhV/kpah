@@ -1,4 +1,4 @@
-import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74, decodeS2COpcodeMinus71, decodeS2COpcodeMinus73 } from "./generated/world-state-codec.js";
+import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74, decodeS2COpcodeMinus71, decodeS2COpcodeMinus73, decodeS2COpcodeMinus51, decodeS2COpcode26 } from "./generated/world-state-codec.js";
 import { decodeS2COpcode5 } from "./generated/opcode5-codec.js";
 import { decodeS2CTemplateCatalog, decodeS2CTemplateAsset } from "./template-assets.js";
 
@@ -8,6 +8,8 @@ export function createServerWorldState() {
     entityOrder: [],
     templatesById: {},
     templateAssetPayloadsById: {},
+    effectDefinitionsById: {},
+    effectImagePayloadsById: {},
     unknownEntitySnapshots: [],
     combatEvents: [],
     combatEventSequence: 0,
@@ -29,6 +31,8 @@ function cloneWorld(world) {
     entityOrder: [...(source.entityOrder ?? [])],
     templatesById: { ...(source.templatesById ?? {}) },
     templateAssetPayloadsById: { ...(source.templateAssetPayloadsById ?? {}) },
+    effectDefinitionsById: { ...(source.effectDefinitionsById ?? {}) },
+    effectImagePayloadsById: { ...(source.effectImagePayloadsById ?? {}) },
     unknownEntitySnapshots: [...(source.unknownEntitySnapshots ?? [])],
     combatEvents: [...(source.combatEvents ?? [])],
     worldEvents: [...(source.worldEvents ?? [])],
@@ -313,6 +317,32 @@ export function applyInboundWorldPacket(state, frame) {
       nextWorld = appendWorldEvent(nextWorld, -71, {
         ...event, lifecycleApplied: Boolean(lifecycleApplied),
         entityKindMatches: Boolean(entityKindMatches),
+      });
+      break;
+    }
+    case 26: {
+      event = decodeS2COpcode26(frame.payload);
+      nextWorld = cloneWorld(world);
+      const definitionErrors = new Set((event.sectionErrors ?? []).map(item => item.section));
+      if (!definitionErrors.has("indexedGraphics")) {
+        for (const definition of event.indexedGraphics ?? []) {
+          nextWorld.effectDefinitionsById[String(definition.id)] = copyBytes(definition.data);
+        }
+      }
+      nextWorld = appendWorldEvent(nextWorld, 26, {
+        templateCount: event.templateCount,
+        effectDefinitionCount: definitionErrors.has("indexedGraphics") ? 0 : (event.indexedGraphics?.length ?? 0),
+        indexedGraphicsError: definitionErrors.has("indexedGraphics"),
+      });
+      break;
+    }
+    case -51: {
+      event = decodeS2COpcodeMinus51(frame.payload);
+      nextWorld = cloneWorld(world);
+      nextWorld.effectImagePayloadsById[String(event.resourceId)] = copyBytes(event.imageBytes);
+      nextWorld = appendWorldEvent(nextWorld, -51, {
+        resourceId: event.resourceId,
+        imageByteLength: event.imageBytes.length,
       });
       break;
     }
