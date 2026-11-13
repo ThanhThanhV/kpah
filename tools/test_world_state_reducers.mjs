@@ -232,7 +232,7 @@ assert.equal(state.serverWorld.entitiesById["124"].effectAttachment, undefined,
   "branch 0 must not overwrite the source player's entity record");
 assert.equal(beforeLinkedEffect.serverWorld.targetLinkedEffectEvents.length, 0,
   "branch 0 event collection must preserve previous world snapshot");
-assert.equal(state.serverWorld.worldEvents.at(-1).effectActorLookupSupported, false);
+assert.equal(state.serverWorld.worldEvents.at(-1).effectActorLookupSupported, true);
 assert.equal(state.serverWorld.worldEvents.at(-1).resolvedTargetCount, 1);
 
 // Opcode -73 branch 1 adds/refreshes a visual effect overlay in the entity's
