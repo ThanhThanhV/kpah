@@ -28,6 +28,7 @@ export function projectServerWorldEntities(world, localCharacterId = null) {
       isLocalPlayer: kind === 0 && Number.isInteger(localCharacterId) && entityId === localCharacterId,
       templateId,
       name: typeof snapshot?.name === "string" ? snapshot.name : null,
+      currentHp: Number.isFinite(entity.currentHp) ? entity.currentHp : null,
       templateName: template?.name ?? null,
       x,
       y,
