@@ -129,4 +129,36 @@ assert.equal(multiHit.damage, 75);
 assert.deepEqual(multiHit.targets.map(target => target.entityId), [124, 123]);
 assert.equal(state.serverWorld.entitiesById["124"].currentHp, 800);
 assert.equal(before106.serverWorld.entitiesById["124"].currentHp, 875, "opcode 106 must preserve previous world snapshot");
+
+// Opcode -74 subcommand 0 attaches the timed effect only to a matching
+// entity ID and entity kind. Duration remains raw; client does not invent
+// expiry clock semantics or classify the effect as a buff/debuff.
+const timedEffect = new PacketWriter().writeI8(0).writeI8(0).writeI16(124)
+  .writeI16(701).writeI32(15000).writeBool(true).writeBool(false).writeI8(2).toUint8Array();
+const beforeTimedEffect = state;
+state = applyInboundWorldPacket(state, { opcode: -74, payload: timedEffect }).state;
+const attachedEntity = state.serverWorld.entitiesById["124"];
+assert.equal(attachedEntity.activeEffects.at(-1).effectId, 701);
+assert.equal(attachedEntity.activeEffects.at(-1).durationValue, 15000);
+assert.equal(attachedEntity.activeEffects.at(-1).durationIsPositive, true);
+assert.equal(attachedEntity.activeEffects.at(-1).flagA, true);
+assert.equal(attachedEntity.activeEffects.at(-1).flagB, false);
+assert.equal(attachedEntity.activeEffects.at(-1).effectVariant, 2);
+assert.equal(beforeTimedEffect.serverWorld.entitiesById["124"].activeEffects, undefined,
+  "timed effect reducer must preserve previous entity snapshot");
+assert.equal(state.serverWorld.worldEvents.at(-1).attachedToKnownEntity, true);
+
+// Same ID with a different entity kind must not receive the effect.
+const wrongKindEffect = new PacketWriter().writeI8(0).writeI8(1).writeI16(124)
+  .writeI16(702).writeI32(3000).writeBool(false).writeBool(false).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: -74, payload: wrongKindEffect }).state;
+assert.equal(state.serverWorld.entitiesById["124"].activeEffects.length, 1);
+assert.equal(state.serverWorld.worldEvents.at(-1).attachedToKnownEntity, false);
+
+// Unsupported subcommands are retained opaque and never parsed as subtype 0.
+const otherEffectVariant = new PacketWriter().writeI8(1).writeU8(0xaa).writeU8(0xbb).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: -74, payload: otherEffectVariant }).state;
+assert.equal(state.serverWorld.worldEvents.at(-1).handled, false);
+assert.deepEqual([...state.serverWorld.worldEvents.at(-1).unconsumedBytes], [0xaa, 0xbb]);
+
 console.log("Inbound world-state reducers: PASS (spawn/update, guarded snapshot, combat event, despawn, unknown opcode)");
