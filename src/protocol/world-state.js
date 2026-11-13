@@ -19,7 +19,7 @@ export function createServerWorldState() {
     effectImagePayloadsById: {},
     targetLinkedEffectEvents: [],
     worldEffects: [],
-    targetLinkedActorsBySourceId: {}
+    targetLinkedActorsBySourceId: {},
     targetLinkedActorSpawnSequence: 0,
     unknownEntitySnapshots: [],
     combatEvents: [],
@@ -51,7 +51,7 @@ function cloneWorld(world) {
     effectImagePayloadsById: { ...(source.effectImagePayloadsById ?? {}) },
     targetLinkedEffectEvents: [...(source.targetLinkedEffectEvents ?? [])],
     worldEffects: [...(source.worldEffects ?? [])],
-    targetLinkedActorsBySourceId: { ...(source.targetLinkedActorsBySourceId ?? {}) }
+    targetLinkedActorsBySourceId: { ...(source.targetLinkedActorsBySourceId ?? {}) },
     unknownEntitySnapshots: [...(source.unknownEntitySnapshots ?? [])],
     combatEvents: [...(source.combatEvents ?? [])],
     worldEvents: [...(source.worldEvents ?? [])],
