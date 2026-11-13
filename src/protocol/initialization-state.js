@@ -119,3 +119,46 @@ export function applyOpcode1(state, packet) {
     })),
   };
 }
+
+
+/**
+ * Stores only completely parsed opcode 3 extension groups under their wire character id.
+ * Group names remain neutral until the original handler establishes business meaning.
+ */
+export function applyOpcode3Extension(state, packet) {
+  if (!state || typeof state !== "object") throw new TypeError("Initialization state is required");
+  if (!packet || !packet.main || packet.main.error || !Number.isInteger(packet.main.i) || packet.main.i === -1) {
+    return state;
+  }
+
+  const characterId = packet.main.i;
+  const previous = state.characterExtensionsById?.[characterId] ?? {};
+  const nextExtension = { ...previous, main: { ...packet.main } };
+  const parsedGroups = [
+    ["pairA", "pairAParsed"],
+    ["tripleB", "tripleBParsed"],
+    ["tripleC", "tripleCParsed"],
+    ["mapping", "mappingApplied"],
+    ["groupD", "groupDParsed"],
+    ["groupE", "groupEParsed"],
+  ];
+  for (const [field, parsedFlag] of parsedGroups) {
+    if (packet[parsedFlag] === true) {
+      const value = packet[field];
+      nextExtension[field] = Array.isArray(value)
+        ? [...value]
+        : value && typeof value === "object" ? { ...value } : value;
+    }
+  }
+  if (packet.bfParsed === true) nextExtension.bf = packet.bf;
+  if (packet.mappingError != null) nextExtension.mappingError = packet.mappingError;
+  if (packet.trailingBytes instanceof Uint8Array) nextExtension.trailingBytes = new Uint8Array(packet.trailingBytes);
+
+  return {
+    ...state,
+    characterExtensionsById: {
+      ...(state.characterExtensionsById ?? {}),
+      [characterId]: nextExtension,
+    },
+  };
+}
