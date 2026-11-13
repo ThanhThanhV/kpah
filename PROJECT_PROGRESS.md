@@ -860,6 +860,14 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - Opcode 48 `USE_ITEM` is source-traced to the inventory “Sử dụng” action and carries an i32 item ID.
 - C2S -68 is `REFINEMENT_ACTION`; S2C -68 is `REFINEMENT_RESULT`. The response handler reads a result byte; result 4 carries a short + two bytes into a screen callback. Payload remains opaque pending callback contract.
 - Added typed C2S `EQUIP_ITEM` (86, i16 item ID), `DROP_EQUIPPED_ITEM` (-21, i16 equipment slot), and `SHOP_PURCHASE_ITEM` (85, i8 item ID). S2C 85 is `SHOP_PURCHASE_SUCCESS`.
-- Named C2S 74 `SHOP_PURCHASE_BATCH` (short total quantity + repeated short item IDs) and C2S 24 `SHOP_BATCH_ACTION` (two record layouts); kept both payloads opaque until variable-list/variant codecs are implemented.
+- Added typed C2S 74 `SHOP_PURCHASE_BATCH` codec (signed-short expanded count + repeated signed-short item IDs) and caller-selected C2S 24 `SHOP_BATCH_ACTION` codecs (catalog/premium layouts, u8 record count, conditional category-3 option byte).
 - CI run `43201997578` on commit `515fb0d05a7686fecbf6e29d61495c60e03a5459` SUCCESS: Vite build, generated protocol consistency, JS protocol suites, Java 21 compile/smoke and original-JAR analysis.
 - Still open: unequip-to-bag, full purchase transaction semantics, opcode 24/74 payload codecs, refinement callback payload, warehouse completion and server-authoritative inventory/equipment mutation. Weighted project progress unchanged; BE remains deferred.
+
+
+### B7 — shop batch variable-list codecs (CI pending)
+
+- Opcode 24 caller-selected `catalog`/`premium` codecs generated in Java/JavaScript; no wire discriminator exists. Catalog writes category/templateId/quantity=1 and conditional option byte for category 3. Premium writes fixed category 4, item ID and quantity.
+- Opcode 74 typed expanded list: signed-short total item count followed by repeated signed-short item IDs; quantity is expanded by repeating IDs.
+- Added JS round-trip and Java 21 smoke coverage. Source: `jy.java:756-780`, `816-865`; `xg.java:3257-3265`.
+- CI pending. Still open: unequip-to-bag, full purchase transaction semantics, refinement callback payload, warehouse completion and server-authoritative inventory/equipment mutation. Weighted progress unchanged; BE deferred.
