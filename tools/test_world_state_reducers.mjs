@@ -80,6 +80,26 @@ assert.equal(state.serverWorld.characterLevelsById["124"].level, 26);
 assert.equal(state.serverWorld.characterLevelsById["124"].valueA, 5000);
 assert.equal(state.serverWorld.characterLevelsById["124"].valueB, 600);
 
+const entityStateUpdate = new PacketWriter()
+  .writeI16(124).writeU8(8).writeI16(940).writeI16(950)
+  .writeI32(1200).writeI8(2).writeI8(3).writeI32(2400).writeI32(77).toUint8Array();
+applied = applyInboundWorldPacket(state, { opcode: 7, payload: entityStateUpdate });
+state = applied.state;
+assert.equal(state.serverWorld.entitiesById["124"].currentHp, 1200);
+assert.equal(state.serverWorld.entitiesById["124"].maxHp, 2400);
+assert.deepEqual(state.serverWorld.entitiesById["124"].opcode7State, {
+  templateId: 8, x: 940, y: 950, stateByteD: 2, stateByteI: 3, opaqueInt: 77,
+});
+assert.equal(state.serverWorld.entitiesById["124"].snapshot.x, 900,
+  "opcode 7 retains its coordinate fields without overriding opcode 5 player position");
+
+const unknownEntityState = new PacketWriter()
+  .writeI16(777).writeU8(8).writeI16(1).writeI16(2)
+  .writeI32(10).writeI8(0).writeI8(0).writeI32(20).writeI32(0).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 7, payload: unknownEntityState }).state;
+assert.equal(state.serverWorld.entitiesById["777"], undefined,
+  "opcode 7 updates existing entities only and must not create an entity");
+
 const playerMoveUpdate = new PacketWriter()
   .writeI8(0).writeU8(8).writeI16(124).writeI16(950).writeI16(960).writeI8(1)
   .writeI32(-1).writeI8(0).writeBool(true).toUint8Array();
