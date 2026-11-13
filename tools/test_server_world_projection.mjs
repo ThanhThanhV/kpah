@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { projectServerWorldEntities } from "../src/protocol/server-world-projection.js";
 import { resolveOriginalEntityFactoryClass, resolveOriginalEntityFrameIndex } from "../src/protocol/original-entity-factory.js";
+import { getServerCombatEventsAfter } from "../src/protocol/server-world-combat.js";
 
 const projected = projectServerWorldEntities({
   entityOrder: [10, 11, 12, 13],
@@ -54,5 +55,21 @@ assert.equal(resolveOriginalEntityFrameIndex(3, 1, 0), 4);
 assert.equal(resolveOriginalEntityFrameIndex(4, 2, 3), 0);
 assert.equal(resolveOriginalEntityFrameIndex(5, 0, 0), null);
 assert.equal(resolveOriginalEntityFrameIndex(0, 4, 0), null);
+const combatBatch = getServerCombatEventsAfter({
+  combatEventSequence: 5,
+  combatEvents: [
+    { sequence: 3, damage: 10 },
+    { sequence: 4, damage: 20 },
+    { sequence: 5, damage: 30 },
+  ],
+}, 3);
+assert.deepEqual(combatBatch.events.map(event => event.damage), [20, 30]);
+assert.equal(combatBatch.lastSequence, 5);
+const evictedBatch = getServerCombatEventsAfter({
+  combatEventSequence: 125,
+  combatEvents: [{ sequence: 125, damage: 50 }],
+}, 100);
+assert.deepEqual(evictedBatch.events.map(event => event.damage), [50]);
+assert.equal(evictedBatch.lastSequence, 125);
 assert.deepEqual(projectServerWorldEntities(null), []);
 console.log("Server world projection: PASS (verified kind, entity/template IDs, opcode 4/5 coordinates, verified template metadata and original idle frame mapping)");
