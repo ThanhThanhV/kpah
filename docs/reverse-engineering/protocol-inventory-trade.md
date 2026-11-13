@@ -220,3 +220,15 @@ Generated Java/JavaScript codecs use the corrected command names and cover both 
 - Drop equipped item opcode -21 đã có schema C2S i16 equipmentSlot.
 - Drop inventory item opcode 61 cần giữ tách biệt; request i16 itemId, response có cấu trúc riêng đang cần schema hóa đầy đủ khi xác minh được tất cả field semantics.
 - Unequip-to-bag vẫn chưa xác minh; không tạo opcode hoặc schema phỏng đoán.
+
+## NPC purchase — phân biệt thông báo thành công và cập nhật trạng thái
+
+- C2S opcode 85 gửi đúng một byte `bd.o` (jy.java:207-214; abv.java:12-15; gt.java:12-15). Đây là giá trị catalog ID được caller lấy từ record `bd`, nhưng writer thu hẹp thành byte; schema giữ tên trung tính `itemId` theo wire contract hiện có.
+- S2C opcode 85 chỉ gọi `km.a(...)` để hiển thị thông báo và không đọc payload (ka.java:195-197). Schema được chuẩn hóa thành payload rỗng; không có item ID, quantity, price hay currency delta trong response này.
+- S2C opcode 18 đọc một record item (type, item template, instance ID, stats...) rồi gọi `mj.a(characterId, item)`; handler chỉ thêm item vào `z.bx` khi character ID là nhân vật hiện tại, và được gọi từ luồng nhặt ground item (ka.java:1343-1355; mj.java:4311-4344). Không có call path từ NPC purchase callback `abv`/`gt` tới handler này trong client source đã truy vết; không được gán opcode 18 thành purchase inventory response.
+- S2C opcode 3 là character-state snapshot lớn, nhưng hiện chưa giải mã hết các field liên quan currency/inventory; nó không chứng minh được packet delta sau từng lần mua (ka.java:481-610). Do vậy chưa xác định được packet nào cập nhật túi/tiền ngay sau mua NPC. Giữ trạng thái này là `unknown` thay vì gán nhầm các packet nhặt đồ hoặc snapshot.
+
+### Kết luận
+
+- `SHOP_PURCHASE_SUCCESS` (S2C 85) có payload rỗng, đã schema hóa; đây chỉ là thông báo UI.
+- Inventory update và currency update sau mua NPC vẫn chưa xác định; cần tiếp tục trace server push và state snapshot trước khi đặt tên opcode.
