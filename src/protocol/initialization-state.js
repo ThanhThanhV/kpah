@@ -162,3 +162,65 @@ export function applyOpcode3Extension(state, packet) {
     },
   };
 }
+
+
+/**
+ * Applies the two source-backed S2C opcode 15 variants without interpreting
+ * item fields or image bytes beyond the decoder's verified framing.
+ */
+export function applyOpcode15(state, packet) {
+  if (!state || typeof state !== "object") throw new TypeError("Initialization state is required");
+  if (!packet || packet.accepted !== true || !Number.isInteger(packet.targetCharacterId)) return state;
+  if (!Array.isArray(packet.items)) throw new TypeError("Opcode 15 items must be an array");
+
+  const cloneItems = () => packet.items.map(item => ({
+    ...item,
+    stats: Array.isArray(item.stats) ? item.stats.map(stat => ({ ...stat })) : [],
+  }));
+  const characterId = packet.targetCharacterId;
+  const previous = state.opcode15ByCharacterId?.[characterId] ?? {};
+
+  let nextCharacter;
+  if (packet.subtype === 0) {
+    if (!Array.isArray(packet.shortValues) || packet.shortValues.length !== 5) {
+      throw new TypeError("Opcode 15 subtype 0 requires five short values");
+    }
+    nextCharacter = {
+      ...previous,
+      shopContext: {
+        items: cloneItems(),
+        aS: packet.aS,
+        shortValues: [...packet.shortValues],
+        optionalTextSentinel: packet.optionalTextSentinel,
+        optionalText: packet.optionalText ?? null,
+        optionalTextValue: packet.optionalTextValue,
+        optionalContextSentinel: packet.optionalContextSentinel,
+        optionalContext: packet.optionalContext == null ? null : { ...packet.optionalContext },
+        trailingBytes: packet.trailingBytes instanceof Uint8Array
+          ? new Uint8Array(packet.trailingBytes) : new Uint8Array(),
+      },
+    };
+  } else {
+    if (!(packet.imageBytes instanceof Uint8Array)) {
+      throw new TypeError("Opcode 15 image bytes must be Uint8Array");
+    }
+    if (!Number.isInteger(packet.frameCount)) throw new TypeError("Opcode 15 frame count is required");
+    nextCharacter = {
+      ...previous,
+      petEquipmentImage: {
+        items: cloneItems(),
+        frameCount: packet.frameCount,
+        atlasLayoutCode: packet.atlasLayoutCode,
+        imageBytes: new Uint8Array(packet.imageBytes),
+      },
+    };
+  }
+
+  return {
+    ...state,
+    opcode15ByCharacterId: {
+      ...(state.opcode15ByCharacterId ?? {}),
+      [characterId]: nextCharacter,
+    },
+  };
+}
