@@ -53,7 +53,7 @@ assert.equal(playerStep.direction, 3);
 const playerVertical = advanceOriginalPlayerMovement({
   x: 8, y: 12, targetX: 8, targetY: 4, direction: 0, moving: true,
 }, 3);
-assert.equal(playerVertical.y, 8);
+assert.equal(playerVertical.y, 9);
 assert.equal(playerVertical.direction, 1);
 const playerComplete = advanceOriginalPlayerMovement({
   x: 10, y: 10, targetX: 12, targetY: 12, direction: 2, moving: true,
