@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate source-backed C2S command variant codecs from protocol/protocol.yaml."""
 from __future__ import annotations
-import argparse, json
+import argparse, json, difflib
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = ROOT / "protocol" / "protocol.yaml"
@@ -352,6 +352,12 @@ def main():
             if not path.is_file() or path.read_text(encoding="utf-8") != content: stale.append(str(path.relative_to(ROOT)))
         else:
             path.parent.mkdir(parents=True,exist_ok=True); path.write_text(content,encoding="utf-8")
-    if stale: raise SystemExit("Stale command-variant outputs: "+", ".join(stale))
+    if stale:
+        for path, content in outputs().items():
+            if not path.is_file() or path.read_text(encoding="utf-8") != content:
+                actual = path.read_text(encoding="utf-8").splitlines(keepends=True) if path.is_file() else []
+                expected = content.splitlines(keepends=True)
+                print("".join(difflib.unified_diff(actual, expected, fromfile=str(path), tofile="generated", n=2)))
+        raise SystemExit("Stale command-variant outputs: "+", ".join(stale))
     print("Command-variant codec "+("check" if args.check else "generated")+": 2 files")
 if __name__ == "__main__": main()
