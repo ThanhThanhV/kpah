@@ -35,7 +35,7 @@ const market94Unknown=decodeC2SOpcode94(new PacketWriter().writeI8(2).writeU8(10
 assert.equal(market94Unknown.fields,null);assert.deepEqual([...market94Unknown.unconsumedBytes],[10]);
 assert.throws(()=>encodeC2SOpcode94({mode:2}),/Unsupported C2S opcode 94 mode/);
 
-assert.deepEqual(C2S_OPCODE24_VARIANTS, ["catalog", "premium"]);
+assert.deepEqual(C2S_OPCODE24_VARIANTS, ["catalog", "category4_fixed"]);
 const catalogRecords = [
  {category:3,templateId:0x1234,optionByte:7},
  {category:1,templateId:0x0022}
@@ -47,15 +47,15 @@ assert.deepEqual(catalogDecoded.records,[
  {category:3,templateId:0x1234,quantity:1,optionByte:7},
  {category:1,templateId:0x0022,quantity:1}
 ]);
-const premiumPayload = encodeC2SOpcode24("premium",{records:[{itemId:0x0102,quantity:5}]});
+const premiumPayload = encodeC2SOpcode24("category4_fixed",{records:[{itemId:0x0102,quantity:5}]});
 assert.deepEqual([...premiumPayload],[1,4,1,2,0,5]);
-assert.deepEqual(decodeC2SOpcode24("premium",premiumPayload).records,[
+assert.deepEqual(decodeC2SOpcode24("category4_fixed",premiumPayload).records,[
  {category:4,itemId:0x0102,quantity:5}
 ]);
 assert.throws(()=>encodeC2SOpcode24("unknown",{records:[]}),/Unknown C2S opcode 24 variant/);
 assert.throws(()=>encodeC2SOpcode24("catalog",{records:[{category:3,templateId:1}]}),/Missing opcode 24 field optionByte/);
 assert.throws(()=>encodeC2SOpcode24("catalog",{records:Array.from({length:256},()=>({category:1,templateId:1}))}),/exceeds u8/);
-const catalogTrailing = decodeC2SOpcode24("premium",new PacketWriter().writeU8(0).writeU8(99).toUint8Array());
+const catalogTrailing = decodeC2SOpcode24("category4_fixed",new PacketWriter().writeU8(0).writeU8(99).toUint8Array());
 assert.deepEqual([...catalogTrailing.trailingBytes],[99]);
 
 const shop74Payload = encodeC2SOpcode74({itemIds:[0x1234,-2]});
