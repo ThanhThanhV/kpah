@@ -94,3 +94,14 @@ This is a pure frame-to-state adapter. It does not open a TCP socket, negotiate 
 ## Incremental stream boundary
 
 The frame-to-state adapter consumes complete frames. `ServerFrameStreamDecoder` now provides the preceding byte-stream layer: it buffers split TCP reads, emits coalesced complete frames, and preserves the encrypted receive cursor. It can pause after a caller-selected number of frames to allow the cleartext `-40` handshake to be handled and the receive key installed before buffered encrypted bytes are parsed. It remains a pure byte-stream utility, not a socket connection or Phaser integration.
+
+
+## Stream-to-state composition
+
+The intended pure client pipeline is now composable without re-encoding frames:
+
+1. Feed each TCP read chunk to `ServerFrameStreamDecoder.push(chunk)`.
+2. Pass each emitted decoded frame to `applyInboundInitializationPacket(state, frame)`.
+3. Carry the stream decoder's receive key/cursor across chunks; the state adapter does not own transport state.
+
+`applyInboundInitializationFrame` remains as a convenience for callers that already hold one complete raw frame. Neither entry point opens a socket or updates the Phaser demo automatically.
