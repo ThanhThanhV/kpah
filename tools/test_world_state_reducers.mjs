@@ -341,7 +341,7 @@ assert.deepEqual([...parsedActorDefinition.optionalSequences[2]], [22]);
 assert.equal(parsedActorDefinition.firstFrameMaxBottom, -30);
 assert.equal(resolveActorEffectSequenceIndex(0, 3), 2);
 assert.equal(resolveActorEffectSequenceIndex(1, 3), 6);
-assert.equal(resolveActorEffectFrameIndex(parsedActorDefinition, 3, 0, 1), 1);
+assert.equal(resolveActorEffectFrameIndex(parsedActorDefinition, 3, 0, 1), 3);
 assert.equal(resolveActorEffectFrameIndex(parsedActorDefinition, 3, 2, 0), null);
 assert.throws(() => decodeActorEffectDefinition(actorDefinitionFixture.slice(0, -1)), /Truncated/);
 

@@ -26,7 +26,7 @@ export function decodeActorEffectDefinition(payload) {
   const readI8 = label => { requireBytes(1, label); return view.getInt8(offset++); };
   const readI16 = label => { requireBytes(2, label); const value = view.getInt16(offset, false); offset += 2; return value; };
   const readBytes = (count, label) => { requireBytes(count, label); const value = payload.slice(offset, offset + count); offset += count; return value; };
-  const readSignedArray = label => { const count = readI8(label + " length"); if (count < 0) throw new RangeError("Negative actor effect " + label + " length"); return readBytes(count, label); };
+  const readSignedArray = label => { const count = readI8(label + " length"); if (count < 0) throw new RangeError("Negative actor effect " + label + " length"); return Int8Array.from(readBytes(count, label)); };
   const regionCount = readI8("region count");
   if (regionCount < 0) throw new RangeError("Negative actor effect region count");
   const regions = [];
