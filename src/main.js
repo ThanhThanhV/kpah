@@ -1182,7 +1182,7 @@ class WorldScene extends Phaser.Scene {
     if(this.textures.exists(key))return Promise.resolve(true);
     if(this.serverActorShadowLoad)return this.serverActorShadowLoad;
     this.serverActorShadowLoad=loadAssetManifest().then(manifest=>{
-      const entry=(manifest.decodedPackedEntries??[]).find(item=>String(item.path??'').replace(/^\\/+/, '')==='shadow.png');
+      const entry=(manifest.decodedPackedEntries??[]).find(item=>item.path==='shadow.png');
       if(!entry)throw new Error('Original /shadow.png asset is absent from the decoded asset manifest.');
       const url=assetUrl(entry.output);if(!url)throw new Error('Original /shadow.png asset path is invalid.');
       return new Promise(resolve=>{
