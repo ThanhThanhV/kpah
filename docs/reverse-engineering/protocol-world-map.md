@@ -165,3 +165,6 @@ The browser client now decodes opcode 100 metadata, issues the exact C2S -47 req
 
 Important limitation: the browser still retains the returned packed image payload as opaque bytes. The ba archive extraction, special bj branches, vertical frame slicing and cd.c[templateType][direction][state] animation selection have not yet been implemented in Phaser. No original sprite is claimed to be rendered yet.
 
+
+The browser implementation has now added the common image branch of ba/cg: it decodes the indexed resource archive, applies the exact repeating XOR key, extracts resource <resourceId>_h and data, concatenates them and recognizes PNG/JPEG/GIF signatures. Special bj payload branches remain opaque. The Phaser scene loads the common image branch as a vertical spritesheet and displays the original idle frame for generic cd entities using the exact cd.c table (direction 0, animation state 0). This is static idle rendering only; facing, action-state animation and specialized renderer classes are not yet reproduced.
+
