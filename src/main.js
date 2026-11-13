@@ -16,6 +16,7 @@ import { createMailState } from './mail-state.js';
 import { createLocalSave } from './local-save.js';
 import { mountProtocolConnectionPanel, sendPlayerMovement } from './protocol/connection-panel.js';
 import { projectServerWorldEntities } from './protocol/server-world-projection.js';
+import { advanceCharacterPartPlayback, triggerCharacterPartAction } from './protocol/character-part-data.js';
 import { decodeTemplateSpriteAtlas } from './protocol/template-assets.js';
 import { resolveOriginalEntityFactoryClass, resolveOriginalEntityFrameIndex } from './protocol/original-entity-factory.js';
 import { advanceOriginalCdMovement, advanceOriginalPlayerMovement } from './protocol/original-entity-motion.js';
@@ -1273,6 +1274,16 @@ class WorldScene extends Phaser.Scene {
     const batch=getServerCombatEventsAfter(this.serverWorldState,this.serverWorldCombatSequence);
     this.serverWorldCombatSequence=batch.lastSequence;
     for(const event of batch.events){
+      const attackerId=Number.isInteger(event.attackerEntityId)?String(event.attackerEntityId):null;
+      const attacker=attackerId?this.serverWorldState?.entitiesById?.[attackerId]:null;
+      if(attacker?.kind===0&&Number.isInteger(attacker.marker)&&attacker.marker>=0){
+        const record=this.serverInitializationState?.characterPartCatalog?.[attacker.marker];
+        if(record?.decoded){
+          this.serverCharacterPartPlayback.set(attackerId,
+            triggerCharacterPartAction(this.serverCharacterPartPlayback.get(attackerId)));
+          this.syncServerWorldViews();
+        }
+      }
       const targets=Array.isArray(event.targets)&&event.targets.length
         ?event.targets.map(target=>target.entityId)
         :[event.targetEntityId];
@@ -1893,20 +1904,9 @@ class WorldScene extends Phaser.Scene {
         if(!record?.decoded)continue;
         const id=String(entityId),motion=this.serverWorldMotion.get(id);
         if(!motion)continue;
-        let playback=this.serverCharacterPartPlayback.get(id);
-        if(!playback)playback={state:0,direction:0,transform:0,frameCursor:0};
-        const moving=motion.moving===true;
-        const nextState=moving?2:0;
-        if(moving){
-          const dx=(motion.targetX??motion.x)-motion.x;
-          const dy=(motion.targetY??motion.y)-motion.y;
-          if(Math.abs(dy)>0)playback.direction=dy<0?1:0;
-          if(Math.abs(dx)>0)playback.transform=dx<0?2:0;
-        }
-        if(playback.state!==nextState){playback.state=nextState;playback.frameCursor=0;}
-        const sequenceIndex=record.metadata.getSequenceIndex(playback.direction,playback.state);
-        const sequence=sequenceIndex===null?null:record.metadata.animationSequences[sequenceIndex];
-        if(sequence?.length)playback.frameCursor=(playback.frameCursor+1)%sequence.length;
+        const playback=advanceCharacterPartPlayback(
+          this.serverCharacterPartPlayback.get(id),record.metadata,motion
+        );
         this.serverCharacterPartPlayback.set(id,playback);
         changed=true;
       }
