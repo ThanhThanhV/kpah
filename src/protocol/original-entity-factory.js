@@ -28,3 +28,20 @@ export function resolveOriginalEntityFactoryClass(kind, templateId, entityState,
     default: return null;
   }
 }
+
+
+// Exact cd.c[templateType][direction][animationState] table from original source.
+const ORIGINAL_CD_FRAME_TABLE = [
+  [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]],
+  [[0, 1, 2, 3], [4, 5, 6, 7], [0, 1, 2, 3], [4, 5, 6, 7]],
+  [[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]],
+  [[0, 1, 2, 3], [4, 5, 6, 7], [0, 1, 2, 3], [4, 5, 6, 7]],
+  [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+];
+
+export function resolveOriginalEntityFrameIndex(templateType, direction, animationState = 0) {
+  if (!Number.isInteger(templateType) || templateType < 0 || templateType >= ORIGINAL_CD_FRAME_TABLE.length
+    || !Number.isInteger(direction) || direction < 0 || direction > 3
+    || !Number.isInteger(animationState) || animationState < 0 || animationState > 3) return null;
+  return ORIGINAL_CD_FRAME_TABLE[templateType][direction][animationState];
+}
