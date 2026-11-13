@@ -53,7 +53,8 @@
     "test:server-frame-stream": "node tools/test_server_frame_stream.mjs",
     "test:protocol-session": "node tools/test_kpah_protocol_session.mjs",
     "bridge:tcp-ws": "node tools/kpah-tcp-ws-bridge.mjs",
-    "test:tcp-ws-bridge": "node tools/test_tcp_ws_bridge.mjs"
+    "test:tcp-ws-bridge": "node tools/test_tcp_ws_bridge.mjs",
+    "test:connection-panel": "node tools/test_connection_panel.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0",
