@@ -6,7 +6,7 @@ import { decodeActorEffectDefinition, resolveActorEffectFrameIndex, resolveActor
 import { advanceActorEffectPlayback, createActorEffectPlayback, getActorEffectFrameParts, setActorEffectAnimationState } from "../src/protocol/actor-effect-playback.js";
 import { advanceTargetLinkedActorPlayback, createTargetLinkedActorPlayback } from "../src/protocol/target-linked-actor.js";
 import { advanceEffectPlayback, createEffectPlayback, getEffectFrameParts } from "../src/protocol/effect-playback.js";
-import { applyInboundWorldPacket } from "../src/protocol/world-state.js";
+import { applyInboundWorldPacket, applyTargetLinkedActorImpactToWorld } from "../src/protocol/world-state.js";
 import { createInitializationState } from "../src/protocol/initialization-state.js";
 
 let state = createInitializationState();
@@ -390,6 +390,9 @@ assert.equal(targetLinkedPlayback.x, 30, "actor approaches to the source Manhatt
 assert.equal(targetLinkedPlayback.finished, true);
 assert.equal(targetLinkedImpact.targets.length, 2, "all linked target records are applied together after the seven-tick impact wait");
 assert.deepEqual(targetLinkedImpact.targets.map(item => [item.entityId, item.damageValue, item.targetCurrentHp]), [[555, 20, 80], [556, 20, 80]]);
+const impactedWorld = applyTargetLinkedActorImpactToWorld(state.serverWorld, { targets: [{ entityId: 124, targetCurrentHp: 777 }] });
+assert.equal(impactedWorld.entitiesById["124"].currentHp, 777, "branch-0 impact mirrors bu.f(int) target HP assignment");
+assert.equal(state.serverWorld.entitiesById["124"].currentHp, undefined, "impact helper must not mutate prior world snapshot");
 
 // Opcode 26 independently carries class-i indexedImages and class-d indexedGraphics.
 const opcode26ActorWriter = new PacketWriter().writeU8(0).writeI16(0).writeU8(0)

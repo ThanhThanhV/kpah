@@ -177,3 +177,8 @@ Added source-backed cursor helpers for class `hz`: select the 3x14 animation seq
 ### Target-linked actor movement and impact timing
 
 Added a deterministic browser-side subset of `hz.b()` for branch-0: actor starts at source entity coordinates; source movement step is `bu.t() - 1`; target approach uses Manhattan distance (`kw.b` → `ku.b`) and stops at distance 30; after reaching the first target (or finding no target) it waits seven actor updates before returning a multi-target impact record. The impact record preserves each target's damage and target-current-HP values. Actor animation state changes from movement sequence 2 to impact sequence 3 and advances one sequence entry per actor update. This is a local playback helper only; it does not yet mutate authoritative world HP or render the actor in Phaser. Full post-impact idle/return behavior is not yet ported.
+
+
+### Branch-0 target HP application
+
+Added `applyTargetLinkedActorImpactToWorld`, a copy-on-write helper mirroring the original `hz.b()` → `target.f(int)` → `bu.f(int)` path. At the actor's seven-tick impact point, Phaser applies each supplied `targetCurrentHp` to the local world projection without mutating the prior protocol snapshot. The next server packet can replace this local projection with newer server state.

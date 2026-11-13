@@ -163,6 +163,19 @@ function applyCombatEvent(world, opcode, packet) {
   return next;
 }
 
+/**
+ * Mirrors the client-side effect of hz.b() after its seven-tick approach:
+ * bu.f(int) assigns the supplied target HP directly to cG.
+ */
+export function applyTargetLinkedActorImpactToWorld(world, impact) {
+  const next = cloneWorld(world);
+  for (const target of impact?.targets ?? []) {
+    if (!Number.isInteger(target.entityId) || !Number.isFinite(target.targetCurrentHp)) continue;
+    const key = String(target.entityId), entity = next.entitiesById[key];
+    if (entity) next.entitiesById[key] = { ...entity, currentHp: target.targetCurrentHp };
+  }
+  return next;
+}
 function appendWorldEvent(world, opcode, packet) {
   const next = cloneWorld(world);
   next.worldEvents.push({ opcode, sequence: (next.worldEvents.at(-1)?.sequence ?? 0) + 1, ...packet });
