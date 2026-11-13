@@ -1229,3 +1229,16 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Projection uses source-backed entity kind/template identifiers and latest known X/Y; it does not assign an original sprite or animation.
 - A dedicated projection test and CI step verify entity ordering, inactive/invalid-coordinate filtering and opcode 5 coordinate precedence.
 - Remaining: verified template-to-asset catalog, original frame/animation definitions, template-specific interpolation speed, local-player identity, combat event presentation and local-save integration.
+
+
+### B16 — Original entity template catalog and asset request pipeline
+
+- Traced the mj entity factory: verified class branches for kinds 0/1/3/4/6/7/14 and template-specific special cases for kind 1.
+- Traced ku.T / cg: template metadata fields, 9-byte config mapping, movement step, frame dimensions, offsets, request type and resource ID.
+- Added S2C opcode 100 decoder and reducer for template catalog metadata.
+- Added exact C2S opcode -47 asset-request encoder (request type, resource ID, template ID).
+- Browser panel requests each referenced template asset once; S2C opcode -47 payloads are retained only for catalog entries already known, matching the original dispatcher guard.
+- Phaser diagnostic labels now show template name and frame dimensions when available.
+- Added test coverage and CI step for opcode 100 metadata, signed offsets, C2S -47 request bytes, S2C -47 response payload and template-aware projection.
+- Remaining: decode the ba packed resource archive in browser, handle special bj payload variants, compose <resourceId>_h + data PNG bytes, implement vertical frame slicing and the original cd.c[templateType][direction][state] mapping, then replace diagnostic markers with original sprite animations.
+
