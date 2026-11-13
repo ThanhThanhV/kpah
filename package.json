@@ -58,7 +58,8 @@
     "test:world-state-reducers": "node tools/test_world_state_reducers.mjs",
     "test:server-world-projection": "node tools/test_server_world_projection.mjs",
     "test:template-assets": "node tools/test_template_assets.mjs",
-    "test:original-entity-motion": "node tools/test_original_entity_motion.mjs"
+    "test:original-entity-motion": "node tools/test_original_entity_motion.mjs",
+    "test:character-part-data": "node tools/test_character_part_data.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0",
