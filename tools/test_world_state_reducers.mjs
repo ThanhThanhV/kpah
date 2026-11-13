@@ -268,11 +268,13 @@ assert.throws(()=>decodeEffectDefinition(new Uint8Array([1,2])),/Truncated effec
 
 // Opcode 26 indexedGraphics carries d.i effect definitions. Branch-1
 // effect IDs use the same ID as the C2S -51 image resource request.
-const opcode26Definition = new PacketWriter()
+const opcode26DefinitionWriter = new PacketWriter()
   .writeU8(0).writeI16(0)
   .writeU8(0)
   .writeU8(0)
-  .writeI16(1).writeI16(910).writeI16(effectDefinitionFixture.length).writeBytes(effectDefinitionFixture)
+  .writeI16(1).writeI16(910).writeI16(effectDefinitionFixture.length);
+opcode26DefinitionWriter.bytes.push(...effectDefinitionFixture);
+const opcode26Definition = opcode26DefinitionWriter
   .writeI8(0)
   .writeI8(0).writeI8(0)
   .writeI8(0).writeI8(0)
