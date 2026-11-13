@@ -1043,7 +1043,7 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Opcode 48: caller inventory `xj → xg.a(bo)`; nhãn “Sử dụng”, writer `jy.g(int)` ghi item ID i32.
 - Opcode -25: caller `xo`/`xp` từ hai menu “Thăng cấp thường”/“Thăng cấp giữ thuộc tính”; writer `jy.a(int,int)` ghi action 10/11 và item ID byte. Sửa command name từ `REFINE_ITEM` thành `EQUIPMENT_UPGRADE_ACTION`.
 - Opcode -68: writer `jy.a(short,int,int,int)` và caller `tx` thuộc luồng luyện đồ; có các mode 1/2/3 và nhánh 5 dài hơn. Đặt tên C2S `REFINEMENT_ACTION`, giữ payload opaque cho tới khi trace hết mode và response.
-- Bổ sung JS/Java vectors cho action 11 và lookup opcode -68. Đã bổ sung typed codecs cho equip/drop và shop purchase item, cùng enum/source evidence cho các purchase batch opaque. CI run `43201997578` SUCCESS: generated protocol consistency, Vite build, JS suites, Java 21 compile/smoke và original-JAR analysis. Không đánh dấu B7 hoàn thành hoặc tăng phần trăm WBS.
+- Bổ sung JS/Java vectors cho action 11 và lookup opcode -68. Đã bổ sung typed codecs cho equip/drop và shop purchase item. CI run `43201997578` SUCCESS cho đợt đó; shop batch codecs được xác nhận riêng tại CI run `43403732922`. Không đánh dấu B7 hoàn thành hoặc tăng phần trăm WBS.
 
 
 ### B7/B10 — S2C refinement response dispatch
@@ -1064,7 +1064,7 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 
 - Opcode 85 `SHOP_PURCHASE_ITEM`: `abv`/`gt` sau xác nhận mua gọi `jy.c(itemId)`; payload một byte. S2C 85 `SHOP_PURCHASE_SUCCESS` hiển thị thông báo mua thành công.
 - Opcode 74 `SHOP_PURCHASE_BATCH`: tab 10, `xg.p()` → `jy.a(Vector)`; signed-short total expanded quantity + lặp item ID signed short theo từng đơn vị. Đã có typed variable-list codec.
-- Opcode 24 `SHOP_BATCH_ACTION`: `jy.b(Vector)` (catalog) và `jy.c(Vector)` (premium) có hai layout; đã có caller-selected codec, count u8; catalog có option byte khi category 3, premium có category 4 cố định. Không có discriminator trên wire.
+- Opcode 24 `SHOP_BATCH_ACTION`: `jy.b(Vector)` (`catalog`) và `jy.c(Vector)` (`category4_fixed`) có hai layout; đã có caller-selected codec, count u8; catalog có option byte khi category 3, layout còn lại ghi category 4 cố định. Không có discriminator trên wire.
 - Chưa coi optimistic local updates là server-authoritative; transaction validation/persistence còn mở.
 
 
@@ -1073,12 +1073,15 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - CI run `43201997578` trên commit `515fb0d05a7686fecbf6e29d61495c60e03a5459` SUCCESS.
 - Generated protocol checks, JavaScript protocol suites, Java 21 compile/smoke và original-JAR analysis đều PASS.
 - Các request client-side đã source-trace: use item 48, equipment upgrade -25 (action 10/11), refinement action/result -68, equip 86, drop-equipped -21, shop purchase item 85, purchase batch 74 và batch action 24.
-- Payload biến thể/list của opcode 24/74 và response callback luyện đồ vẫn opaque; unequip-to-bag, server transaction, authoritative inventory mutation, warehouse completion còn mở. Không tăng % tổng dự án.
+- Payload opcode 24/74 đã có typed codecs; response callback luyện đồ vẫn opaque. Unequip-to-bag, server transaction, authoritative inventory mutation và warehouse completion còn mở. Không tăng % tổng dự án.
 
 
-### B7 — shop batch variable-list codecs (CI pending)
+### B7 — shop batch variable-list codecs (CI PASS)
 
 - Opcode 24 `SHOP_BATCH_ACTION`: caller-selected variants `catalog`/`category4_fixed`; count unsigned byte; catalog record category/templateId/quantity=1/conditional optionByte for category 3; fixed category-4 record category=4/itemId/quantity.
 - Opcode 74 `SHOP_PURCHASE_BATCH`: signed-short expanded total count and repeated signed-short item IDs; list representation expands each selected row by its quantity.
 - Added generated JavaScript and Java codecs, explicit unknown-variant rejection, count bounds, JS round-trip tests and Java 21 smoke assertions. Source evidence: `jy.java:756-780`, `816-865`; `xg.java:3257-3265`.
-- CI pending; do not mark B7 complete or adjust weighted project progress until generated-file check and all CI jobs pass.
+- CI run `43403732922` trên commit `306ccd0e6c992a107c8ae3c7e80ed4fb70ef8223` SUCCESS: generated command-variant check, JS codec tests, Java 21 compile/smoke, Vite build và original-JAR analysis đều PASS. B7 chưa hoàn tất toàn bộ; weighted project progress giữ nguyên.
+
+
+- CI xác nhận shop batch codecs: [run 43403732922](https://github.com/ThanhThanhV/kpah/actions/runs/43403732922), commit `306ccd0e6c992a107c8ae3c7e80ed4fb70ef8223`. Generated check, JS codec tests, Java 21 smoke và original-JAR analysis đều PASS.
