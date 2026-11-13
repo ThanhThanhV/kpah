@@ -78,6 +78,8 @@ jobs:
         run: npm run test:server-frame-stream
       - name: Test KPAH protocol session handshake and dispatch
         run: npm run test:protocol-session
+      - name: Test loopback TCP/WebSocket bridge
+        run: npm run test:tcp-ws-bridge
       - name: Verify generated opcode 1 codec
         run: npm run check:opcode1
       - name: Test generated opcode 1 codec
