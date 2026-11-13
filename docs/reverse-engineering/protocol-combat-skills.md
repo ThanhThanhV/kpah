@@ -182,3 +182,8 @@ Added a deterministic browser-side subset of `hz.b()` for branch-0: actor starts
 ### Branch-0 target HP application
 
 Added `applyTargetLinkedActorImpactToWorld`, a copy-on-write helper mirroring the original `hz.b()` → `target.f(int)` → `bu.f(int)` path. At the actor's seven-tick impact point, Phaser applies each supplied `targetCurrentHp` to the local world projection without mutating the prior protocol snapshot. The next server packet can replace this local projection with newer server state.
+
+
+### Post-impact actor lifecycle
+
+Extended branch-0 playback beyond the impact point: after state 4, source state 0 transitions the actor into a persistent idle state; source state 1 with Manhattan distance > 40 moves the actor back toward the source using the same `source.t() - 1` step. The actor remains until its source entity is removed or a newer branch-0 event for the same source replaces it (matching `mj.o(sourceId)`). Idle roaming randomness and the `mj.V` shadow image are still omitted; the actor remains stationary while idle.

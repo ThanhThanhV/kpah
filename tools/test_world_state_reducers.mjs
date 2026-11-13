@@ -387,9 +387,21 @@ for (let tick = 0; tick < 22; tick += 1) {
   if (result.impact) targetLinkedImpact = result.impact;
 }
 assert.equal(targetLinkedPlayback.x, 30, "actor approaches to the source Manhattan-distance threshold of 30");
-assert.equal(targetLinkedPlayback.finished, true);
+assert.equal(targetLinkedPlayback.finished, false);
+assert.equal(targetLinkedPlayback.impacted, true);
+assert.equal(targetLinkedPlayback.state, 4);
 assert.equal(targetLinkedImpact.targets.length, 2, "all linked target records are applied together after the seven-tick impact wait");
 assert.deepEqual(targetLinkedImpact.targets.map(item => [item.entityId, item.damageValue, item.targetCurrentHp]), [[555, 20, 80], [556, 20, 80]]);
+const idleWorld = { entitiesById: { "124": { state: 0, snapshot: { x: 0, y: 0 } }, "555": { currentHp: 100, snapshot: { x: 60, y: 0 } }, "556": { currentHp: 100, snapshot: { x: 80, y: 0 } } } };
+const idleProjection = new Map([["124", { x: 0, y: 0, state: 0, playerMovementStep: 3 }], ["555", { x: 60, y: 0 }], ["556", { x: 80, y: 0 }]]);
+const idleStep = advanceTargetLinkedActorPlayback(targetLinkedPlayback, idleWorld, idleProjection, parsedActorDefinition);
+assert.equal(idleStep.playback.state, 0, "state 4 returns to idle when source entity state is 0");
+assert.equal(idleStep.playback.finished, false, "original actor remains registered while source entity exists");
+const returnWorld = { entitiesById: { "124": { state: 1, snapshot: { x: 100, y: 0 } }, "555": { currentHp: 100, snapshot: { x: 60, y: 0 } }, "556": { currentHp: 100, snapshot: { x: 80, y: 0 } } } };
+const returnProjection = new Map([["124", { x: 100, y: 0, state: 1, playerMovementStep: 3 }], ["555", { x: 60, y: 0 }], ["556", { x: 80, y: 0 }]]);
+const returnStep = advanceTargetLinkedActorPlayback(targetLinkedPlayback, returnWorld, returnProjection, parsedActorDefinition);
+assert.equal(returnStep.playback.state, 1, "state 4 returns toward a source that is active and more than 40px away");
+assert.equal(returnStep.playback.x, 32);
 const verticalActorEvent = { sourceEntityId: 124, effectId: 920, targets: [{ targetEntityId: 555, resolved: true, damageValue: 5, targetCurrentHp: 95 }] };
 const verticalActorWorld = { entitiesById: { "124": { snapshot: { x: 0, y: 0 } }, "555": { currentHp: 100, snapshot: { x: 0, y: -60 } } } };
 const verticalActorProjections = new Map([["124", { x: 0, y: 0, playerMovementStep: 3 }], ["555", { x: 0, y: -60 }]]);

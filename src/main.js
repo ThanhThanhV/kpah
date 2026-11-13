@@ -1176,8 +1176,12 @@ class WorldScene extends Phaser.Scene {
   syncServerActorEffectViews(){
     const world=this.serverWorldState;if(!world)return;
     const events=world.targetLinkedEffectEvents??[],active=new Set(),projections=this.getServerActorProjections();
+    const latestBySource=new Map();
+    for(let index=0;index<events.length;index++){const event=events[index];latestBySource.set(String(event.sourceEntityId),String(event.sequence??(index+1)));}
     for(let index=0;index<events.length;index++){
-      const event=events[index],eventKey=String(event.sequence??(index+1));active.add(eventKey);
+      const event=events[index],eventKey=String(event.sequence??(index+1));
+      if(latestBySource.get(String(event.sourceEntityId))!==eventKey)continue;
+      active.add(eventKey);
       if(this.serverActorEffectCompleted.has(eventKey))continue;
       const animationId=event.effectId,definition=world.parsedActorEffectDefinitionsById?.[String(animationId)];
       if(!Number.isInteger(animationId)||!definition)continue;
@@ -1217,7 +1221,6 @@ class WorldScene extends Phaser.Scene {
             const damage=this.add.text(point.x,point.y-26,String(target.damageValue),{fontFamily:'Arial',fontSize:'16px',fontStyle:'bold',color:'#ffffff',stroke:'#211b18',strokeThickness:3}).setOrigin(0.5).setDepth(point.y+120);
             this.tweens.add({targets:damage,y:point.y-56,alpha:0,duration:720,ease:'Cubic.easeOut',onComplete:()=>damage.destroy()});
           }
-          this.serverActorEffectCompleted.add(eventKey);this.serverActorEffectViews.get(eventKey)?.destroy();this.serverActorEffectViews.delete(eventKey);this.serverActorEffectPlayback.delete(eventKey);
         }else if(result.playback.finished){
           this.serverActorEffectCompleted.add(eventKey);this.serverActorEffectViews.get(eventKey)?.destroy();this.serverActorEffectViews.delete(eventKey);this.serverActorEffectPlayback.delete(eventKey);
         }
