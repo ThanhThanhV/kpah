@@ -82,6 +82,8 @@ jobs:
         run: npm run test:tcp-ws-bridge
       - name: Test browser protocol connection panel
         run: npm run test:connection-panel
+      - name: Test inbound world-state reducers
+        run: npm run test:world-state-reducers
       - name: Verify generated opcode 1 codec
         run: npm run check:opcode1
       - name: Test generated opcode 1 codec
