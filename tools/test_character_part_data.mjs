@@ -5,6 +5,8 @@ import {
   decodeCharacterPartData,
   DIRECTION_STATE_TO_SEQUENCE,
   characterPartImageResourceId,
+  advanceCharacterPartPlayback,
+  triggerCharacterPartAction,
 } from "../src/protocol/character-part-data.js";
 
 const writer = new PacketWriter()
@@ -49,6 +51,19 @@ assert.equal(decoded.getSequenceIndex(0, 3), 2);
 assert.equal(decoded.getSequenceIndex(1, 3), 6);
 assert.equal(decoded.getFrameIndex(0, 3, 0), 0);
 assert.equal(decoded.getFrame(1, 3, 0).index, 0);
+
+let playback=triggerCharacterPartAction({state:0,direction:0,transform:2,frameCursor:4});
+assert.deepEqual(playback,{state:3,direction:0,transform:2,frameCursor:0},
+  "attack event starts one-shot action state at frame zero");
+playback=advanceCharacterPartPlayback(playback,decoded,{moving:false});
+assert.deepEqual(playback,{state:0,direction:0,transform:2,frameCursor:0},
+  "one-frame action sequence returns to idle on the next original tick");
+playback=advanceCharacterPartPlayback({state:0,direction:0,transform:0,frameCursor:0},decoded,{
+  moving:true,x:10,y:10,targetX:4,targetY:2,
+});
+assert.deepEqual(playback,{state:2,direction:1,transform:2,frameCursor:0},
+  "walking updates original vertical direction and horizontal mirror");
+
 assert.deepEqual(decoded.optionalFrameMetadata, {
   marker: 9,
   values: [{ index: 0, d: 2, e: 3 }],
