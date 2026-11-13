@@ -1192,3 +1192,12 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Cung cấp `sendPacket(opcode, payload)`, không tự gửi login hoặc tự tạo credential; route opcode 1/3/15/16 vào state reducers, opcode khác được chuyển cho callback thô.
 - Thêm fake-transport test, npm script, CI và tài liệu.
 - Giới hạn: browser cần TCP-to-WebSocket bridge riêng; chưa triển khai bridge, endpoint production, auth flow, reconnect/heartbeat hay Phaser binding.
+
+
+### B16 — Local TCP ↔ WebSocket bridge
+
+- Thêm `tools/kpah-tcp-ws-bridge.mjs`: WebSocket endpoint `/kpah` bind loopback, mở raw TCP outbound tới upstream host/port do người chạy chỉ định.
+- Chuyển tiếp binary bytes nguyên trạng hai chiều; không giải mã/re-encode packet, không can thiệp XOR handshake để giữ `KpahProtocolSession` làm chủ protocol.
+- Kiểm soát exact Origin allowlist, binary-only, payload cap, max connections, TCP timeout/keepalive và backpressure; có health endpoint không chứa thông tin nhạy cảm.
+- Thêm integration test bằng TCP echo fixture + WebSocket client; bổ sung npm dependency `ws`, script và CI.
+- Giới hạn: bridge chỉ bind loopback; không cấu hình production endpoint, không giả lập server, không có authentication proxy hoặc triển khai gateway internet-facing.
