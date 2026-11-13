@@ -3928,11 +3928,11 @@
                   "type": "i16"
                 },
                 {
-                  "name": "offsetValueA",
+                  "name": "damageValue",
                   "type": "i32"
                 },
                 {
-                  "name": "offsetValueB",
+                  "name": "targetCurrentHp",
                   "type": "i32"
                 }
               ]

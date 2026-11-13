@@ -1085,8 +1085,8 @@ export function decodeS2COpcodeMinus73(payload) {
       targets.push({
         entityKind: reader.readI8(),
         targetEntityId: reader.readI16(),
-        offsetValueA: reader.readI32(),
-        offsetValueB: reader.readI32(),
+        damageValue: reader.readI32(),
+        targetCurrentHp: reader.readI32(),
       });
     }
     return { entityId, branch, effectId, targetCount, targets, trailingBytes: readRemaining(reader) };

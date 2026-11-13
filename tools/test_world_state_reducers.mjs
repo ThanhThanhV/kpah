@@ -195,7 +195,7 @@ assert.equal(state.serverWorld.worldEvents.at(-1).entityKindMatches, false);
 assert.equal(state.serverWorld.entitiesById["124"].activeEffects.some(effect => effect.effectId === 702), false);
 
 // Opcode -73 branch 0 links a kind-12 effect object to verified target entities.
-// The two per-target integers remain opaque offset values; unresolved targets are retained.
+// Source hz.b() displays the first integer as damage and applies the second as target HP.
 const effectObjectSpawn = new PacketWriter().writeI8(12).writeU8(9).writeI16(777)
   .writeI16(10).writeI16(20).writeI8(0).writeI32(-1).writeI8(0).writeBool(true).toUint8Array();
 state = applyInboundWorldPacket(state, { opcode: 4, payload: effectObjectSpawn }).state;
@@ -208,7 +208,7 @@ const attachment = state.serverWorld.entitiesById["777"].effectAttachment;
 assert.equal(attachment.effectId, 909);
 assert.equal(attachment.targets.length, 2);
 assert.equal(attachment.targets[0].resolved, true);
-assert.deepEqual([attachment.targets[0].offsetValueA, attachment.targets[0].offsetValueB], [1111, -2222]);
+assert.deepEqual([attachment.targets[0].damageValue, attachment.targets[0].targetCurrentHp], [1111, -2222]);
 assert.equal(attachment.targets[1].resolved, false, "target lookup requires both entity ID and kind");
 assert.equal(attachment.resolvedTargetCount, undefined);
 assert.equal(beforeLinkedEffect.serverWorld.entitiesById["777"].effectAttachment, undefined,

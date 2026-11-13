@@ -379,8 +379,8 @@ export function applyInboundWorldPacket(state, frame) {
               effectId: event.effectId,
               targets,
               resolvedTargetEntityIds: targets.filter(target => target.resolved).map(target => target.targetEntityId),
-              offsetValuesA: targets.map(target => target.offsetValueA),
-              offsetValuesB: targets.map(target => target.offsetValueB),
+              damageValues: targets.map(target => target.damageValue),
+              targetCurrentHpValues: targets.map(target => target.targetCurrentHp),
             },
           };
         }

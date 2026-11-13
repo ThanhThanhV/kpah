@@ -78,11 +78,11 @@ Không dùng field `long` như cooldown duration khi chưa xác định clock se
 
 Handler `ka.java:case-73` dispatch đến `mj.A(acu)`, có hai nhánh đã xác minh:
 
-- **Branch 0**: short effect-object entity ID, byte branch = 0, short effect ID, signed-byte target count; mỗi target gồm byte entity kind, short entity ID và hai int. Source tìm effect object bằng `mj.d(id, 12)`, resolve từng target bằng cặp kind + ID, rồi gọi `j.a(Vector, byte, short, int[], int[])`. Lớp effect object `hz` giữ vector target, effect ID và hai mảng int riêng; hai int của mỗi record được giữ trung tính là `offsetValueA/B`, chưa diễn giải đơn vị hoặc trục.
+- **Branch 0**: short effect-object entity ID, byte branch = 0, short effect ID, signed-byte target count; mỗi target gồm byte entity kind, short entity ID và hai int. Source tìm effect object bằng `mj.d(id, 12)`, resolve từng target bằng cặp kind + ID, rồi gọi `j.a(Vector, byte, short, int[], int[])`. Lớp effect object `hz` giữ vector target, effect ID và hai mảng int riêng. Trong `hz.b()` (state 2), int thứ nhất được đưa vào `km.s.a(String.valueOf(value), ...)` để hiển thị số sát thương; int thứ hai được truyền vào `target.f(value)`, và `bu.f(int)` gán trực tiếp vào `cG` (HP hiện tại). Vì vậy codec đặt tên hai field là `damageValue` và `targetCurrentHp`.
 - **Branch 1**: short entity ID, byte branch = 1, short effect ID và signed 64-bit time/expiry. Source tìm entity theo ID rồi gọi `bu.a(effectId, entity.x, entity.y, long)`; implementation `bu` thêm hoặc cập nhật record cùng effect ID trong collection `dg` (được render qua pipeline effect overlay). Browser giữ collection riêng `effectOverlays` và giữ long dưới dạng BigInt.
 - Các branch byte khác không được parser đoán cấu trúc; payload còn lại được giữ opaque. Branch 0 chỉ gắn target list khi source object đã tồn tại với kind 12; mỗi target chỉ được đánh dấu resolved khi cả ID và kind khớp. Branch 1 chỉ cập nhật overlay khi entity đã tồn tại.
 
-Đây là hai cơ chế effect khác nhau: liên kết một effect object với nhiều target/offset, và gắn một visual overlay vào entity. Chưa giải mã animation resource, chưa diễn giải hai offset int, và chưa áp dụng stat/buff/debuff rules.
+Đây là hai cơ chế effect khác nhau: liên kết một effect object với nhiều target/offset, và gắn một visual overlay vào entity. Chưa hoàn thiện mô phỏng chuyển động/animation của actor loại 12 trong browser; không suy diễn hai int thành offset tọa độ. Branch 0 chỉ mô tả sát thương và HP đích theo handler đã truy vết.
 
 ### Effect image resource request — opcode -51
 
