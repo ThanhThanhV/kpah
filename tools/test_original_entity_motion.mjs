@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { advanceOriginalCdMovement } from "../src/protocol/original-entity-motion.js";
+import { advanceOriginalCdMovement, advanceOriginalPlayerMovement } from "../src/protocol/original-entity-motion.js";
 
 let motion = {
   x: 10, y: 10, targetX: 19, targetY: 19,
@@ -44,4 +44,21 @@ const noSpeed = advanceOriginalCdMovement({
   x: 5, y: 5, targetX: 10, targetY: 10, moving: true,
 }, { movementStep: 0, directionFrameType: 0 });
 assert.equal(noSpeed.moving, false);
-console.log("Original cd movement: PASS (40ms tick primitive, X-first axis priority, template step, facing and 2-frame walk state)");
+const playerStep = advanceOriginalPlayerMovement({
+  x: 0, y: 0, targetX: 31, targetY: 40, direction: 0, moving: true,
+}, 3);
+assert.equal(playerStep.x, 7, "player step uses cT + 1 when either axis exceeds 30");
+assert.equal(playerStep.y, 0, "player movement also prioritizes X");
+assert.equal(playerStep.direction, 3);
+const playerVertical = advanceOriginalPlayerMovement({
+  x: 8, y: 12, targetX: 8, targetY: 4, direction: 0, moving: true,
+}, 3);
+assert.equal(playerVertical.y, 8);
+assert.equal(playerVertical.direction, 1);
+const playerComplete = advanceOriginalPlayerMovement({
+  x: 10, y: 10, targetX: 12, targetY: 12, direction: 2, moving: true,
+}, 3);
+assert.equal(playerComplete.x, 12);
+assert.equal(playerComplete.y, 12);
+assert.equal(playerComplete.moving, false);
+console.log("Original entity movement: PASS (cd template ticks and z player distance-banded movement)");
