@@ -327,7 +327,7 @@ const actorDefinitionWriter = new PacketWriter()
   .writeI16(-4).writeI16(-42).writeI8(0)
   .writeI16(7).writeI16(8).writeI8(1).writeI8(1).writeI8(9)
   .writeI16(1).writeI16(0);
-for (let index = 0; index < 8; index += 1) actorDefinitionWriter.writeI8(2).writeU8(index).writeU8(index + 1);
+for (let index = 0; index < 8; index += 1) { const first = index === 2 ? 0 : index === 7 ? 255 : index; const second = index === 2 ? 0 : index + 1; actorDefinitionWriter.writeI8(2).writeU8(first).writeU8(second); }
 actorDefinitionWriter.writeI8(99).writeI8(-2).writeI8(3);
 for (let index = 0; index < 4; index += 1) actorDefinitionWriter.writeI8(1).writeU8(20 + index);
 const actorDefinitionFixture = actorDefinitionWriter.toUint8Array();
@@ -337,11 +337,12 @@ assert.deepEqual(parsedActorDefinition.frames[0].parts[0], { x: -4, y: -42, regi
 assert.equal(parsedActorDefinition.frames[0].offsetX, -2);
 assert.equal(parsedActorDefinition.frames[0].offsetY, 3);
 assert.deepEqual([...parsedActorDefinition.animationSequences[3]], [3, 4]);
+assert.equal(parsedActorDefinition.animationSequences[7][0], -1, "Java byte[] sequences must retain signed byte values");
 assert.deepEqual([...parsedActorDefinition.optionalSequences[2]], [22]);
 assert.equal(parsedActorDefinition.firstFrameMaxBottom, -30);
 assert.equal(resolveActorEffectSequenceIndex(0, 3), 2);
 assert.equal(resolveActorEffectSequenceIndex(1, 3), 6);
-assert.equal(resolveActorEffectFrameIndex(parsedActorDefinition, 3, 0, 1), 3);
+assert.equal(resolveActorEffectFrameIndex(parsedActorDefinition, 3, 0, 1), 0);
 assert.equal(resolveActorEffectFrameIndex(parsedActorDefinition, 3, 2, 0), null);
 assert.throws(() => decodeActorEffectDefinition(actorDefinitionFixture.slice(0, -1)), /Truncated/);
 
