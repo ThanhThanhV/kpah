@@ -37,6 +37,11 @@ export function projectServerWorldEntities(world) {
       frameWidth: template?.frameWidth ?? null,
       frameHeight: template?.frameHeight ?? null,
       movementStep: template?.movementStep ?? null,
+      templateType: template?.directionFrameType ?? null,
+      frameOffsetX: template?.frameOffsetX ?? null,
+      frameOffsetY: template?.frameOffsetY ?? null,
+      shadowOffsetX: template?.shadowOffsetX ?? null,
+      shadowOffsetY: template?.shadowOffsetY ?? null,
       templateReady: template !== null,
     });
   }
