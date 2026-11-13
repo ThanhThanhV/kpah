@@ -1201,3 +1201,13 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Kiểm soát exact Origin allowlist, binary-only, payload cap, max connections, TCP timeout/keepalive và backpressure; có health endpoint không chứa thông tin nhạy cảm.
 - Thêm integration test bằng TCP echo fixture + WebSocket client; bổ sung npm dependency `ws`, script và CI.
 - Giới hạn: bridge chỉ bind loopback; không cấu hình production endpoint, không giả lập server, không có authentication proxy hoặc triển khai gateway internet-facing.
+
+
+### B16 — Browser UI kết nối local protocol bridge
+
+- Thêm nút **Kết nối protocol** trên topbar và panel quản lý WebSocket session.
+- URL bị giới hạn `ws://` + loopback + path `/kpah`; không cho nhập host Internet hoặc nhúng username/password.
+- Panel hiển thị trạng thái WebSocket/handshake, số packet nhận và tóm tắt state initialization; không gửi login packet.
+- Session tiếp tục chạy khi đóng panel; người dùng phải chủ động nhấn Ngắt kết nối để đóng.
+- Thêm URL guard test, npm script và GitHub Actions; cập nhật README hướng dẫn chạy bridge/client.
+- Giới hạn: chưa có TCP endpoint production; không xác nhận login/gameplay. UI hiện chỉ là công cụ kết nối transport và quan sát packet/state đã hỗ trợ.
