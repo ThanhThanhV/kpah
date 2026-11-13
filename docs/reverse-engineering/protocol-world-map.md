@@ -149,3 +149,19 @@ npm run test:world-state
 - Opcodes 6 and 9 append neutral combat-event records (bounded to the latest 100); no damage, animation or combat meaning is inferred from the fields.
 
 `KpahProtocolSession` now routes these packets into `state.serverWorld` in addition to the initialization opcodes. The reducer is separate from the Phaser runtime: entity templates, interpolation, local-player identity and combat presentation still require the corresponding source-derived mappings and runtime adapter.
+
+
+## Original entity template catalog and sprite requests
+
+The original mj entity factory and ku/cg template pipeline are now traced:
+
+- mj.a(kind, templateId, entityId, x, y, subtype, extra) selects the runtime class. For kind 0, a non-negative extra subtype selects hd, otherwise z. For kind 1, several template IDs select specialized classes (v/u/x/w/hj/p/q/t/aj/hy/cf); the fallback is cd. Kinds 3, 4, 6/7, and 14 select al, am, ak, and bq. These are class-factory facts, not a claim that every specialized class has been ported to Phaser.
+- cd.a(templateId) indexes ku.T[templateId]; if missing it creates cg and sends C2S opcode -47 with request type byte, resource ID byte, and template ID short.
+- S2C opcode 100 (mj.z) type 0 carries template ID, a 9-byte config, UTF name, extra byte/int, request type, resource ID and asset mode. The nine config bytes map directly to cg.b..j: direction/frame table selector, movement step, actor type, frame width/height, shadow offsets and sprite offsets. Signed byte values are preserved.
+- S2C opcode -47 carries template ID, boolean, signed-short payload length and opaque asset bytes. The original dispatcher passes the bytes to cg.a(byte[]) only when the corresponding ku.T[templateId] exists.
+- cg.a(byte[]) either creates a special bj resource object for request types 70..88, 90..92, 39/40, or asset mode 1, or parses the payload with the original ba packed-resource reader. In the common image branch it concatenates resources <resourceId>_h and data and creates the sprite image.
+
+The browser client now decodes opcode 100 metadata, issues the exact C2S -47 request when a spawned entity has a known template and its asset has not yet been requested, and stores S2C -47 payload bytes only for known templates. Phaser diagnostic labels display the catalog name and frame dimensions when available.
+
+Important limitation: the browser still retains the returned packed image payload as opaque bytes. The ba archive extraction, special bj branches, vertical frame slicing and cd.c[templateType][direction][state] animation selection have not yet been implemented in Phaser. No original sprite is claimed to be rendered yet.
+
