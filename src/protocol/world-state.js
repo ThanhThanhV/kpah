@@ -162,21 +162,54 @@ function applyCharacterResources(world, packet) {
     localStateByte: Number.isInteger(packet.localStateByte) ? packet.localStateByte : previous.localStateByte ?? null,
     localShortValue: Number.isInteger(packet.localShortValue) ? packet.localShortValue : previous.localShortValue ?? null,
   };
+  const entity = next.entitiesById[id];
+  if (entity?.kind === 0) {
+    const hp = statsByKey.hp?.value;
+    const mp = statsByKey.mp?.value;
+    next.entitiesById[id] = {
+      ...entity,
+      ...(Number.isFinite(hp) ? { currentHp: hp } : {}),
+      ...(Number.isFinite(mp) ? { currentMp: mp } : {}),
+    };
+  }
   return next;
 }
 
 /**
- * Opcode 33 updates level and two source-consumed HP/MP state values. Keep
- * those integers named by wire position until their individual semantics are
- * confirmed from the original mj consumer.
+ * Opcode 33 matches mj.a(short, byte, int, int): it updates an existing
+ * kind-0 player entity, setting HP current/max from valueA and MP current/max
+ * from valueB. The original handler is a no-op when the player entity is absent.
  */
 function applyCharacterLevel(world, packet) {
   const next = cloneWorld(world);
-  next.characterLevelsById[String(packet.characterId)] = {
+  const id = String(packet.characterId);
+  const entity = next.entitiesById[id];
+  if (entity?.kind !== 0) {
+    next.worldEvents.push({
+      opcode: 33,
+      sequence: (next.worldEvents.at(-1)?.sequence ?? 0) + 1,
+      characterId: packet.characterId,
+      entityResolved: false,
+    });
+    if (next.worldEvents.length > 100) next.worldEvents.splice(0, next.worldEvents.length - 100);
+    return next;
+  }
+  next.characterLevelsById[id] = { level: packet.level };
+  next.entitiesById[id] = {
+    ...entity,
+    currentHp: packet.valueA,
+    maxHp: packet.valueA,
+    currentMp: packet.valueB,
+    maxMp: packet.valueB,
     level: packet.level,
-    valueA: packet.valueA,
-    valueB: packet.valueB,
   };
+  next.worldEvents.push({
+    opcode: 33,
+    sequence: (next.worldEvents.at(-1)?.sequence ?? 0) + 1,
+    characterId: packet.characterId,
+    entityResolved: true,
+  });
+  if (next.worldEvents.length > 100) next.worldEvents.splice(0, next.worldEvents.length - 100);
   return next;
 }
 
