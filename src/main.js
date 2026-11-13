@@ -929,7 +929,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldDisposed=false;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;this.serverActorEffectImages=new Map();this.serverActorEffectImageLoads=new Set();this.serverActorEffectTextures=new Map();this.serverActorEffectViews=new Map();this.serverActorEffectShadows=new Map();this.serverActorShadowLoad=null;this.serverActorShadowUnavailable=false;this.serverActorEffectPlayback=new Map();this.serverActorEffectCompleted=new Set();this.serverActorEffectAccumulator=0;}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldDisposed=false;this.serverInitializationState=null;this.serverCharacterPartTextures=new Map();this.serverCharacterPartTextureLoads=new Set();this.serverCharacterPartPlayback=new Map();this.serverCharacterPartAccumulator=0;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;this.serverActorEffectImages=new Map();this.serverActorEffectImageLoads=new Set();this.serverActorEffectTextures=new Map();this.serverActorEffectViews=new Map();this.serverActorEffectShadows=new Map();this.serverActorShadowLoad=null;this.serverActorShadowUnavailable=false;this.serverActorEffectPlayback=new Map();this.serverActorEffectCompleted=new Set();this.serverActorEffectAccumulator=0;}
   create(){
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
@@ -948,8 +948,10 @@ class WorldScene extends Phaser.Scene {
     this.input.on('pointerdown',p=>this.movePlayerTo(p.worldX,p.worldY,450,true));
     this.scale.on('resize',()=>this.cameras.main.setSize(this.scale.width,this.scale.height));
     this.onProtocolState=event=>{
-      const world=event.detail?.state?.serverWorld;
+      const state=event.detail?.state;
+      const world=state?.serverWorld;
       if(!world)return;
+      this.serverInitializationState=state;
       this.serverWorldState=world;
       this.syncServerWorldViews();
       this.syncServerEffectViews();
@@ -962,6 +964,10 @@ class WorldScene extends Phaser.Scene {
       for(const view of this.serverWorldViews.values())view.destroy();
       this.serverWorldViews.clear();
       this.serverWorldMotion.clear();
+      for(const textureSet of this.serverCharacterPartTextures.values())for(const key of textureSet.keys)this.textures.remove(key);
+      this.serverCharacterPartTextures.clear();
+      this.serverCharacterPartTextureLoads.clear();
+      this.serverCharacterPartPlayback.clear();
       for(const view of this.serverEffectViews.values())view.destroy();
       this.serverEffectViews.clear();
       this.serverEffectPlayback.clear();
@@ -1325,6 +1331,69 @@ class WorldScene extends Phaser.Scene {
     };
     image.src=bytesToDataUrl(decoded.imageBytes,decoded.mimeType);
   }
+  ensureServerCharacterPartTextures(partIndex,metadata,imageBytes){
+    const key=String(partIndex);
+    if(this.serverCharacterPartTextures.has(key)||this.serverCharacterPartTextureLoads.has(key))return;
+    if(!metadata?.frames?.length||!(imageBytes instanceof Uint8Array)||!imageBytes.length)return;
+    this.serverCharacterPartTextureLoads.add(key);
+    const image=new window.Image();
+    image.onload=()=>{
+      this.serverCharacterPartTextureLoads.delete(key);
+      if(this.serverWorldDisposed)return;
+      const textures=new Map(),keys=[];
+      for(const frame of metadata.frames){
+        for(const transform of [0,2]){
+          const drawable=(frame.pieces??[]).map(piece=>{
+            const region=metadata.regions?.[piece.regionIndex];
+            if(!region||region.width<=0||region.height<=0||region.x<0||region.y<0
+              ||region.x+region.width>image.naturalWidth||region.y+region.height>image.naturalHeight)return null;
+            return {...piece,region,drawX:transform===2?-piece.x-region.width:piece.x};
+          }).filter(Boolean);
+          if(!drawable.length)continue;
+          const minX=Math.min(0,...drawable.map(part=>part.drawX));
+          const minY=Math.min(0,...drawable.map(part=>part.y));
+          const maxX=Math.max(1,...drawable.map(part=>part.drawX+part.region.width));
+          const maxY=Math.max(1,...drawable.map(part=>part.y+part.region.height));
+          const canvas=document.createElement('canvas');
+          canvas.width=Math.max(1,Math.ceil(maxX-minX));
+          canvas.height=Math.max(1,Math.ceil(maxY-minY));
+          const context=canvas.getContext('2d');
+          if(!context)continue;
+          // hd.a(Graphics) draws non-zero layer groups before layer group zero.
+          for(const group of [drawable.filter(part=>part.layerGroup!==0),drawable.filter(part=>part.layerGroup===0)]){
+            for(const part of group){
+              const dx=part.drawX-minX,dy=part.y-minY;
+              if(transform===2){
+                context.save();
+                context.translate(dx+part.region.width,dy);
+                context.scale(-1,1);
+                context.drawImage(image,part.region.x,part.region.y,part.region.width,part.region.height,
+                  0,0,part.region.width,part.region.height);
+                context.restore();
+              }else{
+                context.drawImage(image,part.region.x,part.region.y,part.region.width,part.region.height,
+                  dx,dy,part.region.width,part.region.height);
+              }
+            }
+          }
+          const textureKey='kpah-player-part-'+key+'-'+frame.index+'-'+transform;
+          if(!this.textures.exists(textureKey))this.textures.addCanvas(textureKey,canvas);
+          textures.set(frame.index+':'+transform,{key:textureKey,bounds:{x:minX,y:minY}});
+          keys.push(textureKey);
+        }
+      }
+      this.serverCharacterPartTextures.set(key,{textures,keys});
+      this.syncServerWorldViews();
+    };
+    image.onerror=()=>{
+      this.serverCharacterPartTextureLoads.delete(key);
+      console.warn('KPAH character part image could not be decoded',partIndex);
+    };
+    const mime=imageBytes[0]===0x89&&imageBytes[1]===0x50?'image/png'
+      :imageBytes[0]===0xff&&imageBytes[1]===0xd8?'image/jpeg'
+      :imageBytes[0]===0x47&&imageBytes[1]===0x49?'image/gif':'image/png';
+    image.src=bytesToDataUrl(imageBytes,mime);
+  }
   syncServerWorldViews(){
     const projected=projectServerWorldEntities(this.serverWorldState);
     const present=new Set(projected.map(entity=>String(entity.entityId)));
@@ -1371,9 +1440,24 @@ class WorldScene extends Phaser.Scene {
       const frameIndex=textureReady?resolveOriginalEntityFrameIndex(entity.templateType,0,0):null;
       const texture=textureReady?this.textures.get(textureKey):null;
       const canRenderSprite=frameIndex!==null&&texture?.has(frameIndex);
+      const partIndex=entity.factoryClass==='hd'&&Number.isInteger(entity.marker)&&entity.marker>=0?entity.marker:null;
+      const partRecord=partIndex===null?null:this.serverInitializationState?.characterPartCatalog?.[partIndex];
+      const partImageBytes=partIndex===null?null:this.serverWorldState?.resourceImagePayloadsById?.[String(12000+partIndex)];
+      if(partRecord?.decoded&&partImageBytes)this.ensureServerCharacterPartTextures(partIndex,partRecord.metadata,partImageBytes);
+      const partPlayback=partIndex===null?null:this.serverCharacterPartPlayback.get(id);
+      const partFrameIndex=partIndex===null||!partRecord?.decoded?null:
+        partRecord.metadata.getFrameIndex(partPlayback?.direction??0,partPlayback?.state??0,partPlayback?.frameCursor??0);
+      const partTransform=partPlayback?.transform??0;
+      const partTexture=partIndex===null?null:this.serverCharacterPartTextures.get(String(partIndex))?.textures.get(partFrameIndex+':'+partTransform);
+      const canRenderCharacterPart=partTexture&&this.textures.exists(partTexture.key);
       if(!view){
         view=this.add.container(motion.x,motion.y,[]);
-        if(canRenderSprite){
+        if(canRenderCharacterPart){
+          const sprite=this.add.image(partTexture.bounds.x,partTexture.bounds.y,partTexture.key).setOrigin(0,0);
+          view.add(sprite);
+          view.setData('visualType','character-part');
+          view.setData('sprite',sprite);
+        }else if(canRenderSprite){
           const sprite=this.add.sprite(-(entity.frameOffsetX??0),-(entity.frameOffsetY??0),textureKey,frameIndex).setOrigin(0,0);
           view.add(sprite);
           view.setData('visualType','sprite');
@@ -1395,15 +1479,26 @@ class WorldScene extends Phaser.Scene {
       }else{
         view.setPosition(motion.x,motion.y).setDepth(motion.y+3);
         view.getData('label')?.setText(labelText).setPosition(0,labelY);
-        if(canRenderSprite&&view.getData('visualType')!=='sprite'){
-          const marker=view.getData('marker');
-          if(marker){view.remove(marker,true);view.setData('marker',null);}
+        if(canRenderCharacterPart&&view.getData('visualType')!=='character-part'){
+          const oldVisual=view.getData('sprite')??view.getData('marker');
+          if(oldVisual)view.remove(oldVisual,true);
+          const sprite=this.add.image(partTexture.bounds.x,partTexture.bounds.y,partTexture.key).setOrigin(0,0);
+          view.addAt(sprite,0);
+          view.setData('visualType','character-part');
+          view.setData('sprite',sprite);
+          view.setData('marker',null);
+        }else if(canRenderCharacterPart){
+          view.getData('sprite')?.setTexture(partTexture.key).setPosition(partTexture.bounds.x,partTexture.bounds.y);
+        }else if(canRenderSprite&&view.getData('visualType')!=='sprite'){
+          const oldVisual=view.getData('sprite')??view.getData('marker');
+          if(oldVisual)view.remove(oldVisual,true);
           const sprite=this.add.sprite(-(entity.frameOffsetX??0),-(entity.frameOffsetY??0),textureKey,frameIndex).setOrigin(0,0);
           view.addAt(sprite,0);
           view.setData('visualType','sprite');
           view.setData('sprite',sprite);
+          view.setData('marker',null);
         }else if(canRenderSprite){
-          view.getData('sprite')?.setFrame(frameIndex)
+          view.getData('sprite')?.setTexture(textureKey,frameIndex)
             .setPosition(-(entity.frameOffsetX??0),-(entity.frameOffsetY??0));
         }else if(view.getData('visualType')==='marker'){
           view.getData('marker')?.setFillStyle(tint,0.92);
@@ -1741,9 +1836,42 @@ class WorldScene extends Phaser.Scene {
       }
     }
   }
+  advanceServerCharacterPartPlayback(delta){
+    this.serverCharacterPartAccumulator+=Math.max(0,delta);
+    let changed=false;
+    while(this.serverCharacterPartAccumulator>=40){
+      this.serverCharacterPartAccumulator-=40;
+      for(const entityId of this.serverWorldState?.entityOrder??[]){
+        const entity=this.serverWorldState.entitiesById?.[String(entityId)];
+        if(entity?.kind!==0||!Number.isInteger(entity.marker)||entity.marker<0)continue;
+        const record=this.serverInitializationState?.characterPartCatalog?.[entity.marker];
+        if(!record?.decoded)continue;
+        const id=String(entityId),motion=this.serverWorldMotion.get(id);
+        if(!motion)continue;
+        let playback=this.serverCharacterPartPlayback.get(id);
+        if(!playback)playback={state:0,direction:0,transform:0,frameCursor:0};
+        const moving=motion.moving===true;
+        const nextState=moving?2:0;
+        if(moving){
+          const dx=(motion.targetX??motion.x)-motion.x;
+          const dy=(motion.targetY??motion.y)-motion.y;
+          if(Math.abs(dy)>0)playback.direction=dy<0?1:0;
+          if(Math.abs(dx)>0)playback.transform=dx<0?2:0;
+        }
+        if(playback.state!==nextState){playback.state=nextState;playback.frameCursor=0;}
+        const sequenceIndex=record.metadata.getSequenceIndex(playback.direction,playback.state);
+        const sequence=sequenceIndex===null?null:record.metadata.animationSequences[sequenceIndex];
+        if(sequence?.length)playback.frameCursor=(playback.frameCursor+1)%sequence.length;
+        this.serverCharacterPartPlayback.set(id,playback);
+        changed=true;
+      }
+    }
+    if(changed)this.syncServerWorldViews();
+  }
   update(time,delta=40){
     this.advanceServerEffectPlayback(delta);
     this.advanceServerWorldMotion(delta);
+    this.advanceServerCharacterPartPlayback(delta);
     this.advanceServerActorEffectPlayback(delta);
     this.syncMonsterViews();
     if(!this.playerSprite||characterState.snapshot().hp<=0)return;
