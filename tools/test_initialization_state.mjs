@@ -2,11 +2,13 @@ import assert from "node:assert/strict";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
 import { decodeS2CInitialization } from "../src/protocol/generated/initialization-codec.js";
 import { applyOpcode16, createInitializationState } from "../src/protocol/initialization-state.js";
+import { createServerWorldState } from "../src/protocol/world-state.js";
 
 const empty = createInitializationState();
 assert.deepEqual(empty, {
   currency: null, resourcesByIndex: {}, inventory: [], auxiliaryItems: [],
   counterValues: [], commonFields: { aY: null, aZ: null },
+  serverWorld: createServerWorldState(),
 });
 
 const mode0 = decodeS2CInitialization(16, new PacketWriter()
@@ -18,6 +20,7 @@ assert.equal(afterBalances.currency, 9007199254740993n);
 assert.deepEqual(afterBalances.resourcesByIndex, { 3: 1200, 8: 250000 });
 assert.deepEqual(afterBalances.commonFields, { aY: 11, aZ: 22 });
 assert.deepEqual(empty.resourcesByIndex, {}, "reducer must not mutate previous state");
+assert.deepEqual(afterBalances.serverWorld, empty.serverWorld, "opcode 16 must preserve world state");
 
 const partialBalance = decodeS2CInitialization(16, new PacketWriter()
   .writeU8(0).writeI64(9007199254740994n).writeU8(1)
