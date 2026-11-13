@@ -1155,3 +1155,13 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Event type phân biệt hai nhánh opcode 3; không tự suy đoán decoder từ payload. Unknown event là no-op.
 - Bổ sung test routing và merge nhân vật; nối npm script và GitHub Actions.
 - Giới hạn: đây là reducer event phía client, chưa phải packet dispatcher của transport; chưa nối socket, Phaser hoặc local-save.
+
+
+### B16 — Inbound initialization frame adapter
+
+- Thêm `applyInboundInitializationFrame`: giải mã một S2C frame hoàn chỉnh bằng transport codec hiện có, sau đó dispatch các opcode initialization đã có cả payload decoder và reducer (1, 3, 15, 16).
+- Opcode 3: tách fixed prefix, chuyển phần trailing bytes sang extension decoder độc lập rồi merge hai event theo characterId.
+- Trả về receive cursor tiếp theo; test encrypted stream liên tiếp chứng minh cursor tiếp tục qua ranh giới packet, không reset theo từng frame.
+- Opcode chưa hỗ trợ được trả về `handled=false`, không đổi state; frame lỗi/strict payload lỗi được ném ra.
+- Thêm test adapter, npm script và GitHub Actions.
+- Giới hạn: chưa có TCP socket reader, partial-frame buffer, handshake production, Phaser bridge hoặc local-save. Caller phải cung cấp từng frame đầy đủ và tự duy trì key/cursor.
