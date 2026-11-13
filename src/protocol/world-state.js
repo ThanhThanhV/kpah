@@ -1,4 +1,4 @@
-import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode83, decodeS2COpcode106 } from "./generated/world-state-codec.js";
+import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74 } from "./generated/world-state-codec.js";
 import { decodeS2COpcode5 } from "./generated/opcode5-codec.js";
 import { decodeS2CTemplateCatalog, decodeS2CTemplateAsset } from "./template-assets.js";
 
@@ -249,6 +249,38 @@ export function applyInboundWorldPacket(state, frame) {
       event = decodeS2COpcode106(frame.payload);
       nextWorld = applyOpcode106Combat(world, event);
       break;
+    case -74: {
+      event = decodeS2COpcodeMinus74(frame.payload);
+      if (!event.handled) {
+        nextWorld = appendWorldEvent(world, -74, {
+          subcommand: event.subcommand,
+          handled: false,
+          unconsumedBytes: copyBytes(event.unconsumedBytes),
+        });
+        break;
+      }
+      nextWorld = cloneWorld(world);
+      const target = nextWorld.entitiesById[String(event.entityId)];
+      const entityKindMatches = target && target.kind === event.entityKind;
+      if (entityKindMatches) {
+        const activeEffects = [...(target.activeEffects ?? [])];
+        const effect = {
+          effectId: event.effectId,
+          durationValue: event.durationValue,
+          durationIsPositive: event.durationIsPositive,
+          flagA: event.flagA,
+          flagB: event.flagB,
+          effectVariant: event.effectVariant,
+        };
+        activeEffects.push(effect);
+        nextWorld.entitiesById[String(event.entityId)] = { ...target, activeEffects };
+      }
+      nextWorld = appendWorldEvent(nextWorld, -74, {
+        ...event,
+        attachedToKnownEntity: Boolean(entityKindMatches),
+      });
+      break;
+    }
     case 100:
       event = decodeS2CTemplateCatalog(frame.payload);
       if (!event.handled) return { state, opcode: frame.opcode, handled: false, events: [] };
