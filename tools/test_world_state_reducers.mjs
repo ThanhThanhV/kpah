@@ -45,7 +45,7 @@ assert.equal(state.serverWorld.entitiesById["124"].snapshot.x, 900);
 
 const playerMoveUpdate = new PacketWriter()
   .writeI8(0).writeU8(8).writeI16(124).writeI16(950).writeI16(960).writeI8(1)
-  .writeI32(-1).writeI8(0).writeI8(0).writeBool(true).toUint8Array();
+  .writeI32(-1).writeI8(0).writeBool(true).toUint8Array();
 state = applyInboundWorldPacket(state, { opcode: 4, payload: playerMoveUpdate }).state;
 assert.equal(state.serverWorld.entitiesById["124"].targetX, 950);
 assert.equal(state.serverWorld.entitiesById["124"].targetY, 960);
