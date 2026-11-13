@@ -113,3 +113,8 @@ assert.deepEqual(decodePayload("C2S","OP_95",market95),{fieldByteA:1,fieldByteB:
 const item100=encodePayload("C2S","OP_100",{mode:0,itemId:508});
 assert.deepEqual([...item100],[0,1,0xfc]);
 assert.deepEqual(decodePayload("C2S","OP_100",item100),{mode:0,itemId:508});
+
+const purchaseSuccess = encodePayload("S2C", "SHOP_PURCHASE_SUCCESS", {});
+assert.deepEqual([...purchaseSuccess], []);
+assert.deepEqual(decodePayload("S2C", "SHOP_PURCHASE_SUCCESS", purchaseSuccess), {});
+assert.throws(() => decodePayload("S2C", "SHOP_PURCHASE_SUCCESS", new Uint8Array([1])), /trailing payload bytes/);
