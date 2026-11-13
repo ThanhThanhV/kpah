@@ -106,3 +106,24 @@ CI đã chạy self-test thành công cho codec tham chiếu (key derivation, C2
 - Applies the implemented initialization reducers for S2C opcodes 1, 3, 15 and 16; forwards other decoded frames to `onPacket` without assigning unverified semantics.
 
 In a browser this class requires a WebSocket-compatible binary transport, normally supplied by a separately deployed TCP-to-WebSocket bridge. It is not a raw browser TCP socket, does not implement the bridge/server, and has not been tested against a production KPAH endpoint. Send and receive XOR cursors remain independent.
+
+
+## Loopback TCP ↔ WebSocket bridge
+
+`tools/kpah-tcp-ws-bridge.mjs` is a local adapter for the browser protocol session.
+
+- Opens a WebSocket endpoint at `/kpah` bound only to a loopback address (default `127.0.0.1:22101`).
+- Opens one outbound raw TCP connection to an explicitly supplied upstream host and port for each WebSocket client.
+- Forwards binary bytes unchanged in both directions. It does not parse frames, alter XOR bytes, or terminate the KPAH handshake; `KpahProtocolSession` remains responsible for protocol handling.
+- Requires an exact allowed browser Origin (default Vite dev/preview origins), rejects text messages and limits WebSocket payload size.
+- Provides a non-sensitive `GET /health` endpoint; it does not log packet payloads or credentials.
+- Applies TCP/WebSocket backpressure, keepalive and connect timeout; the bridge can be shut down cleanly.
+
+Run locally:
+
+```bash
+npm install
+npm run bridge:tcp-ws -- --upstream-host 127.0.0.1 --upstream-port 22100
+```
+
+The upstream above is only an example loopback target. Supply the actual TCP host and port from a legitimate server configuration; no production address is bundled or inferred. The bridge is intentionally loopback-only and is not an internet-facing gateway, authentication service, or KPAH server emulator.
