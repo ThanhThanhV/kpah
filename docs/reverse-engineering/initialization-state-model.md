@@ -49,3 +49,15 @@ The reducer is still a data-state layer, not a live network session or a Phaser 
 Each independently guarded group is applied only when its decoder success flag is true. A truncated optional group therefore cannot overwrite a previously known value with the decoder's sentinel defaults. The counted mapping is applied only when its count, pairs and UTF text all decode. The raw trailing bytes are copied.
 
 This is an extension snapshot reducer only. It does not replace the primary opcode 3 character snapshot, and it does not infer whether the target id is the local player or another entity.
+
+
+## Opcode 15 shop/context and pet-equipment image state
+
+`applyOpcode15(state, packet)` stores accepted packets under `opcode15ByCharacterId[targetCharacterId]`.
+
+- Subtype 0 updates only the `shopContext` variant: item records, the five short values, sentinel-guarded optional fields, and copied trailing bytes.
+- Nonzero subtype updates only the `petEquipmentImage` variant: item records, frame count, atlas layout code, and a copied opaque image byte array.
+- A later update of one variant preserves the other variant for the same character id.
+- Rejected negative-count packets and packets without a valid target id are no-ops.
+
+The reducer intentionally preserves wire field names and image bytes. It does not decode the atlas format, assign gameplay meaning to item fields, or claim that a purchase transaction succeeded.
