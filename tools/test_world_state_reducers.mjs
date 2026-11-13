@@ -97,7 +97,7 @@ assert.equal(combatEvent.targetEntityId, 124);
 assert.equal(combatEvent.damage, 125);
 assert.equal(combatEvent.targetCurrentHp, 875);
 assert.equal(state.serverWorld.entitiesById["124"].currentHp, 875);
-assert.equal(beforeCombat.serverWorld.entitiesById["124"].currentHp, undefined,
+assert.equal(beforeCombat.serverWorld.entitiesById["124"].currentHp, 900,
   "combat reducer must not mutate the previous world snapshot");
 assert.equal(state.serverWorld.combatEventSequence, 2);
 
