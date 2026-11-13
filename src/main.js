@@ -1211,7 +1211,8 @@ class WorldScene extends Phaser.Scene {
       for(const [eventKey,playback] of this.serverActorEffectPlayback){
         const event=events.find((item,index)=>String(item.sequence??(index+1))===eventKey);
         const definition=world.parsedActorEffectDefinitionsById?.[String(playback.animationId)];
-        if(!event||!definition){this.serverActorEffectViews.get(eventKey)?.destroy();this.serverActorEffectViews.delete(eventKey);this.serverActorEffectPlayback.delete(eventKey);continue;}
+        const actor=world.targetLinkedActorsBySourceId?.[String(playback.sourceEntityId)];
+        if(!event||!actor||actor.spawnSequence!==playback.actorSpawnSequence||!definition){this.serverActorEffectViews.get(eventKey)?.destroy();this.serverActorEffectViews.delete(eventKey);this.serverActorEffectPlayback.delete(eventKey);continue;}
         const result=advanceTargetLinkedActorPlayback(playback,world,projections,definition);
         this.serverActorEffectPlayback.set(eventKey,result.playback);
         if(result.impact){
