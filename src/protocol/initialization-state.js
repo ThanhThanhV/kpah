@@ -1,4 +1,5 @@
 import { createServerWorldState } from "./world-state.js";
+import { decodeCharacterPartCatalog } from "./character-part-data.js";
 /**
  * Applies verified S2C opcode 16 initialization snapshots to client-side state.
  * This pure reducer does not open a socket, persist data, or claim server acceptance.
@@ -119,6 +120,9 @@ export function applyOpcode1(state, packet) {
     partData: packet.partData.map(blob => ({
       index: blob.index, data: cloneBytes(blob.data),
     })),
+    characterPartCatalog: decodeCharacterPartCatalog(packet.partData.map(blob => ({
+      index: blob.index, data: cloneBytes(blob.data),
+    }))),
   };
 }
 
