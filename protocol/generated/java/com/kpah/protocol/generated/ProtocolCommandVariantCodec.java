@@ -158,7 +158,7 @@ public final class ProtocolCommandVariantCodec {
                     if (!(condition instanceof Number n) || n.intValue() != field.conditionValue()) continue;
                 }
                 Object value = field.constant() != null ? field.constant() : required(record, field.name());
-                if (field.constant() != null && record.containsKey(field.name()) && !Objects.equals(record.get(field.name()), value))
+                if (field.constant() != null && record.containsKey(field.name()) && (!(record.get(field.name()) instanceof Number n) || n.intValue() != ((Number)value).intValue()))
                     throw new IllegalArgumentException("Invalid constant field " + field.name());
                 writeShopValue(out, field.type(), value);
             }
@@ -177,7 +177,9 @@ public final class ProtocolCommandVariantCodec {
                     Object condition = record.get(field.conditionField());
                     if (!(condition instanceof Number n) || n.intValue() != field.conditionValue()) continue;
                 }
-                record.put(field.name(), field.constant() != null ? field.constant() : readShopValue(in, field.type()));
+                Object wireValue = readShopValue(in, field.type());
+                if (field.constant() != null && ((Number)wireValue).intValue() != ((Number)field.constant()).intValue()) throw new IOException("Invalid constant field " + field.name());
+                record.put(field.name(), field.constant() != null ? field.constant() : wireValue);
             }
             records.add(Map.copyOf(record));
         }
