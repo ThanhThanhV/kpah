@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { projectServerWorldEntities } from "../src/protocol/server-world-projection.js";
+import { resolveOriginalEntityFactoryClass } from "../src/protocol/original-entity-factory.js";
 
 const projected = projectServerWorldEntities({
   entityOrder: [10, 11, 12, 13],
@@ -30,5 +31,17 @@ assert.equal(withTemplate[0].frameHeight, 48);
 assert.equal(withTemplate[0].movementStep, 4);
 assert.equal(withTemplate[0].templateReady, true);
 assert.equal(withTemplate[0].factoryClass, "w");
+assert.equal(resolveOriginalEntityFactoryClass(0, 0, 0, 1), "hd");
+assert.equal(resolveOriginalEntityFactoryClass(0, 0, 0, -1), "z");
+assert.equal(resolveOriginalEntityFactoryClass(1, 91, 0, -1), "v");
+assert.equal(resolveOriginalEntityFactoryClass(1, 46, 0, -1), "w");
+assert.equal(resolveOriginalEntityFactoryClass(1, 100, 0, -1), "cf");
+assert.equal(resolveOriginalEntityFactoryClass(1, 7, 1, -1), "cf");
+assert.equal(resolveOriginalEntityFactoryClass(1, 7, 0, -1), "cd");
+assert.equal(resolveOriginalEntityFactoryClass(3, 0, 0, -1), "al");
+assert.equal(resolveOriginalEntityFactoryClass(4, 0, 0, -1), "am");
+assert.equal(resolveOriginalEntityFactoryClass(6, 0, 0, -1), "ak");
+assert.equal(resolveOriginalEntityFactoryClass(14, 0, 0, -1), "bq");
+assert.equal(resolveOriginalEntityFactoryClass(99, 0, 0, -1), null);
 assert.deepEqual(projectServerWorldEntities(null), []);
 console.log("Server world projection: PASS (verified kind, entity/template IDs, opcode 4/5 coordinates, no template-to-sprite guesses)");
