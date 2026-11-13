@@ -84,6 +84,16 @@ Handler `ka.java:case-73` dispatch đến `mj.A(acu)`, có hai nhánh đã xác 
 
 Đây là hai cơ chế effect khác nhau: liên kết một effect object với nhiều target/offset, và gắn một visual overlay vào entity. Chưa giải mã animation resource, chưa diễn giải hai offset int, và chưa áp dụng stat/buff/debuff rules.
 
+### Effect image resource request — opcode -51
+
+Source trace confirms the resource-fetch path used by entity effect overlays:
+
+- Opcode 26 loads effect-definition records into `d.i`; each record is keyed by a signed-short effect/resource ID and contains binary frame/animation definition bytes.
+- When the original overlay renderer asks `mi.a(effectId)` for its image and no image is cached, `mi.a(short)` sends C2S opcode -51 with only that signed-short resource ID (`jy.j(short)`).
+- S2C opcode -51 reads the same short ID and treats every remaining byte as an image passed to `Image.createImage`.
+
+The browser now retains opcode 26 effect-definition bytes, requests each active branch-1 overlay image once when its definition is available, and stores S2C -51 image bytes by resource ID. The bytes are intentionally not drawn yet: the original `d` frame/atlas definition must be decoded and its frame lifecycle ported before rendering can be considered source-faithful.
+
 ## Các giới hạn gameplay
 
 - Damage event cung cấp cả damage display và HP value sau event; không suy ra công thức damage, crit chance, defense hay server-side mitigation chỉ từ packet này.
