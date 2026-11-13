@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
 import { encodeEffectAssetRequest } from "../src/protocol/effect-assets.js";
 import { decodeEffectDefinition } from "../src/protocol/effect-definition.js";
+import { advanceEffectPlayback, createEffectPlayback, getEffectFrameParts } from "../src/protocol/effect-playback.js";
 import { applyInboundWorldPacket } from "../src/protocol/world-state.js";
 import { createInitializationState } from "../src/protocol/initialization-state.js";
 
@@ -265,6 +266,34 @@ assert.deepEqual([...parsedEffectFixture.auxiliaryArrays.array0],[11,12]);
 assert.deepEqual([...parsedEffectFixture.auxiliaryArrays.array1],[13]);
 assert.equal(parsedEffectFixture.trailingBytes.length,0);
 assert.throws(()=>decodeEffectDefinition(new Uint8Array([1,2])),/Truncated effect definition/);
+
+// Source d.a(Graphics,...) resolves frame parts against atlas rectangles.
+const renderParts = getEffectFrameParts(parsedEffectFixture, 0);
+assert.deepEqual(renderParts.groupZero[0].region, {x:10,y:20,width:30,height:40});
+assert.equal(renderParts.groupZero[0].drawable, true);
+assert.equal(renderParts.groupNonZero[0].drawable, true);
+assert.deepEqual(getEffectFrameParts(parsedEffectFixture, 9), {groupZero:[],groupNonZero:[]});
+
+// Original d.a() advances one sequence entry per invocation. The browser
+// deliberately does not assume a frame interval; the scene drives each tick.
+const oncePlayback = createEffectPlayback(parsedEffectFixture, 0n);
+assert.equal(oncePlayback.mode, "once");
+const onceStep = advanceEffectPlayback(oncePlayback, parsedEffectFixture, 1000);
+assert.equal(onceStep.frameIndex, 0);
+assert.equal(onceStep.finished, false);
+const onceFinished = advanceEffectPlayback(onceStep, parsedEffectFixture, 1000);
+assert.equal(onceFinished.finished, true);
+const loopPlayback = createEffectPlayback(parsedEffectFixture, -1n);
+assert.equal(loopPlayback.mode, "loop");
+const loopStep1 = advanceEffectPlayback(loopPlayback, parsedEffectFixture, 1000);
+const loopStep2 = advanceEffectPlayback(loopStep1, parsedEffectFixture, 1000);
+const loopStep3 = advanceEffectPlayback(loopStep2, parsedEffectFixture, 1000);
+assert.equal(loopStep3.finished, false);
+assert.equal(loopStep3.sequenceCursor, 0);
+const timedPlayback = createEffectPlayback(parsedEffectFixture, 2000n);
+assert.equal(timedPlayback.mode, "until-expiry");
+assert.equal(advanceEffectPlayback(timedPlayback, parsedEffectFixture, 1999).finished, false);
+assert.equal(advanceEffectPlayback(timedPlayback, parsedEffectFixture, 2001).finished, true);
 
 // Opcode 26 indexedGraphics carries d.i effect definitions. Branch-1
 // effect IDs use the same ID as the C2S -51 image resource request.
