@@ -54,7 +54,7 @@ export function decodeEffectDefinition(payload) {
   }
   const sequenceCount=readCount("frame sequence count",false);
   const frameSequence=[];
-  for(let i=0;i<sequenceCount;i++) frameSequence.push(readI16("frame sequence entry") & 0xff);
+  for(let i=0;i<sequenceCount;i++){ const value=readI16("frame sequence entry") & 0xff; frameSequence.push(value>127?value-256:value); }
   const sequenceHeaderByte=readI8("sequence header byte");
   const readByteArray=(label)=>{
     const count=readCount(`${label} count`);
