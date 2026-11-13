@@ -35,6 +35,7 @@ public final class ProtocolPacketCodec {
         SCHEMAS.put("S2C_STORAGE_DEPOSIT_RESULT", List.of(new Field("itemId", Type.I16)));
         SCHEMAS.put("S2C_STORAGE_WITHDRAW_RESULT", List.of(new Field("itemId", Type.I16)));
         SCHEMAS.put("S2C_SELL_ITEM_RESULT", List.of(new Field("itemId", Type.I16)));
+        SCHEMAS.put("S2C_SHOP_PURCHASE_SUCCESS", List.of());
     }
     public static byte[] encode(String command, Map<String, ?> values) throws IOException {
         List<Field> fields = requireSchema(command);
