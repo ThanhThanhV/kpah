@@ -191,4 +191,47 @@ state = applyInboundWorldPacket(state, { opcode: -71, payload: wrongEffectKind }
 assert.equal(state.serverWorld.worldEvents.at(-1).entityKindMatches, false);
 assert.equal(state.serverWorld.entitiesById["124"].activeEffects.some(effect => effect.effectId === 702), false);
 
+// Opcode -73 branch 0 links a kind-12 effect object to verified target entities.
+// The two per-target integers remain opaque offset values; unresolved targets are retained.
+const effectObjectSpawn = new PacketWriter().writeI8(12).writeU8(9).writeI16(777)
+  .writeI16(10).writeI16(20).writeI8(0).writeI32(-1).writeI8(0).writeBool(true).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 4, payload: effectObjectSpawn }).state;
+const linkedEffect = new PacketWriter().writeI16(777).writeI8(0).writeI16(909).writeI8(2)
+  .writeI8(0).writeI16(124).writeI32(1111).writeI32(-2222)
+  .writeI8(1).writeI16(555).writeI32(3333).writeI32(4444).toUint8Array();
+const beforeLinkedEffect = state;
+state = applyInboundWorldPacket(state, { opcode: -73, payload: linkedEffect }).state;
+const attachment = state.serverWorld.entitiesById["777"].effectAttachment;
+assert.equal(attachment.effectId, 909);
+assert.equal(attachment.targets.length, 2);
+assert.equal(attachment.targets[0].resolved, true);
+assert.deepEqual([attachment.targets[0].offsetValueA, attachment.targets[0].offsetValueB], [1111, -2222]);
+assert.equal(attachment.targets[1].resolved, false, "target lookup requires both entity ID and kind");
+assert.equal(attachment.resolvedTargetCount, undefined);
+assert.equal(beforeLinkedEffect.serverWorld.entitiesById["777"].effectAttachment, undefined,
+  "opcode -73 branch 0 must preserve previous entity snapshot");
+assert.equal(state.serverWorld.worldEvents.at(-1).sourceEffectObjectMatches, true);
+assert.equal(state.serverWorld.worldEvents.at(-1).resolvedTargetCount, 1);
+
+// Opcode -73 branch 1 adds/refreshes a visual effect overlay in the entity's
+// original bu.dg collection; the source passes entity coordinates and a long value.
+const overlayCreate = new PacketWriter().writeI16(124).writeI8(1).writeI16(910)
+  .writeI64(987654321n).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: -73, payload: overlayCreate }).state;
+assert.equal(state.serverWorld.entitiesById["124"].effectOverlays.at(-1).effectId, 910);
+assert.equal(state.serverWorld.entitiesById["124"].effectOverlays.at(-1).expiryValue, 987654321n);
+assert.equal(state.serverWorld.worldEvents.at(-1).overlayApplied, true);
+const overlayRefresh = new PacketWriter().writeI16(124).writeI8(1).writeI16(910)
+  .writeI64(1234567890n).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: -73, payload: overlayRefresh }).state;
+assert.equal(state.serverWorld.entitiesById["124"].effectOverlays.length, 1,
+  "matching effect ID refreshes instead of duplicating the overlay");
+assert.equal(state.serverWorld.entitiesById["124"].effectOverlays[0].expiryValue, 1234567890n);
+
+// Unsupported branch is retained opaque, without guessing its payload.
+const unsupportedMinus73 = new PacketWriter().writeI16(124).writeI8(2).writeU8(0xaa).writeU8(0xbb).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: -73, payload: unsupportedMinus73 }).state;
+assert.equal(state.serverWorld.worldEvents.at(-1).handled, false);
+assert.deepEqual([...state.serverWorld.worldEvents.at(-1).unconsumedBytes], [0xaa, 0xbb]);
+
 console.log("Inbound world-state reducers: PASS (spawn/update, guarded snapshot, combat event, despawn, unknown opcode)");
