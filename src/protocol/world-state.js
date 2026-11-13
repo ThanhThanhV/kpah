@@ -13,6 +13,7 @@ export function createServerWorldState() {
     parsedEffectDefinitionsById: {},
     effectDefinitionErrorsById: {},
     effectImagePayloadsById: {},
+    targetLinkedEffectEvents: [],
     unknownEntitySnapshots: [],
     combatEvents: [],
     combatEventSequence: 0,
@@ -38,6 +39,7 @@ function cloneWorld(world) {
     parsedEffectDefinitionsById: { ...(source.parsedEffectDefinitionsById ?? {}) },
     effectDefinitionErrorsById: { ...(source.effectDefinitionErrorsById ?? {}) },
     effectImagePayloadsById: { ...(source.effectImagePayloadsById ?? {}) },
+    targetLinkedEffectEvents: [...(source.targetLinkedEffectEvents ?? [])],
     unknownEntitySnapshots: [...(source.unknownEntitySnapshots ?? [])],
     combatEvents: [...(source.combatEvents ?? [])],
     worldEvents: [...(source.worldEvents ?? [])],
@@ -365,29 +367,28 @@ export function applyInboundWorldPacket(state, frame) {
       event = decodeS2COpcodeMinus73(frame.payload);
       if (event.branch === 0) {
         nextWorld = cloneWorld(world);
-        const effectObject = nextWorld.entitiesById[String(event.entityId)];
-        const sourceMatches = effectObject && effectObject.kind === 12;
+        // Original mj.A resolves a separate hz actor by (source entity ID, kind 12).
+        // That actor is not part of the regular entity-ID map yet, so retain the
+        // target-linked action without pretending the source actor was resolved.
         const targets = event.targets.map(targetRecord => {
           const target = nextWorld.entitiesById[String(targetRecord.targetEntityId)];
           const resolved = Boolean(target && target.kind === targetRecord.entityKind);
           return { ...targetRecord, resolved };
         });
-        if (sourceMatches) {
-          nextWorld.entitiesById[String(event.entityId)] = {
-            ...effectObject,
-            effectAttachment: {
-              effectId: event.effectId,
-              targets,
-              resolvedTargetEntityIds: targets.filter(target => target.resolved).map(target => target.targetEntityId),
-              damageValues: targets.map(target => target.damageValue),
-              targetCurrentHpValues: targets.map(target => target.targetCurrentHp),
-            },
-          };
+        const linkedEvent = {
+          ...event,
+          targets,
+          resolvedTargetEntityIds: targets.filter(target => target.resolved).map(target => target.targetEntityId),
+          effectActorResolved: false,
+        };
+        nextWorld.targetLinkedEffectEvents.push(linkedEvent);
+        if (nextWorld.targetLinkedEffectEvents.length > 100) {
+          nextWorld.targetLinkedEffectEvents.splice(0, nextWorld.targetLinkedEffectEvents.length - 100);
         }
         nextWorld = appendWorldEvent(nextWorld, -73, {
           ...event,
           handled: true,
-          sourceEffectObjectMatches: Boolean(sourceMatches),
+          effectActorLookupSupported: false,
           resolvedTargetCount: targets.filter(target => target.resolved).length,
         });
         break;

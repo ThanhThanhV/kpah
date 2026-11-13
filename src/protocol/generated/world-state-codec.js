@@ -1074,7 +1074,7 @@ export function decodeS2COpcodeMinus71(payload) {
 /** Opcode -73: the two verified mj.A(acu) attachment branches. */
 export function decodeS2COpcodeMinus73(payload) {
   const reader = new PacketReader(payload);
-  const entityId = reader.readI16();
+  const sourceEntityId = reader.readI16();
   const branch = reader.readI8();
   if (branch === 0) {
     const effectId = reader.readI16();
@@ -1089,12 +1089,12 @@ export function decodeS2COpcodeMinus73(payload) {
         targetCurrentHp: reader.readI32(),
       });
     }
-    return { entityId, branch, effectId, targetCount, targets, trailingBytes: readRemaining(reader) };
+    return { sourceEntityId, branch, effectId, targetCount, targets, trailingBytes: readRemaining(reader) };
   }
   if (branch === 1) {
     const effectId = reader.readI16();
     const expiryValue = reader.readI64();
-    return { entityId, branch, effectId, expiryValue, trailingBytes: readRemaining(reader) };
+    return { entityId: sourceEntityId, branch, effectId, expiryValue, trailingBytes: readRemaining(reader) };
   }
-  return { entityId, branch, handled: false, unconsumedBytes: readRemaining(reader), trailingBytes: new Uint8Array() };
+  return { entityId: sourceEntityId, branch, handled: false, unconsumedBytes: readRemaining(reader), trailingBytes: new Uint8Array() };
 }

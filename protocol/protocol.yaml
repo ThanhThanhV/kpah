@@ -3898,7 +3898,7 @@
           "branch": 0,
           "fields": [
             {
-              "name": "effectObjectEntityId",
+              "name": "sourceEntityId",
               "type": "i16"
             },
             {

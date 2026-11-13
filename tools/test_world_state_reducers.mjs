@@ -194,26 +194,28 @@ state = applyInboundWorldPacket(state, { opcode: -71, payload: wrongEffectKind }
 assert.equal(state.serverWorld.worldEvents.at(-1).entityKindMatches, false);
 assert.equal(state.serverWorld.entitiesById["124"].activeEffects.some(effect => effect.effectId === 702), false);
 
-// Opcode -73 branch 0 links a kind-12 effect object to verified target entities.
-// Source hz.b() displays the first integer as damage and applies the second as target HP.
-const effectObjectSpawn = new PacketWriter().writeI8(12).writeU8(9).writeI16(777)
-  .writeI16(10).writeI16(20).writeI8(0).writeI32(-1).writeI8(0).writeBool(true).toUint8Array();
-state = applyInboundWorldPacket(state, { opcode: 4, payload: effectObjectSpawn }).state;
-const linkedEffect = new PacketWriter().writeI16(777).writeI8(0).writeI16(909).writeI8(2)
-  .writeI8(0).writeI16(124).writeI32(1111).writeI32(-2222)
+// Opcode -73 branch 0 is keyed by source entity ID, but the original
+// handler resolves a separate kind-12 hz actor from mj's actor list. That
+// actor registry is not represented by entitiesById, so retain the event
+// without mutating a same-ID player entity or pretending the actor resolved.
+const linkedEffect = new PacketWriter().writeI16(124).writeI8(0).writeI16(909).writeI8(2)
+  .writeI8(0).writeI16(124).writeI32(1111).writeI32(888)
   .writeI8(1).writeI16(555).writeI32(3333).writeI32(4444).toUint8Array();
 const beforeLinkedEffect = state;
 state = applyInboundWorldPacket(state, { opcode: -73, payload: linkedEffect }).state;
-const attachment = state.serverWorld.entitiesById["777"].effectAttachment;
-assert.equal(attachment.effectId, 909);
-assert.equal(attachment.targets.length, 2);
-assert.equal(attachment.targets[0].resolved, true);
-assert.deepEqual([attachment.targets[0].damageValue, attachment.targets[0].targetCurrentHp], [1111, -2222]);
-assert.equal(attachment.targets[1].resolved, false, "target lookup requires both entity ID and kind");
-assert.equal(attachment.resolvedTargetCount, undefined);
-assert.equal(beforeLinkedEffect.serverWorld.entitiesById["777"].effectAttachment, undefined,
-  "opcode -73 branch 0 must preserve previous entity snapshot");
-assert.equal(state.serverWorld.worldEvents.at(-1).sourceEffectObjectMatches, true);
+const linkedEvent = state.serverWorld.targetLinkedEffectEvents.at(-1);
+assert.equal(linkedEvent.sourceEntityId, 124);
+assert.equal(linkedEvent.effectId, 909);
+assert.equal(linkedEvent.targets.length, 2);
+assert.equal(linkedEvent.targets[0].resolved, true);
+assert.deepEqual([linkedEvent.targets[0].damageValue, linkedEvent.targets[0].targetCurrentHp], [1111, 888]);
+assert.equal(linkedEvent.targets[1].resolved, false, "target lookup requires both entity ID and kind");
+assert.equal(linkedEvent.effectActorResolved, false);
+assert.equal(state.serverWorld.entitiesById["124"].effectAttachment, undefined,
+  "branch 0 must not overwrite the source player's entity record");
+assert.equal(beforeLinkedEffect.serverWorld.targetLinkedEffectEvents.length, 0,
+  "branch 0 event collection must preserve previous world snapshot");
+assert.equal(state.serverWorld.worldEvents.at(-1).effectActorLookupSupported, false);
 assert.equal(state.serverWorld.worldEvents.at(-1).resolvedTargetCount, 1);
 
 // Opcode -73 branch 1 adds/refreshes a visual effect overlay in the entity's
