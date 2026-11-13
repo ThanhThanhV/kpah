@@ -197,3 +197,26 @@ Generated Java/JavaScript codecs use the corrected command names and cover both 
 - C2S opcode 78 `SELL_ITEM`: signed-short `itemId` + signed-byte `sourceSelector`. Writer `jy.d(short, byte)` writes the fields in that order (`jy.java:931-942`). The sale-confirmation callbacks send selector 1 for items from `ca.O` and selector 0 for items from `ca.N` (`acn.java:16-20`, `acp.java:16-20`; UI confirmation is in `xg.java:3070-3101`).
 - S2C opcode 78 `SELL_ITEM_RESULT`: signed-short `itemId`. Handler `ka.java:1771-1774` calls `mj.h(itemId)`; the client finds the matching stack by its secondary item key in `ca.N` (`be.java:30-40`), decrements the quantity, removes the stack at zero, credits `bd.r / 5`, and displays the sale-success message (`mj.java:4678-4688`).
 - This is the original client's optimistic post-result behavior. The result packet has no amount or currency field; the client derives proceeds from its local item template. Do not infer the server's authoritative price validation or persistence from this handler.
+
+## Source trace bổ sung — NPC shop purchase và drop item
+
+### NPC shop purchase — C2S/S2C opcode 85
+
+- jy.c(int) tạo C2S opcode 85 và ghi đúng một byte bằng writeByte(n) (jy.java:207-214).
+- Hai caller UI đã xác nhận: abv.a() (màn shop trong xg) và gt.a() (màn shop trong dh) đều gọi jy.a().c(bd.o) sau hộp thoại xác nhận mua (abv.java:10-16, gt.java:10-16). bd.o là trường short trong catalog record bd; writer chỉ phát byte, vì vậy wire field nên mô tả trung tính là mã/template ID 1 byte, không phải index của danh sách UI.
+- Trước khi gửi, cả hai callback kiểm tra túi còn chỗ (km.s.t.y()) và chỉ chọn các catalog record có bd.g khớp shop hiện tại, bd.q bật; bộ đếm UI được dùng để chọn record, nhưng giá trị gửi là bd.o (abu.java:10-36, gs.java:10-36).
+- S2C opcode 85 trong ka.java chỉ hiển thị thông báo “Đã mua, món đồ đang ở trong hành trang.”, không đọc payload (ka.java:195-197). Do đó response success hiện xác minh được là rỗng; không chứa item ID, giá hay số lượng. Không suy diễn rằng notification này tự nó là inventory update hoặc bằng chứng server persistence.
+
+### Drop trang bị đang mặc — C2S opcode -21
+
+- Trong menu của ô trang bị, lựa chọn “Bỏ ra đất” đi qua ye → hộp thoại xác nhận yf; callback gọi jy.a().p(slot) và xóa slot ở client (xg.java:3039-3054, yf.java:13-25).
+- jy.p(int) tạo opcode -21 và ghi slot bằng writeShort (jy.java:1170-1178). Đây là thao tác thả trang bị từ slot xuống đất, không phải tháo trang bị về túi.
+- Phân biệt với drop item trong túi: callback xn gọi jy.h(itemInstanceId); writer dùng opcode 61 với một i16 (jy.java:958-969, xn.java:10-17). S2C opcode 61 trả hai short định danh/ngữ cảnh và record vị trí/vật phẩm rơi; handler mj.a(short, short, jz) xóa item khỏi inventory nếu tìm thấy rồi thêm ground entity (ka.java:1776-1788, mj.java:4691-4704).
+- Chưa tìm thấy thao tác độc lập “unequip về bag” trong menu được truy vết. “Tháo khăn” (xz) là hành vi đặc biệt có cooldown 3 phút và cập nhật trạng thái khăn; không được gán thành generic unequip (xg.java:3047-3050, xz.java:8-19).
+
+### Kết luận phạm vi
+
+- NPC purchase request opcode 85 đã có schema C2S một byte; S2C opcode 85 được xác nhận là notification rỗng.
+- Drop equipped item opcode -21 đã có schema C2S i16 equipmentSlot.
+- Drop inventory item opcode 61 cần giữ tách biệt; request i16 itemId, response có cấu trúc riêng đang cần schema hóa đầy đủ khi xác minh được tất cả field semantics.
+- Unequip-to-bag vẫn chưa xác minh; không tạo opcode hoặc schema phỏng đoán.
