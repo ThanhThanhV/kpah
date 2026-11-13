@@ -262,6 +262,7 @@ export function applyOpcode3Snapshot(state, decodedPrefix) {
   };
   return {
     ...state,
+    activeCharacterId: characterId,
     characterSnapshotsById: {
       ...(state.characterSnapshotsById ?? {}),
       [characterId]: snapshot,
