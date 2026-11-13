@@ -38,6 +38,10 @@ jobs:
         run: npm run build
       - name: Compile Python tooling
         run: python -m compileall -q tools
+      - name: Verify generated command-variant codecs
+        run: python tools/generate_command_variants.py --check
+      - name: Test JavaScript command-variant codecs
+        run: node tools/test_command_variants.mjs
       - name: Test protocol reference vectors
         run: python tools/kpah_protocol_reference.py --self-test
       - name: Test local TCP replay harness
