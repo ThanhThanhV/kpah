@@ -1,6 +1,6 @@
 import { KpahProtocolSession } from "./kpah-protocol-session.js";
 import { encodeTemplateAssetRequest } from "./template-assets.js";
-import { encodeEffectAssetRequest } from "./effect-assets.js";
+import { actorEffectImageResourceId, encodeEffectAssetRequest } from "./effect-assets.js";
 
 let activeSession = null;
 let currentView = null;
@@ -140,6 +140,19 @@ export function mountProtocolConnectionPanel(root) {
               lastError = "Không thể yêu cầu effect image " + effectId + ": " + error.message;
             }
           }
+        }
+        for (const actorEvent of world?.targetLinkedEffectEvents ?? []) {
+          const animationId = actorEvent.effectId;
+          const key = String(animationId);
+          if (!Number.isInteger(animationId) || !world.actorEffectDefinitionsById?.[key]) continue;
+          let resourceId;
+          try { resourceId = actorEffectImageResourceId(animationId); }
+          catch (error) { lastError = "Actor image resource ID không hợp lệ " + animationId + ": " + error.message; continue; }
+          const resourceKey = String(resourceId);
+          if (world.effectImagePayloadsById?.[resourceKey] || requestedEffectAssets.has(resourceId)) continue;
+          requestedEffectAssets.add(resourceId);
+          try { session.sendPacket(-51, encodeEffectAssetRequest(resourceId)); }
+          catch (error) { requestedEffectAssets.delete(resourceId); lastError = "Không thể yêu cầu actor image " + resourceId + ": " + error.message; }
         }
         window.dispatchEvent(new CustomEvent("kpah:protocol-state", { detail: { state } }));
         renderStatus();

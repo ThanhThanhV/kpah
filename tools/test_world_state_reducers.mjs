@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
-import { encodeEffectAssetRequest } from "../src/protocol/effect-assets.js";
+import { actorEffectImageResourceId, encodeEffectAssetRequest } from "../src/protocol/effect-assets.js";
 import { decodeEffectDefinition } from "../src/protocol/effect-definition.js";
 import { decodeActorEffectDefinition, resolveActorEffectFrameIndex, resolveActorEffectSequenceIndex } from "../src/protocol/actor-effect-definition.js";
 import { advanceEffectPlayback, createEffectPlayback, getEffectFrameParts } from "../src/protocol/effect-playback.js";
@@ -318,6 +318,12 @@ assert.equal(state.serverWorld.parsedEffectDefinitionsById["910"].frames.length,
 assert.equal(state.serverWorld.effectDefinitionErrorsById["910"], undefined);
 assert.deepEqual([...encodeEffectAssetRequest(910)], [0x03, 0x8e]);
 assert.throws(() => encodeEffectAssetRequest(40000), /signed short/);
+assert.equal(actorEffectImageResourceId(0), 8700);
+assert.equal(actorEffectImageResourceId(300), 9000);
+assert.equal(actorEffectImageResourceId(301), 14401);
+assert.equal(actorEffectImageResourceId(-1), 8699);
+assert.equal(actorEffectImageResourceId(18667), 32767);
+assert.throws(() => actorEffectImageResourceId(18668), /signed short/);
 
 // Class i/hz target-linked actor catalog is opcode-26 indexedImages; it has
 // a distinct parser and 3x14 animation selector from class d overlays.

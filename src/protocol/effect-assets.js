@@ -7,3 +7,16 @@ export function encodeEffectAssetRequest(resourceId) {
   }
   return new PacketWriter().writeI16(resourceId).toUint8Array();
 }
+
+
+/** Original hz.a(Graphics) requests actor images at a derived resource ID. */
+export function actorEffectImageResourceId(animationId) {
+  if (!Number.isInteger(animationId) || animationId < -0x8000 || animationId > 0x7fff) {
+    throw new RangeError("Actor animation ID must fit a signed short");
+  }
+  const resourceId = animationId + (animationId < 301 ? 8700 : 14100);
+  if (resourceId < -0x8000 || resourceId > 0x7fff) {
+    throw new RangeError("Derived actor image resource ID must fit a signed short");
+  }
+  return resourceId;
+}

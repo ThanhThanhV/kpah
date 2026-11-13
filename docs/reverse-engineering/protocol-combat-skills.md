@@ -162,3 +162,8 @@ The original `ka.case 26` has two distinct indexed catalogs:
 Browser now decodes `indexedImages` with a dedicated `decodeActorEffectDefinition`: region table, frame parts (retaining both triplets and flags), frame sequence, eight animation sequences, optional per-frame offsets, and four optional sequences. The exact 3x14 sequence-index table from `i` is exported as `resolveActorEffectSequenceIndex`; frame resolution is bounded and does not infer missing sequences. The renderer consumes the primary part triplet only, as observed in `i.a(Graphics,...)`; auxiliary part data is preserved.
 
 The actor parser intentionally does not reuse `decodeEffectDefinition`: the binary layouts and consumers are different. This commit adds decoding and state storage only; actor movement, timing, and rendering remain separate work.
+
+
+### Resource request for target-linked actor images
+
+For each opcode -73 branch-0 event with a known class-`i` animation definition, the browser derives the source image resource ID exactly as `hz.a(Graphics)`: animation ID + 8700 when ID < 301, otherwise +14100. It reuses C2S -51 and the shared resource-ID deduplication set; response bytes continue to be stored by the returned resource ID. Requests are skipped until the actor animation definition is present, and invalid signed-short derived IDs are reported rather than truncated.
