@@ -33,7 +33,7 @@ export function projectServerWorldEntities(world) {
       coordinateSource: Number.isFinite(snapshot?.x) && Number.isFinite(snapshot?.y)
         ? "opcode5" : "opcode4",
       presentation: kind === 0 ? "player-like" : kind === 1 ? "monster-npc-family" : "unknown-kind",
-      factoryClass: resolveOriginalEntityFactoryClass(kind, templateId, entity.state, entity.extraSubtype),
+      factoryClass: resolveOriginalEntityFactoryClass(kind, templateId, entity.state, entity.kind1Subtype),
       frameWidth: template?.frameWidth ?? null,
       frameHeight: template?.frameHeight ?? null,
       movementStep: template?.movementStep ?? null,
