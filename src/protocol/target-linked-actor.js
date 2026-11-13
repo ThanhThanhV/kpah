@@ -26,7 +26,7 @@ export function createTargetLinkedActorPlayback(event, world, projections, defin
   const source = pointFor(world, projections, event?.sourceEntityId);
   if (!source) return null;
   const initial = { sourceEntityId: event.sourceEntityId, animationId: event.effectId, event,
-    x: source.x, y: source.y, state: 2, animationState: 0, directionGroup: 0, transform: 0,
+    x: source.x, y: source.y, state: 2, animationState: 0, baseAnimationState: 0, directionGroup: 0, transform: 0,
     cursor: 0, sequenceIndex: null, frameIndex: null, verticalOffset: 0, waitTicks: 0,
     impacted: false, finished: false, tick: 0 };
   return selectFrame(initial, definition);
@@ -42,7 +42,6 @@ export function advanceTargetLinkedActorPlayback(playback, world, projections, d
   let next = { ...playback, tick: playback.tick + 1, animationState: 2, state: 2 };
   let reached = !target;
   if (target) {
-    next.directionGroup = playback.y > target.y ? 1 : 0;
     const distance = manhattan(playback.x + movementStep, playback.y + movementStep, target.x, target.y);
     const targetHp = target.entity?.currentHp ?? target.entity?.snapshot?.currentHp;
     const targetAlive = !Number.isFinite(targetHp) || targetHp > 0;
@@ -52,9 +51,10 @@ export function advanceTargetLinkedActorPlayback(playback, world, projections, d
       if (Math.abs(y - target.y) < movementStep) y = target.y;
       if (x < target.x) { x += movementStep; direction = 2; }
       else if (x > target.x) { x -= movementStep; direction = 0; }
-      else if (y > target.y) { y -= movementStep; next.directionGroup = 1; }
-      else if (y < target.y) { y += movementStep; next.directionGroup = 0; }
-      next.x = x; next.y = y; next.transform = direction; reached = false;
+      else if (y > target.y) { y -= movementStep; next.directionGroup = 1; direction = 0; }
+      else if (y < target.y) { y += movementStep; next.directionGroup = 0; direction = 0; }
+      next.transform = direction;
+      next.x = x; next.y = y; next.transform = direction; next.baseAnimationState = 2; reached = false;
     } else reached = true;
   }
   if (reached) {
@@ -62,11 +62,14 @@ export function advanceTargetLinkedActorPlayback(playback, world, projections, d
     next.waitTicks = playback.waitTicks + 1;
     if (definition?.firstFrameMaxBottom <= -5 && next.verticalOffset < 50) next.verticalOffset = Math.min(50, next.verticalOffset + 10);
     if (next.waitTicks > 6) {
-      next.state = 4; next.impacted = true; next.finished = true;
+      next.state = 4; next.animationState = next.baseAnimationState; next.impacted = true; next.finished = true;
       const impacts = target ? (playback.event.targets ?? []).filter(record => record.resolved && pointFor(world, projections, record.targetEntityId)).map(record => ({ entityId: record.targetEntityId, damageValue: record.damageValue, targetCurrentHp: record.targetCurrentHp })) : [];
       return { playback: selectFrame(next, definition), impact: impacts.length ? { sourceEntityId: playback.sourceEntityId, animationId: playback.animationId, effectId: playback.event.effectId, targets: impacts } : null };
     }
-  } else if (definition?.firstFrameMaxBottom <= -5 && next.verticalOffset > 0) next.verticalOffset = Math.max(0, next.verticalOffset - 3);
+  } else if (definition?.firstFrameMaxBottom <= -5) {
+    if (next.verticalOffset < 40) next.verticalOffset += 1;
+    if (next.verticalOffset > 0) next.verticalOffset = Math.max(0, next.verticalOffset - 3);
+  }
   const sequenceIndex = resolveActorEffectSequenceIndex(next.directionGroup, next.animationState);
   const sequence = sequenceIndex === null ? null : definition?.animationSequences?.[sequenceIndex];
   if ((sequence instanceof Int8Array || sequence instanceof Uint8Array) && sequence.length > 0) next.cursor = (playback.cursor + 1) % sequence.length;

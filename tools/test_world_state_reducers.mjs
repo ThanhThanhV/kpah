@@ -390,6 +390,14 @@ assert.equal(targetLinkedPlayback.x, 30, "actor approaches to the source Manhatt
 assert.equal(targetLinkedPlayback.finished, true);
 assert.equal(targetLinkedImpact.targets.length, 2, "all linked target records are applied together after the seven-tick impact wait");
 assert.deepEqual(targetLinkedImpact.targets.map(item => [item.entityId, item.damageValue, item.targetCurrentHp]), [[555, 20, 80], [556, 20, 80]]);
+const verticalActorEvent = { sourceEntityId: 124, effectId: 920, targets: [{ targetEntityId: 555, resolved: true, damageValue: 5, targetCurrentHp: 95 }] };
+const verticalActorWorld = { entitiesById: { "124": { snapshot: { x: 0, y: 0 } }, "555": { currentHp: 100, snapshot: { x: 0, y: -60 } } } };
+const verticalActorProjections = new Map([["124", { x: 0, y: 0, playerMovementStep: 3 }], ["555", { x: 0, y: -60 }]]);
+let verticalActor = createTargetLinkedActorPlayback(verticalActorEvent, verticalActorWorld, verticalActorProjections, parsedActorDefinition);
+verticalActor = advanceTargetLinkedActorPlayback(verticalActor, verticalActorWorld, verticalActorProjections, parsedActorDefinition).playback;
+assert.equal(verticalActor.y, -2);
+assert.equal(verticalActor.directionGroup, 1, "upward actor movement selects the upper animation group");
+assert.equal(verticalActor.transform, 0, "vertical movement uses unmirrored part transform");
 const previousTargetHp = state.serverWorld.entitiesById["124"].currentHp;
 const impactedWorld = applyTargetLinkedActorImpactToWorld(state.serverWorld, { targets: [{ entityId: 124, targetCurrentHp: 777 }] });
 assert.equal(impactedWorld.entitiesById["124"].currentHp, 777, "branch-0 impact mirrors bu.f(int) target HP assignment");
