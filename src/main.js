@@ -16,7 +16,8 @@ import { createLocalSave } from './local-save.js';
 import { mountProtocolConnectionPanel } from './protocol/connection-panel.js';
 import { projectServerWorldEntities } from './protocol/server-world-projection.js';
 import { decodeTemplateSpriteAtlas } from './protocol/template-assets.js';
-import { resolveOriginalEntityFrameIndex } from './protocol/original-entity-factory.js';
+import { resolveOriginalEntityFactoryClass, resolveOriginalEntityFrameIndex } from './protocol/original-entity-factory.js';
+import { advanceOriginalCdMovement } from './protocol/original-entity-motion.js';
 
 
 function bytesToDataUrl(bytes,mimeType){
@@ -921,7 +922,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldDisposed=false;}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldDisposed=false;}
   create(){
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
@@ -950,6 +951,7 @@ class WorldScene extends Phaser.Scene {
       window.removeEventListener('kpah:protocol-state',this.onProtocolState);
       for(const view of this.serverWorldViews.values())view.destroy();
       this.serverWorldViews.clear();
+      this.serverWorldMotion.clear();
       this.serverWorldDisposed=true;
     });
   }
@@ -994,11 +996,26 @@ class WorldScene extends Phaser.Scene {
     const projected=projectServerWorldEntities(this.serverWorldState);
     const present=new Set(projected.map(entity=>String(entity.entityId)));
     for(const [id,view] of this.serverWorldViews){
-      if(!present.has(id)){view.destroy();this.serverWorldViews.delete(id);}
+      if(!present.has(id)){view.destroy();this.serverWorldViews.delete(id);this.serverWorldMotion.delete(id);}
     }
     for(const entity of projected){
       this.ensureServerTemplateTexture(entity);
       const id=String(entity.entityId);
+      let motion=this.serverWorldMotion.get(id);
+      if(!motion){
+        motion={x:entity.x,y:entity.y,direction:0,frameState:0,animationCounter:0,
+          targetX:entity.targetX,targetY:entity.targetY,moving:entity.movementPending,
+          serverTargetX:entity.targetX,serverTargetY:entity.targetY};
+        this.serverWorldMotion.set(id,motion);
+      }else if(entity.targetX!==motion.serverTargetX||entity.targetY!==motion.serverTargetY){
+        motion.targetX=entity.targetX;
+        motion.targetY=entity.targetY;
+        motion.serverTargetX=entity.targetX;
+        motion.serverTargetY=entity.targetY;
+        motion.moving=entity.movementPending;
+        motion.animationCounter=0;
+        motion.frameState=0;
+      }
       let view=this.serverWorldViews.get(id);
       const tint=entity.presentation==='player-like'?0x6bb7e8:
         entity.presentation==='monster-npc-family'?0xd58a5e:0xb6b6b6;
@@ -1015,7 +1032,7 @@ class WorldScene extends Phaser.Scene {
       const texture=textureReady?this.textures.get(textureKey):null;
       const canRenderSprite=frameIndex!==null&&texture?.has(frameIndex);
       if(!view){
-        view=this.add.container(entity.x,entity.y,[]);
+        view=this.add.container(motion.x,motion.y,[]);
         if(canRenderSprite){
           const sprite=this.add.sprite(-(entity.frameOffsetX??0),-(entity.frameOffsetY??0),textureKey,frameIndex).setOrigin(0,0);
           view.add(sprite);
@@ -1036,7 +1053,7 @@ class WorldScene extends Phaser.Scene {
         view.setData('label',label);
         this.serverWorldViews.set(id,view);
       }else{
-        view.setPosition(entity.x,entity.y).setDepth(entity.y+3);
+        view.setPosition(motion.x,motion.y).setDepth(motion.y+3);
         view.getData('label')?.setText(labelText).setPosition(0,labelY);
         if(canRenderSprite&&view.getData('visualType')!=='sprite'){
           const marker=view.getData('marker');
@@ -1349,7 +1366,34 @@ class WorldScene extends Phaser.Scene {
     const count=content.querySelector('[data-map-alive-count]');
     if(count)count.textContent=String(state.monsters.filter(item=>item.alive).length);
   }
-  update(){
+  advanceServerWorldMotion(delta){
+    if(!this.serverWorldState||!Number.isFinite(delta)||delta<=0)return;
+    this.serverWorldMotionAccumulator+=Math.min(delta,200);
+    while(this.serverWorldMotionAccumulator>=40){
+      this.serverWorldMotionAccumulator-=40;
+      for(const entityId of this.serverWorldState.entityOrder??[]){
+        const id=String(entityId);
+        const entity=this.serverWorldState.entitiesById?.[id];
+        const motion=this.serverWorldMotion.get(id);
+        if(!entity||!motion||!motion.moving)continue;
+        const factoryClass=resolveOriginalEntityFactoryClass(entity.kind,entity.templateId,entity.state,entity.kind1Subtype??0);
+        if(factoryClass!=='cd')continue;
+        const template=this.serverWorldState.templatesById?.[String(entity.templateId)];
+        if(!template||!Number.isInteger(template.movementStep))continue;
+        const next=advanceOriginalCdMovement(motion,template);
+        this.serverWorldMotion.set(id,next);
+        const view=this.serverWorldViews.get(id);
+        if(!view)continue;
+        view.setPosition(next.x,next.y).setDepth(next.y+3);
+        const frameIndex=resolveOriginalEntityFrameIndex(template.directionFrameType,next.direction??0,next.frameState??0);
+        const sprite=view.getData('sprite');
+        const texture=this.textures.get('kpah-server-template-'+entity.templateId);
+        if(sprite&&frameIndex!==null&&texture?.has(frameIndex))sprite.setFrame(frameIndex);
+      }
+    }
+  }
+  update(time,delta=40){
+    this.advanceServerWorldMotion(delta);
     this.syncMonsterViews();
     if(!this.playerSprite||characterState.snapshot().hp<=0)return;
     const {x,y}=this.playerSprite;
