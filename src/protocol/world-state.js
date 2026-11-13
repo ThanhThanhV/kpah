@@ -30,6 +30,7 @@ function cloneWorld(world) {
     templateAssetPayloadsById: { ...(source.templateAssetPayloadsById ?? {}) },
     unknownEntitySnapshots: [...(source.unknownEntitySnapshots ?? [])],
     combatEvents: [...(source.combatEvents ?? [])],
+    combatEventSequence: Number.isInteger(source.combatEventSequence) ? source.combatEventSequence : 0,
     lastSpawnBatch: [...(source.lastSpawnBatch ?? [])],
     removedEntityIds: [...(source.removedEntityIds ?? [])],
   };
