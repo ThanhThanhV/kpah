@@ -154,11 +154,19 @@ export function applyOpcode3Extension(state, packet) {
   if (packet.mappingError != null) nextExtension.mappingError = packet.mappingError;
   if (packet.trailingBytes instanceof Uint8Array) nextExtension.trailingBytes = new Uint8Array(packet.trailingBytes);
 
+  const nextCharacter = {
+    ...(state.charactersById?.[characterId] ?? {}),
+    extension: nextExtension,
+  };
   return {
     ...state,
     characterExtensionsById: {
       ...(state.characterExtensionsById ?? {}),
       [characterId]: nextExtension,
+    },
+    charactersById: {
+      ...(state.charactersById ?? {}),
+      [characterId]: nextCharacter,
     },
   };
 }
@@ -223,4 +231,59 @@ export function applyOpcode15(state, packet) {
       [characterId]: nextCharacter,
     },
   };
+}
+
+
+/**
+ * Applies the verified fixed prefix of S2C opcode 3. The unparsed extension
+ * remains opaque here and is handled only by the dedicated extension decoder.
+ */
+export function applyOpcode3Snapshot(state, decodedPrefix) {
+  if (!state || typeof state !== "object") throw new TypeError("Initialization state is required");
+  if (!decodedPrefix || !decodedPrefix.fields || !Number.isInteger(decodedPrefix.fields.characterId)) return state;
+  if (!(decodedPrefix.trailingBytes instanceof Uint8Array)) {
+    throw new TypeError("Opcode 3 trailing bytes must be Uint8Array");
+  }
+  const characterId = decodedPrefix.fields.characterId;
+  const snapshot = {
+    fields: {
+      ...decodedPrefix.fields,
+      actionMapping: decodedPrefix.fields.actionMapping instanceof Uint8Array
+        ? new Uint8Array(decodedPrefix.fields.actionMapping) : decodedPrefix.fields.actionMapping,
+    },
+    trailingBytes: new Uint8Array(decodedPrefix.trailingBytes),
+    decodedPrefixBytes: decodedPrefix.decodedPrefixBytes,
+  };
+  return {
+    ...state,
+    characterSnapshotsById: {
+      ...(state.characterSnapshotsById ?? {}),
+      [characterId]: snapshot,
+    },
+    charactersById: {
+      ...(state.charactersById ?? {}),
+      [characterId]: {
+        ...(state.charactersById?.[characterId] ?? {}),
+        snapshot,
+      },
+    },
+  };
+}
+
+/**
+ * Single explicit event entry point for the currently implemented initialization
+ * reducers. The event type distinguishes opcode 3's fixed prefix from its
+ * independently guarded extension payload.
+ */
+export function applyInitializationEvent(state, event) {
+  if (!state || typeof state !== "object") throw new TypeError("Initialization state is required");
+  if (!event || typeof event.type !== "string") return state;
+  switch (event.type) {
+    case "S2C_OPCODE_1": return applyOpcode1(state, event.packet);
+    case "S2C_OPCODE_3_SNAPSHOT": return applyOpcode3Snapshot(state, event.packet);
+    case "S2C_OPCODE_3_EXTENSION": return applyOpcode3Extension(state, event.packet);
+    case "S2C_OPCODE_15": return applyOpcode15(state, event.packet);
+    case "S2C_OPCODE_16": return applyOpcode16(state, event.packet);
+    default: return state;
+  }
 }
