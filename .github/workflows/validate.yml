@@ -72,6 +72,8 @@ jobs:
         run: npm run test:opcode15-state
       - name: Test unified initialization event reducer
         run: npm run test:initialization-event
+      - name: Test inbound initialization transport adapter
+        run: npm run test:inbound-initialization
       - name: Verify generated opcode 1 codec
         run: npm run check:opcode1
       - name: Test generated opcode 1 codec
