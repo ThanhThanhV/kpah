@@ -64,6 +64,11 @@ assert.deepEqual(state.serverWorld.characterResourcesById["124"].statsByKey.hp, 
 assert.deepEqual(state.serverWorld.characterResourcesById["124"].statsByKey.mp, { key: "mp", value: 567 });
 assert.equal(state.serverWorld.characterResourcesById["124"].localStateByte, 2);
 assert.equal(state.serverWorld.characterResourcesById["124"].localShortValue, 77);
+assert.equal(state.serverWorld.entitiesById["124"].currentHp, 1234,
+  "opcode 32 hp updates current HP without changing max HP");
+assert.equal(state.serverWorld.entitiesById["124"].currentMp, 567,
+  "opcode 32 mp updates current MP without changing max MP");
+assert.equal(state.serverWorld.entitiesById["124"].maxHp, undefined);
 
 const remoteResources = new PacketWriter()
   .writeI16(123).writeI8(1).writeUTF("hp").writeI32(88).toUint8Array();
@@ -76,9 +81,18 @@ assert.equal(state.serverWorld.characterResourcesById["123"].localStateByte, nul
 const levelUpdate = new PacketWriter().writeI16(124).writeI8(26).writeI32(5000).writeI32(600).toUint8Array();
 applied = applyInboundWorldPacket(state, { opcode: 33, payload: levelUpdate });
 state = applied.state;
-assert.equal(state.serverWorld.characterLevelsById["124"].level, 26);
-assert.equal(state.serverWorld.characterLevelsById["124"].valueA, 5000);
-assert.equal(state.serverWorld.characterLevelsById["124"].valueB, 600);
+assert.deepEqual(state.serverWorld.characterLevelsById["124"], { level: 26 });
+assert.equal(state.serverWorld.entitiesById["124"].level, 26);
+assert.equal(state.serverWorld.entitiesById["124"].currentHp, 5000);
+assert.equal(state.serverWorld.entitiesById["124"].maxHp, 5000);
+assert.equal(state.serverWorld.entitiesById["124"].currentMp, 600);
+assert.equal(state.serverWorld.entitiesById["124"].maxMp, 600);
+
+const ignoredLevelUp = new PacketWriter().writeI16(777).writeI8(27).writeI32(7000).writeI32(900).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 33, payload: ignoredLevelUp }).state;
+assert.equal(state.serverWorld.entitiesById["777"], undefined,
+  "opcode 33 does not create missing player entities");
+assert.equal(state.serverWorld.characterLevelsById["777"], undefined);
 
 const entityStateUpdate = new PacketWriter()
   .writeI16(124).writeU8(8).writeI16(940).writeI16(950)
