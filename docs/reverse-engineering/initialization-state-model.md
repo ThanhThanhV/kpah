@@ -76,3 +76,16 @@ The reducer intentionally preserves wire field names and image bytes. It does no
 Opcode 3 fixed-prefix snapshots and extension groups are merged under `charactersById[characterId]`, while retaining dedicated indexes. The event type distinguishes opcode 3's two decoders; it does not infer packet framing or automatically decode network bytes.
 
 Unknown event types are no-ops. This layer remains disconnected from transport/socket and Phaser.
+
+
+## Inbound initialization transport adapter
+
+`applyInboundInitializationFrame(state, frameBytes, options)` now joins the verified S2C frame decoder to the initialization payload decoders and reducers.
+
+- Decodes one complete S2C short/long frame using the existing transport codec.
+- Dispatches only opcodes 1, 3, 15 and 16, whose payload decoder and state reducer are both implemented.
+- Opcode 3 is decoded as the fixed prefix first; its remaining bytes are passed to the independently guarded extension decoder, then both events are merged by character ID.
+- Returns the next receive cursor. For encrypted traffic the caller must carry this cursor into the next frame because the XOR stream continues across packet boundaries.
+- Unknown/non-initialization opcodes are returned as unhandled without mutating state; malformed transport frames or strict payload decoders throw instead of silently mutating state.
+
+This is a pure frame-to-state adapter. It does not open a TCP socket, negotiate a production key, buffer partial stream reads, connect to Phaser, or persist local state. The caller must provide one complete frame and maintain the receive key/cursor for a live stream.
