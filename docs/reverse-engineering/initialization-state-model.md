@@ -40,3 +40,12 @@ Run npm run test:initialization-state to exercise mode 0 merge semantics, mode 1
 Binary blobs are copied into fresh Uint8Arrays. Catalog indices and opaque records are preserved; this layer does not invent runtime rendering semantics for tile/part bytes. A failed/partial part-data parse is retained as an error field and does not silently claim the blob list is complete.
 
 The reducer is still a data-state layer, not a live network session or a Phaser map renderer.
+
+
+## Opcode 3 character extension state
+
+`applyOpcode3Extension(state, packet)` stores the extension by the packet's character id only when the main identity/header group decoded completely. It retains neutral wire field names; no unverified business interpretation is introduced.
+
+Each independently guarded group is applied only when its decoder success flag is true. A truncated optional group therefore cannot overwrite a previously known value with the decoder's sentinel defaults. The counted mapping is applied only when its count, pairs and UTF text all decode. The raw trailing bytes are copied.
+
+This is an extension snapshot reducer only. It does not replace the primary opcode 3 character snapshot, and it does not infer whether the target id is the local player or another entity.
