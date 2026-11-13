@@ -31,6 +31,7 @@ export function projectServerWorldEntities(world, localCharacterId = null) {
       templateId,
       name: typeof snapshot?.name === "string" ? snapshot.name : null,
       currentHp: Number.isFinite(entity.currentHp) ? entity.currentHp : null,
+      maxHp: Number.isFinite(entity.maxHp) ? entity.maxHp : null,
       level: Number.isInteger(levelState?.level) ? levelState.level : null,
       resourceStats: Object.values(resourceState?.statsByKey ?? {}),
       levelUpdateValues: levelState ? { valueA: levelState.valueA, valueB: levelState.valueB } : null,
