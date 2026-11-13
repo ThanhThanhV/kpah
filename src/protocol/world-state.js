@@ -1,4 +1,4 @@
-import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74, decodeS2COpcodeMinus71, decodeS2COpcodeMinus73, decodeS2COpcodeMinus51, decodeS2COpcode26 } from "./generated/world-state-codec.js";
+import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74, decodeS2COpcodeMinus71, decodeS2COpcodeMinus73, decodeS2COpcodeMinus51, decodeS2COpcode26, decodeS2COpcode15 } from "./generated/world-state-codec.js";
 import { decodeS2COpcode5 } from "./generated/opcode5-codec.js";
 import { decodeS2CTemplateCatalog, decodeS2CTemplateAsset } from "./template-assets.js";
 import { decodeEffectDefinition } from "./effect-definition.js";
@@ -18,6 +18,8 @@ export function createServerWorldState() {
     effectDefinitionErrorsById: {},
     effectImagePayloadsById: {},
     targetLinkedEffectEvents: [],
+    targetLinkedActorsBySourceId: {},
+    targetLinkedActorSpawnSequence: 0,
     unknownEntitySnapshots: [],
     combatEvents: [],
     combatEventSequence: 0,
@@ -47,10 +49,12 @@ function cloneWorld(world) {
     effectDefinitionErrorsById: { ...(source.effectDefinitionErrorsById ?? {}) },
     effectImagePayloadsById: { ...(source.effectImagePayloadsById ?? {}) },
     targetLinkedEffectEvents: [...(source.targetLinkedEffectEvents ?? [])],
+    targetLinkedActorsBySourceId: { ...(source.targetLinkedActorsBySourceId ?? {}) },
     unknownEntitySnapshots: [...(source.unknownEntitySnapshots ?? [])],
     combatEvents: [...(source.combatEvents ?? [])],
     worldEvents: [...(source.worldEvents ?? [])],
     combatEventSequence: Number.isInteger(source.combatEventSequence) ? source.combatEventSequence : 0,
+    targetLinkedActorSpawnSequence: Number.isInteger(source.targetLinkedActorSpawnSequence) ? source.targetLinkedActorSpawnSequence : 0,
     lastSpawnBatch: [...(source.lastSpawnBatch ?? [])],
     removedEntityIds: [...(source.removedEntityIds ?? [])],
   };
@@ -132,7 +136,7 @@ export function applyS2COpcode8World(world, packet) {
   if (!packet || !Array.isArray(packet.entityIds)) throw new TypeError("Opcode 8 entityIds must be an array");
   const next = cloneWorld(world);
   const removed = new Set(packet.entityIds);
-  for (const id of packet.entityIds) delete next.entitiesById[String(id)];
+  for (const id of packet.entityIds) { delete next.entitiesById[String(id)]; delete next.targetLinkedActorsBySourceId[String(id)]; }
   next.entityOrder = next.entityOrder.filter(id => !removed.has(id));
   next.removedEntityIds = [...packet.entityIds];
   return next;
@@ -250,6 +254,32 @@ export function applyInboundWorldPacket(state, frame) {
       event = decodeS2COpcode10(frame.payload);
       nextWorld = appendWorldEvent(world, 10, { first: event.firstShort, second: event.secondShort, valueA: event.firstInt, valueB: event.secondInt, trailingBytes: event.trailingBytes });
       break;
+    case 15: {
+      event = decodeS2COpcode15(frame.payload);
+      nextWorld = cloneWorld(world);
+      if (event.mode === 0 && Number.isInteger(event.shopId) && event.auxiliary) {
+        const sourceId = String(event.shopId);
+        const source = nextWorld.entitiesById[sourceId];
+        if (source?.kind === 0) {
+          // ka.case 15 creates l (kind 12); mj.a(l,z) turns R=5 into hz(z,S).
+          // The animation ID is auxiliary.fieldS, not the later -73 effect ID.
+          if (event.auxiliary.fieldR === 5 && Number.isInteger(event.auxiliary.fieldS)) {
+            const sequence = nextWorld.targetLinkedActorSpawnSequence + 1;
+            nextWorld.targetLinkedActorSpawnSequence = sequence;
+            nextWorld.targetLinkedActorsBySourceId[sourceId] = {
+              sourceEntityId: event.shopId, animationId: event.auxiliary.fieldS,
+              spawnSequence: sequence, auxiliaryFieldM: event.auxiliary.fieldM,
+            };
+          } else delete nextWorld.targetLinkedActorsBySourceId[sourceId];
+        }
+      }
+      nextWorld = appendWorldEvent(nextWorld, 15, {
+        mode: event.mode, sourceEntityId: event.mode === 0 ? event.shopId : null,
+        targetLinkedActorCreated: Boolean(event.mode === 0 && event.auxiliary?.fieldR === 5 && nextWorld.targetLinkedActorsBySourceId[String(event.shopId)]),
+        animationId: event.mode === 0 && event.auxiliary?.fieldR === 5 ? nextWorld.targetLinkedActorsBySourceId[String(event.shopId)]?.animationId ?? null : null,
+      });
+      break;
+    }
     case 83: {
       const reader = frame.payload;
       if (reader.length < 2) throw new RangeError("Opcode 83 payload is missing source entity id");
@@ -416,9 +446,11 @@ export function applyInboundWorldPacket(state, frame) {
         const linkedEvent = {
           ...event,
           sequence: (nextWorld.targetLinkedEffectEvents.at(-1)?.sequence ?? 0) + 1,
+          animationId: nextWorld.targetLinkedActorsBySourceId[String(event.sourceEntityId)]?.animationId ?? null,
+          actorSpawnSequence: nextWorld.targetLinkedActorsBySourceId[String(event.sourceEntityId)]?.spawnSequence ?? null,
           targets,
           resolvedTargetEntityIds: targets.filter(target => target.resolved).map(target => target.targetEntityId),
-          effectActorResolved: false,
+          effectActorResolved: Number.isInteger(nextWorld.targetLinkedActorsBySourceId[String(event.sourceEntityId)]?.animationId),
         };
         nextWorld.targetLinkedEffectEvents.push(linkedEvent);
         if (nextWorld.targetLinkedEffectEvents.length > 100) {
@@ -427,7 +459,7 @@ export function applyInboundWorldPacket(state, frame) {
         nextWorld = appendWorldEvent(nextWorld, -73, {
           ...event,
           handled: true,
-          effectActorLookupSupported: false,
+          effectActorLookupSupported: Number.isInteger(linkedEvent.animationId),
           resolvedTargetCount: targets.filter(target => target.resolved).length,
         });
         break;

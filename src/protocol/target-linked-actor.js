@@ -40,8 +40,8 @@ function advanceCursor(playback, definition) {
 
 export function createTargetLinkedActorPlayback(event, world, projections, definition) {
   const source = pointFor(world, projections, event?.sourceEntityId);
-  if (!source) return null;
-  return selectFrame({ sourceEntityId: event.sourceEntityId, animationId: event.effectId, event,
+  if (!source || !Number.isInteger(event?.animationId)) return null;
+  return selectFrame({ sourceEntityId: event.sourceEntityId, animationId: event.animationId, effectId: event.effectId, event,
     x: source.x, y: source.y, state: 2, animationState: 0, baseAnimationState: 0, directionGroup: 0, transform: 0,
     cursor: 0, sequenceIndex: null, frameIndex: null, verticalOffset: 0, waitTicks: 0,
     impacted: false, finished: false, tick: 0 }, definition);
@@ -86,7 +86,7 @@ export function advanceTargetLinkedActorPlayback(playback, world, projections, d
     if (next.waitTicks > 6) {
       next.state = 4; next.animationState = next.baseAnimationState; next.impacted = true;
       const impacts = target ? (playback.event.targets ?? []).filter(record => record.resolved && pointFor(world, projections, record.targetEntityId)).map(record => ({ entityId: record.targetEntityId, damageValue: record.damageValue, targetCurrentHp: record.targetCurrentHp })) : [];
-      return { playback: advanceCursor(next, definition), impact: impacts.length ? { sourceEntityId: playback.sourceEntityId, animationId: playback.animationId, effectId: playback.event.effectId, targets: impacts } : null };
+      return { playback: advanceCursor(next, definition), impact: impacts.length ? { sourceEntityId: playback.sourceEntityId, animationId: playback.animationId, effectId: playback.effectId, targets: impacts } : null };
     }
   } else if (definition?.firstFrameMaxBottom <= -5) {
     if (next.verticalOffset < 40) next.verticalOffset += 1;

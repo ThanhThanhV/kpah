@@ -141,8 +141,8 @@ export function mountProtocolConnectionPanel(root) {
             }
           }
         }
-        for (const actorEvent of world?.targetLinkedEffectEvents ?? []) {
-          const animationId = actorEvent.effectId;
+        for (const actor of Object.values(world?.targetLinkedActorsBySourceId ?? {})) {
+          const animationId = actor.animationId;
           const key = String(animationId);
           if (!Number.isInteger(animationId) || !world.actorEffectDefinitionsById?.[key]) continue;
           let resourceId;

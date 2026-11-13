@@ -1183,7 +1183,7 @@ class WorldScene extends Phaser.Scene {
       if(latestBySource.get(String(event.sourceEntityId))!==eventKey)continue;
       active.add(eventKey);
       if(this.serverActorEffectCompleted.has(eventKey))continue;
-      const animationId=event.effectId,definition=world.parsedActorEffectDefinitionsById?.[String(animationId)];
+      const animationId=event.animationId,definition=world.parsedActorEffectDefinitionsById?.[String(animationId)];
       if(!Number.isInteger(animationId)||!definition)continue;
       let playback=this.serverActorEffectPlayback.get(eventKey);
       if(!playback){playback=createTargetLinkedActorPlayback(event,world,projections,definition);if(!playback)continue;this.serverActorEffectPlayback.set(eventKey,playback);}

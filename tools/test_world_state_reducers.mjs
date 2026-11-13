@@ -197,6 +197,17 @@ state = applyInboundWorldPacket(state, { opcode: -71, payload: wrongEffectKind }
 assert.equal(state.serverWorld.worldEvents.at(-1).entityKindMatches, false);
 assert.equal(state.serverWorld.entitiesById["124"].activeEffects.some(effect => effect.effectId === 702), false);
 
+// Opcode 15 mode 0 creates the kind-12 actor. Its animation catalog ID
+// is auxiliary.fieldS and is distinct from the later -73 target effect ID.
+const actorSpawnPacket = new PacketWriter().writeI8(0).writeI16(124).writeI8(0).writeI8(0);
+for (let index = 0; index < 5; index += 1) actorSpawnPacket.writeI16(0);
+actorSpawnPacket.writeI8(-1).writeI8(0).writeI8(5).writeI16(920).writeI8(0).writeUTF("actor").writeI32(0);
+state = applyInboundWorldPacket(state, { opcode: 15, payload: actorSpawnPacket.toUint8Array() }).state;
+assert.deepEqual(state.serverWorld.targetLinkedActorsBySourceId["124"], {
+  sourceEntityId: 124, animationId: 920, spawnSequence: 1, auxiliaryFieldM: 0,
+});
+assert.equal(state.serverWorld.worldEvents.at(-1).targetLinkedActorCreated, true);
+
 // Opcode -73 branch 0 is keyed by source entity ID, but the original
 // handler resolves a separate kind-12 hz actor from mj's actor list. That
 // actor registry is not represented by entitiesById, so retain the event
@@ -210,11 +221,13 @@ const linkedEvent = state.serverWorld.targetLinkedEffectEvents.at(-1);
 assert.equal(linkedEvent.sourceEntityId, 124);
 assert.equal(linkedEvent.sequence, 1, "target-linked events need stable identities for actor playback");
 assert.equal(linkedEvent.effectId, 909);
+assert.equal(linkedEvent.animationId, 920, "actor animation ID comes from opcode 15, not branch-0 effect ID");
+assert.equal(linkedEvent.effectActorResolved, true);
 assert.equal(linkedEvent.targets.length, 2);
 assert.equal(linkedEvent.targets[0].resolved, true);
 assert.deepEqual([linkedEvent.targets[0].damageValue, linkedEvent.targets[0].targetCurrentHp], [1111, 888]);
 assert.equal(linkedEvent.targets[1].resolved, false, "target lookup requires both entity ID and kind");
-assert.equal(linkedEvent.effectActorResolved, false);
+assert.equal(linkedEvent.actorSpawnSequence, 1);
 assert.equal(state.serverWorld.entitiesById["124"].effectAttachment, undefined,
   "branch 0 must not overwrite the source player's entity record");
 assert.equal(beforeLinkedEffect.serverWorld.targetLinkedEffectEvents.length, 0,
@@ -374,7 +387,7 @@ const actorProjectionFixture = new Map([
   ["555", { x: 60, y: 0 }],
   ["556", { x: 80, y: 0 }],
 ]);
-const actorEventFixture = { sourceEntityId: 124, effectId: 920, targets: [
+const actorEventFixture = { sourceEntityId: 124, animationId: 920, effectId: 909, targets: [
   { targetEntityId: 555, resolved: true, damageValue: 20, targetCurrentHp: 80 },
   { targetEntityId: 556, resolved: true, damageValue: 20, targetCurrentHp: 80 },
 ] };
