@@ -1034,3 +1034,22 @@ export function decodeS2COpcode82(payload, canUpdate) {
   const counterByte = reader.readI8();
   return { canUpdate: true, counterByte, unconsumedBytes: new Uint8Array(), trailingBytes: readRemaining(reader) };
 }
+
+/** Opcode -74, mj.C(acu): timed effect attachment, subcommand zero. */
+export function decodeS2COpcodeMinus74(payload) {
+  const reader = new PacketReader(payload);
+  const subcommand = reader.readI8();
+  if (subcommand !== 0) {
+    return { subcommand, handled: false, unconsumedBytes: readRemaining(reader), trailingBytes: new Uint8Array() };
+  }
+  const entityKind = reader.readI8();
+  const entityId = reader.readI16();
+  const effectId = reader.readI16();
+  const durationValue = reader.readI32();
+  const flagA = reader.readBool();
+  const flagB = reader.readBool();
+  const effectVariant = reader.remaining() > 0 ? reader.readI8() : null;
+  return { subcommand, handled: true, entityKind, entityId, effectId,
+    durationValue, durationIsPositive: durationValue > 0, flagA, flagB,
+    effectVariant, trailingBytes: readRemaining(reader) };
+}
