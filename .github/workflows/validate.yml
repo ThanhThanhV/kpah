@@ -62,10 +62,14 @@ jobs:
         run: npm run test:initialization-state
       - name: Test opcode 1 global initialization state reducer
         run: npm run test:opcode1-state
+      - name: Test opcode 3 character extension state reducer
+        run: npm run test:opcode3-extension-state
       - name: Verify generated opcode 15 codec
         run: npm run check:opcode15
       - name: Test generated opcode 15 codec
         run: npm run test:opcode15
+      - name: Test opcode 15 initialization state reducer
+        run: npm run test:opcode15-state
       - name: Verify generated opcode 1 codec
         run: npm run check:opcode1
       - name: Test generated opcode 1 codec
