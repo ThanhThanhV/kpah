@@ -110,6 +110,24 @@ export function mountProtocolConnectionPanel(root) {
       onState: state => {
         lastState = state;
         const world = state.serverWorld;
+        // Original hd.a(Graphics) requests its atlas through mi.a(partIndex + 12000),
+        // which sends C2S -51. The marker byte from opcode 4 selects hd's part-data index.
+        for (const entityId of world?.entityOrder ?? []) {
+          const entity = world.entitiesById?.[String(entityId)];
+          const partIndex = entity?.kind === 0 && Number.isInteger(entity.marker) ? entity.marker : -1;
+          const part = partIndex >= 0 ? state.characterPartCatalog?.[partIndex] : null;
+          if (!part?.decoded) continue;
+          const resourceId = 12000 + partIndex;
+          const key = String(resourceId);
+          if (world.resourceImagePayloadsById?.[key] || requestedEffectAssets.has(resourceId)) continue;
+          requestedEffectAssets.add(resourceId);
+          try {
+            session.sendPacket(-51, encodeEffectAssetRequest(resourceId));
+          } catch (error) {
+            requestedEffectAssets.delete(resourceId);
+            lastError = "Không thể yêu cầu character part image " + resourceId + ": " + error.message;
+          }
+        }
         for (const entityId of world?.entityOrder ?? []) {
           const entity = world.entitiesById?.[String(entityId)];
           const templateId = Number.isInteger(entity?.templateId) ? entity.templateId : null;
