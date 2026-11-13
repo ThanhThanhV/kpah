@@ -1174,3 +1174,11 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Có `maxFrames` để dừng sau frame handshake cleartext `-40`, cho phép caller cài key rồi mới parse phần encrypted đang buffer.
 - Thêm test split chunks, coalesced frames, long header, cursor continuity, handshake key switch và frame size guard; nối npm + CI.
 - Giới hạn: chưa mở TCP socket, chưa có connection lifecycle/send queue/timeout, chưa nối stream decoder với initialization adapter/Phaser trong app.
+
+
+### B16 — Compose stream frames with initialization state
+
+- Bổ sung `applyInboundInitializationPacket` nhận frame đã decode trực tiếp từ `ServerFrameStreamDecoder`, tránh decode/re-encode frame lần hai.
+- Giữ `applyInboundInitializationFrame` làm wrapper cho một frame hoàn chỉnh.
+- Thêm integration test stream chunk → decoded frame → opcode 16 reducer; cập nhật tài liệu pipeline.
+- Vẫn chưa kết nối TCP socket thực, Phaser runtime hoặc local-save.
