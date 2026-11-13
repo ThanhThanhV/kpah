@@ -14,12 +14,12 @@ export function decodeS2COpcode3Extension(payload) {
     main.cd = reader.readI16(); main.cc = reader.readI32(); main.ce = reader.readI16();
     main.dm = reader.readI32(); main.dn = reader.readUTF(); main.ak = reader.readBool();
   } catch (error) { main.error = error instanceof Error ? error.message : String(error); }
-  let pairA = { shortValue: -1, byteValue: -1 };
-  try { pairA = { shortValue: reader.readI16(), byteValue: reader.readI8() }; } catch {}
-  let tripleB = { shortValue1: -1, byteValue: -1, shortValue2: -1 };
-  try { tripleB = { shortValue1: reader.readI16(), byteValue: reader.readI8(), shortValue2: reader.readI16() }; } catch {}
-  let tripleC = { shortValue1: -1, shortValue2: -1, shortValue3: -1 };
-  try { tripleC = { shortValue1: reader.readI16(), shortValue2: reader.readI16(), shortValue3: reader.readI16() }; } catch {}
+  let pairA = { shortValue: -1, byteValue: -1 }, pairAParsed = false;
+  try { pairA = { shortValue: reader.readI16(), byteValue: reader.readI8() }; pairAParsed = true; } catch {}
+  let tripleB = { shortValue1: -1, byteValue: -1, shortValue2: -1 }, tripleBParsed = false;
+  try { tripleB = { shortValue1: reader.readI16(), byteValue: reader.readI8(), shortValue2: reader.readI16() }; tripleBParsed = true; } catch {}
+  let tripleC = { shortValue1: -1, shortValue2: -1, shortValue3: -1 }, tripleCParsed = false;
+  try { tripleC = { shortValue1: reader.readI16(), shortValue2: reader.readI16(), shortValue3: reader.readI16() }; tripleCParsed = true; } catch {}
   let mapping = null, mappingApplied = false, mappingError = null;
   try {
     const count = reader.readI8();
@@ -29,13 +29,13 @@ export function decodeS2COpcode3Extension(payload) {
     const text = reader.readUTF();
     mapping = { pairs, text }; mappingApplied = true;
   } catch (error) { mappingError = error instanceof Error ? error.message : String(error); }
-  let bf = -1;
-  try { bf = reader.readI16(); } catch {}
-  let groupD = { bi: -1, bn: -1, bj: 0, bk: 0 };
-  try { groupD = { bi: reader.readI8(), bn: reader.readI16(), bj: reader.readI8(), bk: reader.readI8() }; } catch {}
-  let groupE = { bm: -1, bo: -1, bl: 0 };
-  try { groupE = { bm: reader.readI8(), bo: reader.readI16(), bl: reader.readI8() }; } catch {}
+  let bf = -1, bfParsed = false;
+  try { bf = reader.readI16(); bfParsed = true; } catch {}
+  let groupD = { bi: -1, bn: -1, bj: 0, bk: 0 }, groupDParsed = false;
+  try { groupD = { bi: reader.readI8(), bn: reader.readI16(), bj: reader.readI8(), bk: reader.readI8() }; groupDParsed = true; } catch {}
+  let groupE = { bm: -1, bo: -1, bl: 0 }, groupEParsed = false;
+  try { groupE = { bm: reader.readI8(), bo: reader.readI16(), bl: reader.readI8() }; groupEParsed = true; } catch {}
   const trailingBytes = new Uint8Array(reader.remaining());
   for (let i = 0; i < trailingBytes.length; i += 1) trailingBytes[i] = reader.readU8();
-  return { main, pairA, tripleB, tripleC, mapping, mappingApplied, mappingError, bf, groupD, groupE, trailingBytes };
+  return { main, pairA, pairAParsed, tripleB, tripleBParsed, tripleC, tripleCParsed, mapping, mappingApplied, mappingError, bf, bfParsed, groupD, groupDParsed, groupE, groupEParsed, trailingBytes };
 }
