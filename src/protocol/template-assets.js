@@ -86,8 +86,8 @@ export function decodeS2CTemplateCatalog(payload) {
   }
   if (reader.remaining !== 0) throw new RangeError("Unexpected trailing bytes in opcode 100 template catalog");
   const signedConfig = [...config].map(value => value > 127 ? value - 256 : value);
-  const [directionFrameType, movementStep, actorType, frameWidth, frameHeight,
-    shadowOffsetX, shadowOffsetY, spriteOffsetX, spriteOffsetY] = signedConfig;
+  const [directionFrameType, movementStep, templateMode, frameWidth, frameHeight,
+    frameOffsetX, frameOffsetY, shadowOffsetX, shadowOffsetY] = signedConfig;
   return {
     handled: true,
     catalogType,
@@ -97,13 +97,13 @@ export function decodeS2CTemplateCatalog(payload) {
       name,
       directionFrameType,
       movementStep,
-      actorType,
+      templateMode,
       frameWidth,
       frameHeight,
+      frameOffsetX,
+      frameOffsetY,
       shadowOffsetX,
       shadowOffsetY,
-      spriteOffsetX,
-      spriteOffsetY,
       extraByte,
       extraInt,
       requestType,
