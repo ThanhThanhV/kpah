@@ -48,6 +48,11 @@ applied = applyInboundWorldPacket(state, { opcode: 5, payload: snapshotPayload }
 state = applied.state;
 assert.equal(state.serverWorld.entitiesById["124"].snapshot.name, "Hero");
 assert.equal(state.serverWorld.entitiesById["124"].snapshot.x, 900);
+assert.equal(state.serverWorld.entitiesById["124"].currentHp, 100);
+assert.equal(state.serverWorld.entitiesById["124"].maxHp, 200);
+assert.equal(state.serverWorld.entitiesById["124"].currentMp, 300);
+assert.equal(state.serverWorld.entitiesById["124"].maxMp, 400);
+assert.equal(state.serverWorld.entitiesById["124"].level, 9);
 
 state = { ...state, activeCharacterId: 124 };
 const characterResources = new PacketWriter()
