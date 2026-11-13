@@ -21,6 +21,7 @@ assert.equal(motion.frameState, 1, "cd movement frame state changes after O > 2"
 
 motion = advanceOriginalCdMovement(motion, template);
 motion = advanceOriginalCdMovement(motion, template);
+motion = advanceOriginalCdMovement(motion, template);
 assert.equal(motion.y, 19);
 assert.equal(motion.moving, false);
 assert.equal(motion.targetX, null);
