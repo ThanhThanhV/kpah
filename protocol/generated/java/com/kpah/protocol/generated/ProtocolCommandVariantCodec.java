@@ -116,7 +116,6 @@ public final class ProtocolCommandVariantCodec {
         else return new Decoded(mode,Map.of(),readRemaining(in),new byte[0]);
         return new Decoded(mode,Map.copyOf(fields),new byte[0],readRemaining(in));
     }
-
     private record VariantField(String name, String type, Object constant, String conditionField, Integer conditionValue) {}
     private static final Map<String, List<VariantField>> OPCODE24_VARIANTS = new LinkedHashMap<>();
     static {
