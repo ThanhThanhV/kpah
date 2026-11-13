@@ -49,6 +49,29 @@ state = applied.state;
 assert.equal(state.serverWorld.entitiesById["124"].snapshot.name, "Hero");
 assert.equal(state.serverWorld.entitiesById["124"].snapshot.x, 900);
 
+state = { ...state, activeCharacterId: 124 };
+const characterResources = new PacketWriter()
+  .writeI16(124).writeI8(4)
+  .writeUTF("hp").writeI32(1234)
+  .writeUTF("mp").writeI32(567)
+  .writeUTF("bp").writeI32(8)
+  .writeUTF("sp").writeI32(9)
+  .writeI8(2).writeI16(77).toUint8Array();
+applied = applyInboundWorldPacket(state, { opcode: 32, payload: characterResources });
+state = applied.state;
+assert.equal(applied.handled, true);
+assert.deepEqual(state.serverWorld.characterResourcesById["124"].statsByKey.hp, { key: "hp", value: 1234 });
+assert.deepEqual(state.serverWorld.characterResourcesById["124"].statsByKey.mp, { key: "mp", value: 567 });
+assert.equal(state.serverWorld.characterResourcesById["124"].localStateByte, 2);
+assert.equal(state.serverWorld.characterResourcesById["124"].localShortValue, 77);
+
+const levelUpdate = new PacketWriter().writeI16(124).writeI8(26).writeI32(5000).writeI32(600).toUint8Array();
+applied = applyInboundWorldPacket(state, { opcode: 33, payload: levelUpdate });
+state = applied.state;
+assert.equal(state.serverWorld.characterLevelsById["124"].level, 26);
+assert.equal(state.serverWorld.characterLevelsById["124"].valueA, 5000);
+assert.equal(state.serverWorld.characterLevelsById["124"].valueB, 600);
+
 const playerMoveUpdate = new PacketWriter()
   .writeI8(0).writeU8(8).writeI16(124).writeI16(950).writeI16(960).writeI8(1)
   .writeI32(-1).writeI8(0).writeBool(true).toUint8Array();
