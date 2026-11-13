@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { projectServerWorldEntities } from "../src/protocol/server-world-projection.js";
-import { resolveOriginalEntityFactoryClass } from "../src/protocol/original-entity-factory.js";
+import { resolveOriginalEntityFactoryClass, resolveOriginalEntityFrameIndex } from "../src/protocol/original-entity-factory.js";
 
 const projected = projectServerWorldEntities({
   entityOrder: [10, 11, 12, 13],
@@ -43,5 +43,12 @@ assert.equal(resolveOriginalEntityFactoryClass(4, 0, 0, -1), "am");
 assert.equal(resolveOriginalEntityFactoryClass(6, 0, 0, -1), "ak");
 assert.equal(resolveOriginalEntityFactoryClass(14, 0, 0, -1), "bq");
 assert.equal(resolveOriginalEntityFactoryClass(99, 0, 0, -1), null);
+assert.equal(resolveOriginalEntityFrameIndex(0, 3, 0), 12);
+assert.equal(resolveOriginalEntityFrameIndex(1, 2, 0), 0);
+assert.equal(resolveOriginalEntityFrameIndex(2, 3, 3), 3);
+assert.equal(resolveOriginalEntityFrameIndex(3, 1, 0), 4);
+assert.equal(resolveOriginalEntityFrameIndex(4, 2, 3), 0);
+assert.equal(resolveOriginalEntityFrameIndex(5, 0, 0), null);
+assert.equal(resolveOriginalEntityFrameIndex(0, 4, 0), null);
 assert.deepEqual(projectServerWorldEntities(null), []);
 console.log("Server world projection: PASS (verified kind, entity/template IDs, opcode 4/5 coordinates, no template-to-sprite guesses)");
