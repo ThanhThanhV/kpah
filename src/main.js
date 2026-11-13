@@ -1217,6 +1217,7 @@ class WorldScene extends Phaser.Scene {
         this.serverActorEffectPlayback.set(eventKey,result.playback);
         if(result.impact){
           this.serverWorldState=applyTargetLinkedActorImpactToWorld(this.serverWorldState,result.impact);
+          this.syncServerEffectViews();
           for(const target of result.impact.targets){
             const point=projections.get(String(target.entityId));if(!point)continue;
             const damage=this.add.text(point.x,point.y-26,String(target.damageValue),{fontFamily:'Arial',fontSize:'16px',fontStyle:'bold',color:'#ffffff',stroke:'#211b18',strokeThickness:3}).setOrigin(0.5).setDepth(point.y+120);

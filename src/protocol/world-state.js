@@ -176,7 +176,18 @@ export function applyTargetLinkedActorImpactToWorld(world, impact) {
   for (const target of impact?.targets ?? []) {
     if (!Number.isInteger(target.entityId) || !Number.isFinite(target.targetCurrentHp)) continue;
     const key = String(target.entityId), entity = next.entitiesById[key];
-    if (entity) next.entitiesById[key] = { ...entity, currentHp: target.targetCurrentHp };
+    if (entity) {
+      let updated = { ...entity, currentHp: target.targetCurrentHp };
+      if (Number.isInteger(impact.effectId)) {
+        const overlays = [...(entity.effectOverlays ?? [])];
+        const index = overlays.findIndex(effect => effect.effectId === impact.effectId);
+        const overlay = { effectId: impact.effectId, expiryValue: 0n };
+        if (index >= 0) overlays[index] = overlay;
+        else overlays.push(overlay);
+        updated = { ...updated, effectOverlays: overlays };
+      }
+      next.entitiesById[key] = updated;
+    }
   }
   return next;
 }

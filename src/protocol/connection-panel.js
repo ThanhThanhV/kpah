@@ -141,6 +141,18 @@ export function mountProtocolConnectionPanel(root) {
             }
           }
         }
+        for (const actorEvent of world?.targetLinkedEffectEvents ?? []) {
+          const effectId = actorEvent.effectId;
+          const key = String(effectId);
+          if (!Number.isInteger(effectId) || !world.effectDefinitionsById?.[key]
+            || world.effectImagePayloadsById?.[key] || requestedEffectAssets.has(effectId)) continue;
+          requestedEffectAssets.add(effectId);
+          try { session.sendPacket(-51, encodeEffectAssetRequest(effectId)); }
+          catch (error) {
+            requestedEffectAssets.delete(effectId);
+            lastError = "Không thể yêu cầu target impact effect image " + effectId + ": " + error.message;
+          }
+        }
         for (const actor of Object.values(world?.targetLinkedActorsBySourceId ?? {})) {
           const animationId = actor.animationId;
           const key = String(animationId);

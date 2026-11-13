@@ -424,8 +424,9 @@ assert.equal(verticalActor.y, -2);
 assert.equal(verticalActor.directionGroup, 1, "upward actor movement selects the upper animation group");
 assert.equal(verticalActor.transform, 0, "vertical movement uses unmirrored part transform");
 const previousTargetHp = state.serverWorld.entitiesById["124"].currentHp;
-const impactedWorld = applyTargetLinkedActorImpactToWorld(state.serverWorld, { targets: [{ entityId: 124, targetCurrentHp: 777 }] });
+const impactedWorld = applyTargetLinkedActorImpactToWorld(state.serverWorld, { effectId: 910, targets: [{ entityId: 124, targetCurrentHp: 777 }] });
 assert.equal(impactedWorld.entitiesById["124"].currentHp, 777, "branch-0 impact mirrors bu.f(int) target HP assignment");
+assert.deepEqual(impactedWorld.entitiesById["124"].effectOverlays.find(effect => effect.effectId === 910), { effectId: 910, expiryValue: 0n }, "hz impact attaches a one-shot d overlay to each resolved target");
 assert.equal(state.serverWorld.entitiesById["124"].currentHp, previousTargetHp, "impact helper must not mutate prior world snapshot");
 
 // Opcode 26 independently carries class-i indexedImages and class-d indexedGraphics.
