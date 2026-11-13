@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { assetUrl, loadAssetManifest } from './kpah-assets.js';
 import './style.css';
 import { renderResourceViewer } from './resource-viewer.js';
 import { configureWorldCamera, moveWorldEntity, setWorldEntityDepth } from './world-runtime.js';
@@ -928,7 +929,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldDisposed=false;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;this.serverActorEffectImages=new Map();this.serverActorEffectImageLoads=new Set();this.serverActorEffectTextures=new Map();this.serverActorEffectViews=new Map();this.serverActorEffectPlayback=new Map();this.serverActorEffectCompleted=new Set();this.serverActorEffectAccumulator=0;}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldDisposed=false;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;this.serverActorEffectImages=new Map();this.serverActorEffectImageLoads=new Set();this.serverActorEffectTextures=new Map();this.serverActorEffectViews=new Map();this.serverActorEffectShadows=new Map();this.serverActorShadowLoad=null;this.serverActorShadowUnavailable=false;this.serverActorEffectPlayback=new Map();this.serverActorEffectCompleted=new Set();this.serverActorEffectAccumulator=0;}
   create(){
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
@@ -973,6 +974,9 @@ class WorldScene extends Phaser.Scene {
       this.serverActorEffectTextures.clear();
       for(const view of this.serverActorEffectViews.values())view.destroy();
       this.serverActorEffectViews.clear();
+      for(const shadow of this.serverActorEffectShadows.values())shadow.destroy();
+      this.serverActorEffectShadows.clear();
+      if(this.textures.exists('kpah-actor-shadow'))this.textures.remove('kpah-actor-shadow');
       this.serverActorEffectPlayback.clear();
       this.serverActorEffectCompleted.clear();
       this.serverActorEffectImages.clear();
@@ -1173,6 +1177,25 @@ class WorldScene extends Phaser.Scene {
     if(!this.textures.exists(textureKey))this.textures.addCanvas(textureKey,canvas);
     const result={key:textureKey,bounds:{x:minX,y:minY}};this.serverActorEffectTextures.set(textureKey,result);return result;
   }
+  ensureServerActorShadowTexture(){
+    const key='kpah-actor-shadow';
+    if(this.textures.exists(key))return Promise.resolve(true);
+    if(this.serverActorShadowLoad)return this.serverActorShadowLoad;
+    this.serverActorShadowLoad=loadAssetManifest().then(manifest=>{
+      const entry=(manifest.decodedPackedEntries??[]).find(item=>String(item.path??'').replace(/^\\/+/, '')==='shadow.png');
+      if(!entry)throw new Error('Original /shadow.png asset is absent from the decoded asset manifest.');
+      const url=assetUrl(entry.output);if(!url)throw new Error('Original /shadow.png asset path is invalid.');
+      return new Promise(resolve=>{
+        const image=new Image();
+        image.onload=()=>{if(!this.serverWorldDisposed&&!this.textures.exists(key))this.textures.addImage(key,image);resolve(!this.serverWorldDisposed);};
+        image.onerror=()=>resolve(false);
+        image.src=url;
+      });
+    }).then(loaded=>{this.serverActorShadowUnavailable=!loaded;return loaded;})
+      .catch(error=>{this.serverActorShadowUnavailable=true;console.warn('KPAH actor shadow could not be loaded',error);return false;})
+      .finally(()=>{this.serverActorShadowLoad=null;});
+    return this.serverActorShadowLoad;
+  }
   syncServerActorEffectViews(){
     const world=this.serverWorldState;if(!world)return;
     const events=world.targetLinkedEffectEvents??[],active=new Set(),projections=this.getServerActorProjections();
@@ -1192,14 +1215,23 @@ class WorldScene extends Phaser.Scene {
       if(imageBytes)this.ensureServerActorEffectImage(animationId,definition,imageBytes);
       const image=this.serverActorEffectImages.get(String(animationId));
       if(!image||!Number.isInteger(playback.frameIndex))continue;
+      const shadowKey='kpah-actor-shadow';
+      if(!this.textures.exists(shadowKey)&&!this.serverActorShadowUnavailable){this.ensureServerActorShadowTexture();if(this.serverActorShadowLoad)continue;}
       const texture=this.ensureServerActorEffectTexture(animationId,definition,image,playback.frameIndex,playback.transform,playback.verticalOffset);
       if(!texture)continue;
       const x=playback.x+texture.bounds.x,y=playback.y+texture.bounds.y;
+      const frame=definition.frames[playback.frameIndex];
+      const shadowX=playback.x+(frame?.offsetX??0),shadowY=playback.y+(frame?.offsetY??0);
+      if(this.textures.exists(shadowKey)){
+        let shadow=this.serverActorEffectShadows.get(eventKey);
+        if(!shadow){shadow=this.add.image(shadowX,shadowY,shadowKey).setOrigin(0,0);this.serverActorEffectShadows.set(eventKey,shadow);}
+        shadow.setPosition(shadowX,shadowY).setDepth(Math.round(playback.y));
+      }
       let view=this.serverActorEffectViews.get(eventKey);
       if(!view){view=this.add.image(x,y,texture.key).setOrigin(0,0);this.serverActorEffectViews.set(eventKey,view);}
-      view.setPosition(x,y).setTexture(texture.key).setDepth(playback.y+2);
+      view.setPosition(x,y).setTexture(texture.key).setDepth(Math.round(playback.y));
     }
-    for(const [key,view] of this.serverActorEffectViews){if(!active.has(key)){view.destroy();this.serverActorEffectViews.delete(key);this.serverActorEffectPlayback.delete(key);this.serverActorEffectCompleted.delete(key);}}
+    for(const [key,view] of this.serverActorEffectViews){if(!active.has(key)){view.destroy();this.serverActorEffectViews.delete(key);this.serverActorEffectShadows.get(key)?.destroy();this.serverActorEffectShadows.delete(key);this.serverActorEffectPlayback.delete(key);this.serverActorEffectCompleted.delete(key);}}
     for(const key of this.serverActorEffectPlayback.keys()){if(!active.has(key))this.serverActorEffectPlayback.delete(key);}
   }
   advanceServerActorEffectPlayback(delta){
@@ -1212,7 +1244,7 @@ class WorldScene extends Phaser.Scene {
         const event=events.find((item,index)=>String(item.sequence??(index+1))===eventKey);
         const definition=world.parsedActorEffectDefinitionsById?.[String(playback.animationId)];
         const actor=world.targetLinkedActorsBySourceId?.[String(playback.sourceEntityId)];
-        if(!event||!actor||actor.spawnSequence!==playback.actorSpawnSequence||!definition){this.serverActorEffectViews.get(eventKey)?.destroy();this.serverActorEffectViews.delete(eventKey);this.serverActorEffectPlayback.delete(eventKey);continue;}
+        if(!event||!actor||actor.spawnSequence!==playback.actorSpawnSequence||!definition){this.serverActorEffectViews.get(eventKey)?.destroy();this.serverActorEffectViews.delete(eventKey);this.serverActorEffectShadows.get(eventKey)?.destroy();this.serverActorEffectShadows.delete(eventKey);this.serverActorEffectPlayback.delete(eventKey);continue;}
         const result=advanceTargetLinkedActorPlayback(playback,world,projections,definition);
         this.serverActorEffectPlayback.set(eventKey,result.playback);
         if(result.impact){

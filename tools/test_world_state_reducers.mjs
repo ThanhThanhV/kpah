@@ -410,6 +410,19 @@ const idleProjection = new Map([["124", { x: 0, y: 0, state: 0, playerMovementSt
 const idleStep = advanceTargetLinkedActorPlayback(targetLinkedPlayback, idleWorld, idleProjection, parsedActorDefinition);
 assert.equal(idleStep.playback.state, 0, "state 4 returns to idle when source entity state is 0");
 assert.equal(idleStep.playback.finished, false, "original actor remains registered while source entity exists");
+const idleRoamStart = {
+  ...idleStep.playback, state: 0, animationState: 0, idleDirection: 0, idleTicks: 0,
+  idleDuration: 200, idleDeltaX: 0, idleDeltaY: 0,
+};
+const idleRoamStep = advanceTargetLinkedActorPlayback(idleRoamStart, idleWorld, idleProjection, parsedActorDefinition, () => 0);
+assert.equal(idleRoamStep.playback.state, 0);
+assert.equal(idleRoamStep.playback.idleDirection, 1, "source hz state 0 starts an idle roam after ku.n(12) returns zero");
+assert.equal(idleRoamStep.playback.animationState, 2);
+assert.equal(idleRoamStep.playback.x, idleRoamStart.x - 2, "idle roam uses the source signed modulo-3 horizontal step");
+const idleRoamStop = advanceTargetLinkedActorPlayback(idleRoamStep.playback, idleWorld, idleProjection, parsedActorDefinition, () => 0);
+assert.equal(idleRoamStop.playback.idleDirection, 0, "ku.n(16) can stop the current idle roam");
+assert.equal(idleRoamStop.playback.x, idleRoamStep.playback.x, "idle stop clears per-tick movement deltas");
+
 const returnWorld = { entitiesById: { "124": { state: 1, snapshot: { x: 100, y: 0 } }, "555": { currentHp: 100, snapshot: { x: 60, y: 0 } }, "556": { currentHp: 100, snapshot: { x: 80, y: 0 } } } };
 const returnProjection = new Map([["124", { x: 100, y: 0, state: 1, playerMovementStep: 3 }], ["555", { x: 60, y: 0 }], ["556", { x: 80, y: 0 }]]);
 const returnStep = advanceTargetLinkedActorPlayback(targetLinkedPlayback, returnWorld, returnProjection, parsedActorDefinition);
