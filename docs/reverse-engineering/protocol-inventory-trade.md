@@ -71,7 +71,7 @@ Payload: short item ID, short owner/context ID, byte item class. Handler gọi `
 - Opcode 76 là equipment/gear list; không phải character stat snapshot.
 - Opcode 94 là trade/market panel data; hai mode trả player list hoặc item/listing list.
 - Opcode 92/95 là market listing actions và responses; không tự động suy ra purchase semantics.
-- Chưa đóng toàn bộ C2S purchase, shop NPC, use-item, equip/unequip, upgrade/refine và warehouse flows; chúng sẽ được truy vết riêng từ caller UI và các response handler.
+- Đã source-trace request/result item sale opcode 78; vẫn chưa đóng NPC purchase transaction, unequip-to-bag, refinement callback details và server-authoritative warehouse/purchase persistence.
 
 ## Bước tiếp theo
 
@@ -190,3 +190,10 @@ Generated Java/JavaScript codecs use the corrected command names and cover both 
 - S2C opcode 69 `STORAGE_WITHDRAW_RESULT`: one signed-short `itemId`. Handler `ka.java:257-260` calls `mj.f(itemId)`, which removes the item from `z.bA` and adds it to `z.bx` if absent (`mj.java:4576-4584`).
 - C2S opcode 70 `STORAGE_REFRESH`: empty payload; `jy.i()` sends only the opcode (`jy.java:880-890`) and is called when leaving the tab-22 storage flow (`xg.java:3291-3293`, `dh.java:2097-2100`). No S2C opcode-70 handler was identified in `ka.java`; do not invent a response command.
 - These handlers prove original-client collection updates, not server persistence or transaction acceptance. The generated web codecs only serialize/parse the payloads; they do not mutate inventory or storage state.
+
+
+## Item sale request / result trace
+
+- C2S opcode 78 `SELL_ITEM`: signed-short `itemId` + signed-byte `sourceSelector`. Writer `jy.d(short, byte)` writes the fields in that order (`jy.java:931-942`). The sale-confirmation callbacks send selector 1 for items from `ca.O` and selector 0 for items from `ca.N` (`acn.java:16-20`, `acp.java:16-20`; UI confirmation is in `xg.java:3070-3101`).
+- S2C opcode 78 `SELL_ITEM_RESULT`: signed-short `itemId`. Handler `ka.java:1771-1774` calls `mj.h(itemId)`; the client finds the matching stack by its secondary item key in `ca.N` (`be.java:30-40`), decrements the quantity, removes the stack at zero, credits `bd.r / 5`, and displays the sale-success message (`mj.java:4678-4688`).
+- This is the original client's optimistic post-result behavior. The result packet has no amount or currency field; the client derives proceeds from its local item template. Do not infer the server's authoritative price validation or persistence from this handler.
