@@ -54,10 +54,14 @@ X = -10 when mirrored, Y = -10), centered beneath the composed character.
 CFR establishes the local identity relation: opcode 3 writes the active character
 ID to `mj.t.h`; kind-0 world entities use their entity ID in `j.h`; original
 lookups compare those values directly (`mj.b(short)` searches kind 0 by `j.h`,
-and rendering excludes the actor whose `j.h == mj.t.h`). The reducer now stores
+and rendering excludes the actor whose `j.h == mj.t.h`). The reducer stores
 `activeCharacterId` from opcode 3 and the Phaser projection marks the matching
-kind-0 entity as `isLocalPlayer`. This identifies the local actor, but does not
-yet bind movement controls/camera to it or replace the local demo placeholder.
+kind-0 entity as `isLocalPlayer`. When that actor appears, the scene hides its
+offline demo placeholder, follows the server actor with the camera, and routes
+pointer/keyboard movement through the original C2S opcode 4 payload (two
+big-endian signed shorts: target X and target Y). The scene waits for server
+world updates to move the actor; it does not locally teleport the authoritative
+sprite. If the actor despawns, the scene falls back to the offline demo actor.
 Attack/death states, equipment appearance changes and live-server visual
 comparison remain open. Kind-1 generic `cd` movement continues to use the
 separately verified movement adapter below.
