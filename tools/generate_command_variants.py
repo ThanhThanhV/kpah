@@ -149,7 +149,7 @@ def java_output(schema):
     lines += ['            default -> { return new Decoded(mode, Map.of(), readRemaining(in), new byte[0]); }',
               "        }", "        return new Decoded(mode, Map.copyOf(fields), new byte[0], readRemaining(in));",
               "    }",
-              "    private static Object required(Map<String,Object> values,String key) {",
+              "    private static Object required(Map<String,?> values,String key) {",
               '        if(values==null || !values.containsKey(key) || values.get(key)==null) throw new IllegalArgumentException("Missing field "+key);',
               "        return values.get(key);",
               "    }",
@@ -245,7 +245,7 @@ def variant_js_output(schemas):
         "}",
         ""
     ]
-    return "\\n".join(lines)
+    return "\n".join(lines)
 
 
 def variant_java_output(schemas):
@@ -335,7 +335,7 @@ def variant_java_output(schemas):
         '        return new Decoded(-1, Map.of("itemIds", List.copyOf(itemIds)), new byte[0], readRemaining(in));',
         "    }"
     ]
-    return "\\n".join(lines) + "\\n"
+    return "\n".join(lines) + "\n"
 
 
 def outputs():
