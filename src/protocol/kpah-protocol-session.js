@@ -1,6 +1,7 @@
 import { decodeHandshakeKey, encodeClientFrame } from "./generated/transport-codec.js";
 import { ServerFrameStreamDecoder } from "./server-frame-stream.js";
 import { applyInboundInitializationPacket } from "./inbound-initialization-adapter.js";
+import { createInitializationState } from "./initialization-state.js";
 
 /**
  * Protocol session over a browser WebSocket or another WebSocket-compatible
@@ -17,7 +18,7 @@ export class KpahProtocolSession {
     onOpen = () => {},
     onClose = () => {},
     onError = () => {},
-    initialState = {},
+    initialState = createInitializationState(),
     maxFrameLength = 16 * 1024 * 1024,
   } = {}) {
     if (!transport || typeof transport.send !== "function"
