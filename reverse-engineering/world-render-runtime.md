@@ -62,7 +62,7 @@ ID to `mj.t.h`; kind-0 world entities use their entity ID in `j.h`; original
 lookups compare those values directly (`mj.b(short)` searches kind 0 by `j.h`,
 and rendering excludes the actor whose `j.h == mj.t.h`). The reducer stores
 `activeCharacterId` from opcode 3 and the Phaser projection marks the matching
-kind-0 entity as `isLocalPlayer`. When that actor appears, the scene hides its
+kind-0 entity as `isLocalPlayer`. When that actor appears, the scene hides its The verified opcode-5 snapshot name is projected to the local player label and character-name fields in the HUD; opaque snapshot fields are not treated as level, HP or MP.
 offline demo placeholder, follows the server actor with the camera, and routes
 pointer/keyboard movement through the original C2S opcode 4 payload (two
 big-endian signed shorts: target X and target Y). The scene waits for server
