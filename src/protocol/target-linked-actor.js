@@ -125,7 +125,7 @@ export function advanceTargetLinkedActorPlayback(playback, world, projections, d
   }
   const firstRecord = playback.event.targets?.[0];
   const target = firstRecord?.resolved ? pointFor(world, projections, firstRecord.targetEntityId) : null;
-  let next = { ...playback, tick: playback.tick + 1, animationState: 2, state: 2 };
+  let next = { ...playback, tick: playback.tick + 1, idleTicks: (playback.idleTicks ?? 0) + 1, animationState: 2, state: 2 };
   let reached = !target;
   if (target) {
     const distance = manhattan(playback.x + movementStep, playback.y + movementStep, target.x, target.y);

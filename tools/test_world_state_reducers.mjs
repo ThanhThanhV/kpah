@@ -426,8 +426,10 @@ assert.equal(idleRoamStop.playback.x, idleRoamStep.playback.x, "idle stop clears
 const returnWorld = { entitiesById: { "124": { state: 1, snapshot: { x: 100, y: 0 } }, "555": { currentHp: 100, snapshot: { x: 60, y: 0 } }, "556": { currentHp: 100, snapshot: { x: 80, y: 0 } } } };
 const returnProjection = new Map([["124", { x: 100, y: 0, state: 1, playerMovementStep: 3 }], ["555", { x: 60, y: 0 }], ["556", { x: 80, y: 0 }]]);
 const returnStep = advanceTargetLinkedActorPlayback(targetLinkedPlayback, returnWorld, returnProjection, parsedActorDefinition);
-assert.equal(returnStep.playback.state, 1, "state 4 returns toward a source that is active and more than 40px away");
-assert.equal(returnStep.playback.x, 32);
+assert.equal(returnStep.playback.state, 1, "state 4 switches to return state when the source is active and more than 40px away");
+assert.equal(returnStep.playback.x, 30, "the original switch advances state 4 on this tick; state 1 movement starts next tick");
+const returnMoveStep = advanceTargetLinkedActorPlayback(returnStep.playback, returnWorld, returnProjection, parsedActorDefinition);
+assert.equal(returnMoveStep.playback.x, 32, "state 1 moves toward the source on the following actor update");
 const verticalActorEvent = { sourceEntityId: 124, animationId: 920, effectId: 909, targets: [{ targetEntityId: 555, resolved: true, damageValue: 5, targetCurrentHp: 95 }] };
 const verticalActorWorld = { entitiesById: { "124": { snapshot: { x: 0, y: 0 } }, "555": { currentHp: 100, snapshot: { x: 0, y: -60 } } } };
 const verticalActorProjections = new Map([["124", { x: 0, y: 0, playerMovementStep: 3 }], ["555", { x: 0, y: -60 }]]);
