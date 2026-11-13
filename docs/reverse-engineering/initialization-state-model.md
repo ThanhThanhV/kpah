@@ -61,3 +61,18 @@ This is an extension snapshot reducer only. It does not replace the primary opco
 - Rejected negative-count packets and packets without a valid target id are no-ops.
 
 The reducer intentionally preserves wire field names and image bytes. It does not decode the atlas format, assign gameplay meaning to item fields, or claim that a purchase transaction succeeded.
+
+
+## Unified initialization event reducer
+
+`applyInitializationEvent(state, event)` is the explicit entry point for the implemented reducers.
+
+- `S2C_OPCODE_1`: global catalogs/configuration.
+- `S2C_OPCODE_3_SNAPSHOT`: fixed character snapshot prefix.
+- `S2C_OPCODE_3_EXTENSION`: independently guarded extension groups.
+- `S2C_OPCODE_15`: shop/context or pet-equipment image variant.
+- `S2C_OPCODE_16`: currency/resource, inventory, auxiliary and counter updates.
+
+Opcode 3 fixed-prefix snapshots and extension groups are merged under `charactersById[characterId]`, while retaining dedicated indexes. The event type distinguishes opcode 3's two decoders; it does not infer packet framing or automatically decode network bytes.
+
+Unknown event types are no-ops. This layer remains disconnected from transport/socket and Phaser.
