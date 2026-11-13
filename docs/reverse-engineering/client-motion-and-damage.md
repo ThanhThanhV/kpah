@@ -57,3 +57,9 @@ Damage event handler đồng thời cập nhật current HP từ packet, cập n
 - Chưa suy ra damage formula, crit chance/multiplier, defense, elemental bonus hoặc damage cap từ floating labels.
 - Tiếp theo: trace `cT` assignment và status effects, xác định jump/knockback branches, map font style IDs và combat flags với data tables.
 
+
+## Server-driven generic cd entity movement
+
+The opcode-4 S2C handler routes existing kind-1 entities through cd.a(x,y). That method stores target M/N only when cd.L >= 0; it does not directly replace current l/m. The initial cd.L value comes from the opcode-4 extra int. The cd.y() update branch uses the template step cg.c, snaps X when abs(dx) <= step and Y when abs(dy) < step, then moves X before Y by one step. Facing is set to right 3, left 2, up 1, down 0. Template type 4 stops this movement branch. During movement cd.b() cycles O through 0..6 and selects cZ 0 for O<=2, otherwise cZ 1.
+
+The Web adapter now keeps current coordinates separate from target coordinates for existing kind-1 records with cd.L >= 0 and advances them on a 40 ms tick. It selects the source cd.c frame table with the current direction and movement frame state 0/1. Remaining differences: Q() can pause movement for effect/status flags; non-type-4 targets receive random vertical jitter (-4 + nextInt()%8); action/death states and their frame-state transitions are not yet mapped.
