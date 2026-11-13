@@ -118,11 +118,25 @@ jobs:
                 throw new AssertionError("C2S opcode 61 item id");
               Map<String,Object> storage68Values = Map.of("itemId", 502);
               Map<String,Object> storage69Values = Map.of("itemId", 503);
-              Map<String,Object> storage68Decoded = ProtocolPacketCodec.decode("C2S_OP_68", ProtocolPacketCodec.encode("C2S_OP_68", storage68Values));
-              Map<String,Object> storage69Decoded = ProtocolPacketCodec.decode("C2S_OP_69", ProtocolPacketCodec.encode("C2S_OP_69", storage69Values));
+              byte[] storage68Payload = ProtocolPacketCodec.encode("C2S_STORAGE_DEPOSIT_ITEM", storage68Values);
+              byte[] storage69Payload = ProtocolPacketCodec.encode("C2S_STORAGE_WITHDRAW_ITEM", storage69Values);
+              Map<String,Object> storage68Decoded = ProtocolPacketCodec.decode("C2S_STORAGE_DEPOSIT_ITEM", storage68Payload);
+              Map<String,Object> storage69Decoded = ProtocolPacketCodec.decode("C2S_STORAGE_WITHDRAW_ITEM", storage69Payload);
+              byte[] storageDepositResponse = ProtocolPacketCodec.encode("S2C_STORAGE_DEPOSIT_RESULT", storage68Values);
+              byte[] storageWithdrawResponse = ProtocolPacketCodec.encode("S2C_STORAGE_WITHDRAW_RESULT", storage69Values);
+              byte[] storageRefresh = ProtocolPacketCodec.encode("C2S_STORAGE_REFRESH", Map.of());
               if (((Number)storage68Decoded.get("itemId")).intValue() != 502
-                  || ((Number)storage69Decoded.get("itemId")).intValue() != 503)
-                throw new AssertionError("C2S opcode 68/69 storage move");
+                  || ((Number)storage69Decoded.get("itemId")).intValue() != 503
+                  || ((Number)ProtocolPacketCodec.decode("S2C_STORAGE_DEPOSIT_RESULT", storageDepositResponse).get("itemId")).intValue() != 502
+                  || ((Number)ProtocolPacketCodec.decode("S2C_STORAGE_WITHDRAW_RESULT", storageWithdrawResponse).get("itemId")).intValue() != 503
+                  || storageRefresh.length != 0
+                  || !ProtocolPacketCodec.decode("C2S_STORAGE_REFRESH", storageRefresh).isEmpty()
+                  || ProtocolCommand.find(ProtocolCommand.Direction.C2S, 68).orElseThrow() != ProtocolCommand.C2S_STORAGE_DEPOSIT_ITEM
+                  || ProtocolCommand.find(ProtocolCommand.Direction.C2S, 69).orElseThrow() != ProtocolCommand.C2S_STORAGE_WITHDRAW_ITEM
+                  || ProtocolCommand.find(ProtocolCommand.Direction.C2S, 70).orElseThrow() != ProtocolCommand.C2S_STORAGE_REFRESH
+                  || ProtocolCommand.find(ProtocolCommand.Direction.S2C, 68).orElseThrow() != ProtocolCommand.S2C_STORAGE_DEPOSIT_RESULT
+                  || ProtocolCommand.find(ProtocolCommand.Direction.S2C, 69).orElseThrow() != ProtocolCommand.S2C_STORAGE_WITHDRAW_RESULT)
+                throw new AssertionError("C2S/S2C storage deposit, withdraw and refresh");
               Map<String,Object> market92Values = Map.of("fieldBoolean", true, "fieldByteA", -1, "fieldByteB", 2,
                 "itemId", 505, "fieldInt", -600, "sourceSelector", 1);
               Map<String,Object> market92Decoded = ProtocolPacketCodec.decode("C2S_OP_92", ProtocolPacketCodec.encode("C2S_OP_92", market92Values));
