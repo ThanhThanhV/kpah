@@ -1078,7 +1078,7 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 
 ### B7 — shop batch variable-list codecs (CI pending)
 
-- Opcode 24 `SHOP_BATCH_ACTION`: caller-selected variants `catalog`/`premium`; count unsigned byte; catalog record category/templateId/quantity=1/conditional optionByte for category 3; premium record category=4/itemId/quantity.
+- Opcode 24 `SHOP_BATCH_ACTION`: caller-selected variants `catalog`/`category4_fixed`; count unsigned byte; catalog record category/templateId/quantity=1/conditional optionByte for category 3; fixed category-4 record category=4/itemId/quantity.
 - Opcode 74 `SHOP_PURCHASE_BATCH`: signed-short expanded total count and repeated signed-short item IDs; list representation expands each selected row by its quantity.
 - Added generated JavaScript and Java codecs, explicit unknown-variant rejection, count bounds, JS round-trip tests and Java 21 smoke assertions. Source evidence: `jy.java:756-780`, `816-865`; `xg.java:3257-3265`.
 - CI pending; do not mark B7 complete or adjust weighted project progress until generated-file check and all CI jobs pass.
