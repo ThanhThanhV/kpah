@@ -642,12 +642,18 @@ jobs:
               ProtocolCommandVariantCodec.Decoded shop24Premium = ProtocolCommandVariantCodec.decodeC2SOpcode24("category4_fixed", shop24PremiumPayload);
               byte[] shop74Payload = ProtocolCommandVariantCodec.encodeC2SOpcode74(List.<Number>of(0x1234, (short)-2));
               ProtocolCommandVariantCodec.Decoded shop74 = ProtocolCommandVariantCodec.decodeC2SOpcode74(shop74Payload);
+              boolean invalidShop24ConstantRejected = false;
+              try {
+                ProtocolCommandVariantCodec.decodeC2SOpcode24("catalog",
+                  new PacketWriter().writeU8(1).writeI8(1).writeI16(0x0022).writeI16(2).toByteArray());
+              } catch (IOException expected) { invalidShop24ConstantRejected = true; }
               if (!Arrays.equals(shop24CatalogPayload, new byte[]{2,3,0x12,0x34,0,1,7,1,0,0x22,0,1})
                   || ((Number)((List<Map<String,Object>>)shop24Catalog.fields().get("records")).get(0).get("optionByte")).intValue() != 7
                   || !Arrays.equals(shop24PremiumPayload, new byte[]{1,4,1,2,0,5})
                   || ((Number)((List<Map<String,Object>>)shop24Premium.fields().get("records")).get(0).get("category")).intValue() != 4
                   || !Arrays.equals(shop74Payload, new byte[]{0,2,0x12,0x34,(byte)0xff,(byte)0xfe})
-                  || !shop74.fields().get("itemIds").equals(List.of((short)0x1234, (short)-2)))
+                  || !shop74.fields().get("itemIds").equals(List.of((short)0x1234, (short)-2))
+                  || !invalidShop24ConstantRejected)
                 throw new AssertionError("C2S shop batch opcodes 24/74 variable-list codecs");
               ProtocolWorldStateCodec.Opcode73 materials73 = ProtocolWorldStateCodec.decodeS2COpcode73(
                 new PacketWriter().writeI16(2).writeI16(501).writeI16(7).writeI16(12)
