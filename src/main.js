@@ -1186,6 +1186,7 @@ class WorldScene extends Phaser.Scene {
   ensureServerActorShadowTexture(){
     const key='kpah-actor-shadow';
     if(this.textures.exists(key))return Promise.resolve(true);
+    if(this.serverActorShadowUnavailable)return Promise.resolve(false);
     if(this.serverActorShadowLoad)return this.serverActorShadowLoad;
     this.serverActorShadowLoad=loadAssetManifest().then(manifest=>{
       const entry=(manifest.decodedPackedEntries??[]).find(item=>item.path==='shadow.png');
@@ -1451,6 +1452,11 @@ class WorldScene extends Phaser.Scene {
       const partTransform=partPlayback?.transform??0;
       const partTexture=partIndex===null||partFrameIndex===null?null:this.serverCharacterPartTextures.get(String(partIndex))?.textures.get(partFrameIndex+':'+partTransform);
       const canRenderCharacterPart=partTexture&&this.textures.exists(partTexture.key);
+      if(entity.factoryClass==='hd'&&!this.textures.exists('kpah-actor-shadow')&&!this.serverActorShadowUnavailable){
+        this.ensureServerActorShadowTexture().then(loaded=>{
+          if(loaded&&!this.serverWorldDisposed)this.syncServerWorldViews();
+        });
+      }
       if(!view){
         view=this.add.container(motion.x,motion.y,[]);
         if(canRenderCharacterPart){
@@ -1504,6 +1510,15 @@ class WorldScene extends Phaser.Scene {
         }else if(view.getData('visualType')==='marker'){
           view.getData('marker')?.setFillStyle(tint,0.92);
         }
+      }
+      if(entity.factoryClass==='hd'&&this.textures.exists('kpah-actor-shadow')){
+        const shadowX=partTransform===2?-10:10;
+        let originalShadow=view.getData('originalShadow');
+        if(!originalShadow){
+          originalShadow=this.add.image(shadowX,-10,'kpah-actor-shadow').setOrigin(0.5,0.5);
+          view.addAt(originalShadow,0);
+          view.setData('originalShadow',originalShadow);
+        }else originalShadow.setPosition(shadowX,-10).setTexture('kpah-actor-shadow');
       }
     }
   }
