@@ -952,7 +952,10 @@ class WorldScene extends Phaser.Scene {
       let view=this.serverWorldViews.get(id);
       const tint=entity.presentation==='player-like'?0x6bb7e8:
         entity.presentation==='monster-npc-family'?0xd58a5e:0xb6b6b6;
-      const labelText='#'+entity.entityId+' · K'+(entity.kind??'?')+' / T'+(entity.templateId??'?');
+      const templateLabel=entity.templateName
+        ? entity.templateName+' '+entity.frameWidth+'x'+entity.frameHeight
+        : 'T'+(entity.templateId??'?');
+      const labelText='#'+entity.entityId+' · K'+(entity.kind??'?')+' / '+templateLabel;
       if(!view){
         const marker=this.add.circle(0,0,9,tint,0.92).setStrokeStyle(2,0x171b22,0.95);
         const label=this.add.text(0,-19,labelText,{
