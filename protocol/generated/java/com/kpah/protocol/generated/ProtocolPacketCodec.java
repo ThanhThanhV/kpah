@@ -25,7 +25,7 @@ public final class ProtocolPacketCodec {
         SCHEMAS.put("C2S_STORAGE_DEPOSIT_ITEM", List.of(new Field("itemId", Type.I16)));
         SCHEMAS.put("C2S_STORAGE_WITHDRAW_ITEM", List.of(new Field("itemId", Type.I16)));
         SCHEMAS.put("C2S_STORAGE_REFRESH", List.of());
-        SCHEMAS.put("C2S_OP_78", List.of(new Field("itemId", Type.I16), new Field("optionByte", Type.I8)));
+        SCHEMAS.put("C2S_SELL_ITEM", List.of(new Field("itemId", Type.I16), new Field("sourceSelector", Type.I8)));
         SCHEMAS.put("C2S_SHOP_PURCHASE_ITEM", List.of(new Field("itemId", Type.I8)));
         SCHEMAS.put("C2S_EQUIP_ITEM", List.of(new Field("itemId", Type.I16)));
         SCHEMAS.put("C2S_OP_92", List.of(new Field("fieldBoolean", Type.BOOL), new Field("fieldByteA", Type.I8), new Field("fieldByteB", Type.I8), new Field("itemId", Type.I16), new Field("fieldInt", Type.I32), new Field("sourceSelector", Type.I8)));
@@ -34,6 +34,7 @@ public final class ProtocolPacketCodec {
         SCHEMAS.put("C2S_FARM_PLOT_ACTION", List.of(new Field("action", Type.U8), new Field("plotId", Type.U8)));
         SCHEMAS.put("S2C_STORAGE_DEPOSIT_RESULT", List.of(new Field("itemId", Type.I16)));
         SCHEMAS.put("S2C_STORAGE_WITHDRAW_RESULT", List.of(new Field("itemId", Type.I16)));
+        SCHEMAS.put("S2C_SELL_ITEM_RESULT", List.of(new Field("itemId", Type.I16)));
     }
     public static byte[] encode(String command, Map<String, ?> values) throws IOException {
         List<Field> fields = requireSchema(command);
