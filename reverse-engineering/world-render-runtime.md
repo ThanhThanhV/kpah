@@ -40,3 +40,17 @@ are shown at the latest received server coordinate; the original `cd`
 template-specific interpolation rule is not simulated. The demo-local player
 and monsters remain separate from these server markers, and no local-player
 identity or combat HP is inferred.
+
+
+## Original template catalog binding
+
+The source trace established that entity sprite data is loaded dynamically rather than resolved by a static filename table. S2C opcode 100 populates the template catalog (ku.T / cg) with the template name, frame dimensions, movement step, offsets, resource ID and request type. When a spawned entity references a catalog entry without its image, the original client sends C2S opcode -47; S2C opcode -47 returns the packed resource payload.
+
+The browser client now:
+- Reduces opcode 100 into serverWorld.templatesById.
+- Requests the exact original asset tuple (request type, resource ID, template ID) once per template when a live entity references it.
+- Stores the S2C -47 payload in serverWorld.templateAssetPayloadsById only when its template catalog entry exists.
+- Displays template name and frame dimensions in the Phaser diagnostic marker.
+
+The packed response is not yet converted into an image. Original ba decodes the packed archive using the repeating XOR key NguyenVanMinh, then the common sprite branch concatenates <resourceId>_h and data before constructing the image. Special bj branches and the original vertical frame/direction/state mapping remain unimplemented. Consequently the Phaser scene still shows diagnostic markers, not original sprite art.
+
