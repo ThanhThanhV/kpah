@@ -1246,7 +1246,7 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 ### B16 — Decode common template image and render original idle sprites
 
 - Ported original ba packed-resource archive parsing: indexed names, signed name length, unsigned-short resource lengths, per-name XOR reset and continuous payload XOR with NguyenVanMinh.
-- Ported cg common image branch: resolve <resourceId>_h and data, concatenate and recognize PNG/JPEG/GIF payloads; keep special bj branches opaque.
+- Ported cg common image branch: resolve <resourceId>_h and data, concatenate and recognize PNG payloads; keep special bj branches opaque.
 - Ported the exact cd.c[templateType][direction][animationState] frame-index table.
 - Phaser now converts common template image responses into vertical spritesheets and renders the original idle frame for generic cd entities; uses opcode 100 frame dimensions and frame offsets.
 - Render fallback remains diagnostic marker for specialized entity classes and special asset formats.
