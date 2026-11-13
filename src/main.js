@@ -1141,7 +1141,7 @@ class WorldScene extends Phaser.Scene {
     }
   }
   getServerActorProjections(){
-    const projected=projectServerWorldEntities(this.serverWorldState);
+    const projected=projectServerWorldEntities(this.serverWorldState, this.serverInitializationState?.activeCharacterId ?? null);
     return new Map(projected.map(entity=>{
       const motion=this.serverWorldMotion.get(String(entity.entityId));
       return [String(entity.entityId),{...entity,x:motion?.x??entity.x,y:motion?.y??entity.y}];
@@ -1396,7 +1396,7 @@ class WorldScene extends Phaser.Scene {
     image.src=bytesToDataUrl(imageBytes,mime);
   }
   syncServerWorldViews(){
-    const projected=projectServerWorldEntities(this.serverWorldState);
+    const projected=projectServerWorldEntities(this.serverWorldState, this.serverInitializationState?.activeCharacterId ?? null);
     const present=new Set(projected.map(entity=>String(entity.entityId)));
     for(const [id,view] of this.serverWorldViews){
       if(!present.has(id)){view.destroy();this.serverWorldViews.delete(id);this.serverWorldMotion.delete(id);this.serverCharacterPartPlayback.delete(id);}
@@ -1433,7 +1433,7 @@ class WorldScene extends Phaser.Scene {
       const templateLabel=entity.templateName
         ? entity.templateName+' '+entity.frameWidth+'x'+entity.frameHeight
         : 'T'+(entity.templateId??'?');
-      const labelText='#'+entity.entityId+' · '+(entity.factoryClass??('K'+(entity.kind??'?')))
+      const labelText='#'+entity.entityId+(entity.isLocalPlayer?' · LOCAL':'')+' · '+(entity.factoryClass??('K'+(entity.kind??'?')))
         +' / '+templateLabel;
       const labelY=entity.templateReady?-(entity.frameOffsetY??0)-4:-19;
       const textureKey='kpah-server-template-'+entity.templateId;
