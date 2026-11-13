@@ -12,6 +12,24 @@ let lastError = "";
 let requestedTemplateAssets = new Set();
 let requestedEffectAssets = new Set();
 
+export function encodePlayerMovementPayload(x, y) {
+  if (!Number.isInteger(x) || !Number.isInteger(y)
+    || x < -32768 || x > 32767 || y < -32768 || y > 32767) {
+    throw new RangeError("Player movement coordinates must be signed 16-bit integers");
+  }
+  const payload = new Uint8Array(4);
+  const view = new DataView(payload.buffer);
+  view.setInt16(0, x, false);
+  view.setInt16(2, y, false);
+  return payload;
+}
+
+export function sendPlayerMovement(x, y) {
+  if (!activeSession || activeSession.closed) return false;
+  activeSession.sendPacket(4, encodePlayerMovementPayload(x, y));
+  return true;
+}
+
 export function normalizeLocalBridgeUrl(value) {
   const url = new URL(String(value || "").trim());
   const host = url.hostname.replace(/^\[|\]$/g, "").toLowerCase();
