@@ -57,6 +57,17 @@ export function applyS2COpcode4World(world, packet) {
         movementPending: movementEnabled && record.active !== false
           && (record.x !== previous.x || record.y !== previous.y),
       };
+    } else if (previous && previous.kind === 0 && record.kind === 0) {
+      // Existing kind-0 actor resolves to z and routes through z.a(x,y)/z.b(x,y),
+      // which stores ay/az for its own movement state instead of teleporting.
+      entity = {
+        ...previous,
+        active: record.active,
+        targetX: record.x,
+        targetY: record.y,
+        movementPending: record.active !== false
+          && (record.x !== previous.x || record.y !== previous.y),
+      };
     } else {
       entity = { ...previous, ...record, targetX: null, targetY: null, movementPending: false };
     }
