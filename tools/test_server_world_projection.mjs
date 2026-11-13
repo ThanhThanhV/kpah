@@ -71,5 +71,13 @@ const evictedBatch = getServerCombatEventsAfter({
 }, 100);
 assert.deepEqual(evictedBatch.events.map(event => event.damage), [50]);
 assert.equal(evictedBatch.lastSequence, 125);
+const restartedSessionBatch = getServerCombatEventsAfter({
+  combatEventSequence: 1,
+  combatEvents: [{ sequence: 1, damage: 75 }],
+}, 125);
+assert.deepEqual(restartedSessionBatch.events.map(event => event.damage), [75]);
+assert.equal(restartedSessionBatch.lastSequence, 1,
+  "a new protocol session may restart its event sequence");
+
 assert.deepEqual(projectServerWorldEntities(null), []);
 console.log("Server world projection: PASS (verified kind, entity/template IDs, opcode 4/5 coordinates, verified template metadata and original idle frame mapping)");
