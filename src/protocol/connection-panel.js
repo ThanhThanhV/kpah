@@ -1,4 +1,5 @@
 import { KpahProtocolSession } from "./kpah-protocol-session.js";
+import { encodeTemplateAssetRequest } from "./template-assets.js";
 
 let activeSession = null;
 let currentView = null;
@@ -6,6 +7,7 @@ let statusText = "Chưa kết nối";
 let packetCount = 0;
 let lastState = null;
 let lastError = "";
+let requestedTemplateAssets = new Set();
 
 export function normalizeLocalBridgeUrl(value) {
   const url = new URL(String(value || "").trim());
@@ -38,7 +40,9 @@ function renderStatus() {
       state.textContent = "Xu: " + (lastState.currency == null ? "chưa có" : String(lastState.currency))
         + " · Vật phẩm: " + (lastState.inventory?.length ?? 0)
         + " · Resource index: " + resources
-        + " · World entities: " + (lastState.serverWorld?.entityOrder?.length ?? 0);
+        + " · World entities: " + (lastState.serverWorld?.entityOrder?.length ?? 0)
+        + " · Templates: " + Object.keys(lastState.serverWorld?.templatesById ?? {}).length
+        + " · Asset payloads: " + Object.keys(lastState.serverWorld?.templateAssetPayloadsById ?? {}).length;
     }
   }
 }
@@ -93,20 +97,38 @@ export function mountProtocolConnectionPanel(root) {
     statusText = "Đang mở WebSocket...";
     packetCount = 0;
     lastState = null;
+    requestedTemplateAssets = new Set();
     renderStatus();
     const socket = new WebSocket(url);
-    activeSession = new KpahProtocolSession(socket, {
+    const session = new KpahProtocolSession(socket, {
       onOpen: () => { statusText = "WebSocket đã mở · chờ handshake -40"; renderStatus(); },
       onHandshake: () => { statusText = "Đã handshake · protocol sẵn sàng"; renderStatus(); },
       onPacket: () => { packetCount += 1; renderStatus(); },
       onState: state => {
         lastState = state;
+        const world = state.serverWorld;
+        for (const entityId of world?.entityOrder ?? []) {
+          const entity = world.entitiesById?.[String(entityId)];
+          const templateId = Number.isInteger(entity?.templateId) ? entity.templateId : null;
+          if (templateId === null) continue;
+          const template = world.templatesById?.[String(templateId)];
+          if (!template || world.templateAssetPayloadsById?.[String(templateId)]
+            || requestedTemplateAssets.has(templateId)) continue;
+          requestedTemplateAssets.add(templateId);
+          try {
+            session.sendPacket(-47, encodeTemplateAssetRequest({ ...template, templateId }));
+          } catch (error) {
+            requestedTemplateAssets.delete(templateId);
+            lastError = "Không thể yêu cầu asset template " + templateId + ": " + error.message;
+          }
+        }
         window.dispatchEvent(new CustomEvent("kpah:protocol-state", { detail: { state } }));
         renderStatus();
       },
       onClose: () => { statusText = "Kết nối đã đóng"; activeSession = null; renderStatus(); },
       onError: error => { statusText = "Lỗi kết nối/protocol"; lastError = error?.message || "Lỗi không xác định"; renderStatus(); },
     });
+    activeSession = session;
   };
 
   connectButton.addEventListener("click", connect);
