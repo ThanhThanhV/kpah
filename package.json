@@ -50,7 +50,8 @@
     "check:command-variants": "python tools/generate_command_variants.py --check",
     "test:command-variants": "node tools/test_command_variants.mjs",
     "test:inbound-initialization": "node tools/test_inbound_initialization_adapter.mjs",
-    "test:server-frame-stream": "node tools/test_server_frame_stream.mjs"
+    "test:server-frame-stream": "node tools/test_server_frame_stream.mjs",
+    "test:protocol-session": "node tools/test_kpah_protocol_session.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0"
