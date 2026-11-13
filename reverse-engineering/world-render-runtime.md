@@ -128,6 +128,15 @@ server HP meter only when `maxHp > 0`. Demo HP/MP bars are not repurposed.
 
 ## Character HP/MP and level synchronization (S2C opcodes 5/32/33)
 
+Source reference: CFR 0.152 decompile from original-JAR analysis artifact
+[CI run 43195783681](https://github.com/ThanhThanhV/kpah/actions/runs/43195783681).
+The relevant source blocks are `ka.java:case5` (around lines 643-675),
+`ka.java:case32` (around 1788-1811), `ka.java:case33` (around 1813-1817),
+`mj.java:b(short)` (around 3661-3674), `mj.java:a(short,cx[])` (around
+4716-4737), and `mj.java:a(short,byte,int,int)` (around 4740-4764).
+The original character sheet consumer in `xg.java` (around 1285-1290)
+labels the corresponding fields as HP and MP current/max.
+
 The original `ka.java:case5` resolves a pre-existing kind-0 player through
 `mj.b(short)`, then reads the four resource integers directly into
 `z.cG` (current HP), `z.cH` (maximum HP), `z.bC` (current MP) and
