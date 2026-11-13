@@ -1261,3 +1261,13 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Phaser advances these server targets on a 40 ms accumulator and updates position/depth plus directional sprite frame.
 - Added reducer and movement unit tests to CI.
 - Remaining: Q() pauses from effects/status flags, random vertical target jitter for non-type-4 templates, kind-0 remote-player interpolation, special entity class renderers and action/death animation states.
+
+
+### B16 — Server combat feedback projection (opcode 6/9)
+
+- Preserve the separate opcode 6 and opcode 9 branches while adding verified aliases for attacker ID, target ID, damage and target HP-after-event.
+- Apply target current HP immutably when the entity is already present in serverWorld.
+- Add monotonic event sequence numbers so Phaser consumes each event once even when the rolling history is capped at 100.
+- Phaser now renders the raw server damage number above the target entity and fades it upward; no crit/miss/element semantics are inferred from the other bytes.
+- Extend existing world-state and projection tests; document the source-backed field mapping.
+- Remaining: use verified max HP to render server HP bars, trace opcode 10/83/106 branches, map combat animation/effect resources, and implement specialized entity renderers. This is feedback presentation, not server-side battle simulation.
