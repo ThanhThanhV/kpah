@@ -1,4 +1,4 @@
-import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74, decodeS2COpcodeMinus71, decodeS2COpcodeMinus73, decodeS2COpcodeMinus51, decodeS2COpcode26, decodeS2COpcode15 } from "./generated/world-state-codec.js";
+import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode32, decodeS2COpcode33, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74, decodeS2COpcodeMinus71, decodeS2COpcodeMinus73, decodeS2COpcodeMinus51, decodeS2COpcode26, decodeS2COpcode15 } from "./generated/world-state-codec.js";
 import { decodeS2COpcode5 } from "./generated/opcode5-codec.js";
 import { decodeS2CTemplateCatalog, decodeS2CTemplateAsset } from "./template-assets.js";
 import { decodeEffectDefinition } from "./effect-definition.js";
@@ -8,6 +8,8 @@ export function createServerWorldState() {
   return {
     entitiesById: {},
     entityOrder: [],
+    characterResourcesById: {},
+    characterLevelsById: {},
     templatesById: {},
     templateAssetPayloadsById: {},
     effectDefinitionsById: {},
@@ -41,6 +43,8 @@ function cloneWorld(world) {
     ...source,
     entitiesById: { ...(source.entitiesById ?? {}) },
     entityOrder: [...(source.entityOrder ?? [])],
+    characterResourcesById: { ...(source.characterResourcesById ?? {}) },
+    characterLevelsById: { ...(source.characterLevelsById ?? {}) },
     templatesById: { ...(source.templatesById ?? {}) },
     templateAssetPayloadsById: { ...(source.templateAssetPayloadsById ?? {}) },
     effectDefinitionsById: { ...(source.effectDefinitionsById ?? {}) },
@@ -132,6 +136,46 @@ export function applyS2COpcode5World(world, payload) {
   next.entitiesById[String(snapshot.entityId)] = {
     ...next.entitiesById[String(snapshot.entityId)],
     snapshot,
+  };
+  return next;
+}
+
+/**
+ * Opcode 32 is a keyed resource update. The original consumer recognizes
+ * hp/mp/bp/sp; retain every key/value pair and the local-only trailer without
+ * inventing a max/current interpretation for those values.
+ */
+function applyCharacterResources(world, packet) {
+  const next = cloneWorld(world);
+  const id = String(packet.characterId);
+  const previous = next.characterResourcesById[id] ?? { statsByKey: {} };
+  const statsByKey = { ...(previous.statsByKey ?? {}) };
+  for (const record of packet.stats ?? []) {
+    if (typeof record.key !== "string" || !record.key.trim() || !Number.isFinite(record.value)) continue;
+    const key = record.key.trim();
+    statsByKey[key.toLowerCase()] = { key, value: record.value };
+  }
+  next.characterResourcesById[id] = {
+    ...previous,
+    stats: (packet.stats ?? []).map(record => ({ ...record })),
+    statsByKey,
+    localStateByte: Number.isInteger(packet.localStateByte) ? packet.localStateByte : previous.localStateByte ?? null,
+    localShortValue: Number.isInteger(packet.localShortValue) ? packet.localShortValue : previous.localShortValue ?? null,
+  };
+  return next;
+}
+
+/**
+ * Opcode 33 updates level and two source-consumed HP/MP state values. Keep
+ * those integers named by wire position until their individual semantics are
+ * confirmed from the original mj consumer.
+ */
+function applyCharacterLevel(world, packet) {
+  const next = cloneWorld(world);
+  next.characterLevelsById[String(packet.characterId)] = {
+    level: packet.level,
+    valueA: packet.valueA,
+    valueB: packet.valueB,
   };
   return next;
 }
@@ -252,6 +296,21 @@ export function applyInboundWorldPacket(state, frame, nowMs = Date.now()) {
     case 5:
       nextWorld = applyS2COpcode5World(world, frame.payload);
       event = { entityId: (frame.payload[0] << 8) | frame.payload[1] };
+      break;
+    case 32: {
+      const characterId = frame.payload.length >= 2
+        ? ((frame.payload[0] << 8) | frame.payload[1]) > 0x7fff
+          ? ((frame.payload[0] << 8) | frame.payload[1]) - 0x10000
+          : ((frame.payload[0] << 8) | frame.payload[1])
+        : null;
+      event = decodeS2COpcode32(frame.payload, Number.isInteger(state.activeCharacterId)
+        && characterId === state.activeCharacterId);
+      nextWorld = applyCharacterResources(world, event);
+      break;
+    }
+    case 33:
+      event = decodeS2COpcode33(frame.payload);
+      nextWorld = applyCharacterLevel(world, event);
       break;
     case 6:
       event = decodeS2COpcode6(frame.payload);
