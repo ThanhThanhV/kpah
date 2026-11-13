@@ -6,7 +6,7 @@ import { createInitializationState } from "../src/protocol/initialization-state.
 let state = createInitializationState();
 const spawn = new PacketWriter()
   .writeI8(1).writeU8(7).writeI16(123).writeI16(456).writeI16(789).writeI8(2)
-  .writeI32(-99).writeI8(4).writeI8(5).writeBool(true)
+  .writeI32(99).writeI8(4).writeI8(5).writeBool(true)
   .writeI8(0).writeU8(8).writeI16(124).writeI16(500).writeI16(600).writeI8(1)
   .writeI32(77).writeI8(6).writeBool(true).toUint8Array();
 let applied = applyInboundWorldPacket(state, { opcode: 4, payload: spawn });
@@ -16,6 +16,17 @@ assert.deepEqual(applied.events, ["S2C_OPCODE_4_WORLD"]);
 assert.equal(state.serverWorld.entitiesById["123"].templateId, 7);
 assert.equal(state.serverWorld.entitiesById["123"].x, 456);
 assert.deepEqual(state.serverWorld.entityOrder, [123, 124]);
+
+const moveUpdate = new PacketWriter()
+  .writeI8(1).writeU8(7).writeI16(123).writeI16(200).writeI16(300).writeI8(2)
+  .writeI32(-1).writeI8(8).writeI8(9).writeBool(true).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 4, payload: moveUpdate }).state;
+assert.equal(state.serverWorld.entitiesById["123"].x, 456, "cd current position is not teleported by a target update");
+assert.equal(state.serverWorld.entitiesById["123"].y, 789);
+assert.equal(state.serverWorld.entitiesById["123"].targetX, 200);
+assert.equal(state.serverWorld.entitiesById["123"].targetY, 300);
+assert.equal(state.serverWorld.entitiesById["123"].movementPending, true);
+assert.equal(state.serverWorld.entitiesById["123"].extraInt, 99, "existing cd.L remains from spawn");
 
 const snapshot = new PacketWriter().writeI16(124).writeUTF("Hero").writeI16(900).writeI16(901);
 for (const n of [100, 200, 300, 400]) snapshot.writeI32(n);
