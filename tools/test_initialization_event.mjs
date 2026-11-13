@@ -18,6 +18,7 @@ let state = applyInitializationEvent(createInitializationState(), {
   type: "S2C_OPCODE_3_SNAPSHOT", packet: snapshot,
 });
 assert.equal(state.charactersById[321].snapshot.fields.characterName, "Hero");
+assert.equal(state.activeCharacterId, 321, "opcode 3 identifies the active local character");
 assert.deepEqual([...state.characterSnapshotsById[321].fields.actionMapping], [0xaa,0xbb,0xcc]);
 assert.deepEqual([...state.charactersById[321].snapshot.trailingBytes], [0xde]);
 
