@@ -66,6 +66,28 @@ Further confirmed destinations:
 - Tile blobs are stored using the two named keys t_hang and t_thanh. The later part-data table is stored in hd.a, a static map keyed by record index and consumed by the hd character-part renderer.
 - mj.Z, the four mj.ac/ad/ae/af bytes, the z.cy/cz/cA/cB matrices and paired mj.bb/bc arrays are populated by this handler, but their runtime consumer was not found in the scanned CFR source. They remain neutral lookup/config data; no business meaning is assigned.
 
+
+### Character part record — CFR class `c` / player renderer `hd`
+
+The opcode-1 part-data records are no longer treated as wholly opaque by the Web client. CFR 0.152 establishes the following structure in `c(byte[])`, called by `hd.a(partIndex, data)`:
+
+1. Signed-byte atlas-region count; each region consumes five unsigned bytes. The first byte is retained as `discardedByte`; the remaining four are the source rectangle X/Y/width/height.
+2. Signed-short frame count. Each frame has a signed-byte piece count.
+3. Each piece consumes a primary tuple (short X, short Y, signed-byte region index), an auxiliary tuple (short X, short Y, signed-byte region index, signed-byte flag), then a signed-byte layer group. The auxiliary tuple is preserved as raw metadata because CFR constructs a temporary `g` object for it, while `hd` later reads the primary `g.d` for draw transform; that field-flow discrepancy is not silently interpreted as a flip flag.
+4. Signed-short frame-height table count followed by signed-short values cast to byte by the Java client.
+5. Eight signed-byte-length-prefixed frame-index sequences. The source's static `c.e[direction][state]` table selects one of these sequences; the Web decoder preserves that exact 2×13 lookup.
+6. Optional trailer: one signed byte followed by two bytes per frame; if bytes remain, four additional signed-byte-length-prefixed sequences follow.
+
+The decoder is implemented in `src/protocol/character-part-data.js`. `applyOpcode1` now retains the original raw `partData` and also publishes `characterPartCatalog`, where each record has either parsed metadata or a per-record error. A malformed part does not discard the rest of opcode 1 or pretend to be renderable.
+
+The test uses a synthetic record built from the CFR field order and covers atlas rectangles, frame pieces, signed offsets, animation lookup, optional tables, trailing bytes and malformed records:
+
+```bash
+npm run test:character-part-data
+```
+
+This is the metadata-decoder milestone, not yet the final Phaser character renderer. The atlas image lookup and the full equipment/appearance composition still need to be connected. In `hd.a(Graphics)`, the original client obtains the character image through `mi.a(partIndex + 12000)`, resolves a frame composition through `c.e[direction][state]`, then draws the selected atlas regions at their part offsets. The original asset-family paths declared by `ba` are `/c/leg/`, `/c/body/`, `/c/head/`, `/c/hat/`, and `/c/coat/`.
+
 ## S2C opcode 3 — selected character snapshot
 
 Handler writes into the current player `km.s.t` (`ca extends z`). Confirmed prefix:
