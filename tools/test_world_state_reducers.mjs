@@ -78,6 +78,11 @@ assert.equal(state.serverWorld.characterResourcesById["123"].statsByKey.hp.value
 assert.equal(state.serverWorld.characterResourcesById["123"].localStateByte, null,
   "opcode 32 only reads the additional byte/short for the active character");
 
+const ignoredResources = new PacketWriter().writeI16(777).writeI8(1).writeUTF("hp").writeI32(999).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 32, payload: ignoredResources }).state;
+assert.equal(state.serverWorld.characterResourcesById["777"], undefined,
+  "opcode 32 ignores IDs that do not resolve to a kind-0 player");
+
 const levelUpdate = new PacketWriter().writeI16(124).writeI8(26).writeI32(5000).writeI32(600).toUint8Array();
 applied = applyInboundWorldPacket(state, { opcode: 33, payload: levelUpdate });
 state = applied.state;
