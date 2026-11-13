@@ -8,6 +8,8 @@ public final class ProtocolPacketCodec {
     private record Field(String name, Type type) {}
     private static final Map<String, List<Field>> SCHEMAS = new LinkedHashMap<>();
     static {
+        SCHEMAS.put("S2C_STORAGE_DEPOSIT_RESULT", List.of(new Field("itemId", Type.I16)));
+        SCHEMAS.put("S2C_STORAGE_WITHDRAW_RESULT", List.of(new Field("itemId", Type.I16)));
         SCHEMAS.put("C2S_OPEN_ARTIFACT_PANEL", List.of(new Field("sentinel", Type.I16)));
         SCHEMAS.put("C2S_FARM_PANEL_ACTION", List.of(new Field("action", Type.U8), new Field("index", Type.U8)));
         SCHEMAS.put("C2S_EQUIPMENT_UPGRADE_ACTION", List.of(new Field("action", Type.U8), new Field("itemId", Type.U8)));
@@ -22,8 +24,9 @@ public final class ProtocolPacketCodec {
         SCHEMAS.put("C2S_CREATE_CHARACTER", List.of(new Field("name", Type.UTF), new Field("field1", Type.U8), new Field("field2", Type.U8), new Field("field3", Type.U8), new Field("field4", Type.U8), new Field("serverFlag", Type.U8)));
         SCHEMAS.put("C2S_USE_ITEM", List.of(new Field("itemId", Type.I32)));
         SCHEMAS.put("C2S_OP_61", List.of(new Field("itemId", Type.I16)));
-        SCHEMAS.put("C2S_OP_68", List.of(new Field("itemId", Type.I16)));
-        SCHEMAS.put("C2S_OP_69", List.of(new Field("itemId", Type.I16)));
+        SCHEMAS.put("C2S_STORAGE_DEPOSIT_ITEM", List.of(new Field("itemId", Type.I16)));
+        SCHEMAS.put("C2S_STORAGE_WITHDRAW_ITEM", List.of(new Field("itemId", Type.I16)));
+        SCHEMAS.put("C2S_STORAGE_REFRESH", List.of());
         SCHEMAS.put("C2S_OP_78", List.of(new Field("itemId", Type.I16), new Field("optionByte", Type.I8)));
         SCHEMAS.put("C2S_SHOP_PURCHASE_ITEM", List.of(new Field("itemId", Type.I8)));
         SCHEMAS.put("C2S_EQUIP_ITEM", List.of(new Field("itemId", Type.I16)));
