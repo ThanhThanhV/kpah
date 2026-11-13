@@ -22,6 +22,8 @@ export function projectServerWorldEntities(world, localCharacterId = null) {
       ? snapshot.templateId
       : Number.isInteger(entity.templateId) ? entity.templateId : null;
     const template = templateId === null ? null : templates[String(templateId)] ?? null;
+    const resourceState = world.characterResourcesById?.[String(entityId)] ?? null;
+    const levelState = world.characterLevelsById?.[String(entityId)] ?? null;
     projected.push({
       entityId,
       kind,
@@ -29,6 +31,9 @@ export function projectServerWorldEntities(world, localCharacterId = null) {
       templateId,
       name: typeof snapshot?.name === "string" ? snapshot.name : null,
       currentHp: Number.isFinite(entity.currentHp) ? entity.currentHp : null,
+      level: Number.isInteger(levelState?.level) ? levelState.level : null,
+      resourceStats: Object.values(resourceState?.statsByKey ?? {}),
+      levelUpdateValues: levelState ? { valueA: levelState.valueA, valueB: levelState.valueB } : null,
       templateName: template?.name ?? null,
       x,
       y,
