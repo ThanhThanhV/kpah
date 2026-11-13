@@ -1,4 +1,4 @@
-import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode32, decodeS2COpcode33, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74, decodeS2COpcodeMinus71, decodeS2COpcodeMinus73, decodeS2COpcodeMinus51, decodeS2COpcode26, decodeS2COpcode15 } from "./generated/world-state-codec.js";
+import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode7, decodeS2COpcode32, decodeS2COpcode33, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74, decodeS2COpcodeMinus71, decodeS2COpcodeMinus73, decodeS2COpcodeMinus51, decodeS2COpcode26, decodeS2COpcode15 } from "./generated/world-state-codec.js";
 import { decodeS2COpcode5 } from "./generated/opcode5-codec.js";
 import { decodeS2CTemplateCatalog, decodeS2CTemplateAsset } from "./template-assets.js";
 import { decodeEffectDefinition } from "./effect-definition.js";
@@ -180,6 +180,48 @@ function applyCharacterLevel(world, packet) {
   return next;
 }
 
+/**
+ * Opcode 7 resolves an already-existing entity through mj.a(ce); it never
+ * creates one. HP values are source-confirmed, while the other fields remain
+ * grouped as an opaque state update until their rendering semantics are traced.
+ */
+function applyS2COpcode7World(world, packet) {
+  const next = cloneWorld(world);
+  const id = String(packet.entityId);
+  const entity = next.entitiesById[id];
+  if (!entity) {
+    next.worldEvents.push({
+      opcode: 7,
+      sequence: (next.worldEvents.at(-1)?.sequence ?? 0) + 1,
+      entityId: packet.entityId,
+      entityResolved: false,
+    });
+    if (next.worldEvents.length > 100) next.worldEvents.splice(0, next.worldEvents.length - 100);
+    return next;
+  }
+  next.entitiesById[id] = {
+    ...entity,
+    currentHp: packet.currentHp,
+    maxHp: packet.maxHp,
+    opcode7State: {
+      templateId: packet.templateId,
+      x: packet.x,
+      y: packet.y,
+      stateByteD: packet.stateByteD,
+      stateByteI: packet.stateByteI,
+      opaqueInt: packet.opaqueInt,
+    },
+  };
+  next.worldEvents.push({
+    opcode: 7,
+    sequence: (next.worldEvents.at(-1)?.sequence ?? 0) + 1,
+    entityId: packet.entityId,
+    entityResolved: true,
+  });
+  if (next.worldEvents.length > 100) next.worldEvents.splice(0, next.worldEvents.length - 100);
+  return next;
+}
+
 export function applyS2COpcode8World(world, packet) {
   if (!packet || !Array.isArray(packet.entityIds)) throw new TypeError("Opcode 8 entityIds must be an array");
   const next = cloneWorld(world);
@@ -311,6 +353,10 @@ export function applyInboundWorldPacket(state, frame, nowMs = Date.now()) {
     case 33:
       event = decodeS2COpcode33(frame.payload);
       nextWorld = applyCharacterLevel(world, event);
+      break;
+    case 7:
+      event = decodeS2COpcode7(frame.payload);
+      nextWorld = applyS2COpcode7World(world, event);
       break;
     case 6:
       event = decodeS2COpcode6(frame.payload);
