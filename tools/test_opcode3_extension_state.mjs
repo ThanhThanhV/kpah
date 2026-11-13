@@ -24,7 +24,9 @@ assert.equal(base.characterExtensionsById, undefined);
 const truncated = decodeS2COpcode3Extension(new Uint8Array());
 assert.equal(applyOpcode3Extension(first, truncated), first, "missing character identity must not mutate state");
 
-const partial = decodeS2COpcode3Extension(new PacketWriter().writeI16(123).writeI8(0).writeBool(true).writeBool(true).toUint8Array());
+const partial = decodeS2COpcode3Extension(new PacketWriter().writeI16(123).writeI8(0).writeBool(true)
+  .writeBool(true).writeI8(1).writeI8(2).writeI8(3).writeI16(4).writeI32(5).writeI16(6)
+  .writeI32(7).writeUTF("updated").writeBool(false).toUint8Array());
 const merged = applyOpcode3Extension(first, partial);
 assert.deepEqual(merged.characterExtensionsById[123].pairA, first.characterExtensionsById[123].pairA,
   "failed optional group must not overwrite a previously decoded group with sentinel defaults");
