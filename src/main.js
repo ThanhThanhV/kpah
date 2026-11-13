@@ -1546,6 +1546,17 @@ class WorldScene extends Phaser.Scene {
       this.demoPlayerSprite?.setVisible(true);
       this.configureCamera();
     }
+    this.syncServerCharacterHud(localEntity);
+  }
+  syncServerCharacterHud(localEntity){
+    const serverName=typeof localEntity?.name==="string"?localEntity.name.trim():"";
+    const name=serverName||(!this.serverLocalPlayerEntityId?activeCharacterName:"");
+    if(!name||name===this.serverHudCharacterName)return;
+    this.serverHudCharacterName=name;
+    this.playerLabel?.setText(name);
+    document.querySelectorAll(".hero-name").forEach(element=>{element.textContent=name;});
+    const heading=document.querySelector(".character-details h2");
+    if(heading)heading.textContent=name;
   }
   drawZone(zone){
     this.zoneObjects=[];
