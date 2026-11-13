@@ -38,6 +38,64 @@ export function decodeS2COpcode8(payload) {
   while (reader.remaining() > 0) entityIds.push(reader.readI16());
   return { entityIds, trailingBytes: readRemaining(reader) };
 }
+/**
+ * Opcode 10: the original dispatcher forwards these four values to the
+ * active world scene. Their gameplay meaning is intentionally not inferred.
+ */
+export function decodeS2COpcode10(payload) {
+  const reader = new PacketReader(payload);
+  return { first: reader.readI16(), second: reader.readI16(),
+    valueA: reader.readI32(), valueB: reader.readI32(),
+    trailingBytes: readRemaining(reader) };
+}
+
+/**
+ * Opcode 83 is conditional on the source entity existing. The reducer checks
+ * that guard before invoking this decoder.
+ */
+export function decodeS2COpcode83(payload) {
+  const reader = new PacketReader(payload);
+  const sourceEntityId = reader.readI16();
+  const actionByte = reader.readI8();
+  const targetCount = reader.readI8();
+  if (targetCount < 0) throw new RangeError("Negative opcode 83 target count");
+  const targets = [];
+  for (let i = 0; i < targetCount; i += 1) {
+    targets.push({ entityId: reader.readI16(), valueA: reader.readI32(), valueB: reader.readI32() });
+  }
+  let stateA = null, stateB = null;
+  try { stateA = reader.readU8(); } catch {}
+  try { stateB = reader.readU8(); } catch {}
+  return { sourceEntityId, actionByte, targetCount, targets, stateA, stateB,
+    trailingBytes: readRemaining(reader) };
+}
+
+/**
+ * Opcode 106 has one shared damage value and a guarded list of target/HP
+ * records. Preserve incomplete target bytes instead of fabricating records.
+ */
+export function decodeS2COpcode106(payload) {
+  const reader = new PacketReader(payload);
+  const sourceEntityId = reader.readI16();
+  const actionByte = reader.readI8();
+  const damage = reader.readI32();
+  const effectBytes = [reader.readI8(), reader.readI8(), reader.readI8()];
+  const targetCount = reader.readI8();
+  if (targetCount < 0) throw new RangeError("Negative opcode 106 target count");
+  const targets = [];
+  let malformedTargetBytes = new Uint8Array();
+  for (let i = 0; i < targetCount; i += 1) {
+    try {
+      targets.push({ entityId: reader.readI16(), targetCurrentHp: reader.readI32() });
+    } catch {
+      malformedTargetBytes = readRemaining(reader);
+      break;
+    }
+  }
+  return { sourceEntityId, actionByte, damage, effectBytes, targetCount, targets,
+    malformedTargetBytes, trailingBytes: readRemaining(reader) };
+}
+
 export function decodeS2COpcode12(payload) {
   const reader = new PacketReader(payload);
   const first = reader.readI16(), second = reader.readI16(), third = reader.readI16();
