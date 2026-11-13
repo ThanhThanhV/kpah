@@ -1,3 +1,4 @@
+import { createServerWorldState } from "./world-state.js";
 /**
  * Applies verified S2C opcode 16 initialization snapshots to client-side state.
  * This pure reducer does not open a socket, persist data, or claim server acceptance.
@@ -10,6 +11,7 @@ export function createInitializationState() {
     auxiliaryItems: [],
     counterValues: [],
     commonFields: { aY: null, aZ: null },
+    serverWorld: createServerWorldState(),
   };
 }
 
