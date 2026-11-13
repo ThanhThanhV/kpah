@@ -125,11 +125,11 @@ public final class ProtocolCommandVariantCodec {
         catalog.add(new VariantField("quantity", "i16", (short)1, null, null));
         catalog.add(new VariantField("optionByte", "i8", null, "category", 3));
         OPCODE24_VARIANTS.put("catalog", List.copyOf(catalog));
-        List<VariantField> premium = new ArrayList<>();
-        premium.add(new VariantField("category", "i8", (byte)4, null, null));
-        premium.add(new VariantField("itemId", "i16", null, null, null));
-        premium.add(new VariantField("quantity", "i16", null, null, null));
-        OPCODE24_VARIANTS.put("premium", List.copyOf(premium));
+        List<VariantField> category4_fixed = new ArrayList<>();
+        category4_fixed.add(new VariantField("category", "i8", (byte)4, null, null));
+        category4_fixed.add(new VariantField("itemId", "i16", null, null, null));
+        category4_fixed.add(new VariantField("quantity", "i16", null, null, null));
+        OPCODE24_VARIANTS.put("category4_fixed", List.copyOf(category4_fixed));
     }
     private static void writeShopValue(PacketWriter out, String type, Object value) throws IOException {
         switch (type) {
