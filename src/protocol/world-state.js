@@ -1,4 +1,4 @@
-import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74 } from "./generated/world-state-codec.js";
+import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74, decodeS2COpcodeMinus71 } from "./generated/world-state-codec.js";
 import { decodeS2COpcode5 } from "./generated/opcode5-codec.js";
 import { decodeS2CTemplateCatalog, decodeS2CTemplateAsset } from "./template-assets.js";
 
@@ -278,6 +278,41 @@ export function applyInboundWorldPacket(state, frame) {
       nextWorld = appendWorldEvent(nextWorld, -74, {
         ...event,
         attachedToKnownEntity: Boolean(entityKindMatches),
+      });
+      break;
+    }
+    case -71: {
+      event = decodeS2COpcodeMinus71(frame.payload);
+      nextWorld = cloneWorld(world);
+      const target = nextWorld.entitiesById[String(event.entityId)];
+      const entityKindMatches = target && target.kind === event.entityKind;
+      let lifecycleApplied = false;
+      if (event.action === 1 && entityKindMatches && (event.attachMode === 0 || event.attachMode === 1)) {
+        const activeEffects = [...(target.activeEffects ?? [])];
+        const effectIndex = activeEffects.findIndex(effect => effect.effectId === event.effectId);
+        if (event.attachMode === 1) {
+          if (effectIndex >= 0) {
+            activeEffects[effectIndex] = { ...activeEffects[effectIndex], expiryValue: 0n };
+            lifecycleApplied = true;
+          }
+        } else {
+          const effect = {
+            effectId: event.effectId,
+            expiryValue: event.expiryValue,
+            xTile: event.xTile,
+            yTile: event.yTile,
+            state: event.state,
+            auxiliary: event.auxiliary,
+          };
+          if (effectIndex >= 0) activeEffects[effectIndex] = effect;
+          else activeEffects.push(effect);
+          lifecycleApplied = true;
+        }
+        if (lifecycleApplied) nextWorld.entitiesById[String(event.entityId)] = { ...target, activeEffects };
+      }
+      nextWorld = appendWorldEvent(nextWorld, -71, {
+        ...event, lifecycleApplied: Boolean(lifecycleApplied),
+        entityKindMatches: Boolean(entityKindMatches),
       });
       break;
     }
