@@ -67,3 +67,19 @@ Special bj resource formats (request types 39/40, 70..88, 90..92 and asset mode 
 For generic kind-1 cd entities whose original L value is non-negative, opcode-4 updates are now treated as target coordinates rather than teleports. Phaser advances them on a 40 ms accumulator using the source template movement step, X-before-Y axis priority, strict Y snap threshold and facing values. The original idle/walk frame selector uses cd.c with the current direction and frame state 0/1.
 
 This remains a partial port: Q() status/effect pauses, random Y jitter for non-type-4 templates, server correction edge cases and action/death animation states are not yet modeled. Kind-0 opcode-5 snapshots are now correctly restricted to the original player actor lookup path; they no longer overwrite monster positions.
+
+
+## Server combat feedback
+
+S2C opcodes 6 and 9 now update the target entity's current HP from the
+source-confirmed post-event HP field and append a monotonic, bounded combat
+event history. The Phaser scene consumes each event once and draws the raw
+damage integer above the target before fading it upward. A session restart
+that resets the event sequence is detected so the new session's first events
+are not suppressed.
+
+The damage label is intentionally neutral white. The original handler's other
+style/flag bytes remain preserved but are not yet translated into critical-hit,
+miss, element, buff or skill-animation semantics. HP bars still need a
+verified maximum-HP source for generic monster entities; the opcode 7 entity
+snapshot ID assignment remains unresolved in the current bytecode notes.
