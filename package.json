@@ -55,7 +55,8 @@
     "bridge:tcp-ws": "node tools/kpah-tcp-ws-bridge.mjs",
     "test:tcp-ws-bridge": "node tools/test_tcp_ws_bridge.mjs",
     "test:connection-panel": "node tools/test_connection_panel.mjs",
-    "test:world-state-reducers": "node tools/test_world_state_reducers.mjs"
+    "test:world-state-reducers": "node tools/test_world_state_reducers.mjs",
+    "test:server-world-projection": "node tools/test_server_world_projection.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0",
