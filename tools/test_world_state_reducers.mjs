@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
 import { encodeEffectAssetRequest } from "../src/protocol/effect-assets.js";
+import { decodeEffectDefinition } from "../src/protocol/effect-definition.js";
 import { applyInboundWorldPacket } from "../src/protocol/world-state.js";
 import { createInitializationState } from "../src/protocol/initialization-state.js";
 
@@ -235,20 +236,52 @@ state = applyInboundWorldPacket(state, { opcode: -73, payload: unsupportedMinus7
 assert.equal(state.serverWorld.worldEvents.at(-1).handled, false);
 assert.deepEqual([...state.serverWorld.worldEvents.at(-1).unconsumedBytes], [0xaa, 0xbb]);
 
+// Effect definition format mirrors d.a(byte[]): region table, frame parts,
+// frame index sequence, then three length-prefixed auxiliary arrays.
+const effectDefinitionFixture = new PacketWriter()
+  .writeI8(1)
+  .writeU8(7).writeU8(10).writeU8(20).writeU8(30).writeU8(40)
+  .writeI16(1).writeI8(2)
+  .writeI16(-12).writeI16(25).writeI8(0)
+  .writeI16(4).writeI16(5).writeI8(6).writeI8(7).writeI8(0)
+  .writeI16(8).writeI16(-9).writeI8(0)
+  .writeI16(1).writeI16(2).writeI8(3).writeI8(4).writeI8(1)
+  .writeU8(2).writeI16(0).writeI16(0)
+  .writeI8(99)
+  .writeI8(2).writeI8(11).writeI8(12)
+  .writeI8(1).writeI8(13)
+  .writeI8(0)
+  .toUint8Array();
+const parsedEffectFixture = decodeEffectDefinition(effectDefinitionFixture);
+assert.deepEqual(parsedEffectFixture.regions[0], {headerTag:7,x:10,y:20,width:30,height:40});
+assert.equal(parsedEffectFixture.frames.length,1);
+assert.equal(parsedEffectFixture.frames[0].groupZero.length,1);
+assert.equal(parsedEffectFixture.frames[0].groupNonZero.length,1);
+assert.equal(parsedEffectFixture.frames[0].groupZero[0].x,-12);
+assert.equal(parsedEffectFixture.frames[0].groupZero[0].regionIndex,0);
+assert.deepEqual(parsedEffectFixture.frameSequence,[0,0]);
+assert.equal(parsedEffectFixture.sequenceHeaderByte,99);
+assert.deepEqual([...parsedEffectFixture.auxiliaryArrays.array0],[11,12]);
+assert.deepEqual([...parsedEffectFixture.auxiliaryArrays.array1],[13]);
+assert.equal(parsedEffectFixture.trailingBytes.length,0);
+assert.throws(()=>decodeEffectDefinition(new Uint8Array([1,2])),/Truncated effect definition/);
+
 // Opcode 26 indexedGraphics carries d.i effect definitions. Branch-1
 // effect IDs use the same ID as the C2S -51 image resource request.
 const opcode26Definition = new PacketWriter()
   .writeU8(0).writeI16(0)
   .writeU8(0)
   .writeU8(0)
-  .writeI16(1).writeI16(910).writeI16(3).writeU8(1).writeU8(2).writeU8(3)
+  .writeI16(1).writeI16(910).writeI16(effectDefinitionFixture.length).writeBytes(effectDefinitionFixture)
   .writeI8(0)
   .writeI8(0).writeI8(0)
   .writeI8(0).writeI8(0)
   .writeI8(0).writeI8(0)
   .toUint8Array();
 state = applyInboundWorldPacket(state, { opcode: 26, payload: opcode26Definition }).state;
-assert.deepEqual([...state.serverWorld.effectDefinitionsById["910"]], [1, 2, 3]);
+assert.deepEqual([...state.serverWorld.effectDefinitionsById["910"]], [...effectDefinitionFixture]);
+assert.equal(state.serverWorld.parsedEffectDefinitionsById["910"].frames.length, 1);
+assert.equal(state.serverWorld.effectDefinitionErrorsById["910"], undefined);
 assert.deepEqual([...encodeEffectAssetRequest(910)], [0x03, 0x8e]);
 assert.throws(() => encodeEffectAssetRequest(40000), /signed short/);
 
