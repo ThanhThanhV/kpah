@@ -182,7 +182,7 @@ export function applyTargetLinkedActorImpactToWorld(world, impact) {
         const overlays = [...(entity.effectOverlays ?? [])];
         const index = overlays.findIndex(effect => effect.effectId === impact.effectId);
         const overlay = { effectId: impact.effectId, expiryValue: 0n };
-        if (index >= 0) overlays[index] = overlay;
+        if (index >= 0) overlays[index] = { ...overlays[index], expiryValue: 0n };
         else overlays.push(overlay);
         updated = { ...updated, effectOverlays: overlays };
       }
@@ -496,7 +496,7 @@ export function applyInboundWorldPacket(state, frame, nowMs = Date.now()) {
           const effectOverlays = [...(target.effectOverlays ?? [])];
           const index = effectOverlays.findIndex(effect => effect.effectId === event.effectId);
           const overlay = { effectId: event.effectId, expiryValue: event.expiryValue };
-          if (index >= 0) effectOverlays[index] = overlay;
+          if (index >= 0) effectOverlays[index] = { ...effectOverlays[index], expiryValue: event.expiryValue };
           else effectOverlays.push(overlay);
           nextWorld.entitiesById[String(event.entityId)] = { ...target, effectOverlays };
           overlayApplied = true;

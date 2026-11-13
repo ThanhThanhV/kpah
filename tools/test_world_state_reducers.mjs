@@ -259,9 +259,15 @@ assert.equal(state.serverWorld.worldEvents.at(-1).overlayApplied, true);
 const overlayRefresh = new PacketWriter().writeI16(124).writeI8(1).writeI16(910)
   .writeI64(1234567890n).toUint8Array();
 state = applyInboundWorldPacket(state, { opcode: -73, payload: overlayRefresh }).state;
-assert.equal(state.serverWorld.entitiesById["124"].effectOverlays.length, 1,
-  "matching effect ID refreshes instead of duplicating the overlay");
-assert.equal(state.serverWorld.entitiesById["124"].effectOverlays[0].expiryValue, 1234567890n);
+const overlaysAfterRefresh = state.serverWorld.entitiesById["124"].effectOverlays;
+assert.equal(overlaysAfterRefresh.length, 2, "the -74 overlay and -73 overlay are stored in the same source collection");
+assert.equal(overlaysAfterRefresh.filter(effect => effect.effectId === 910).length, 1,
+  "matching -73 effect ID refreshes instead of duplicating its overlay");
+assert.equal(overlaysAfterRefresh.find(effect => effect.effectId === 910).expiryValue, 1234567890n);
+assert.equal(overlaysAfterRefresh.find(effect => effect.effectId === 701).flagA, true,
+  "refreshing another overlay must preserve the -74 constructor flags");
+assert.equal(overlaysAfterRefresh.find(effect => effect.effectId === 701).loopHoldSeconds, attachedOverlay.loopHoldSeconds,
+  "refreshing another overlay must preserve its d.e random hold interval");
 
 // Unsupported branch is retained opaque, without guessing its payload.
 const unsupportedMinus73 = new PacketWriter().writeI16(124).writeI8(2).writeU8(0xaa).writeU8(0xbb).toUint8Array();
@@ -468,7 +474,7 @@ assert.equal(verticalActor.transform, 0, "vertical movement uses unmirrored part
 const previousTargetHp = state.serverWorld.entitiesById["124"].currentHp;
 const impactedWorld = applyTargetLinkedActorImpactToWorld(state.serverWorld, { effectId: 910, targets: [{ entityId: 124, targetCurrentHp: 777 }] });
 assert.equal(impactedWorld.entitiesById["124"].currentHp, 777, "branch-0 impact mirrors bu.f(int) target HP assignment");
-assert.deepEqual(impactedWorld.entitiesById["124"].effectOverlays.find(effect => effect.effectId === 910), { effectId: 910, expiryValue: 0n }, "hz impact attaches a one-shot d overlay to each resolved target");
+assert.deepEqual(impactedWorld.entitiesById["124"].effectOverlays.find(effect => effect.effectId === 910), { effectId: 910, expiryValue: 0n }, "hz impact refreshes the target overlay expiry through bu.a(int,int,int,long)");
 assert.equal(state.serverWorld.entitiesById["124"].currentHp, previousTargetHp, "impact helper must not mutate prior world snapshot");
 
 // Opcode 26 independently carries class-i indexedImages and class-d indexedGraphics.
