@@ -1016,7 +1016,7 @@ class WorldScene extends Phaser.Scene {
       if(!view){
         view=this.add.container(entity.x,entity.y,[]);
         if(canRenderSprite){
-          const sprite=this.add.sprite(-(entity.frameOffsetX??0),-(entity.frameOffsetY??0),textureKey,frameIndex).setOrigin(0,1);
+          const sprite=this.add.sprite(-(entity.frameOffsetX??0),-(entity.frameOffsetY??0),textureKey,frameIndex).setOrigin(0,0);
           view.add(sprite);
           view.setData('visualType','sprite');
           view.setData('sprite',sprite);
@@ -1026,7 +1026,7 @@ class WorldScene extends Phaser.Scene {
           view.setData('visualType','marker');
           view.setData('marker',marker);
         }
-        const label=this.add.text(0,-Math.max(19,entity.frameHeight??0)-4,labelText,{
+        const label=this.add.text(0,-(entity.frameOffsetY??0)-4,labelText,{
           fontFamily:'Arial',fontSize:'10px',color:'#ffffff',
           stroke:'#171b22',strokeThickness:3
         }).setOrigin(0.5,1);
