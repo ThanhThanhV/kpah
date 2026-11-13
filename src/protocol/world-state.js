@@ -1,4 +1,4 @@
-import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9 } from "./generated/world-state-codec.js";
+import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode83, decodeS2COpcode106 } from "./generated/world-state-codec.js";
 import { decodeS2COpcode5 } from "./generated/opcode5-codec.js";
 import { decodeS2CTemplateCatalog, decodeS2CTemplateAsset } from "./template-assets.js";
 
@@ -11,6 +11,7 @@ export function createServerWorldState() {
     unknownEntitySnapshots: [],
     combatEvents: [],
     combatEventSequence: 0,
+    worldEvents: [],
     lastSpawnBatch: [],
     removedEntityIds: [],
   };
@@ -30,6 +31,7 @@ function cloneWorld(world) {
     templateAssetPayloadsById: { ...(source.templateAssetPayloadsById ?? {}) },
     unknownEntitySnapshots: [...(source.unknownEntitySnapshots ?? [])],
     combatEvents: [...(source.combatEvents ?? [])],
+    worldEvents: [...(source.worldEvents ?? [])],
     combatEventSequence: Number.isInteger(source.combatEventSequence) ? source.combatEventSequence : 0,
     lastSpawnBatch: [...(source.lastSpawnBatch ?? [])],
     removedEntityIds: [...(source.removedEntityIds ?? [])],
@@ -143,6 +145,42 @@ function applyCombatEvent(world, opcode, packet) {
   return next;
 }
 
+function appendWorldEvent(world, opcode, packet) {
+  const next = cloneWorld(world);
+  next.worldEvents.push({ opcode, sequence: (next.worldEvents.at(-1)?.sequence ?? 0) + 1, ...packet });
+  if (next.worldEvents.length > 100) next.worldEvents.splice(0, next.worldEvents.length - 100);
+  return next;
+}
+
+function applyOpcode106Combat(world, packet) {
+  const next = cloneWorld(world);
+  const sequence = next.combatEventSequence + 1;
+  for (const targetRecord of packet.targets) {
+    const target = next.entitiesById[String(targetRecord.entityId)];
+    if (target) {
+      next.entitiesById[String(targetRecord.entityId)] = {
+        ...target,
+        currentHp: targetRecord.targetCurrentHp,
+      };
+    }
+  }
+  const event = {
+    sequence,
+    opcode: 106,
+    attackerEntityId: packet.sourceEntityId,
+    actionByte: packet.actionByte,
+    damage: packet.damage,
+    effectBytes: [...packet.effectBytes],
+    targets: packet.targets.map(target => ({ ...target })),
+    malformedTargetBytes: new Uint8Array(packet.malformedTargetBytes),
+    trailingBytes: new Uint8Array(packet.trailingBytes),
+  };
+  next.combatEventSequence = sequence;
+  next.combatEvents.push(event);
+  if (next.combatEvents.length > 100) next.combatEvents.splice(0, next.combatEvents.length - 100);
+  return next;
+}
+
 /**
  * Applies only world/template packets with verified decoder layouts and
  * source-backed original handler paths. Asset payloads remain opaque until
@@ -176,6 +214,40 @@ export function applyInboundWorldPacket(state, frame) {
     case 9:
       event = decodeS2COpcode9(frame.payload);
       nextWorld = applyCombatEvent(world, 9, event);
+      break;
+    case 10:
+      event = decodeS2COpcode10(frame.payload);
+      nextWorld = appendWorldEvent(world, 10, event);
+      break;
+    case 83: {
+      const reader = frame.payload;
+      if (reader.length < 2) throw new RangeError("Opcode 83 payload is missing source entity id");
+      const sourceId = (reader[0] << 8) | reader[1];
+      const sourceEntityId = sourceId > 0x7fff ? sourceId - 0x10000 : sourceId;
+      if (!world.entitiesById[String(sourceEntityId)]) {
+        nextWorld = appendWorldEvent(world, 83, {
+          sourceEntityId, handledByOriginalGuard: false,
+          opaquePayload: copyBytes(frame.payload),
+        });
+        event = { sourceEntityId, handledByOriginalGuard: false };
+        break;
+      }
+      event = decodeS2COpcode83(frame.payload);
+      nextWorld = cloneWorld(world);
+      for (const target of event.targets) {
+        const existing = nextWorld.entitiesById[String(target.entityId)];
+        if (existing) {
+          nextWorld.entitiesById[String(target.entityId)] = {
+            ...existing, opcode83State: { valueA: target.valueA, valueB: target.valueB },
+          };
+        }
+      }
+      nextWorld = appendWorldEvent(nextWorld, 83, event);
+      break;
+    }
+    case 106:
+      event = decodeS2COpcode106(frame.payload);
+      nextWorld = applyOpcode106Combat(world, event);
       break;
     case 100:
       event = decodeS2CTemplateCatalog(frame.payload);
