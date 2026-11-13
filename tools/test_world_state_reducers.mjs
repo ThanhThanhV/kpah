@@ -4,6 +4,7 @@ import { actorEffectImageResourceId, encodeEffectAssetRequest } from "../src/pro
 import { decodeEffectDefinition } from "../src/protocol/effect-definition.js";
 import { decodeActorEffectDefinition, resolveActorEffectFrameIndex, resolveActorEffectSequenceIndex } from "../src/protocol/actor-effect-definition.js";
 import { advanceActorEffectPlayback, createActorEffectPlayback, getActorEffectFrameParts, setActorEffectAnimationState } from "../src/protocol/actor-effect-playback.js";
+import { advanceTargetLinkedActorPlayback, createTargetLinkedActorPlayback } from "../src/protocol/target-linked-actor.js";
 import { advanceEffectPlayback, createEffectPlayback, getEffectFrameParts } from "../src/protocol/effect-playback.js";
 import { applyInboundWorldPacket } from "../src/protocol/world-state.js";
 import { createInitializationState } from "../src/protocol/initialization-state.js";
@@ -334,7 +335,7 @@ const actorDefinitionWriter = new PacketWriter()
   .writeI16(-4).writeI16(-42).writeI8(0)
   .writeI16(7).writeI16(8).writeI8(1).writeI8(1).writeI8(9)
   .writeI16(1).writeI16(0);
-for (let index = 0; index < 8; index += 1) { const first = index === 2 ? 0 : index === 7 ? 255 : index; const second = index === 2 ? 0 : index + 1; actorDefinitionWriter.writeI8(2).writeU8(first).writeU8(second); }
+for (let index = 0; index < 8; index += 1) { const first = index === 1 || index === 2 ? 0 : index === 7 ? 255 : index; const second = index === 1 || index === 2 ? 0 : index + 1; actorDefinitionWriter.writeI8(2).writeU8(first).writeU8(second); }
 actorDefinitionWriter.writeI8(99).writeI8(-2).writeI8(3);
 for (let index = 0; index < 4; index += 1) actorDefinitionWriter.writeI8(1).writeU8(20 + index);
 const actorDefinitionFixture = actorDefinitionWriter.toUint8Array();
@@ -362,6 +363,32 @@ assert.equal(actorPlaybackState.sequenceIndex, 2);
 const actorParts = getActorEffectFrameParts(parsedActorDefinition, 0, 2, 5);
 assert.deepEqual(actorParts, [{ x: -12, y: -37, sourceX: 2, sourceY: 3, width: 16, height: 12, transform: 2 }]);
 assert.deepEqual(getActorEffectFrameParts(parsedActorDefinition, 0, 1, 0), []);
+const actorWorldFixture = { entitiesById: {
+  "124": { snapshot: { x: 0, y: 0 } },
+  "555": { kind: 1, currentHp: 100, snapshot: { x: 60, y: 0 } },
+  "556": { kind: 1, currentHp: 100, snapshot: { x: 80, y: 0 } },
+} };
+const actorProjectionFixture = new Map([
+  ["124", { x: 0, y: 0, playerMovementStep: 3 }],
+  ["555", { x: 60, y: 0 }],
+  ["556", { x: 80, y: 0 }],
+]);
+const actorEventFixture = { sourceEntityId: 124, effectId: 920, targets: [
+  { targetEntityId: 555, resolved: true, damageValue: 20, targetCurrentHp: 80 },
+  { targetEntityId: 556, resolved: true, damageValue: 20, targetCurrentHp: 80 },
+] };
+let targetLinkedPlayback = createTargetLinkedActorPlayback(actorEventFixture, actorWorldFixture, actorProjectionFixture, parsedActorDefinition);
+assert.equal(targetLinkedPlayback.x, 0);
+let targetLinkedImpact = null;
+for (let tick = 0; tick < 22; tick += 1) {
+  const result = advanceTargetLinkedActorPlayback(targetLinkedPlayback, actorWorldFixture, actorProjectionFixture, parsedActorDefinition);
+  targetLinkedPlayback = result.playback;
+  if (result.impact) targetLinkedImpact = result.impact;
+}
+assert.equal(targetLinkedPlayback.x, 30, "actor approaches to the source Manhattan-distance threshold of 30");
+assert.equal(targetLinkedPlayback.finished, true);
+assert.equal(targetLinkedImpact.targets.length, 2, "all linked target records are applied together after the seven-tick impact wait");
+assert.deepEqual(targetLinkedImpact.targets.map(item => [item.entityId, item.damageValue, item.targetCurrentHp]), [[555, 20, 80], [556, 20, 80]]);
 
 // Opcode 26 independently carries class-i indexedImages and class-d indexedGraphics.
 const opcode26ActorWriter = new PacketWriter().writeU8(0).writeI16(0).writeU8(0)

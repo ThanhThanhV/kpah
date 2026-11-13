@@ -172,3 +172,8 @@ For each opcode -73 branch-0 event with a known class-`i` animation definition, 
 ### Actor `i` frame playback helpers
 
 Added source-backed cursor helpers for class `hz`: select the 3x14 animation sequence by direction group and state, advance one entry per actor update, and switch animation state without resetting the cursor beyond the new sequence length. `getActorEffectFrameParts` projects only primary atlas crop and x/y offsets consumed by `i.a(Graphics,...)`; it mirrors for source transform 2 and applies `dD` only to parts with y < -40. Auxiliary part metadata remains opaque. These helpers are not yet connected to Phaser or the actor movement/impact state machine.
+
+
+### Target-linked actor movement and impact timing
+
+Added a deterministic browser-side subset of `hz.b()` for branch-0: actor starts at source entity coordinates; source movement step is `bu.t() - 1`; target approach uses Manhattan distance (`kw.b` → `ku.b`) and stops at distance 30; after reaching the first target (or finding no target) it waits seven actor updates before returning a multi-target impact record. The impact record preserves each target's damage and target-current-HP values. Actor animation state changes from movement sequence 2 to impact sequence 3 and advances one sequence entry per actor update. This is a local playback helper only; it does not yet mutate authoritative world HP or render the actor in Phaser. Full post-impact idle/return behavior is not yet ported.
