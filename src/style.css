@@ -448,3 +448,18 @@
  .equip-stat-summary>div{font-size:8px;padding:5px}
  .inventory-item-detail{font-size:7px}
 }
+
+
+/* Local protocol connection panel */
+.protocol-connection-panel{display:grid;gap:12px;padding:4px}
+.protocol-field{display:grid;gap:6px;color:#d8c7a6;font-size:11px}
+.protocol-field input{width:100%;min-width:0;box-sizing:border-box;padding:10px 11px;border:1px solid #67513b;border-radius:5px;background:#17141b;color:#f0e2c5;font:12px ui-monospace,monospace}
+.protocol-actions{display:flex;gap:8px;flex-wrap:wrap}
+.protocol-actions button{min-height:36px;padding:0 14px}
+.protocol-secondary{border:1px solid #80624a;border-radius:5px;background:#30272b;color:#e6ca92}
+.protocol-status{display:flex;justify-content:space-between;gap:12px;padding:9px 10px;border:1px solid #51402f;background:#211d22;color:#c8b99f;font-size:11px}
+.protocol-status b{color:#e9d39f;text-align:right;overflow-wrap:anywhere}
+.protocol-state,.protocol-error{margin:0;padding:9px 10px;border-radius:5px;background:#211d22;color:#a9c69c;font-size:10px;line-height:1.5;overflow-wrap:anywhere}
+.protocol-error{color:#e5a18e}
+.protocol-connection-panel .settings-note{margin:0;color:#b5a58e;font-size:10px;line-height:1.6}
+.protocol-connection-panel code{white-space:normal;overflow-wrap:anywhere;color:#e7ca8d}
