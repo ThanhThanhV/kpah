@@ -120,3 +120,27 @@ snapshot ID assignment remains unresolved in the current bytecode notes.
 ## Verified current HP projection
 
 S2C opcode 6/9 target records and opcode 106 multi-target records carry a post-event target HP value; the world reducer stores it as `entity.currentHp`. The projection now exposes that current value to the local HUD as a separate server-sourced line. It deliberately does not calculate a percentage or overwrite the demo HP/MP bars: a verified maximum-HP source for kind-0 player actors has not yet been established.
+
+
+## Character level and resource HUD (S2C opcodes 32/33)
+
+The original dispatch trace in `ka.java:case32` confirms opcode 32 carries a
+character ID and signed-byte-counted UTF-key / signed-int value records. The
+original consumer recognizes the keys `hp`, `mp`, `bp` and `sp`. For the
+active local character only, the handler reads one additional signed byte and
+one signed short before passing the records to `mj.a(id,cx[])`. The browser
+decoder now uses `activeCharacterId` to honor that conditional trailer,
+stores the resource records by character ID and projects the recognized keys
+to the local HUD.
+
+The `hp/mp/bp/sp` values are displayed as server-provided resource values;
+they are not treated as max values and are not used to derive HP/MP bar ratios.
+Combat current HP from opcodes 6/9/106 remains a separate display value.
+
+The `ka.java:case33` trace confirms character ID, level byte and two signed
+integers are passed to `mj.a(id,level,int,int)`, which updates level and
+character HP/MP state. The browser now projects and displays the level, while
+retaining the two integers as `valueA/valueB` until the exact per-field
+semantics are verified. No max-HP, max-MP or current-resource label is inferred
+from those two values. This is protocol/UI integration only; no live-server
+packet capture or visual validation has been performed.
