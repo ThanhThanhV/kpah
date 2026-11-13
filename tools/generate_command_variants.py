@@ -324,7 +324,7 @@ def variant_java_output(schemas):
         "    public static byte[] encodeC2SOpcode74(List<? extends Number> itemIds) throws IOException {",
         '        if (itemIds == null || itemIds.size() > 32767) throw new IllegalArgumentException("Opcode 74 item count must be 0..32767");',
         "        PacketWriter out = new PacketWriter(); out.writeI16(itemIds.size());",
-        "        for (Number itemId : itemIds) { if (itemId == null) throw new IllegalArgumentException(\"Null opcode 74 item ID\\"); out.writeI16(itemId.intValue()); }",
+        "        for (Number itemId : itemIds) { if (itemId == null) throw new IllegalArgumentException(\"Null opcode 74 item ID\"); out.writeI16(itemId.intValue()); }",
         "        return out.toByteArray();",
         "    }",
         "    public static Decoded decodeC2SOpcode74(byte[] payload) throws IOException {",
