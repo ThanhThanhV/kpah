@@ -17,6 +17,7 @@ export function createServerWorldState() {
     actorEffectDefinitionErrorsById: {},
     effectDefinitionErrorsById: {},
     effectImagePayloadsById: {},
+    resourceImagePayloadsById: {},
     targetLinkedEffectEvents: [],
     worldEffects: [],
     targetLinkedActorsBySourceId: {},
@@ -49,6 +50,7 @@ function cloneWorld(world) {
     actorEffectDefinitionErrorsById: { ...(source.actorEffectDefinitionErrorsById ?? {}) },
     effectDefinitionErrorsById: { ...(source.effectDefinitionErrorsById ?? {}) },
     effectImagePayloadsById: { ...(source.effectImagePayloadsById ?? {}) },
+    resourceImagePayloadsById: { ...(source.resourceImagePayloadsById ?? source.effectImagePayloadsById ?? {}) },
     targetLinkedEffectEvents: [...(source.targetLinkedEffectEvents ?? [])],
     worldEffects: [...(source.worldEffects ?? [])],
     targetLinkedActorsBySourceId: { ...(source.targetLinkedActorsBySourceId ?? {}) },
@@ -451,6 +453,7 @@ export function applyInboundWorldPacket(state, frame, nowMs = Date.now()) {
       event = decodeS2COpcodeMinus51(frame.payload);
       nextWorld = cloneWorld(world);
       nextWorld.effectImagePayloadsById[String(event.resourceId)] = copyBytes(event.imageBytes);
+      nextWorld.resourceImagePayloadsById[String(event.resourceId)] = copyBytes(event.imageBytes);
       nextWorld = appendWorldEvent(nextWorld, -51, {
         resourceId: event.resourceId,
         imageByteLength: event.imageBytes.length,
