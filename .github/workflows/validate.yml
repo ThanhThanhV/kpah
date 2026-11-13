@@ -58,6 +58,8 @@ jobs:
         run: npm run check:initialization-protocol
       - name: Test generated initialization codec
         run: npm run test:initialization-protocol
+      - name: Test opcode 16 initialization state reducer
+        run: npm run test:initialization-state
       - name: Verify generated opcode 15 codec
         run: npm run check:opcode15
       - name: Test generated opcode 15 codec
