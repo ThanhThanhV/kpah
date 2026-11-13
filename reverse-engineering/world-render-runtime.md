@@ -47,9 +47,20 @@ part metadata and the matching opcode -51 image resource are available:
   composition.
 The renderer preserves the auxiliary per-piece tuple without interpreting its
 transform flag because CFR constructs it through a temporary `g` object while
-`hd` reads the primary `g.d`. Shadow, attack/death states, local-player identity
-binding and live-server visual comparison remain open. Kind-1 generic `cd`
-movement continues to use the separately verified movement adapter below.
+`hd` reads the primary `g.d`. It also loads the original `/shadow.png` asset and
+places it at the source `hd.a(Graphics)` offsets (X = +10 when facing right,
+X = -10 when mirrored, Y = -10), centered beneath the composed character.
+
+CFR establishes the local identity relation: opcode 3 writes the active character
+ID to `mj.t.h`; kind-0 world entities use their entity ID in `j.h`; original
+lookups compare those values directly (`mj.b(short)` searches kind 0 by `j.h`,
+and rendering excludes the actor whose `j.h == mj.t.h`). The reducer now stores
+`activeCharacterId` from opcode 3 and the Phaser projection marks the matching
+kind-0 entity as `isLocalPlayer`. This identifies the local actor, but does not
+yet bind movement controls/camera to it or replace the local demo placeholder.
+Attack/death states, equipment appearance changes and live-server visual
+comparison remain open. Kind-1 generic `cd` movement continues to use the
+separately verified movement adapter below.
 
 
 ## Original template catalog binding
