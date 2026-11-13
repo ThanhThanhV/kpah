@@ -65,6 +65,14 @@ assert.deepEqual(state.serverWorld.characterResourcesById["124"].statsByKey.mp, 
 assert.equal(state.serverWorld.characterResourcesById["124"].localStateByte, 2);
 assert.equal(state.serverWorld.characterResourcesById["124"].localShortValue, 77);
 
+const remoteResources = new PacketWriter()
+  .writeI16(123).writeI8(1).writeUTF("hp").writeI32(88).toUint8Array();
+applied = applyInboundWorldPacket(state, { opcode: 32, payload: remoteResources });
+state = applied.state;
+assert.equal(state.serverWorld.characterResourcesById["123"].statsByKey.hp.value, 88);
+assert.equal(state.serverWorld.characterResourcesById["123"].localStateByte, null,
+  "opcode 32 only reads the additional byte/short for the active character");
+
 const levelUpdate = new PacketWriter().writeI16(124).writeI8(26).writeI32(5000).writeI32(600).toUint8Array();
 applied = applyInboundWorldPacket(state, { opcode: 33, payload: levelUpdate });
 state = applied.state;
