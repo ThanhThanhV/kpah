@@ -1,4 +1,4 @@
-import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74, decodeS2COpcodeMinus71 } from "./generated/world-state-codec.js";
+import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74, decodeS2COpcodeMinus71, decodeS2COpcodeMinus73 } from "./generated/world-state-codec.js";
 import { decodeS2COpcode5 } from "./generated/opcode5-codec.js";
 import { decodeS2CTemplateCatalog, decodeS2CTemplateAsset } from "./template-assets.js";
 
@@ -313,6 +313,64 @@ export function applyInboundWorldPacket(state, frame) {
       nextWorld = appendWorldEvent(nextWorld, -71, {
         ...event, lifecycleApplied: Boolean(lifecycleApplied),
         entityKindMatches: Boolean(entityKindMatches),
+      });
+      break;
+    }
+    case -73: {
+      event = decodeS2COpcodeMinus73(frame.payload);
+      if (event.branch === 0) {
+        nextWorld = cloneWorld(world);
+        const effectObject = nextWorld.entitiesById[String(event.entityId)];
+        const sourceMatches = effectObject && effectObject.kind === 12;
+        const targets = event.targets.map(targetRecord => {
+          const target = nextWorld.entitiesById[String(targetRecord.targetEntityId)];
+          const resolved = Boolean(target && target.kind === targetRecord.entityKind);
+          return { ...targetRecord, resolved };
+        });
+        if (sourceMatches) {
+          nextWorld.entitiesById[String(event.entityId)] = {
+            ...effectObject,
+            effectAttachment: {
+              effectId: event.effectId,
+              targets,
+              resolvedTargetEntityIds: targets.filter(target => target.resolved).map(target => target.targetEntityId),
+              offsetValuesA: targets.map(target => target.offsetValueA),
+              offsetValuesB: targets.map(target => target.offsetValueB),
+            },
+          };
+        }
+        nextWorld = appendWorldEvent(nextWorld, -73, {
+          ...event,
+          handled: true,
+          sourceEffectObjectMatches: Boolean(sourceMatches),
+          resolvedTargetCount: targets.filter(target => target.resolved).length,
+        });
+        break;
+      }
+      if (event.branch === 1) {
+        nextWorld = cloneWorld(world);
+        const target = nextWorld.entitiesById[String(event.entityId)];
+        let overlayApplied = false;
+        if (target) {
+          const effectOverlays = [...(target.effectOverlays ?? [])];
+          const index = effectOverlays.findIndex(effect => effect.effectId === event.effectId);
+          const overlay = { effectId: event.effectId, expiryValue: event.expiryValue };
+          if (index >= 0) effectOverlays[index] = overlay;
+          else effectOverlays.push(overlay);
+          nextWorld.entitiesById[String(event.entityId)] = { ...target, effectOverlays };
+          overlayApplied = true;
+        }
+        nextWorld = appendWorldEvent(nextWorld, -73, {
+          ...event,
+          handled: true,
+          overlayApplied,
+        });
+        break;
+      }
+      nextWorld = appendWorldEvent(world, -73, {
+        ...event,
+        handled: false,
+        unconsumedBytes: copyBytes(event.unconsumedBytes),
       });
       break;
     }
