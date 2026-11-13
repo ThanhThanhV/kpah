@@ -112,14 +112,18 @@ are not suppressed.
 
 The damage label is intentionally neutral white. The original handler's other
 style/flag bytes remain preserved but are not yet translated into critical-hit,
-miss, element, buff or skill-animation semantics. HP bars still need a
-verified maximum-HP source for generic monster entities; the opcode 7 entity
-snapshot ID assignment remains unresolved in the current bytecode notes.
+miss, element, buff or skill-animation semantics. Opcode 7 now provides a
+source-confirmed current/max HP pair for an already-existing entity; it does
+not create entities. HP bars are rendered only when both values are available.
 
 
 ## Verified current HP projection
 
-S2C opcode 6/9 target records and opcode 106 multi-target records carry a post-event target HP value; the world reducer stores it as `entity.currentHp`. The projection now exposes that current value to the local HUD as a separate server-sourced line. It deliberately does not calculate a percentage or overwrite the demo HP/MP bars: a verified maximum-HP source for kind-0 player actors has not yet been established.
+S2C opcode 6/9 target records and opcode 106 multi-target records carry a
+post-event target HP value; the world reducer stores it as `entity.currentHp`.
+S2C opcode 7 provides both `currentHp` and `maxHp` for an existing entity.
+The projection exposes both values, and the local HUD renders a separate
+server HP meter only when `maxHp > 0`. Demo HP/MP bars are not repurposed.
 
 
 ## Character level and resource HUD (S2C opcodes 32/33)
@@ -144,3 +148,16 @@ retaining the two integers as `valueA/valueB` until the exact per-field
 semantics are verified. No max-HP, max-MP or current-resource label is inferred
 from those two values. This is protocol/UI integration only; no live-server
 packet capture or visual validation has been performed.
+
+
+## Existing-entity HP state update (S2C opcode 7)
+
+The `ka.java:case7` trace confirms the packet contains entity ID, template ID,
+X/Y, current HP, two state bytes, max HP and an opaque integer. The handler
+passes the decoded record to `mj.a(ce)`, which resolves an existing entity and
+updates it; it does not create an entity. The browser reducer follows that
+guard, updates only `currentHp` and `maxHp`, and retains the remaining fields
+under `opcode7State` without changing render coordinates or interpreting the
+opaque integer. The local HUD displays the server HP ratio only when current
+and maximum HP are both available. Unknown entity IDs are recorded as
+unresolved world events and never inserted into the entity map.
