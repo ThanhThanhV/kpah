@@ -8,8 +8,6 @@ public final class ProtocolPacketCodec {
     private record Field(String name, Type type) {}
     private static final Map<String, List<Field>> SCHEMAS = new LinkedHashMap<>();
     static {
-        SCHEMAS.put("S2C_STORAGE_DEPOSIT_RESULT", List.of(new Field("itemId", Type.I16)));
-        SCHEMAS.put("S2C_STORAGE_WITHDRAW_RESULT", List.of(new Field("itemId", Type.I16)));
         SCHEMAS.put("C2S_OPEN_ARTIFACT_PANEL", List.of(new Field("sentinel", Type.I16)));
         SCHEMAS.put("C2S_FARM_PANEL_ACTION", List.of(new Field("action", Type.U8), new Field("index", Type.U8)));
         SCHEMAS.put("C2S_EQUIPMENT_UPGRADE_ACTION", List.of(new Field("action", Type.U8), new Field("itemId", Type.U8)));
@@ -34,6 +32,8 @@ public final class ProtocolPacketCodec {
         SCHEMAS.put("C2S_OP_95", List.of(new Field("fieldByteA", Type.I8), new Field("fieldByteB", Type.I8), new Field("itemId", Type.I16), new Field("fieldShortB", Type.I16), new Field("fieldByteC", Type.I8)));
         SCHEMAS.put("C2S_OP_100", List.of(new Field("mode", Type.I8), new Field("itemId", Type.I16)));
         SCHEMAS.put("C2S_FARM_PLOT_ACTION", List.of(new Field("action", Type.U8), new Field("plotId", Type.U8)));
+        SCHEMAS.put("S2C_STORAGE_DEPOSIT_RESULT", List.of(new Field("itemId", Type.I16)));
+        SCHEMAS.put("S2C_STORAGE_WITHDRAW_RESULT", List.of(new Field("itemId", Type.I16)));
     }
     public static byte[] encode(String command, Map<String, ?> values) throws IOException {
         List<Field> fields = requireSchema(command);
