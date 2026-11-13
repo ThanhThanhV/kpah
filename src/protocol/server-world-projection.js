@@ -30,6 +30,9 @@ export function projectServerWorldEntities(world) {
       x,
       y,
       state: Number.isInteger(entity.state) ? entity.state : null,
+      targetX: Number.isFinite(entity.targetX) ? entity.targetX : null,
+      targetY: Number.isFinite(entity.targetY) ? entity.targetY : null,
+      movementPending: entity.movementPending === true,
       coordinateSource: Number.isFinite(snapshot?.x) && Number.isFinite(snapshot?.y)
         ? "opcode5" : "opcode4",
       presentation: kind === 0 ? "player-like" : kind === 1 ? "monster-npc-family" : "unknown-kind",
