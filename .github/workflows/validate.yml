@@ -74,6 +74,8 @@ jobs:
         run: npm run test:initialization-event
       - name: Test inbound initialization transport adapter
         run: npm run test:inbound-initialization
+      - name: Test incremental S2C TCP frame decoder
+        run: npm run test:server-frame-stream
       - name: Verify generated opcode 1 codec
         run: npm run check:opcode1
       - name: Test generated opcode 1 codec
