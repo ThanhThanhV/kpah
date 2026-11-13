@@ -3887,6 +3887,83 @@
       "payload": "source-verified-prefix-with-optional-auxiliary-int",
       "evidence": "verified-client-handler: ka.java:case-71 -> mj effect object lifecycle; action/effect/entity/long time/tile coords/kind/mode/state; optional auxiliary int",
       "evidenceSource": "ka.java:case-71"
+    },
+    {
+      "name": "ENTITY_EFFECT_ATTACHMENT_VARIANTS",
+      "opcode": -73,
+      "direction": "S2C",
+      "payload": "branch-0-effect-object-target-links-or-branch-1-entity-effect-overlay",
+      "variants": [
+        {
+          "branch": 0,
+          "fields": [
+            {
+              "name": "effectObjectEntityId",
+              "type": "i16"
+            },
+            {
+              "name": "branch",
+              "type": "i8",
+              "value": 0
+            },
+            {
+              "name": "effectId",
+              "type": "i16"
+            },
+            {
+              "name": "targetCount",
+              "type": "i8"
+            },
+            {
+              "name": "targets",
+              "type": "array",
+              "count": "targetCount",
+              "fields": [
+                {
+                  "name": "entityKind",
+                  "type": "i8"
+                },
+                {
+                  "name": "entityId",
+                  "type": "i16"
+                },
+                {
+                  "name": "offsetValueA",
+                  "type": "i32"
+                },
+                {
+                  "name": "offsetValueB",
+                  "type": "i32"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "branch": 1,
+          "fields": [
+            {
+              "name": "entityId",
+              "type": "i16"
+            },
+            {
+              "name": "branch",
+              "type": "i8",
+              "value": 1
+            },
+            {
+              "name": "effectId",
+              "type": "i16"
+            },
+            {
+              "name": "expiryValue",
+              "type": "i64"
+            }
+          ]
+        }
+      ],
+      "evidence": "CFR source ka.java:case-73 dispatches to mj.A(acu). Branch 0 reads effect-object entity ID (short), branch byte 0, effect ID (short), signed-byte target count, then each target entity kind (byte), entity ID (short), and two ints; it resolves the source as entity kind 12 and each target by kind+ID, then calls j.a(Vector,byte,short,int[],int[]). Branch 1 reads entity ID (short), branch byte 1, effect ID (short), and long expiry/time; it resolves the entity by ID and calls bu.a(effectId, entity.x, entity.y, long), which updates/adds the matching d record in bu.dg. Other branch values are not decoded.",
+      "evidenceSource": "ka.java:case-73"
     }
   ],
   "extensionSchemas": [
