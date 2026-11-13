@@ -9,21 +9,18 @@ import { applyInitializationEvent } from "./initialization-state.js";
 const INITIALIZATION_OPCODES = new Set([1, 3, 15, 16]);
 
 /**
- * Decode one complete S2C transport frame and apply only the initialization
- * opcodes for which both payload decoders and client-state reducers exist.
- *
- * For encrypted streams, pass the receive key and the previous receive cursor.
- * The returned cursor must be supplied to the next frame; the transport codec
- * deliberately does not keep hidden connection state.
+ * Apply an already decoded S2C frame (for example, emitted by
+ * ServerFrameStreamDecoder) to the initialization state.
  */
-export function applyInboundInitializationFrame(state, frameBytes, options = {}) {
+export function applyInboundInitializationPacket(state, frame) {
   if (!state || typeof state !== "object") throw new TypeError("Initialization state is required");
-  const key = options.key ?? null;
-  const cursor = options.cursor ?? 0;
-  const frame = decodeServerFrame(frameBytes, key, cursor);
+  if (!frame || !Number.isInteger(frame.opcode) || !(frame.payload instanceof Uint8Array)) {
+    throw new TypeError("A decoded S2C frame with opcode and Uint8Array payload is required");
+  }
 
   if (!INITIALIZATION_OPCODES.has(frame.opcode)) {
-    return { state, opcode: frame.opcode, handled: false, events: [], cursor: frame.cursor, longLength: frame.longLength };
+    return { state, opcode: frame.opcode, handled: false, events: [],
+      cursor: frame.cursor, longLength: frame.longLength ?? false };
   }
 
   let nextState = state;
@@ -40,8 +37,7 @@ export function applyInboundInitializationFrame(state, frameBytes, options = {})
     case 3: {
       const snapshot = decodeS2CPrefix(3, frame.payload);
       apply("S2C_OPCODE_3_SNAPSHOT", snapshot);
-      // The fixed prefix decoder leaves the independently parsed extension
-      // bytes untouched. The original handler parses that remainder separately.
+      // The fixed prefix leaves the independently parsed extension bytes untouched.
       if (snapshot.trailingBytes.length > 0) {
         apply("S2C_OPCODE_3_EXTENSION", decodeS2COpcode3Extension(snapshot.trailingBytes));
       }
@@ -63,8 +59,17 @@ export function applyInboundInitializationFrame(state, frameBytes, options = {})
     handled: true,
     events,
     cursor: frame.cursor,
-    longLength: frame.longLength,
+    longLength: frame.longLength ?? false,
   };
+}
+
+/**
+ * Convenience wrapper for callers that already have one complete raw frame.
+ * Encrypted callers must carry the returned cursor into the next invocation.
+ */
+export function applyInboundInitializationFrame(state, frameBytes, options = {}) {
+  const frame = decodeServerFrame(frameBytes, options.key ?? null, options.cursor ?? 0);
+  return applyInboundInitializationPacket(state, frame);
 }
 
 export { INITIALIZATION_OPCODES };
