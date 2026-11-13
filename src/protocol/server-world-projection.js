@@ -4,7 +4,7 @@ import { resolveOriginalEntityFactoryClass } from "./original-entity-factory.js"
  * Projects source-backed server entities into a Phaser diagnostic model.
  * Template metadata comes from S2C opcode 100; it is not an asset/sprite map.
  */
-export function projectServerWorldEntities(world) {
+export function projectServerWorldEntities(world, localCharacterId = null) {
   if (!world || typeof world !== "object") return [];
   const entities = world.entitiesById ?? {};
   const templates = world.templatesById ?? {};
@@ -25,6 +25,7 @@ export function projectServerWorldEntities(world) {
     projected.push({
       entityId,
       kind,
+      isLocalPlayer: kind === 0 && Number.isInteger(localCharacterId) && entityId === localCharacterId,
       templateId,
       templateName: template?.name ?? null,
       x,
