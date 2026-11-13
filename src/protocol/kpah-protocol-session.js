@@ -2,6 +2,7 @@ import { decodeHandshakeKey, encodeClientFrame } from "./generated/transport-cod
 import { ServerFrameStreamDecoder } from "./server-frame-stream.js";
 import { applyInboundInitializationPacket } from "./inbound-initialization-adapter.js";
 import { createInitializationState } from "./initialization-state.js";
+import { applyInboundWorldPacket } from "./world-state.js";
 
 /**
  * Protocol session over a browser WebSocket or another WebSocket-compatible
@@ -118,7 +119,8 @@ export class KpahProtocolSession {
       return;
     }
 
-    const applied = applyInboundInitializationPacket(this.state, frame);
+    let applied = applyInboundInitializationPacket(this.state, frame);
+    if (!applied.handled) applied = applyInboundWorldPacket(this.state, frame);
     if (applied.handled) {
       this.state = applied.state;
       this.onState(this.state, applied);
