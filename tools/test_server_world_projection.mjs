@@ -18,7 +18,7 @@ assert.deepEqual(projected, [
     frameWidth: null, frameHeight: null, movementStep: null, templateType: null,
     frameOffsetX: null, frameOffsetY: null, shadowOffsetX: null, shadowOffsetY: null, templateReady: false },
   { entityId: 11, kind: 1, templateId: 7, x: 320, y: 410, state: 2,
-    coordinateSource: "opcode5", presentation: "monster-npc-family", factoryClass: "cd", targetX: null, targetY: null, movementPending: false, templateName: null,
+    coordinateSource: "opcode5", presentation: "monster-npc-family", factoryClass: "cd", targetX: null, targetY: null, movementPending: false, playerMovementStep: 3, templateName: null,
     frameWidth: null, frameHeight: null, movementStep: null, templateType: null,
     frameOffsetX: null, frameOffsetY: null, shadowOffsetX: null, shadowOffsetY: null, templateReady: false },
 ]);
