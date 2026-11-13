@@ -8,21 +8,21 @@ const projected = projectServerWorldEntities({
   characterResourcesById: { 10: { statsByKey: { hp: { key: "hp", value: 1234 }, mp: { key: "mp", value: 567 } } } },
   characterLevelsById: { 10: { level: 25, valueA: 5000, valueB: 600 } },
   entitiesById: {
-    10: { kind: 0, templateId: 4, x: 100, y: 200, state: 1, marker: 3, currentHp: 987, snapshot: { name: "ThanhKiem" } },
-    11: { kind: 1, templateId: 7, x: 300, y: 400, state: 2, currentHp: 65,
+    10: { kind: 0, templateId: 4, x: 100, y: 200, state: 1, marker: 3, currentHp: 987, maxHp: 2500, snapshot: { name: "ThanhKiem" } },
+    11: { kind: 1, templateId: 7, x: 300, y: 400, state: 2, currentHp: 65, maxHp: 100,
       snapshot: { name: "Wolf", x: 320, y: 410 } },
     12: { kind: 3, templateId: 9, x: 500, y: 600, active: false },
     13: { kind: 99, templateId: 255, x: null, y: 10 },
   },
 }, 10);
 assert.deepEqual(projected, [
-  { entityId: 10, kind: 0, isLocalPlayer: true, templateId: 4, name: "ThanhKiem", currentHp: 987, level: 25,
+  { entityId: 10, kind: 0, isLocalPlayer: true, templateId: 4, name: "ThanhKiem", currentHp: 987, maxHp: 2500, level: 25,
     resourceStats: [{ key: "hp", value: 1234 }, { key: "mp", value: 567 }],
     levelUpdateValues: { valueA: 5000, valueB: 600 }, x: 100, y: 200, state: 1, marker: 3,
     coordinateSource: "opcode4", presentation: "player-like", factoryClass: "hd", targetX: null, targetY: null, movementPending: false, playerMovementStep: 3, templateName: null,
     frameWidth: null, frameHeight: null, movementStep: null, templateType: null,
     frameOffsetX: null, frameOffsetY: null, shadowOffsetX: null, shadowOffsetY: null, templateReady: false },
-  { entityId: 11, kind: 1, isLocalPlayer: false, templateId: 7, name: "Wolf", currentHp: 65, level: null, resourceStats: [], levelUpdateValues: null,
+  { entityId: 11, kind: 1, isLocalPlayer: false, templateId: 7, name: "Wolf", currentHp: 65, maxHp: 100, level: null, resourceStats: [], levelUpdateValues: null,
     x: 320, y: 410, state: 2, marker: null,
     coordinateSource: "opcode5", presentation: "monster-npc-family", factoryClass: "cd", targetX: null, targetY: null, movementPending: false, playerMovementStep: 3, templateName: null,
     frameWidth: null, frameHeight: null, movementStep: null, templateType: null,
@@ -36,6 +36,8 @@ const withTemplate = projectServerWorldEntities({
 assert.equal(withTemplate[0].templateName, "Wolf");
 assert.equal(projected[0].name, "ThanhKiem", "opcode 5 snapshot name is exposed without interpreting opaque stat fields");
 assert.equal(projected[0].currentHp, 987, "post-combat current HP is projected as a verified current value");
+assert.equal(projected[0].maxHp, 2500, "opcode 7 max HP is projected");
+assert.equal(projected[1].maxHp, 100);
 assert.equal(projected[0].level, 25, "opcode 33 level is projected");
 assert.deepEqual(projected[0].resourceStats, [{ key: "hp", value: 1234 }, { key: "mp", value: 567 }]);
 assert.deepEqual(projected[0].levelUpdateValues, { valueA: 5000, valueB: 600 });
