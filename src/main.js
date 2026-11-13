@@ -1578,6 +1578,40 @@ class WorldScene extends Phaser.Scene {
       hpValue.hidden=true;
       hpValue.textContent="";
     }
+
+    let levelValue=profile.querySelector(".server-level-value");
+    if(Number.isInteger(localEntity?.level)){
+      if(!levelValue){
+        levelValue=document.createElement("small");
+        levelValue.className="server-level-value";
+        profile.appendChild(levelValue);
+      }
+      levelValue.textContent="Cấp độ từ server: "+localEntity.level;
+      levelValue.hidden=false;
+    }else if(levelValue){
+      levelValue.hidden=true;
+      levelValue.textContent="";
+    }
+
+    let statsValue=profile.querySelector(".server-stats-value");
+    const knownStats=new Map((localEntity?.resourceStats??[])
+      .filter(item=>item&&typeof item.key==="string"&&Number.isFinite(item.value))
+      .map(item=>[item.key.toLowerCase(),item.value]));
+    const resourceLabels=[["hp","HP"],["mp","MP"],["bp","BP"],["sp","SP"]]
+      .filter(([key])=>knownStats.has(key))
+      .map(([key,label])=>label+" "+Math.trunc(knownStats.get(key)).toLocaleString("vi-VN"));
+    if(resourceLabels.length){
+      if(!statsValue){
+        statsValue=document.createElement("small");
+        statsValue.className="server-stats-value";
+        profile.appendChild(statsValue);
+      }
+      statsValue.textContent="Chỉ số server: "+resourceLabels.join(" · ");
+      statsValue.hidden=false;
+    }else if(statsValue){
+      statsValue.hidden=true;
+      statsValue.textContent="";
+    }
   }
   drawZone(zone){
     this.zoneObjects=[];
