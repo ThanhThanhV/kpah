@@ -137,3 +137,15 @@ npm run test:world-state
 - Chưa có server source hoặc live packet capture để xác nhận server validation, anti-cheat và timing.
 - Tiếp theo: phân tích entity movement state machine trong `ca/z/cd`, rồi packet damage/skill/effect và ground drops; không triển khai mô phỏng server trước khi chốt thứ tự field.
 
+
+
+## Inbound world state reducer
+
+`src/protocol/world-state.js` now applies only the already source-backed world packet layouts:
+
+- Opcode 4 merges spawn/update records by entity ID and preserves wire fields without guessing template semantics.
+- Opcode 5 decodes a full entity snapshot only when opcode 4 has already established that entity ID. For an unknown entity, the bytes after the ID remain opaque, matching the original handler's existence guard.
+- Opcode 8 removes the listed entity IDs.
+- Opcodes 6 and 9 append neutral combat-event records (bounded to the latest 100); no damage, animation or combat meaning is inferred from the fields.
+
+`KpahProtocolSession` now routes these packets into `state.serverWorld` in addition to the initialization opcodes. The reducer is separate from the Phaser runtime: entity templates, interpolation, local-player identity and combat presentation still require the corresponding source-derived mappings and runtime adapter.
