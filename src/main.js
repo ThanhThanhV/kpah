@@ -961,20 +961,26 @@ class WorldScene extends Phaser.Scene {
     const batch=getServerCombatEventsAfter(this.serverWorldState,this.serverWorldCombatSequence);
     this.serverWorldCombatSequence=batch.lastSequence;
     for(const event of batch.events){
-      const id=String(event.targetEntityId);
-      const entity=this.serverWorldState?.entitiesById?.[id];
-      const motion=this.serverWorldMotion.get(id);
-      const x=motion?.x??entity?.snapshot?.x??entity?.x;
-      const y=motion?.y??entity?.snapshot?.y??entity?.y;
-      if(!Number.isFinite(x)||!Number.isFinite(y))continue;
-      const damage=this.add.text(x,y-26,String(event.damage),{
-        fontFamily:'Arial',fontSize:'16px',fontStyle:'bold',color:'#ffffff',
-        stroke:'#211b18',strokeThickness:3
-      }).setOrigin(0.5).setDepth(y+120);
-      this.tweens.add({
-        targets:damage,y:y-56,alpha:0,duration:720,ease:'Cubic.easeOut',
-        onComplete:()=>damage.destroy()
-      });
+      const targets=Array.isArray(event.targets)&&event.targets.length
+        ?event.targets.map(target=>target.entityId)
+        :[event.targetEntityId];
+      for(const targetId of targets){
+        if(!Number.isInteger(targetId))continue;
+        const id=String(targetId);
+        const entity=this.serverWorldState?.entitiesById?.[id];
+        const motion=this.serverWorldMotion.get(id);
+        const x=motion?.x??entity?.snapshot?.x??entity?.x;
+        const y=motion?.y??entity?.snapshot?.y??entity?.y;
+        if(!Number.isFinite(x)||!Number.isFinite(y))continue;
+        const damage=this.add.text(x,y-26,String(event.damage),{
+          fontFamily:'Arial',fontSize:'16px',fontStyle:'bold',color:'#ffffff',
+          stroke:'#211b18',strokeThickness:3
+        }).setOrigin(0.5).setDepth(y+120);
+        this.tweens.add({
+          targets:damage,y:y-56,alpha:0,duration:720,ease:'Cubic.easeOut',
+          onComplete:()=>damage.destroy()
+        });
+      }
     }
   }
   ensureServerTemplateTexture(entity){
