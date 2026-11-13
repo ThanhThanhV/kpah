@@ -386,6 +386,16 @@ assert.equal(state.serverWorld.parsedEffectDefinitionsById["910"].frames.length,
 assert.equal(state.serverWorld.effectDefinitionErrorsById["910"], undefined);
 assert.deepEqual([...encodeEffectAssetRequest(910)], [0x03, 0x8e]);
 assert.throws(() => encodeEffectAssetRequest(40000), /signed short/);
+// S2C -51 is the generic image-resource response used by hd/mi as well as effects.
+const playerPartImage = new Uint8Array([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a,0x01]);
+state = applyInboundWorldPacket(state, {
+  opcode: -51,
+  payload: new PacketWriter().writeI16(12000).toUint8Array().length
+    ? new Uint8Array([...new PacketWriter().writeI16(12000).toUint8Array(), ...playerPartImage])
+    : new Uint8Array(),
+}).state;
+assert.deepEqual([...state.serverWorld.resourceImagePayloadsById["12000"]], [...playerPartImage]);
+assert.deepEqual([...state.serverWorld.effectImagePayloadsById["12000"]], [...playerPartImage]);
 assert.equal(actorEffectImageResourceId(0), 8700);
 assert.equal(actorEffectImageResourceId(300), 9000);
 assert.equal(actorEffectImageResourceId(301), 14401);
