@@ -144,7 +144,9 @@ export function decodeC2SOpcode24(variant, payload) {
     const record = {};
     for (const field of definition.fields) {
       if (field.condition && record[field.condition.field] !== field.condition.equals) continue;
-      record[field.name] = Object.prototype.hasOwnProperty.call(field, "constant") ? field.constant : reader[SHOP_READ[field.type]]();
+      const wireValue = reader[SHOP_READ[field.type]]();
+      if (Object.prototype.hasOwnProperty.call(field, "constant") && wireValue !== field.constant) throw new RangeError("Invalid constant field " + field.name);
+      record[field.name] = Object.prototype.hasOwnProperty.call(field, "constant") ? field.constant : wireValue;
     }
     records.push(record);
   }
