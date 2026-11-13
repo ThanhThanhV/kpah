@@ -1603,6 +1603,43 @@ class WorldScene extends Phaser.Scene {
       if(hpMeter)hpMeter.hidden=true;
     }
 
+    let mpValue=profile.querySelector(".server-mp-value");
+    if(Number.isFinite(localEntity?.currentMp)){
+      if(!mpValue){
+        mpValue=document.createElement("small");
+        mpValue.className="server-mp-value";
+        profile.appendChild(mpValue);
+      }
+      const currentMp=Math.max(0,Math.trunc(localEntity.currentMp));
+      const maxMp=Number.isFinite(localEntity.maxMp)&&localEntity.maxMp>0?Math.trunc(localEntity.maxMp):null;
+      mpValue.textContent=maxMp===null
+        ?"MP hiện tại từ server: "+currentMp.toLocaleString("vi-VN")
+        :"MP từ server: "+currentMp.toLocaleString("vi-VN")+" / "+maxMp.toLocaleString("vi-VN");
+      mpValue.hidden=false;
+      let mpMeter=profile.querySelector(".server-mp-meter");
+      if(maxMp!==null){
+        if(!mpMeter){
+          mpMeter=document.createElement("div");
+          mpMeter.className="meter mp server-mp-meter";
+          mpMeter.appendChild(document.createElement("i"));
+          if(mpValue.nextSibling)profile.insertBefore(mpMeter,mpValue.nextSibling);
+          else profile.appendChild(mpMeter);
+        }
+        const fill=mpMeter.querySelector("i");
+        if(fill)fill.style.width=Math.min(100,currentMp/maxMp*100)+"%";
+        mpMeter.hidden=false;
+      }else if(mpMeter){
+        mpMeter.hidden=true;
+        const fill=mpMeter.querySelector("i");
+        if(fill)fill.style.width="0%";
+      }
+    }else if(mpValue){
+      mpValue.hidden=true;
+      mpValue.textContent="";
+      const mpMeter=profile.querySelector(".server-mp-meter");
+      if(mpMeter)mpMeter.hidden=true;
+    }
+
     let levelValue=profile.querySelector(".server-level-value");
     if(Number.isInteger(localEntity?.level)){
       if(!levelValue){
