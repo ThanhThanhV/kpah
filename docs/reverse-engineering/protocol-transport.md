@@ -127,3 +127,8 @@ npm run bridge:tcp-ws -- --upstream-host 127.0.0.1 --upstream-port 22100
 ```
 
 The upstream above is only an example loopback target. Supply the actual TCP host and port from a legitimate server configuration; no production address is bundled or inferred. The bridge is intentionally loopback-only and is not an internet-facing gateway, authentication service, or KPAH server emulator.
+
+
+## Browser connection panel
+
+The game shell now exposes a small protocol connection panel. It creates `KpahProtocolSession` over a browser WebSocket and only accepts `ws://localhost`, `ws://127.x.x.x` or `ws://[::1]` URLs at the exact `/kpah` path. The panel reports handshake status, packet count and a compact initialization-state summary. It does not contain account/password fields and does not issue login opcode 1. Closing the panel leaves an active session running; the explicit Disconnect button closes it.
