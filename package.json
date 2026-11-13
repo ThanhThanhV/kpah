@@ -51,10 +51,13 @@
     "test:command-variants": "node tools/test_command_variants.mjs",
     "test:inbound-initialization": "node tools/test_inbound_initialization_adapter.mjs",
     "test:server-frame-stream": "node tools/test_server_frame_stream.mjs",
-    "test:protocol-session": "node tools/test_kpah_protocol_session.mjs"
+    "test:protocol-session": "node tools/test_kpah_protocol_session.mjs",
+    "bridge:tcp-ws": "node tools/kpah-tcp-ws-bridge.mjs",
+    "test:tcp-ws-bridge": "node tools/test_tcp_ws_bridge.mjs"
   },
   "dependencies": {
-    "phaser": "^3.90.0"
+    "phaser": "^3.90.0",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "vite": "^6.4.1"
