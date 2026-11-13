@@ -1007,6 +1007,7 @@ class WorldScene extends Phaser.Scene {
         : 'T'+(entity.templateId??'?');
       const labelText='#'+entity.entityId+' · '+(entity.factoryClass??('K'+(entity.kind??'?')))
         +' / '+templateLabel;
+      const labelY=entity.templateReady?-(entity.frameOffsetY??0)-4:-19;
       const textureKey='kpah-server-template-'+entity.templateId;
       const textureReady=entity.factoryClass==='cd'&&entity.templateReady
         &&this.textures.exists(textureKey)&&Number.isInteger(entity.templateType);
@@ -1026,7 +1027,7 @@ class WorldScene extends Phaser.Scene {
           view.setData('visualType','marker');
           view.setData('marker',marker);
         }
-        const label=this.add.text(0,-(entity.frameOffsetY??0)-4,labelText,{
+        const label=this.add.text(0,labelY,labelText,{
           fontFamily:'Arial',fontSize:'10px',color:'#ffffff',
           stroke:'#171b22',strokeThickness:3
         }).setOrigin(0.5,1);
@@ -1036,11 +1037,11 @@ class WorldScene extends Phaser.Scene {
         this.serverWorldViews.set(id,view);
       }else{
         view.setPosition(entity.x,entity.y).setDepth(entity.y+3);
-        view.getData('label')?.setText(labelText).setPosition(0,-Math.max(19,entity.frameHeight??0)-4);
+        view.getData('label')?.setText(labelText).setPosition(0,labelY);
         if(canRenderSprite&&view.getData('visualType')!=='sprite'){
           const marker=view.getData('marker');
           if(marker){view.remove(marker,true);view.setData('marker',null);}
-          const sprite=this.add.sprite(-(entity.frameOffsetX??0),-(entity.frameOffsetY??0),textureKey,frameIndex).setOrigin(0,1);
+          const sprite=this.add.sprite(-(entity.frameOffsetX??0),-(entity.frameOffsetY??0),textureKey,frameIndex).setOrigin(0,0);
           view.addAt(sprite,0);
           view.setData('visualType','sprite');
           view.setData('sprite',sprite);
