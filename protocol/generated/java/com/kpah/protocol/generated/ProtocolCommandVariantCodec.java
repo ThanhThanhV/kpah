@@ -94,7 +94,7 @@ public final class ProtocolCommandVariantCodec {
         }
         return new Decoded(mode, Map.copyOf(fields), new byte[0], readRemaining(in));
     }
-    private static Object required(Map<String,Object> values,String key) {
+    private static Object required(Map<String,?> values,String key) {
         if(values==null || !values.containsKey(key) || values.get(key)==null) throw new IllegalArgumentException("Missing field "+key);
         return values.get(key);
     }
@@ -116,5 +116,86 @@ public final class ProtocolCommandVariantCodec {
         else if(mode==1) { fields.put("fieldByteA",in.readI8()); fields.put("fieldByteB",in.readI8()); fields.put("fieldShort",in.readI16()); }
         else return new Decoded(mode,Map.of(),readRemaining(in),new byte[0]);
         return new Decoded(mode,Map.copyOf(fields),new byte[0],readRemaining(in));
+    }
+
+    private record VariantField(String name, String type, Object constant, String conditionField, Integer conditionValue) {}
+    private static final Map<String, List<VariantField>> OPCODE24_VARIANTS = new LinkedHashMap<>();
+    static {
+        List<VariantField> catalog = new ArrayList<>();
+        catalog.add(new VariantField("category", "i8", null, null, null));
+        catalog.add(new VariantField("templateId", "i16", null, null, null));
+        catalog.add(new VariantField("quantity", "i16", (short)1, null, null));
+        catalog.add(new VariantField("optionByte", "i8", null, "category", 3));
+        OPCODE24_VARIANTS.put("catalog", List.copyOf(catalog));
+        List<VariantField> premium = new ArrayList<>();
+        premium.add(new VariantField("category", "i8", (byte)4, null, null));
+        premium.add(new VariantField("itemId", "i16", null, null, null));
+        premium.add(new VariantField("quantity", "i16", null, null, null));
+        OPCODE24_VARIANTS.put("premium", List.copyOf(premium));
+    }
+    private static void writeShopValue(PacketWriter out, String type, Object value) throws IOException {
+        switch (type) {
+            case "i8" -> out.writeI8(((Number)value).intValue());
+            case "i16" -> out.writeI16(((Number)value).intValue());
+            default -> throw new IllegalArgumentException("Unsupported shop field type: " + type);
+        }
+    }
+    private static Object readShopValue(PacketReader in, String type) throws IOException {
+        return switch (type) {
+            case "i8" -> in.readI8();
+            case "i16" -> in.readI16();
+            default -> throw new IllegalArgumentException("Unsupported shop field type: " + type);
+        };
+    }
+    public static byte[] encodeC2SOpcode24(String variant, List<? extends Map<String, ?>> records) throws IOException {
+        List<VariantField> definition = OPCODE24_VARIANTS.get(variant);
+        if (definition == null) throw new IllegalArgumentException("Unknown C2S opcode 24 variant: " + variant);
+        if (records == null || records.size() > 255) throw new IllegalArgumentException("Opcode 24 record count must be 0..255");
+        PacketWriter out = new PacketWriter(); out.writeU8(records.size());
+        for (Map<String, ?> record : records) {
+            if (record == null) throw new IllegalArgumentException("Opcode 24 record is null");
+            for (VariantField field : definition) {
+                if (field.conditionField() != null) {
+                    Object condition = record.get(field.conditionField());
+                    if (!(condition instanceof Number n) || n.intValue() != field.conditionValue()) continue;
+                }
+                Object value = field.constant() != null ? field.constant() : required(record, field.name());
+                if (field.constant() != null && record.containsKey(field.name()) && !Objects.equals(record.get(field.name()), value))
+                    throw new IllegalArgumentException("Invalid constant field " + field.name());
+                writeShopValue(out, field.type(), value);
+            }
+        }
+        return out.toByteArray();
+    }
+    public static Decoded decodeC2SOpcode24(String variant, byte[] payload) throws IOException {
+        List<VariantField> definition = OPCODE24_VARIANTS.get(variant);
+        if (definition == null) throw new IllegalArgumentException("Unknown C2S opcode 24 variant: " + variant);
+        PacketReader in = new PacketReader(payload); int count = in.readU8();
+        List<Map<String, Object>> records = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            Map<String, Object> record = new LinkedHashMap<>();
+            for (VariantField field : definition) {
+                if (field.conditionField() != null) {
+                    Object condition = record.get(field.conditionField());
+                    if (!(condition instanceof Number n) || n.intValue() != field.conditionValue()) continue;
+                }
+                record.put(field.name(), field.constant() != null ? field.constant() : readShopValue(in, field.type()));
+            }
+            records.add(Map.copyOf(record));
+        }
+        return new Decoded(-1, Map.of("variant", variant, "records", List.copyOf(records)), new byte[0], readRemaining(in));
+    }
+    public static byte[] encodeC2SOpcode74(List<? extends Number> itemIds) throws IOException {
+        if (itemIds == null || itemIds.size() > 32767) throw new IllegalArgumentException("Opcode 74 item count must be 0..32767");
+        PacketWriter out = new PacketWriter(); out.writeI16(itemIds.size());
+        for (Number itemId : itemIds) { if (itemId == null) throw new IllegalArgumentException("Null opcode 74 item ID"); out.writeI16(itemId.intValue()); }
+        return out.toByteArray();
+    }
+    public static Decoded decodeC2SOpcode74(byte[] payload) throws IOException {
+        PacketReader in = new PacketReader(payload); int count = in.readI16();
+        if (count < 0) throw new IOException("Negative opcode 74 item count: " + count);
+        List<Short> itemIds = new ArrayList<>();
+        for (int i = 0; i < count; i++) itemIds.add(in.readI16());
+        return new Decoded(-1, Map.of("itemIds", List.copyOf(itemIds)), new byte[0], readRemaining(in));
     }
 }
