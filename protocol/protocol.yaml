@@ -3879,6 +3879,14 @@
       ],
       "evidence": "verified-client-handler: ka.java:case-74 -> mj.C(acu); subcommand 0 reads entity kind/id, effect id, duration, two booleans and optional variant",
       "evidenceSource": "ka.java:case-74"
+    },
+    {
+      "name": "ENTITY_EFFECT_OBJECT_LIFECYCLE",
+      "opcode": -71,
+      "direction": "S2C",
+      "payload": "source-verified-prefix-with-optional-auxiliary-int",
+      "evidence": "verified-client-handler: ka.java:case-71 -> mj effect object lifecycle; action/effect/entity/long time/tile coords/kind/mode/state; optional auxiliary int",
+      "evidenceSource": "ka.java:case-71"
     }
   ],
   "extensionSchemas": [
