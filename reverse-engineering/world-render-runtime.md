@@ -34,12 +34,22 @@ The browser protocol panel now publishes each reduced protocol state as a
   incomplete records are not rendered.
 - Labels expose entity ID, kind and template ID to make captures debuggable.
 
-This is a diagnostic binding, not original character rendering: no template ID
-is mapped to a sprite, atlas, animation, facing or movement speed. Positions
-are shown at the latest received server coordinate; the original `cd`
-template-specific interpolation rule is not simulated. The demo-local player
-and monsters remain separate from these server markers, and no local-player
-identity or combat HP is inferred.
+The diagnostic marker path remains the fallback for unsupported kinds/assets. Kind-0
+player actors now have a source-backed original part renderer when opcode 1
+part metadata and the matching opcode -51 image resource are available:
+- opcode 4's marker byte selects the `hd` part-data index;
+- the image resource ID is `partIndex + 12000`, requested with C2S opcode -51;
+- opcode 1 part bytes are decoded with the CFR `c(byte[])` layout into atlas
+  rectangles, frame compositions and the original 2x13 direction/state selector;
+- Phaser composes atlas crops in the original non-zero-group then zero-group
+  draw order and plays source idle state 0 / walking state 2 sequences at
+  the 40 ms client update cadence; horizontal-left orientation mirrors the
+  composition.
+The renderer preserves the auxiliary per-piece tuple without interpreting its
+transform flag because CFR constructs it through a temporary `g` object while
+`hd` reads the primary `g.d`. Shadow, attack/death states, local-player identity
+binding and live-server visual comparison remain open. Kind-1 generic `cd`
+movement continues to use the separately verified movement adapter below.
 
 
 ## Original template catalog binding
