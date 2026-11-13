@@ -55,7 +55,7 @@ export function applyS2COpcode5World(world, payload) {
   const exists = Object.prototype.hasOwnProperty.call(current.entitiesById ?? {}, String(signedEntityId));
   const snapshot = decodeS2COpcode5(payload, { entityExists: exists });
   const next = cloneWorld(current);
-  if (!snapshot.entityExists) {
+  if (!exists) {
     next.unknownEntitySnapshots.push({
       entityId: snapshot.entityId,
       unconsumedBytes: copyBytes(snapshot.unconsumedBytes),
@@ -105,8 +105,7 @@ export function applyInboundWorldPacket(state, frame) {
       nextWorld = applyS2COpcode4World(world, event);
       break;
     case 5:
-      event = applyS2COpcode5World(world, frame.payload);
-      nextWorld = event;
+      nextWorld = applyS2COpcode5World(world, frame.payload);
       event = { entityId: (frame.payload[0] << 8) | frame.payload[1] };
       break;
     case 6:
