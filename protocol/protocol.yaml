@@ -1524,11 +1524,11 @@
       "evidence": "dispatcher-only"
     },
     {
-      "name": "OP_5",
+      "name": "PLAYER_ENTITY_SNAPSHOT",
       "opcode": 5,
       "direction": "S2C",
       "payload": "opaque",
-      "evidence": "dispatcher-only"
+      "evidence": "CFR ka.java:case5 resolves an existing kind-0 player via mj.b(short), then reads name, coordinates, current HP, max HP, current MP, max MP, and level cY; typed in src/protocol/generated/opcode5-codec.js with the remaining fields preserved."
     },
     {
       "name": "OP_6",
