@@ -1,5 +1,6 @@
 import { KpahProtocolSession } from "./kpah-protocol-session.js";
 import { encodeTemplateAssetRequest } from "./template-assets.js";
+import { characterPartImageResourceId } from "./character-part-data.js";
 import { actorEffectImageResourceId, encodeEffectAssetRequest } from "./effect-assets.js";
 
 let activeSession = null;
@@ -117,7 +118,7 @@ export function mountProtocolConnectionPanel(root) {
           const partIndex = entity?.kind === 0 && Number.isInteger(entity.marker) ? entity.marker : -1;
           const part = partIndex >= 0 ? state.characterPartCatalog?.[partIndex] : null;
           if (!part?.decoded) continue;
-          const resourceId = 12000 + partIndex;
+          const resourceId = characterPartImageResourceId(partIndex);
           const key = String(resourceId);
           if (world.resourceImagePayloadsById?.[key] || requestedEffectAssets.has(resourceId)) continue;
           requestedEffectAssets.add(resourceId);
