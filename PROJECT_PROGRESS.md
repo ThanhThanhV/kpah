@@ -50,7 +50,7 @@ This percentage is a task-weighted estimate against the agreed 41-item roadmap (
 
 - B8 NPC/menu/quest slice: documented entity speech opcode 27, help/information -24, world message -26, quest collection -64, quest detail/objectives -30/-31 and generic accept/reject prompt -32. Traced quest model `cy`, menu `tb`, world state `mj` and prompt callbacks `kk/kc`. NPC action trees and reward schema remain open.
 
-- B7 inventory/equipment/trade slice: documented material/recipe list 73, equipment list 76, trade/market panel 94, market listing 92 and update/remove 95. Item use/equip/drop/upgrade requests and inventory↔storage request/response 68/69 plus refresh 70 are source-traced. Still open: NPC purchase transaction, unequip-to-bag, refinement callback details, warehouse sale completion and server-authoritative persistence.
+- B7 inventory/equipment/trade slice: documented material/recipe list 73, equipment list 76, trade/market panel 94, market listing 92 and update/remove 95. Item use/equip/drop/upgrade requests and inventory↔storage request/response 68/69 plus refresh 70 are source-traced. Still open: NPC purchase transaction, unequip-to-bag, refinement callback details, warehouse sale server transaction/persistence and server-authoritative persistence.
 
 - B6 combat/skill protocol slice: documented C2S skill cast opcode 51 and S2C damage events 6/9/10/83/106 plus timed effect/buff events -74/-71 and extended effect -73. Traced target HP mutation, floating damage/MISS, attacker animation callbacks and entity effect-list lifecycle. Damage formula, crit/defense rules, complete skill-code mapping and buff stacking remain unverified.
 
@@ -882,3 +882,10 @@ GitHub file updates were confirmed on main. The current environment did not run 
 - C2S 69 `STORAGE_WITHDRAW_ITEM` and S2C 69 `STORAGE_WITHDRAW_RESULT` carry signed-short item IDs. The original client moves the matching item from storage `z.bA` to inventory `z.bx` after S2C 69.
 - C2S 70 `STORAGE_REFRESH` has an empty payload and is sent when leaving storage tab 22; no S2C 70 handler was identified.
 - CI run `43404517017` on commit `42637282a5489416aa41bb6377d96ce38a7305a4` SUCCESS: generated protocol check, JS payload tests, Java 21 compile/smoke, Vite build and original-JAR analysis. These are client protocol mappings only; no server persistence is claimed.
+
+
+### B7 — item sale request/result mapping (CI PASS)
+
+- C2S 78 `SELL_ITEM` carries signed-short item ID + signed-byte source selector (1 for `ca.O`, 0 for `ca.N`). S2C 78 `SELL_ITEM_RESULT` carries the signed-short item ID.
+- Original-client result handler decrements the matching `ca.N` stack, removes it at zero, credits local item-template price divided by five, and displays success. No server-side amount, validation or persistence is inferred.
+- CI run `43404903857` on commit `62f6672cbc4e80b5934b06ad92d8434fe6cecf80` SUCCESS: protocol codegen, JS tests, Java 21 smoke, Vite build and original-JAR analysis.
