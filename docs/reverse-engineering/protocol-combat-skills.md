@@ -116,3 +116,9 @@ zero-damage MISS behavior is not inferred for opcodes 6/9.
 - Opcode 106 retains the shared damage value, three effect bytes, and the list of target/current-HP records. Known targets receive the source-backed current HP update. One multi-target combat event is emitted for the Phaser combat-event consumer; the effect bytes remain uninterpreted.
 
 All three packet variants preserve unknown/trailing data where available. These reducers do not calculate damage, infer critical hits, or assign animation semantics to opaque bytes.
+
+## Browser world-state integration — opcode -74
+
+The generated decoder handles the verified mj.C(acu) subcommand 0 layout: entity kind, entity ID, effect ID, signed duration value, two booleans and an optional variant byte. Other subcommands are retained as unconsumed bytes and are not interpreted as this variant.
+
+The reducer attaches the raw effect record only when both entity ID and entity kind match a currently known world entity. It preserves the original duration value and flags; it does not invent a local expiry clock, classify the effect as buff/debuff, or apply stat changes. If the target is not present or the kind differs, the packet remains in the bounded world-event history with attachedToKnownEntity=false.
