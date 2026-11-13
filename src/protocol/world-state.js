@@ -10,6 +10,7 @@ export function createServerWorldState() {
     templateAssetPayloadsById: {},
     unknownEntitySnapshots: [],
     combatEvents: [],
+    combatEventSequence: 0,
     lastSpawnBatch: [],
     removedEntityIds: [],
   };
@@ -118,7 +119,25 @@ export function applyS2COpcode8World(world, packet) {
 
 function applyCombatEvent(world, opcode, packet) {
   const next = cloneWorld(world);
-  next.combatEvents.push({ opcode, ...packet });
+  const sequence = next.combatEventSequence + 1;
+  const event = {
+    sequence,
+    opcode,
+    ...packet,
+    attackerEntityId: packet.firstEntityId,
+    targetEntityId: packet.secondEntityId,
+    damage: packet.valueA,
+    targetCurrentHp: packet.valueB,
+  };
+  next.combatEventSequence = sequence;
+  const target = next.entitiesById[String(event.targetEntityId)];
+  if (target) {
+    next.entitiesById[String(event.targetEntityId)] = {
+      ...target,
+      currentHp: event.targetCurrentHp,
+    };
+  }
+  next.combatEvents.push(event);
   if (next.combatEvents.length > 100) next.combatEvents.splice(0, next.combatEvents.length - 100);
   return next;
 }
