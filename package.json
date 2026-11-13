@@ -27,6 +27,7 @@
     "check:initialization-protocol": "python tools/generate_initialization_codec.py --check",
     "test:initialization-protocol": "node tools/test_initialization_codec.mjs",
     "test:initialization-state": "node tools/test_initialization_state.mjs",
+    "test:opcode1-state": "node tools/test_opcode1_state.mjs",
     "generate:opcode15": "python tools/generate_opcode15_codec.py",
     "check:opcode15": "python tools/generate_opcode15_codec.py --check",
     "test:opcode15": "node tools/test_opcode15_codec.mjs",
