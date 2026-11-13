@@ -1,6 +1,7 @@
 import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74, decodeS2COpcodeMinus71, decodeS2COpcodeMinus73, decodeS2COpcodeMinus51, decodeS2COpcode26 } from "./generated/world-state-codec.js";
 import { decodeS2COpcode5 } from "./generated/opcode5-codec.js";
 import { decodeS2CTemplateCatalog, decodeS2CTemplateAsset } from "./template-assets.js";
+import { decodeEffectDefinition } from "./effect-definition.js";
 
 export function createServerWorldState() {
   return {
@@ -9,6 +10,8 @@ export function createServerWorldState() {
     templatesById: {},
     templateAssetPayloadsById: {},
     effectDefinitionsById: {},
+    parsedEffectDefinitionsById: {},
+    effectDefinitionErrorsById: {},
     effectImagePayloadsById: {},
     unknownEntitySnapshots: [],
     combatEvents: [],
@@ -32,6 +35,8 @@ function cloneWorld(world) {
     templatesById: { ...(source.templatesById ?? {}) },
     templateAssetPayloadsById: { ...(source.templateAssetPayloadsById ?? {}) },
     effectDefinitionsById: { ...(source.effectDefinitionsById ?? {}) },
+    parsedEffectDefinitionsById: { ...(source.parsedEffectDefinitionsById ?? {}) },
+    effectDefinitionErrorsById: { ...(source.effectDefinitionErrorsById ?? {}) },
     effectImagePayloadsById: { ...(source.effectImagePayloadsById ?? {}) },
     unknownEntitySnapshots: [...(source.unknownEntitySnapshots ?? [])],
     combatEvents: [...(source.combatEvents ?? [])],
@@ -326,12 +331,22 @@ export function applyInboundWorldPacket(state, frame) {
       const definitionErrors = new Set((event.sectionErrors ?? []).map(item => item.section));
       if (!definitionErrors.has("indexedGraphics")) {
         for (const definition of event.indexedGraphics ?? []) {
-          nextWorld.effectDefinitionsById[String(definition.id)] = copyBytes(definition.data);
+          const key = String(definition.id);
+          const bytes = copyBytes(definition.data);
+          nextWorld.effectDefinitionsById[key] = bytes;
+          try {
+            nextWorld.parsedEffectDefinitionsById[key] = decodeEffectDefinition(bytes);
+            delete nextWorld.effectDefinitionErrorsById[key];
+          } catch (error) {
+            delete nextWorld.parsedEffectDefinitionsById[key];
+            nextWorld.effectDefinitionErrorsById[key] = error.message;
+          }
         }
       }
       nextWorld = appendWorldEvent(nextWorld, 26, {
         templateCount: event.templateCount,
         effectDefinitionCount: definitionErrors.has("indexedGraphics") ? 0 : (event.indexedGraphics?.length ?? 0),
+        parsedEffectDefinitionCount: Object.keys(nextWorld.parsedEffectDefinitionsById).length,
         indexedGraphicsError: definitionErrors.has("indexedGraphics"),
       });
       break;
