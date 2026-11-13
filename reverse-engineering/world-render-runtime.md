@@ -52,5 +52,12 @@ The browser client now:
 - Stores the S2C -47 payload in serverWorld.templateAssetPayloadsById only when its template catalog entry exists.
 - Displays template name and frame dimensions in the Phaser diagnostic marker.
 
-The packed response is not yet converted into an image. Original ba decodes the packed archive using the repeating XOR key NguyenVanMinh, then the common sprite branch concatenates <resourceId>_h and data before constructing the image. Special bj branches and the original vertical frame/direction/state mapping remain unimplemented. Consequently the Phaser scene still shows diagnostic markers, not original sprite art.
+## Common original monster sprite rendering
+
+The common cg image response is now decoded in the browser: the indexed ba archive is XOR-decoded with NguyenVanMinh, then the resource named <resourceId>_h is concatenated with data. Recognized PNG/JPEG/GIF bytes are loaded into Phaser as a vertical spritesheet. The original cd renderer uses source X=0 and advances only the Y coordinate, so the adapter crops the first column before registering frames.
+
+For generic cd entities, Phaser selects the exact original idle frame index from cd.c[templateType][direction][animationState], currently with direction 0 and idle animation state 0 because the incoming world reducer does not yet provide a verified facing/frame-state projection. Frame dimensions and frame offsets come from opcode 100 metadata. The original shadow layer is not yet reconstructed.
+
+Special bj resource formats (request types 39/40, 70..88, 90..92 and asset mode 1) remain opaque. Specialized entity classes (hd, v, u, x, w, hj, p, q, t, aj, hy, cf, al, am, ak, bq) still use diagnostic markers until their renderers are traced and ported. No walking/action animation or movement interpolation is claimed.
+
 
