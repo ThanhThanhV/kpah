@@ -30,6 +30,7 @@ export function projectServerWorldEntities(world) {
       x,
       y,
       state: Number.isInteger(entity.state) ? entity.state : null,
+      marker: Number.isInteger(entity.marker) ? entity.marker : null,
       targetX: Number.isFinite(entity.targetX) ? entity.targetX : null,
       targetY: Number.isFinite(entity.targetY) ? entity.targetY : null,
       movementPending: entity.movementPending === true,
