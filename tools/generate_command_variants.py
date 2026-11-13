@@ -7,29 +7,46 @@ ROOT = Path(__file__).resolve().parents[1]
 SPEC = ROOT / "protocol" / "protocol.yaml"
 JS = ROOT / "src" / "protocol" / "generated" / "command-variant-codec.js"
 JAVA = ROOT / "protocol" / "generated" / "java" / "com" / "kpah" / "protocol" / "generated" / "ProtocolCommandVariantCodec.java"
-TYPES = {"i8": ("writeI8", "readI8", "byteValue"), "i16": ("writeI16", "readI16", "shortValue"),
+TYPES = {"u8": ("writeU8", "readU8", "intValue"), "i8": ("writeI8", "readI8", "byteValue"), "i16": ("writeI16", "readI16", "shortValue"),
          "i32": ("writeI32", "readI32", "intValue"), "utf": ("writeUTF", "readUTF", None)}
 
 def load():
     spec = json.loads(SPEC.read_text(encoding="utf-8"))
-    schemas = [s for s in spec.get("commandVariantSchemas", []) if s.get("direction") == "C2S" and s.get("opcode") in (62, 94)]
+    schemas = [s for s in spec.get("commandVariantSchemas", []) if s.get("direction") == "C2S" and s.get("opcode") in (24, 62, 74, 94)]
     by_opcode = {int(s["opcode"]): s for s in schemas}
-    if set(by_opcode) != {62, 94}:
-        raise ValueError("Expected C2S opcode 62 and 94 commandVariantSchemas")
+    if set(by_opcode) != {24, 62, 74, 94}:
+        raise ValueError("Expected C2S opcode 24, 62, 74 and 94 commandVariantSchemas")
     expected_modes = {62: {0, 2, 3, 4, 5, 6, 7}, 94: {0, 1}}
-    for opcode, schema in by_opcode.items():
-        modes = set()
+    for opcode, modes in expected_modes.items():
+        schema = by_opcode[opcode]
+        actual = set()
         for variant in schema.get("variants", []):
             mode = int(variant["mode"])
-            if mode in modes:
-                raise ValueError(f"Duplicate opcode {opcode} mode {mode}")
-            modes.add(mode)
+            if mode in actual: raise ValueError(f"Duplicate opcode {opcode} mode {mode}")
+            actual.add(mode)
             for field in variant.get("fields", []):
-                if field["type"] not in TYPES:
-                    raise ValueError(f"Unsupported opcode {opcode} field type {field['type']}")
-        if modes != expected_modes[opcode]:
-            raise ValueError(f"Unexpected source-backed opcode {opcode} modes: {sorted(modes)}")
-    return by_opcode[62]
+                if field["type"] not in TYPES: raise ValueError(f"Unsupported opcode {opcode} field type {field['type']}")
+        if actual != modes: raise ValueError(f"Unexpected source-backed opcode {opcode} modes: {sorted(actual)}")
+    shop24, shop74 = by_opcode[24], by_opcode[74]
+    if shop24.get("countType") != "u8" or not shop24.get("variants"):
+        raise ValueError("Opcode 24 requires u8 record count and caller-selected variants")
+    variant_names = set()
+    for variant in shop24["variants"]:
+        name = variant.get("name")
+        if not name or name in variant_names: raise ValueError(f"Invalid/duplicate opcode 24 variant: {name}")
+        variant_names.add(name)
+        fields_seen = set()
+        for field in variant.get("fields", []):
+            if field.get("type") not in ("i8", "i16"): raise ValueError(f"Unsupported opcode 24 field type: {field.get('type')}")
+            if field["name"] in fields_seen: raise ValueError(f"Duplicate opcode 24 field: {field['name']}")
+            condition = field.get("condition")
+            if condition and condition.get("field") not in fields_seen:
+                raise ValueError(f"Opcode 24 conditional field must follow its discriminator: {field['name']}")
+            fields_seen.add(field["name"])
+    collection = shop74.get("collection", {})
+    if collection.get("name") != "itemIds" or collection.get("countType") != "i16" or collection.get("itemType") != "i16":
+        raise ValueError("Opcode 74 requires signed-short itemIds count and values")
+    return by_opcode
 
 def js_output(schema):
     lines = [
@@ -160,9 +177,173 @@ def java_output(schema):
     ]
     return "\n".join(lines)
 
+def variant_js_output(schemas):
+    shop24, shop74 = schemas[24], schemas[74]
+    variants = {v["name"]: v for v in shop24["variants"]}
+    collection = shop74["collection"]
+    lines = [
+        "// Source-backed variable-list codecs generated from protocol/protocol.yaml.",
+        "const SHOP_WRITE = {u8: \"writeU8\", i8: \"writeI8\", i16: \"writeI16\"};",
+        "const SHOP_READ = {u8: \"readU8\", i8: \"readI8\", i16: \"readI16\"};",
+        "const OPCODE24_VARIANTS = Object.freeze(" + json.dumps(variants, ensure_ascii=False, separators=(",", ":")) + ");",
+        "export const C2S_OPCODE24_VARIANTS = Object.freeze(" + json.dumps(list(variants.keys())) + ");",
+        "export function encodeC2SOpcode24(variant, values) {",
+        "  const definition = OPCODE24_VARIANTS[variant];",
+        "  if (!definition) throw new RangeError(\"Unknown C2S opcode 24 variant: \" + variant);",
+        "  if (!values || !Array.isArray(values.records)) throw new TypeError(\"opcode 24 values.records must be an array\");",
+        "  if (values.records.length > 255) throw new RangeError(\"opcode 24 record count exceeds u8\");",
+        "  const writer = new PacketWriter().writeU8(values.records.length);",
+        "  for (const record of values.records) {",
+        "    if (!record || typeof record !== \"object\") throw new TypeError(\"opcode 24 record must be an object\");",
+        "    for (const field of definition.fields) {",
+        "      if (field.condition && record[field.condition.field] !== field.condition.equals) continue;",
+        "      let value;",
+        "      if (Object.prototype.hasOwnProperty.call(field, \"constant\")) {",
+        "        if (Object.prototype.hasOwnProperty.call(record, field.name) && record[field.name] !== field.constant) throw new Error(\"Invalid constant field \" + field.name);",
+        "        value = field.constant;",
+        "      } else {",
+        "        if (!Object.prototype.hasOwnProperty.call(record, field.name)) throw new Error(\"Missing opcode 24 field \" + field.name);",
+        "        value = record[field.name];",
+        "      }",
+        "      writer[SHOP_WRITE[field.type]](value);",
+        "    }",
+        "  }",
+        "  return writer.toUint8Array();",
+        "}",
+        "export function decodeC2SOpcode24(variant, payload) {",
+        "  const definition = OPCODE24_VARIANTS[variant];",
+        "  if (!definition) throw new RangeError(\"Unknown C2S opcode 24 variant: \" + variant);",
+        "  const reader = new PacketReader(payload), count = reader.readU8(), records = [];",
+        "  for (let i = 0; i < count; i += 1) {",
+        "    const record = {};",
+        "    for (const field of definition.fields) {",
+        "      if (field.condition && record[field.condition.field] !== field.condition.equals) continue;",
+        "      record[field.name] = Object.prototype.hasOwnProperty.call(field, \"constant\") ? field.constant : reader[SHOP_READ[field.type]]();",
+        "    }",
+        "    records.push(record);",
+        "  }",
+        "  const trailingBytes = new Uint8Array(reader.remaining());",
+        "  for (let i = 0; i < trailingBytes.length; i += 1) trailingBytes[i] = reader.readU8();",
+        "  return { variant, records, trailingBytes };",
+        "}",
+        "export function encodeC2SOpcode74(values) {",
+        "  const itemIds = values && values." + collection["name"] + ";",
+        "  if (!Array.isArray(itemIds)) throw new TypeError(\"opcode 74 itemIds must be an array\");",
+        "  if (itemIds.length > 32767) throw new RangeError(\"opcode 74 item count exceeds signed short\");",
+        "  const writer = new PacketWriter()." + TYPES[collection["countType"]][0] + "(itemIds.length);",
+        "  for (const itemId of itemIds) writer." + TYPES[collection["itemType"]][0] + "(itemId);",
+        "  return writer.toUint8Array();",
+        "}",
+        "export function decodeC2SOpcode74(payload) {",
+        "  const reader = new PacketReader(payload), count = reader." + TYPES[collection["countType"]][1] + "();",
+        "  if (count < 0) throw new RangeError(\"Negative opcode 74 item count\");",
+        "  const itemIds = [];",
+        "  for (let i = 0; i < count; i += 1) itemIds.push(reader." + TYPES[collection["itemType"]][1] + "());",
+        "  const trailingBytes = new Uint8Array(reader.remaining());",
+        "  for (let i = 0; i < trailingBytes.length; i += 1) trailingBytes[i] = reader.readU8();",
+        "  return { itemIds, trailingBytes };",
+        "}",
+        ""
+    ]
+    return "\\n".join(lines)
+
+
+def variant_java_output(schemas):
+    shop24, shop74 = schemas[24], schemas[74]
+    variants, collection = shop24["variants"], shop74["collection"]
+    lines = [
+        "    private record VariantField(String name, String type, Object constant, String conditionField, Integer conditionValue) {}",
+        "    private static final Map<String, List<VariantField>> OPCODE24_VARIANTS = new LinkedHashMap<>();",
+        "    static {"
+    ]
+    for variant in variants:
+        lines.append(f'        List<VariantField> {variant["name"]} = new ArrayList<>();')
+        for field in variant["fields"]:
+            constant = "null"
+            if "constant" in field:
+                constant = f'(byte){field["constant"]}' if field["type"] == "i8" else f'(short){field["constant"]}'
+            condition = field.get("condition", {})
+            condition_field = f'"{condition["field"]}"' if condition else "null"
+            condition_value = str(condition["equals"]) if condition else "null"
+            lines.append(f'        {variant["name"]}.add(new VariantField("{field["name"]}", "{field["type"]}", {constant}, {condition_field}, {condition_value}));')
+        lines.append(f'        OPCODE24_VARIANTS.put("{variant["name"]}", List.copyOf({variant["name"]}));')
+    lines += [
+        "    }",
+        "    private static void writeShopValue(PacketWriter out, String type, Object value) throws IOException {",
+        "        switch (type) {",
+        '            case "i8" -> out.writeI8(((Number)value).intValue());',
+        '            case "i16" -> out.writeI16(((Number)value).intValue());',
+        '            default -> throw new IllegalArgumentException("Unsupported shop field type: " + type);',
+        "        }",
+        "    }",
+        "    private static Object readShopValue(PacketReader in, String type) throws IOException {",
+        "        return switch (type) {",
+        '            case "i8" -> in.readI8();',
+        '            case "i16" -> in.readI16();',
+        '            default -> throw new IllegalArgumentException("Unsupported shop field type: " + type);',
+        "        };",
+        "    }",
+        "    public static byte[] encodeC2SOpcode24(String variant, List<? extends Map<String, ?>> records) throws IOException {",
+        "        List<VariantField> definition = OPCODE24_VARIANTS.get(variant);",
+        '        if (definition == null) throw new IllegalArgumentException("Unknown C2S opcode 24 variant: " + variant);',
+        '        if (records == null || records.size() > 255) throw new IllegalArgumentException("Opcode 24 record count must be 0..255");',
+        "        PacketWriter out = new PacketWriter(); out.writeU8(records.size());",
+        "        for (Map<String, ?> record : records) {",
+        '            if (record == null) throw new IllegalArgumentException("Opcode 24 record is null");',
+        "            for (VariantField field : definition) {",
+        "                if (field.conditionField() != null) {",
+        "                    Object condition = record.get(field.conditionField());",
+        "                    if (!(condition instanceof Number n) || n.intValue() != field.conditionValue()) continue;",
+        "                }",
+        "                Object value = field.constant() != null ? field.constant() : required(record, field.name());",
+        "                if (field.constant() != null && record.containsKey(field.name()) && !Objects.equals(record.get(field.name()), value))",
+        '                    throw new IllegalArgumentException("Invalid constant field " + field.name());',
+        "                writeShopValue(out, field.type(), value);",
+        "            }",
+        "        }",
+        "        return out.toByteArray();",
+        "    }",
+        "    public static Decoded decodeC2SOpcode24(String variant, byte[] payload) throws IOException {",
+        "        List<VariantField> definition = OPCODE24_VARIANTS.get(variant);",
+        '        if (definition == null) throw new IllegalArgumentException("Unknown C2S opcode 24 variant: " + variant);',
+        "        PacketReader in = new PacketReader(payload); int count = in.readU8();",
+        "        List<Map<String, Object>> records = new ArrayList<>();",
+        "        for (int i = 0; i < count; i++) {",
+        "            Map<String, Object> record = new LinkedHashMap<>();",
+        "            for (VariantField field : definition) {",
+        "                if (field.conditionField() != null) {",
+        "                    Object condition = record.get(field.conditionField());",
+        "                    if (!(condition instanceof Number n) || n.intValue() != field.conditionValue()) continue;",
+        "                }",
+        "                record.put(field.name(), field.constant() != null ? field.constant() : readShopValue(in, field.type()));",
+        "            }",
+        "            records.add(Map.copyOf(record));",
+        "        }",
+        '        return new Decoded(-1, Map.of("variant", variant, "records", List.copyOf(records)), new byte[0], readRemaining(in));',
+        "    }",
+        "    public static byte[] encodeC2SOpcode74(List<? extends Number> itemIds) throws IOException {",
+        '        if (itemIds == null || itemIds.size() > 32767) throw new IllegalArgumentException("Opcode 74 item count must be 0..32767");',
+        "        PacketWriter out = new PacketWriter(); out.writeI16(itemIds.size());",
+        "        for (Number itemId : itemIds) { if (itemId == null) throw new IllegalArgumentException(\\"Null opcode 74 item ID\\"); out.writeI16(itemId.intValue()); }",
+        "        return out.toByteArray();",
+        "    }",
+        "    public static Decoded decodeC2SOpcode74(byte[] payload) throws IOException {",
+        "        PacketReader in = new PacketReader(payload); int count = in.readI16();",
+        '        if (count < 0) throw new IOException("Negative opcode 74 item count: " + count);',
+        "        List<Short> itemIds = new ArrayList<>();",
+        "        for (int i = 0; i < count; i++) itemIds.add(in.readI16());",
+        '        return new Decoded(-1, Map.of("itemIds", List.copyOf(itemIds)), new byte[0], readRemaining(in));',
+        "    }"
+    ]
+    return "\\n".join(lines) + "\\n"
+
+
 def outputs():
-    schema = load()
-    return {JS: js_output(schema), JAVA: java_output(schema)}
+    schemas = load()
+    java = java_output(schemas[62])
+    java = java.rsplit("}", 1)[0] + variant_java_output(schemas) + "}\n"
+    return {JS: js_output(schemas[62]) + variant_js_output(schemas),
+            JAVA: java}
 
 def main():
     parser=argparse.ArgumentParser(); parser.add_argument("--check",action="store_true"); args=parser.parse_args()
