@@ -85,3 +85,26 @@ Handler `mj.A(acu)` chứa nhiều nhánh: đọc entity ID/type, danh sách tar
 - Opcode -74/-71/-73 chứng minh client có effect attachment pipeline; chưa đủ để khẳng định toàn bộ buff/debuff stacking, dispel, duration refresh và immunity rules.
 - Tiếp theo: map từng skill code theo profession/level, trace skill animation resource IDs, rồi đối chiếu combat events với các handler còn lại và data tables.
 
+
+
+## Browser world-state integration — opcode 6/9
+
+The browser reducer now preserves the two original handler branches separately
+and adds explicit source-backed aliases to each event:
+
+- `attackerEntityId` = first signed-short entity ID.
+- `targetEntityId` = second signed-short entity ID.
+- `damage` = damage integer used by the original floating-damage display.
+- `targetCurrentHp` = target HP integer written by the original handler.
+
+When the target entity is already present, its `currentHp` is updated immutably.
+Events receive a monotonic sequence number; the retained history is bounded to
+100 events without resetting the sequence. The Phaser scene consumes each new
+event once and displays the raw damage value above the target, then fades it
+upward. The presentation deliberately uses neutral white text: the remaining
+style/flag bytes are preserved but are not yet interpreted as critical, miss,
+element, or status semantics.
+
+This does not calculate damage, mutate local character progression, or claim
+server-authoritative combat simulation. Opcode 10's separately documented
+zero-damage MISS behavior is not inferred for opcodes 6/9.
