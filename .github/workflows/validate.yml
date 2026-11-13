@@ -637,9 +637,9 @@ jobs:
                 Map.of("category", 1, "templateId", (short)0x0022));
               byte[] shop24CatalogPayload = ProtocolCommandVariantCodec.encodeC2SOpcode24("catalog", shop24CatalogRecords);
               ProtocolCommandVariantCodec.Decoded shop24Catalog = ProtocolCommandVariantCodec.decodeC2SOpcode24("catalog", shop24CatalogPayload);
-              byte[] shop24PremiumPayload = ProtocolCommandVariantCodec.encodeC2SOpcode24("premium",
+              byte[] shop24PremiumPayload = ProtocolCommandVariantCodec.encodeC2SOpcode24("category4_fixed",
                 List.of(Map.of("itemId", (short)0x0102, "quantity", (short)5)));
-              ProtocolCommandVariantCodec.Decoded shop24Premium = ProtocolCommandVariantCodec.decodeC2SOpcode24("premium", shop24PremiumPayload);
+              ProtocolCommandVariantCodec.Decoded shop24Premium = ProtocolCommandVariantCodec.decodeC2SOpcode24("category4_fixed", shop24PremiumPayload);
               byte[] shop74Payload = ProtocolCommandVariantCodec.encodeC2SOpcode74(List.<Number>of(0x1234, (short)-2));
               ProtocolCommandVariantCodec.Decoded shop74 = ProtocolCommandVariantCodec.decodeC2SOpcode74(shop74Payload);
               if (!Arrays.equals(shop24CatalogPayload, new byte[]{2,3,0x12,0x34,0,1,7,1,0,0x22,0,1})
