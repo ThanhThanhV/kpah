@@ -1070,3 +1070,31 @@ export function decodeS2COpcodeMinus71(payload) {
   return { action, effectId, entityId, expiryValue, xTile, yTile, entityKind,
     attachMode, state, auxiliary, trailingBytes: readRemaining(reader) };
 }
+
+/** Opcode -73: the two verified mj.A(acu) attachment branches. */
+export function decodeS2COpcodeMinus73(payload) {
+  const reader = new PacketReader(payload);
+  const entityId = reader.readI16();
+  const branch = reader.readI8();
+  if (branch === 0) {
+    const effectId = reader.readI16();
+    const targetCount = reader.readI8();
+    if (targetCount < 0) throw new RangeError("Negative opcode -73 target count");
+    const targets = [];
+    for (let i = 0; i < targetCount; i += 1) {
+      targets.push({
+        entityKind: reader.readI8(),
+        targetEntityId: reader.readI16(),
+        offsetValueA: reader.readI32(),
+        offsetValueB: reader.readI32(),
+      });
+    }
+    return { entityId, branch, effectId, targetCount, targets, trailingBytes: readRemaining(reader) };
+  }
+  if (branch === 1) {
+    const effectId = reader.readI16();
+    const expiryValue = reader.readI64();
+    return { entityId, branch, effectId, expiryValue, trailingBytes: readRemaining(reader) };
+  }
+  return { entityId, branch, handled: false, unconsumedBytes: readRemaining(reader), trailingBytes: new Uint8Array() };
+}
