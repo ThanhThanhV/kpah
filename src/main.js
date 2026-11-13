@@ -1794,13 +1794,16 @@ class WorldScene extends Phaser.Scene {
   movePlayerTo(x,y,duration=120,showDestination=false){
     if(!this.playerSprite||characterState.snapshot().hp<=0)return;
     if(this.serverLocalPlayerEntityId){
+      const target={x:Math.round(x),y:Math.round(y)};
       try{
-        sendPlayerMovement(Math.round(x),Math.round(y));
+        if(!sendPlayerMovement(target.x,target.y))return;
       }catch(error){
         console.warn('KPAH server movement request failed',error);
+        return;
       }
+      this.serverMoveDestination=target;
       if(showDestination&&this.destinationMarker){
-        this.destinationMarker.setPosition(x,y+18).setScale(1).setAlpha(0.9).setVisible(true);
+        this.destinationMarker.setPosition(target.x,target.y+18).setScale(1).setAlpha(0.9).setVisible(true);
         this.destinationPulse?.restart();
       }
       return;
@@ -1919,6 +1922,12 @@ class WorldScene extends Phaser.Scene {
     if(!this.playerSprite||characterState.snapshot().hp<=0)return;
     if(this.serverLocalPlayerEntityId){
       const {x,y}=this.playerSprite,now=Date.now();
+      if(this.serverMoveDestination
+        &&Math.hypot(this.serverMoveDestination.x-x,this.serverMoveDestination.y-y)<=8){
+        this.serverMoveDestination=null;
+        this.destinationPulse?.pause();
+        this.destinationMarker?.setVisible(false);
+      }
       if(!this.lastMapPinSyncAt||now-this.lastMapPinSyncAt>=100){
         this.lastMapPinSyncAt=now;
         this.syncWorldMapPins(x,y);
