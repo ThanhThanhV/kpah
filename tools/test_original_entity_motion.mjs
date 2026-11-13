@@ -47,7 +47,7 @@ assert.equal(noSpeed.moving, false);
 const playerStep = advanceOriginalPlayerMovement({
   x: 0, y: 0, targetX: 31, targetY: 40, direction: 0, moving: true,
 }, 3);
-assert.equal(playerStep.x, 7, "player step uses cT + 1 when either axis exceeds 30");
+assert.equal(playerStep.x, 4, "player step uses cT + 1 when either axis exceeds 30");
 assert.equal(playerStep.y, 0, "player movement also prioritizes X");
 assert.equal(playerStep.direction, 3);
 const playerVertical = advanceOriginalPlayerMovement({
