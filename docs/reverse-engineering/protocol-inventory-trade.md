@@ -180,3 +180,13 @@ Generated Java/JavaScript codecs use the corrected command names and cover both 
 - CI run `43403732922` on commit `306ccd0e6c992a107c8ae3c7e80ed4fb70ef8223` passed generated command-variant consistency, JavaScript round-trip/boundary tests, Java 21 compile/smoke (including constant-field rejection), Vite build and original-JAR analysis.
 - Opcode 24 variant identifiers are intentionally neutral: `catalog` for the category/template path and `category4_fixed` for the fixed-category-4 path. The packet itself carries no variant discriminator; callers must select the correct layout.
 - No server acceptance, currency deduction, stock mutation or inventory persistence is inferred from these client-side codecs.
+
+
+## Storage deposit / withdraw request-response trace
+
+- C2S opcode 68 `STORAGE_DEPOSIT_ITEM`: one signed-short `itemId`. The tab-22 inventory-side selection calls `jy.d(itemId)` (`aaa.java:15-20`; writer `jy.java:892-903`).
+- S2C opcode 68 `STORAGE_DEPOSIT_RESULT`: one signed-short `itemId`. Handler `ka.java:252-255` calls `mj.e(itemId)`, which removes the item from `z.bx` (inventory) and adds it to `z.bA` (storage) if absent (`mj.java:4562-4573`).
+- C2S opcode 69 `STORAGE_WITHDRAW_ITEM`: one signed-short `itemId`. The tab-22 storage-side selection calls `jy.e(itemId)` (`aaa.java:35-40`; writer `jy.java:905-915`).
+- S2C opcode 69 `STORAGE_WITHDRAW_RESULT`: one signed-short `itemId`. Handler `ka.java:257-260` calls `mj.f(itemId)`, which removes the item from `z.bA` and adds it to `z.bx` if absent (`mj.java:4576-4584`).
+- C2S opcode 70 `STORAGE_REFRESH`: empty payload; `jy.i()` sends only the opcode (`jy.java:880-890`) and is called when leaving the tab-22 storage flow (`xg.java:3291-3293`, `dh.java:2097-2100`). No S2C opcode-70 handler was identified in `ka.java`; do not invent a response command.
+- These handlers prove original-client collection updates, not server persistence or transaction acceptance. The generated web codecs only serialize/parse the payloads; they do not mutate inventory or storage state.
