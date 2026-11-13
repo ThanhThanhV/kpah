@@ -27,3 +27,16 @@ The common aY and aZ fields are retained under neutral names because their busin
 ## Verification
 
 Run npm run test:initialization-state to exercise mode 0 merge semantics, mode 1 full replacement, mode 2 second-collection replacement, mode 3 counter replacement, unknown-mode no-op behavior and immutability of previous state.
+
+
+## Opcode 1 global initialization catalogs
+
+`applyOpcode1(state, decodedPacket)` applies the verified opcode 1 data into a new immutable state:
+- Global movement step and boat ticket price, global config bytes, optional block, hotline/URL and part-data parse status.
+- Skill catalog, profession skill slot counts and five profession catalogs.
+- Stat labels, paired lookup rows and quest objective labels.
+- Tile blobs keyed by the two verified runtime keys and indexed part-data blobs.
+
+Binary blobs are copied into fresh Uint8Arrays. Catalog indices and opaque records are preserved; this layer does not invent runtime rendering semantics for tile/part bytes. A failed/partial part-data parse is retained as an error field and does not silently claim the blob list is complete.
+
+The reducer is still a data-state layer, not a live network session or a Phaser map renderer.
