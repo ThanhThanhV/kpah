@@ -82,3 +82,14 @@ CI đã chạy self-test thành công cho codec tham chiếu (key derivation, C2
 - Đã xác minh framing trong client decompile; chưa có capture mạng thật hoặc server source để đối chiếu tương tác với server production.
 - Các packet opcode nghiệp vụ, schema payload, xác thực và trạng thái server được theo dõi riêng trong B4–B16.
 
+
+
+## Incremental S2C stream framing
+
+`ServerFrameStreamDecoder` incrementally reconstructs S2C frames from arbitrary TCP read chunks.
+
+- Buffers incomplete short or encrypted long headers and incomplete payloads.
+- Emits multiple complete frames when one read contains concatenated packets.
+- Maintains the receive XOR cursor across all bytes and packet boundaries.
+- Supports a caller-controlled frame limit so the cleartext `-40` key handshake can be emitted first; the caller can then call `setKey(decodedKey)` before parsing buffered encrypted bytes.
+- The decoder accepts chunks, not sockets. The TCP reader, connection lifecycle, timeout and send queue remain separate work.
