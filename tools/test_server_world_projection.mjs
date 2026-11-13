@@ -15,7 +15,8 @@ const projected = projectServerWorldEntities({
 assert.deepEqual(projected, [
   { entityId: 10, kind: 0, templateId: 4, x: 100, y: 200, state: 1,
     coordinateSource: "opcode4", presentation: "player-like", factoryClass: "hd", templateName: null,
-    frameWidth: null, frameHeight: null, movementStep: null, templateReady: false },
+    frameWidth: null, frameHeight: null, movementStep: null, templateType: null,
+    frameOffsetX: null, frameOffsetY: null, shadowOffsetX: null, shadowOffsetY: null, templateReady: false },
   { entityId: 11, kind: 1, templateId: 7, x: 320, y: 410, state: 2,
     coordinateSource: "opcode5", presentation: "monster-npc-family", factoryClass: "cd", templateName: null,
     frameWidth: null, frameHeight: null, movementStep: null, templateReady: false },
@@ -29,6 +30,8 @@ assert.equal(withTemplate[0].templateName, "Wolf");
 assert.equal(withTemplate[0].frameWidth, 32);
 assert.equal(withTemplate[0].frameHeight, 48);
 assert.equal(withTemplate[0].movementStep, 4);
+assert.equal(withTemplate[0].templateType, null);
+assert.equal(withTemplate[0].frameOffsetX, null);
 assert.equal(withTemplate[0].templateReady, true);
 assert.equal(withTemplate[0].factoryClass, "w");
 assert.equal(resolveOriginalEntityFactoryClass(0, 0, 0, 1), "hd");
