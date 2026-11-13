@@ -1165,3 +1165,12 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Opcode chưa hỗ trợ được trả về `handled=false`, không đổi state; frame lỗi/strict payload lỗi được ném ra.
 - Thêm test adapter, npm script và GitHub Actions.
 - Giới hạn: chưa có TCP socket reader, partial-frame buffer, handshake production, Phaser bridge hoặc local-save. Caller phải cung cấp từng frame đầy đủ và tự duy trì key/cursor.
+
+
+### B16 — Incremental S2C TCP frame stream decoder
+
+- Thêm `ServerFrameStreamDecoder` nhận TCP chunks bất kỳ, buffer header/body chưa đủ và tách nhiều frame ghép trong cùng một lần đọc.
+- Hỗ trợ short header và encrypted long header theo framing đã reverse-engineer; giữ receive XOR cursor liên tục qua các packet.
+- Có `maxFrames` để dừng sau frame handshake cleartext `-40`, cho phép caller cài key rồi mới parse phần encrypted đang buffer.
+- Thêm test split chunks, coalesced frames, long header, cursor continuity, handshake key switch và frame size guard; nối npm + CI.
+- Giới hạn: chưa mở TCP socket, chưa có connection lifecycle/send queue/timeout, chưa nối stream decoder với initialization adapter/Phaser trong app.
