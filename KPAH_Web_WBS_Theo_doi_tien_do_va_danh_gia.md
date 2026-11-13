@@ -1063,8 +1063,8 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 ### B7 — C2S shop purchase request families
 
 - Opcode 85 `SHOP_PURCHASE_ITEM`: `abv`/`gt` sau xác nhận mua gọi `jy.c(itemId)`; payload một byte. S2C 85 `SHOP_PURCHASE_SUCCESS` hiển thị thông báo mua thành công.
-- Opcode 74 `SHOP_PURCHASE_BATCH`: tab 10, `xg.p()` → `jy.a(Vector)`; total quantity short + lặp item ID short theo số lượng; đặt tên source-backed, chưa typed variable-list.
-- Opcode 24 `SHOP_BATCH_ACTION`: `jy.b(Vector)` và `jy.c(Vector)` có hai record layout khác nhau; chưa typed để tránh ép hai biến thể vào một schema.
+- Opcode 74 `SHOP_PURCHASE_BATCH`: tab 10, `xg.p()` → `jy.a(Vector)`; signed-short total expanded quantity + lặp item ID signed short theo từng đơn vị. Đã có typed variable-list codec.
+- Opcode 24 `SHOP_BATCH_ACTION`: `jy.b(Vector)` (catalog) và `jy.c(Vector)` (premium) có hai layout; đã có caller-selected codec, count u8; catalog có option byte khi category 3, premium có category 4 cố định. Không có discriminator trên wire.
 - Chưa coi optimistic local updates là server-authoritative; transaction validation/persistence còn mở.
 
 
@@ -1074,3 +1074,11 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 - Generated protocol checks, JavaScript protocol suites, Java 21 compile/smoke và original-JAR analysis đều PASS.
 - Các request client-side đã source-trace: use item 48, equipment upgrade -25 (action 10/11), refinement action/result -68, equip 86, drop-equipped -21, shop purchase item 85, purchase batch 74 và batch action 24.
 - Payload biến thể/list của opcode 24/74 và response callback luyện đồ vẫn opaque; unequip-to-bag, server transaction, authoritative inventory mutation, warehouse completion còn mở. Không tăng % tổng dự án.
+
+
+### B7 — shop batch variable-list codecs (CI pending)
+
+- Opcode 24 `SHOP_BATCH_ACTION`: caller-selected variants `catalog`/`premium`; count unsigned byte; catalog record category/templateId/quantity=1/conditional optionByte for category 3; premium record category=4/itemId/quantity.
+- Opcode 74 `SHOP_PURCHASE_BATCH`: signed-short expanded total count and repeated signed-short item IDs; list representation expands each selected row by its quantity.
+- Added generated JavaScript and Java codecs, explicit unknown-variant rejection, count bounds, JS round-trip tests and Java 21 smoke assertions. Source evidence: `jy.java:756-780`, `816-865`; `xg.java:3257-3265`.
+- CI pending; do not mark B7 complete or adjust weighted project progress until generated-file check and all CI jobs pass.
