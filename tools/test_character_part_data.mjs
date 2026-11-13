@@ -20,7 +20,9 @@ const writer = new PacketWriter()
   .writeI16(1).writeI16(55);
 
 for (let sequence = 0; sequence < 8; sequence += 1) {
-  writer.writeI8(1).writeI8(0);
+  const length = sequence === 2 ? 3 : sequence === 6 ? 2 : 1;
+  writer.writeI8(length);
+  for (let frame = 0; frame < length; frame += 1) writer.writeI8(0);
 }
 writer.writeI8(9).writeI8(2).writeI8(3);
 for (let index = 0; index < 4; index += 1) {
@@ -56,8 +58,19 @@ let playback=triggerCharacterPartAction({state:0,direction:0,transform:2,frameCu
 assert.deepEqual(playback,{state:3,direction:0,transform:2,frameCursor:0},
   "attack event starts one-shot action state at frame zero");
 playback=advanceCharacterPartPlayback(playback,decoded,{moving:false});
+assert.deepEqual(playback,{state:3,direction:0,transform:2,frameCursor:1},
+  "multi-frame action sequence advances without looping");
+playback=advanceCharacterPartPlayback(playback,decoded,{moving:false});
+assert.deepEqual(playback,{state:3,direction:0,transform:2,frameCursor:2});
+playback=advanceCharacterPartPlayback(playback,decoded,{moving:false});
 assert.deepEqual(playback,{state:0,direction:0,transform:2,frameCursor:0},
-  "one-frame action sequence returns to idle on the next original tick");
+  "action sequence returns to idle after its final frame");
+let reversePlayback=triggerCharacterPartAction({state:0,direction:1,transform:0,frameCursor:0});
+reversePlayback=advanceCharacterPartPlayback(reversePlayback,decoded,{moving:false});
+assert.equal(reversePlayback.state,3);
+assert.equal(reversePlayback.frameCursor,1,"reverse-facing action uses direction 1's action sequence");
+reversePlayback=advanceCharacterPartPlayback(reversePlayback,decoded,{moving:false});
+assert.equal(reversePlayback.state,0,"reverse-facing action also completes once");
 playback=advanceCharacterPartPlayback({state:0,direction:0,transform:0,frameCursor:0},decoded,{
   moving:true,x:10,y:10,targetX:4,targetY:2,
 });
