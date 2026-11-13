@@ -1391,7 +1391,8 @@ class WorldScene extends Phaser.Scene {
           if(!template||!Number.isInteger(template.movementStep))continue;
           next=advanceOriginalCdMovement(motion,template);
         }else if(factoryClass==='hd'||factoryClass==='z'){
-          next=advanceOriginalPlayerMovement(motion,entity.playerMovementStep);
+          next=advanceOriginalPlayerMovement(motion,
+            Number.isFinite(entity.snapshot?.cT)?entity.snapshot.cT:3);
         }else continue;
         this.serverWorldMotion.set(id,next);
         const view=this.serverWorldViews.get(id);
