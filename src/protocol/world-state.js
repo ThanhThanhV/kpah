@@ -57,7 +57,10 @@ export function applyS2COpcode5World(world, payload) {
   if (payload.length < 2) throw new RangeError("Opcode 5 payload is missing entity id");
   const entityId = (payload[0] << 8) | payload[1];
   const signedEntityId = entityId > 0x7fff ? entityId - 0x10000 : entityId;
-  const exists = Object.prototype.hasOwnProperty.call(current.entitiesById ?? {}, String(signedEntityId));
+  const existingEntity = current.entitiesById?.[String(signedEntityId)];
+  // Original ka opcode 5 resolves through mj.b(short), which only returns kind 0
+  // player actors before casting to z. A kind 1 cd monster is not a valid target.
+  const exists = existingEntity?.kind === 0;
   const snapshot = decodeS2COpcode5(payload, { entityExists: exists });
   const next = cloneWorld(current);
   if (!exists) {
