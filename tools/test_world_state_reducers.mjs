@@ -43,6 +43,16 @@ state = applied.state;
 assert.equal(state.serverWorld.entitiesById["124"].snapshot.name, "Hero");
 assert.equal(state.serverWorld.entitiesById["124"].snapshot.x, 900);
 
+const playerMoveUpdate = new PacketWriter()
+  .writeI8(0).writeU8(8).writeI16(124).writeI16(950).writeI16(960).writeI8(1)
+  .writeI32(-1).writeI8(0).writeI8(0).writeBool(true).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 4, payload: playerMoveUpdate }).state;
+assert.equal(state.serverWorld.entitiesById["124"].targetX, 950);
+assert.equal(state.serverWorld.entitiesById["124"].targetY, 960);
+assert.equal(state.serverWorld.entitiesById["124"].movementPending, true);
+assert.equal(state.serverWorld.entitiesById["124"].snapshot.x, 900,
+  "opcode 4 player target must not overwrite opcode 5 current position");
+
 // Opcode 5 for an entity that has not spawned is retained as opaque bytes,
 // matching the original handler's existing-entity guard.
 const unknownPayload = new PacketWriter().writeI16(999).writeU8(0xaa).writeU8(0xbb).toUint8Array();
