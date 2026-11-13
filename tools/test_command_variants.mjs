@@ -47,16 +47,20 @@ assert.deepEqual(catalogDecoded.records,[
  {category:3,templateId:0x1234,quantity:1,optionByte:7},
  {category:1,templateId:0x0022,quantity:1}
 ]);
-const premiumPayload = encodeC2SOpcode24("category4_fixed",{records:[{itemId:0x0102,quantity:5}]});
-assert.deepEqual([...premiumPayload],[1,4,1,2,0,5]);
-assert.deepEqual(decodeC2SOpcode24("category4_fixed",premiumPayload).records,[
+const category4Payload = encodeC2SOpcode24("category4_fixed",{records:[{itemId:0x0102,quantity:5}]});
+assert.deepEqual([...category4Payload],[1,4,1,2,0,5]);
+assert.deepEqual(decodeC2SOpcode24("category4_fixed",category4Payload).records,[
  {category:4,itemId:0x0102,quantity:5}
 ]);
+const invalidCatalogConstant = new PacketWriter().writeU8(1).writeI8(1).writeI16(0x22).writeI16(2).toUint8Array();
+assert.throws(()=>decodeC2SOpcode24("catalog",invalidCatalogConstant),/Invalid constant field quantity/);
+const invalidCategory4Constant = new PacketWriter().writeU8(1).writeI8(3).writeI16(0x0102).writeI16(5).toUint8Array();
+assert.throws(()=>decodeC2SOpcode24("category4_fixed",invalidCategory4Constant),/Invalid constant field category/);
 assert.throws(()=>encodeC2SOpcode24("unknown",{records:[]}),/Unknown C2S opcode 24 variant/);
 assert.throws(()=>encodeC2SOpcode24("catalog",{records:[{category:3,templateId:1}]}),/Missing opcode 24 field optionByte/);
 assert.throws(()=>encodeC2SOpcode24("catalog",{records:Array.from({length:256},()=>({category:1,templateId:1}))}),/exceeds u8/);
-const catalogTrailing = decodeC2SOpcode24("category4_fixed",new PacketWriter().writeU8(0).writeU8(99).toUint8Array());
-assert.deepEqual([...catalogTrailing.trailingBytes],[99]);
+const fixedCategoryTrailing = decodeC2SOpcode24("category4_fixed",new PacketWriter().writeU8(0).writeU8(99).toUint8Array());
+assert.deepEqual([...fixedCategoryTrailing.trailingBytes],[99]);
 
 const shop74Payload = encodeC2SOpcode74({itemIds:[0x1234,-2]});
 assert.deepEqual([...shop74Payload],[0,2,0x12,0x34,0xff,0xfe]);
