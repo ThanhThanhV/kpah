@@ -39,5 +39,5 @@ assert.deepEqual([...state.partData[0].data], [8, 9, 10]);
 assert.equal(original.skillCatalog, undefined, "must not mutate input state");
 decoded.tileBlobs[0].data[0] = 99;
 assert.deepEqual([...state.tileBlobs[0].data], [1, 2, 3], "binary blobs must be copied");
-assert.throws(() => applyOpcode1(original, { skills: [] }), /tile and part data arrays/);
+assert.throws(() => applyOpcode1(original, { skills: [] }), /Decoded opcode 1 packet is required/);
 console.log("Opcode 1 initialization state reducer: PASS (catalogs, config, tiles, part blobs, immutable copies)");
