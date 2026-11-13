@@ -173,3 +173,10 @@ Generated Java/JavaScript codecs use the corrected command names and cover both 
 - `protocol.yaml` now declares both source-backed opcode 24 variants and the opcode 74 expanded item-ID collection.
 - Generated JS/Java APIs: `encode/decodeC2SOpcode24(variant, ...)` and `encode/decodeC2SOpcode74(...)`. Opcode 24 variant selection is explicit because no variant tag exists in the packet. Opcode 74 represents quantity expansion directly as repeated item IDs.
 - JavaScript round-trip and Java 21 smoke vectors cover category-3 conditional option bytes, category-4 fixed category-4 records, signed item IDs, empty lists, unknown variants, and count bounds.
+
+
+### Shop batch codec CI verification
+
+- CI run `43403732922` on commit `306ccd0e6c992a107c8ae3c7e80ed4fb70ef8223` passed generated command-variant consistency, JavaScript round-trip/boundary tests, Java 21 compile/smoke (including constant-field rejection), Vite build and original-JAR analysis.
+- Opcode 24 variant identifiers are intentionally neutral: `catalog` for the category/template path and `category4_fixed` for the fixed-category-4 path. The packet itself carries no variant discriminator; callers must select the correct layout.
+- No server acceptance, currency deduction, stock mutation or inventory persistence is inferred from these client-side codecs.
