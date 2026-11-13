@@ -1387,7 +1387,8 @@ class WorldScene extends Phaser.Scene {
         view.setPosition(next.x,next.y).setDepth(next.y+3);
         const frameIndex=resolveOriginalEntityFrameIndex(template.directionFrameType,next.direction??0,next.frameState??0);
         const sprite=view.getData('sprite');
-        const texture=this.textures.get('kpah-server-template-'+entity.templateId);
+        const textureKey='kpah-server-template-'+entity.templateId;
+        const texture=this.textures.exists(textureKey)?this.textures.get(textureKey):null;
         if(sprite&&frameIndex!==null&&texture?.has(frameIndex))sprite.setFrame(frameIndex);
       }
     }
