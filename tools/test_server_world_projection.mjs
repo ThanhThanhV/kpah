@@ -38,6 +38,10 @@ assert.equal(withTemplate[0].templateReady, true);
 assert.equal(withTemplate[0].factoryClass, "w");
 assert.equal(resolveOriginalEntityFactoryClass(0, 0, 0, 1), "hd");
 assert.equal(resolveOriginalEntityFactoryClass(0, 0, 0, -1), "z");
+const playerWithoutPartMarker = projectServerWorldEntities({
+  entityOrder: [14], entitiesById: { 14: { kind: 0, templateId: 0, x: 1, y: 2, marker: -1 } },
+});
+assert.equal(playerWithoutPartMarker[0].factoryClass, "z", "kind-0 renderer uses the opcode-4 marker byte as the part index");
 assert.equal(resolveOriginalEntityFactoryClass(1, 91, 0, -1), "v");
 assert.equal(resolveOriginalEntityFactoryClass(1, 46, 0, -1), "w");
 assert.equal(resolveOriginalEntityFactoryClass(1, 100, 0, -1), "cf");
