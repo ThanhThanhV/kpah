@@ -115,3 +115,8 @@ style/flag bytes remain preserved but are not yet translated into critical-hit,
 miss, element, buff or skill-animation semantics. HP bars still need a
 verified maximum-HP source for generic monster entities; the opcode 7 entity
 snapshot ID assignment remains unresolved in the current bytecode notes.
+
+
+## Verified current HP projection
+
+S2C opcode 6/9 target records and opcode 106 multi-target records carry a post-event target HP value; the world reducer stores it as `entity.currentHp`. The projection now exposes that current value to the local HUD as a separate server-sourced line. It deliberately does not calculate a percentage or overwrite the demo HP/MP bars: a verified maximum-HP source for kind-0 player actors has not yet been established.
