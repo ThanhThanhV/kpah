@@ -126,29 +126,37 @@ The projection exposes both values, and the local HUD renders a separate
 server HP meter only when `maxHp > 0`. Demo HP/MP bars are not repurposed.
 
 
-## Character level and resource HUD (S2C opcodes 32/33)
+## Character HP/MP and level synchronization (S2C opcodes 5/32/33)
 
-The original dispatch trace in `ka.java:case32` confirms opcode 32 carries a
-character ID and signed-byte-counted UTF-key / signed-int value records. The
-original consumer recognizes the keys `hp`, `mp`, `bp` and `sp`. For the
-active local character only, the handler reads one additional signed byte and
-one signed short before passing the records to `mj.a(id,cx[])`. The browser
-decoder now uses `activeCharacterId` to honor that conditional trailer,
-stores the resource records by character ID and projects the recognized keys
-to the local HUD.
+The original `ka.java:case5` resolves a pre-existing kind-0 player through
+`mj.b(short)`, then reads the four resource integers directly into
+`z.cG` (current HP), `z.cH` (maximum HP), `z.bC` (current MP) and
+`z.bB` (maximum MP). It reads `z.cY` as the level byte. The browser maps
+`snapshot.combatState[0..3]` to those four named fields and
+`snapshot.stateBytes[0]` to level, only after the same kind-0 entity guard.
+This supplies initial HP/MP meters from the player snapshot.
 
-The `hp/mp/bp/sp` values are displayed as server-provided resource values;
-they are not treated as max values and are not used to derive HP/MP bar ratios.
-Combat current HP from opcodes 6/9/106 remains a separate display value.
+Opcode 32 reads a character ID and signed-byte-counted UTF-key / signed-int
+records. The original `mj.a(short,cx[])` resolves a kind-0 player and applies
+`hp` to current HP (`cE=cG`), `mp` to current MP (`bC`), `bp` to
+`aC`, and `sp` to `aD`. The additional byte and short are read only for
+the active local character. The browser follows the same entity guard, updates
+current HP/MP without changing their maximum values, and retains BP/SP as
+auxiliary resource values.
 
-The `ka.java:case33` trace confirms character ID, level byte and two signed
-integers are passed to `mj.a(id,level,int,int)`, which updates level and
-character HP/MP state. The browser now projects and displays the level, while
-retaining the two integers as `valueA/valueB` until the exact per-field
-semantics are verified. No max-HP, max-MP or current-resource label is inferred
-from those two values. This is protocol/UI integration only; no live-server
+Opcode 33 reads character ID, level byte, and two signed integers. The original
+`mj.a(short,byte,int,int)` resolves an existing kind-0 player, assigns
+`cY=level`, `cH=cG=valueA` (maximum and current HP), and
+`bB=bC=valueB` (maximum and current MP), then emits the level-up visual.
+Missing/non-player IDs are ignored. The browser now maps these fields directly
+to `level`, `currentHp`, `maxHp`, `currentMp`, and `maxMp`.
+
+Opcode 7 can subsequently refresh current/max HP for an existing world entity;
+combat opcodes 6/9/106 refresh post-event current HP. These updates preserve
+maximum MP. The local HUD displays HP and MP values and meters only when their
+server values are available; BP/SP remain auxiliary text values. No values are
+inferred from unknown fields. This is source-level integration; no live-server
 packet capture or visual validation has been performed.
-
 
 ## Existing-entity HP state update (S2C opcode 7)
 
