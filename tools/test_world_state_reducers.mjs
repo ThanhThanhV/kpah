@@ -1,0 +1,57 @@
+import assert from "node:assert/strict";
+import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
+import { applyInboundWorldPacket } from "../src/protocol/world-state.js";
+import { createInitializationState } from "../src/protocol/initialization-state.js";
+
+let state = createInitializationState();
+const spawn = new PacketWriter()
+  .writeI8(1).writeU8(7).writeI16(123).writeI16(456).writeI16(789).writeI8(2)
+  .writeI32(-99).writeI8(4).writeI8(5).writeBool(true)
+  .writeI8(0).writeU8(8).writeI16(124).writeI16(500).writeI16(600).writeI8(1)
+  .writeI32(77).writeI8(6).writeBool(true).toUint8Array();
+let applied = applyInboundWorldPacket(state, { opcode: 4, payload: spawn });
+state = applied.state;
+assert.equal(applied.handled, true);
+assert.deepEqual(applied.events, ["S2C_OPCODE_4_WORLD"]);
+assert.equal(state.serverWorld.entitiesById["123"].templateId, 7);
+assert.equal(state.serverWorld.entitiesById["123"].x, 456);
+assert.deepEqual(state.serverWorld.entityOrder, [123, 124]);
+
+const snapshot = new PacketWriter().writeI16(123).writeUTF("Hero").writeI16(900).writeI16(901);
+for (const n of [100, 200, 300, 400]) snapshot.writeI32(n);
+snapshot.writeI8(1).writeI8(2);
+for (let i = 0; i < 7; i++) snapshot.writeI8(i);
+for (let i = 0; i < 7; i++) snapshot.writeI16(10 + i);
+snapshot.writeI16(50).writeI8(6).writeI16(70).writeI16(80).writeI8(9).writeI8(10)
+  .writeI8(2).writeI8(3).writeI8(4).writeI8(5).writeI16(99).writeI8(7).writeI8(8).writeI8(13);
+for (let i = 0; i < 5; i++) snapshot.writeI16(200 + i);
+snapshot.writeBool(true).writeBool(false).writeI8(11).writeI8(12).writeBool(true);
+const snapshotPayload = snapshot.toUint8Array();
+applied = applyInboundWorldPacket(state, { opcode: 5, payload: snapshotPayload });
+state = applied.state;
+assert.equal(state.serverWorld.entitiesById["123"].snapshot.name, "Hero");
+assert.equal(state.serverWorld.entitiesById["123"].snapshot.x, 900);
+
+// Opcode 5 for an entity that has not spawned is retained as opaque bytes,
+// matching the original handler's existing-entity guard.
+const unknownPayload = new PacketWriter().writeI16(999).writeU8(0xaa).writeU8(0xbb).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 5, payload: unknownPayload }).state;
+assert.equal(state.serverWorld.unknownEntitySnapshots[0].entityId, 999);
+assert.deepEqual([...state.serverWorld.unknownEntitySnapshots[0].unconsumedBytes], [0xaa, 0xbb]);
+
+const combat = new PacketWriter().writeI16(123).writeI16(124).writeI8(3).writeI32(400).writeI32(900)
+  .writeI8(1).writeI8(2).writeI8(3).writeI8(4).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 6, payload: combat }).state;
+assert.equal(state.serverWorld.combatEvents[0].firstEntityId, 123);
+assert.equal(state.serverWorld.combatEvents[0].valueA, 400);
+
+const remove = new PacketWriter().writeI16(123).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 8, payload: remove }).state;
+assert.equal(state.serverWorld.entitiesById["123"], undefined);
+assert.deepEqual(state.serverWorld.entityOrder, [124]);
+assert.deepEqual(state.serverWorld.removedEntityIds, [123]);
+
+const ignored = applyInboundWorldPacket(state, { opcode: 7, payload: new Uint8Array() });
+assert.equal(ignored.handled, false);
+assert.equal(ignored.state, state);
+console.log("Inbound world-state reducers: PASS (spawn/update, guarded snapshot, combat event, despawn, unknown opcode)");
