@@ -111,11 +111,11 @@ assert.deepEqual([state.serverWorld.worldEvents.at(-1).first, state.serverWorld.
 const opcode83 = new PacketWriter().writeI16(124).writeI8(7).writeI8(1).writeI16(124).writeI32(111).writeI32(222).writeU8(3).writeU8(4).toUint8Array();
 state = applyInboundWorldPacket(state, { opcode: 83, payload: opcode83 }).state;
 assert.deepEqual(state.serverWorld.entitiesById["124"].opcode83State, { valueA: 111, valueB: 222 });
-assert.equal(state.serverWorld.worldEvents.at(-1).targets[0].entityId, 124);
+assert.equal(state.serverWorld.worldEvents.at(-1).targets[0].targetId, 124);
 const missingSource83 = new PacketWriter().writeI16(999).writeI8(7).writeI8(1).writeI16(124).writeI32(1).writeI32(2).toUint8Array();
 state = applyInboundWorldPacket(state, { opcode: 83, payload: missingSource83 }).state;
 assert.equal(state.serverWorld.worldEvents.at(-1).handledByOriginalGuard, false);
-assert.deepEqual([...state.serverWorld.worldEvents.at(-1).opaquePayload], [...missingSource83]);
+assert.deepEqual([...state.serverWorld.worldEvents.at(-1).opaquePayload], [...missingSource83.slice(3)]);
 
 // Opcode 106 carries shared damage plus target/current-HP records.
 const opcode106 = new PacketWriter().writeI16(124).writeI8(8).writeI32(75).writeI8(1).writeI8(2).writeI8(3).writeI8(2).writeI16(124).writeI32(800).writeI16(123).writeI32(0).toUint8Array();
