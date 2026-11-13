@@ -86,6 +86,8 @@ jobs:
         run: npm run test:world-state-reducers
       - name: Test server world projection
         run: npm run test:server-world-projection
+      - name: Test original template catalog and asset protocol
+        run: npm run test:template-assets
       - name: Verify generated opcode 1 codec
         run: npm run check:opcode1
       - name: Test generated opcode 1 codec
