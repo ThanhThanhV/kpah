@@ -415,7 +415,7 @@ const returnProjection = new Map([["124", { x: 100, y: 0, state: 1, playerMoveme
 const returnStep = advanceTargetLinkedActorPlayback(targetLinkedPlayback, returnWorld, returnProjection, parsedActorDefinition);
 assert.equal(returnStep.playback.state, 1, "state 4 returns toward a source that is active and more than 40px away");
 assert.equal(returnStep.playback.x, 32);
-const verticalActorEvent = { sourceEntityId: 124, effectId: 920, targets: [{ targetEntityId: 555, resolved: true, damageValue: 5, targetCurrentHp: 95 }] };
+const verticalActorEvent = { sourceEntityId: 124, animationId: 920, effectId: 909, targets: [{ targetEntityId: 555, resolved: true, damageValue: 5, targetCurrentHp: 95 }] };
 const verticalActorWorld = { entitiesById: { "124": { snapshot: { x: 0, y: 0 } }, "555": { currentHp: 100, snapshot: { x: 0, y: -60 } } } };
 const verticalActorProjections = new Map([["124", { x: 0, y: 0, playerMovementStep: 3 }], ["555", { x: 0, y: -60 }]]);
 let verticalActor = createTargetLinkedActorPlayback(verticalActorEvent, verticalActorWorld, verticalActorProjections, parsedActorDefinition);
