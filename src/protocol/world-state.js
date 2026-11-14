@@ -214,7 +214,7 @@ function applyCharacterRevive(world, packet, activeCharacterId = null) {
     ...entity, currentHp: packet.currentHp, maxHp: packet.maxHp,
     maxMp: packet.maxMp, reviveAuxiliary: packet.auxiliaryShort,
   };
-  next.characterRevivesById[id] = {
+  if (resolved) next.characterRevivesById[id] = {
     maxHp: packet.maxHp, maxMp: packet.maxMp,
     currentHp: packet.currentHp, auxiliaryShort: packet.auxiliaryShort,
   };
