@@ -82,6 +82,15 @@ playback=advanceCharacterPartPlayback(playback,decoded,{
 assert.equal(playback.frameCursor,1,
   "walking advances to the next frame only after its initial pose has been shown");
 playback=advanceCharacterPartPlayback(playback,decoded,{
+  moving:true,direction:1,x:9,y:9,targetX:9,targetY:2,
+});
+assert.equal(playback.direction,1,"vertical turn selects the matching animation row");
+assert.equal(playback.transform,0,"vertical turn clears the previous left-facing mirror");
+playback=advanceCharacterPartPlayback(playback,decoded,{
+  moving:true,direction:2,x:10,y:10,targetX:4,targetY:2,
+});
+assert.equal(playback.transform,2,"left movement applies the original horizontal mirror");
+playback=advanceCharacterPartPlayback(playback,decoded,{
   moving:true,direction:3,x:10,y:10,targetX:20,targetY:2,
 });
 assert.equal(playback.transform,0,"right movement restores the unmirrored atlas");
