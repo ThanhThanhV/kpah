@@ -177,7 +177,7 @@ public enum ProtocolCommand {
     S2C_OP_2((byte) 2, Direction.S2C),
     S2C_CHARACTER_SNAPSHOT((byte) 3, Direction.S2C),
     S2C_OP_4((byte) 4, Direction.S2C),
-    S2C_OP_5((byte) 5, Direction.S2C),
+    S2C_PLAYER_ENTITY_SNAPSHOT((byte) 5, Direction.S2C),
     S2C_OP_6((byte) 6, Direction.S2C),
     S2C_OP_7((byte) 7, Direction.S2C),
     S2C_OP_8((byte) 8, Direction.S2C),
