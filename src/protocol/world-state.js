@@ -232,8 +232,8 @@ function applyCharacterLevel(world, packet) {
     characterId: packet.characterId,
     entityId: packet.characterId,
     level: packet.level,
-    x: Number.isFinite(entity.snapshot?.x) ? entity.snapshot.x : entity.x,
-    y: Number.isFinite(entity.snapshot?.y) ? entity.snapshot.y : entity.y,
+    x: Number.isFinite(entity.x) ? entity.x : entity.snapshot?.x,
+    y: Number.isFinite(entity.y) ? entity.y : entity.snapshot?.y,
     entityResolved: true,
     eventType: "level-up",
   });
