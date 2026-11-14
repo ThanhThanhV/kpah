@@ -274,12 +274,17 @@ export function advanceCharacterPartPlayback(playback, metadata, motion) {
     else if (worldDirection === 2) next.transform = 2;
     else if (worldDirection === 3) next.transform = 0;
   }
-  if (next.state !== nextState) {
+  const stateChanged = next.state !== nextState;
+  if (stateChanged) {
     next.state = nextState;
     next.frameCursor = 0;
   }
   const sequence = sequenceFor(next.state);
-  if (sequence?.length) next.frameCursor = (next.frameCursor + 1) % sequence.length;
+  // Keep frame zero visible for the first tick after entering idle/walk.
+  // Advancing here would skip the first pose of every newly entered sequence.
+  if (!stateChanged && sequence?.length) {
+    next.frameCursor = (next.frameCursor + 1) % sequence.length;
+  }
   return next;
 }
 
