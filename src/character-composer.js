@@ -34,6 +34,7 @@ export function mountCharacterComposer(root) {
           <button type="button" data-composer-export>Xuất tọa độ JSON</button>
         </div>
         <canvas data-composer-preview width="320" height="320" aria-label="Nhân vật đang được ghép"></canvas>
+        <p data-composer-autodraft-status>Đang tìm mảnh sprite đầu, thân và chân để dựng bản ghép thử…</p>
         <div class="character-composer__layers" data-composer-layers></div>
         <p>Kéo trực tiếp từng mảnh trên khung xem trước để căn vị trí. Có thể xuất cấu hình tọa độ JSON để lưu và dùng lại.</p>
       </section>
@@ -254,20 +255,13 @@ export function mountCharacterComposer(root) {
   }
 
 
-  function detectTransparentRegions() {
-    if (!atlasImage) return;
+  function scanTransparentRegions(image) {
     const scan = document.createElement('canvas');
-    scan.width = atlasImage.naturalWidth;
-    scan.height = atlasImage.naturalHeight;
+    scan.width = image.naturalWidth;
+    scan.height = image.naturalHeight;
     const scanContext = scan.getContext('2d', { willReadFrequently: true });
-    scanContext.drawImage(atlasImage, 0, 0);
-    let pixels;
-    try { pixels = scanContext.getImageData(0, 0, scan.width, scan.height).data; }
-    catch (error) {
-      candidateSelect.innerHTML = '<option value="">Không đọc được alpha của atlas</option>';
-      candidateSelect.disabled = true;
-      return;
-    }
+    scanContext.drawImage(image, 0, 0);
+    const pixels = scanContext.getImageData(0, 0, scan.width, scan.height).data;
     const width = scan.width, height = scan.height, total = width * height;
     const visited = new Uint8Array(total);
     const queue = new Int32Array(total);
@@ -299,7 +293,17 @@ export function mountCharacterComposer(root) {
         regions.push({ x: minX, y: minY, width: boxWidth, height: boxHeight, area });
       }
     }
-    detectedRegions = regions.sort((a, b) => b.area - a.area);
+    return regions.sort((a, b) => b.area - a.area);
+  }
+
+  function detectTransparentRegions() {
+    if (!atlasImage) return;
+    try { detectedRegions = scanTransparentRegions(atlasImage); }
+    catch (error) {
+      candidateSelect.innerHTML = '<option value="">Không đọc được alpha của atlas</option>';
+      candidateSelect.disabled = true;
+      return;
+    }
     candidateSelect.innerHTML = '';
     detectedRegions.forEach((region, index) => {
       const option = document.createElement('option');
@@ -317,6 +321,52 @@ export function mountCharacterComposer(root) {
     } else {
       candidateSelect.dispatchEvent(new Event('change'));
     }
+  }
+
+  async function autoComposeFirstDraft() {
+    const draft = new Map();
+    for (const type of TYPES) {
+      const entry = catalog.filter(item => item.partType === type)
+        .sort((a, b) => Number(a.partId) - Number(b.partId))[0];
+      if (!entry) continue;
+      const image = new Image();
+      image.src = assetUrl(entry.image);
+      await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = () => reject(new Error('Không tải được ' + entry.image));
+      });
+      if (disposed) return;
+      let regions = [];
+      try { regions = scanTransparentRegions(image); } catch { /* Continue to next atlas. */ }
+      const region = regions[0];
+      if (!region) continue;
+      const crop = document.createElement('canvas');
+      crop.width = region.width;
+      crop.height = region.height;
+      crop.getContext('2d').drawImage(image, region.x, region.y, region.width, region.height,
+        0, 0, region.width, region.height);
+      const croppedImage = new Image();
+      croppedImage.src = crop.toDataURL('image/png');
+      await new Promise((resolve, reject) => {
+        croppedImage.onload = resolve;
+        croppedImage.onerror = reject;
+      });
+      if (disposed) return;
+      draft.set(type, {
+        type, partId: entry.partId, source: entry.image,
+        crop: { x: region.x, y: region.y, width: region.width, height: region.height },
+        image: croppedImage, width: region.width, height: region.height,
+        ...PRESETS[type],
+      });
+    }
+    if (disposed || draft.size === 0) return;
+    layers.clear();
+    for (const [type, layer] of draft) layers.set(type, layer);
+    renderLayers();
+    drawPreview();
+    saveComposition();
+    const note = root.querySelector('[data-composer-autodraft-status]');
+    if (note) note.textContent = 'Đã tạo bản ghép thử từ mảnh alpha lớn nhất của mỗi atlas. Cần kiểm tra và căn chỉnh lại vì đây chưa phải tọa độ hoạt ảnh gốc.';
   }
 
   candidateSelect.addEventListener('change', () => {
@@ -461,8 +511,11 @@ export function mountCharacterComposer(root) {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) await restoreComposition(JSON.parse(saved));
+        else await autoComposeFirstDraft();
       } catch (error) {
-        console.warn('Không thể khôi phục bản ghép nhân vật đã lưu:', error);
+        console.warn('Không thể khôi phục hoặc tự ghép nhân vật:', error);
+        const note = root.querySelector('[data-composer-autodraft-status]');
+        if (note) note.textContent = 'Chưa tự ghép được từ atlas này. Hãy chọn từng mảnh bằng công cụ khoanh vùng.';
       }
     }
   }).catch(error => {
