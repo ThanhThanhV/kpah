@@ -82,7 +82,7 @@ export function mountCharacterStage(root) {
   root.innerHTML = `
     <div class="original-character-stage__viewport">
       <canvas width="480" height="360" aria-label="Hoạt ảnh nhân vật KPAH gốc"></canvas>
-      <div class="original-character-stage__empty">Đang chờ dữ liệu nhân vật gốc từ máy chủ KPAH</div>
+      <div class="original-character-stage__empty">Kết nối máy chủ KPAH và vào game để nhận dữ liệu part + atlas của nhân vật</div>
       <span class="original-character-stage__tag">NHÂN VẬT GỐC</span>
     </div>
     <div class="original-character-stage__toolbar">
