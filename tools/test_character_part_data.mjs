@@ -15,9 +15,7 @@ const writer = new PacketWriter()
   .writeU8(0).writeU8(10).writeU8(20).writeU8(30).writeU8(40)
   .writeI16(1)
   .writeI8(1)
-  .writeI16(5).writeI16(-3).writeI8(0)
-  .writeI16(1).writeI16(2).writeI8(0).writeI8(1)
-  .writeI8(0)
+  .writeI16(5).writeI16(-3).writeI8(0).writeI8(1).writeI8(0)
   .writeI16(1).writeI16(55);
 
 for (let sequence = 0; sequence < 8; sequence += 1) {
@@ -25,7 +23,7 @@ for (let sequence = 0; sequence < 8; sequence += 1) {
   writer.writeI8(length);
   for (let frame = 0; frame < length; frame += 1) writer.writeI8(0);
 }
-writerconst bytes = writer.toUint8Array();
+const bytes = writer.toUint8Array();
 const decoded = decodeCharacterPartData(bytes);
 
 assert.equal(decoded.format, "kpah-character-part-v1");
@@ -35,13 +33,7 @@ assert.deepEqual(decoded.regions[0], {
 });
 assert.equal(decoded.frameCount, 1);
 assert.deepEqual(decoded.frames[0].pieces[0], {
-  index: 0,
-  x: 5,
-  y: -3,
-  regionIndex: 0,
-  flip: 0,
-  discardedAuxiliary: { x: 1, y: 2, regionIndex: 0, byte: 1 },
-  layerGroup: 0,
+  index: 0, x: 5, y: -3, regionIndex: 0, flip: 1, layerGroup: 0,
 });
 assert.deepEqual(decoded.frameHeights, [{ index: 0, rawValue: 55, byteValue: 55 }]);
 assert.equal(decoded.animationSequences.length, 8);
