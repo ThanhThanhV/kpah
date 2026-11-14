@@ -112,7 +112,7 @@ export function mountCharacterStage(root) {
   const atlasImages = new Map();
   const selectedAtlasIds = { head: '0', body: '0', leg: '0' };
   let atlasCatalog = [];
-  let atlasLoadToken = 0;
+  const atlasLoadTokens = { head: 0, body: 0, leg: 0 };
   let data = latestCharacterPart;
   let state = 0;
   let direction = 0;
@@ -180,17 +180,27 @@ export function mountCharacterStage(root) {
     selectedAtlasIds[type] = id;
     const entry = atlasCatalog.find(item => item.partType === type && item.partId === id);
     if (!entry) return;
-    const token = ++atlasLoadToken;
+    const token = ++atlasLoadTokens[type];
     const image = new Image();
     image.onload = () => {
+      // Each part selector has its own request sequence. A slow response for
+      // an older selection must never overwrite the image currently selected.
+      if (disposed || token !== atlasLoadTokens[type] || selectedAtlasIds[type] !== id) return;
       atlasImages.set(type, image);
-      if (!data && !disposed && token <= atlasLoadToken) drawAtlasFallback();
+      if (!data) drawAtlasFallback();
     };
     image.onerror = () => {
+      if (disposed || token !== atlasLoadTokens[type] || selectedAtlasIds[type] !== id) return;
       empty.textContent = 'Không tải được atlas gốc: ' + entry.image;
       empty.hidden = false;
     };
-    image.src = assetUrl(entry.image);
+    const url = assetUrl(entry.image);
+    if (!url) {
+      empty.textContent = 'Đường dẫn atlas không hợp lệ: ' + entry.image;
+      empty.hidden = false;
+      return;
+    }
+    image.src = url;
   }
 
   function initializeAtlasFallback() {
