@@ -1279,6 +1279,9 @@ class WorldScene extends Phaser.Scene {
       &&Number.isInteger(event.sequence)&&event.sequence>this.serverWorldEventSequence)
       .sort((a,b)=>a.sequence-b.sequence);
     for(const event of pending){
+      // Consume even when an actor has no known world coordinates; otherwise
+      // the same unresolved visual event would be retried on every scene tick.
+      this.serverWorldEventSequence=event.sequence;
       const id=String(event.entityId??event.characterId);
       const entity=this.serverWorldState?.entitiesById?.[id];
       const motion=this.serverWorldMotion.get(id);
@@ -1288,9 +1291,10 @@ class WorldScene extends Phaser.Scene {
       const isLocal=Number.isInteger(this.serverInitializationState?.activeCharacterId)
         &&this.serverInitializationState.activeCharacterId===Number(event.characterId);
       const level=Number.isInteger(event.level)?event.level:entity?.level;
-      const label=isLocal?'Đạt được level '+level:'Lv. '+level;
+      if(isLocal&&Number.isInteger(level))toast('Đạt được level '+level);
+      const label='Lv. '+level;
       const popup=this.add.text(x,y-34,label,{
-        fontFamily:'Arial',fontSize:isLocal?'15px':'13px',fontStyle:'bold',
+        fontFamily:'Arial',fontSize:'13px',fontStyle:'bold',
         color:'#ffe89a',stroke:'#34251d',strokeThickness:4
       }).setOrigin(0.5).setDepth(y+150);
       this.tweens.add({
@@ -1310,7 +1314,6 @@ class WorldScene extends Phaser.Scene {
           duration:620,ease:'Cubic.easeOut',onComplete:()=>spark.destroy()
         });
       }
-      this.serverWorldEventSequence=event.sequence;
     }
     if(!pending.length&&latestSequence>this.serverWorldEventSequence){
       this.serverWorldEventSequence=latestSequence;
