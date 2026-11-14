@@ -24,7 +24,7 @@ import { mountCharacterStage, publishCharacterPartData, clearCharacterPartData }
 import { createStarterCharacterComposition } from './character-composer.js';
 import { decodeTemplateSpriteAtlas } from './protocol/template-assets.js';
 import { resolveOriginalEntityFactoryClass, resolveOriginalEntityFrameIndex } from './protocol/original-entity-factory.js';
-import { advanceOriginalCdMovement, advanceOriginalPlayerMovement, stopOriginalEntityMotionAtCurrentPosition } from './protocol/original-entity-motion.js';
+import { advanceOriginalCdMovement, advanceOriginalHdMovement, advanceOriginalPlayerMovement, stopOriginalEntityMotionAtCurrentPosition } from './protocol/original-entity-motion.js';
 import { getServerCombatEventsAfter } from './protocol/server-world-combat.js';
 import { advanceEffectPlayback, createEffectPlayback, getEffectFrameParts } from './protocol/effect-playback.js';
 import { actorEffectImageResourceId } from './protocol/effect-assets.js';
@@ -2414,7 +2414,9 @@ class WorldScene extends Phaser.Scene {
           template=this.serverWorldState.templatesById?.[String(entity.templateId)];
           if(!template||!Number.isInteger(template.movementStep))continue;
           next=advanceOriginalCdMovement(motion,template);
-        }else if(factoryClass==='hd'||factoryClass==='z'){
+        }else if(factoryClass==='hd'){
+          next=advanceOriginalHdMovement(motion);
+        }else if(factoryClass==='z'){
           next=advanceOriginalPlayerMovement(motion,
             Number.isFinite(entity.snapshot?.cT)?entity.snapshot.cT:3);
         }else continue;
