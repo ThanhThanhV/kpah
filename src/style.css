@@ -511,3 +511,28 @@
  .character-portrait .original-character-stage__viewport{height:260px}
  .character-overview{grid-template-columns:minmax(0,1fr)}
 }
+
+
+/* Character sheet is the first screen after login; keep the original sprite stage prominent. */
+.game-window.character-window{
+  width:min(920px,calc(100vw - 28px));
+  max-height:min(860px,calc(var(--app-height,100dvh) - 24px));
+}
+.game-window.character-window .window-content{padding:18px}
+.character-window .character-overview{gap:16px}
+.character-window .character-portrait .original-character-stage__viewport{height:380px}
+.character-window .original-character-stage__toolbar{justify-content:center;gap:8px}
+.character-window .original-character-stage__toolbar button{font-size:10px;padding:8px 11px}
+.character-window .original-character-stage__caption{font-size:10px;max-width:680px}
+.character-window .character-overview-main h2{font-size:23px}
+.character-window .progression-stat{min-height:58px}
+.character-window .character-subnav{margin-top:18px}
+.character-window .character-portrait{padding:12px}
+@media(max-width:700px){
+  .game-window.character-window{width:calc(100vw - 12px);max-height:calc(var(--app-height,100dvh) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 12px)}
+  .game-window.character-window .window-content{padding:10px}
+  .character-window .character-portrait .original-character-stage__viewport{height:290px}
+  .character-window .character-overview-main h2{font-size:18px}
+  .character-window .character-overview{gap:12px}
+  .character-window .original-character-stage__toolbar button{font-size:8px;padding:6px 8px}
+}
