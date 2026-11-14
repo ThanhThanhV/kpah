@@ -223,6 +223,23 @@ export function createWorldTileLayer(scene, definition) {
     // Phaser.Tilemap.setCollision(indexes, collides, recalculateFaces, layer)
     map.setCollision(collisionIndexes, true, true, layer);
   }
+  if (Array.isArray(definition.collisionGrid)) {
+    if (definition.collisionGrid.length !== data.length ||
+        definition.collisionGrid.some(row => !Array.isArray(row) || row.length !== data[0].length ||
+          row.some(value => typeof value !== 'boolean'))) {
+      throw new Error('World collision grid must match the visual tile matrix.');
+    }
+    for (let row = 0; row < definition.collisionGrid.length; row += 1) {
+      for (let column = 0; column < definition.collisionGrid[row].length; column += 1) {
+        const tile = layer.getTileAt(column, row);
+        if (tile) {
+          const blocked = definition.collisionGrid[row][column];
+          tile.setCollision(blocked, blocked, blocked, blocked, false);
+        }
+      }
+    }
+    layer.calculateFacesWithin(0, 0, data[0].length, data.length);
+  }
   layer.setDepth(definition.depth || 0);
   return { map, layer };
 }
