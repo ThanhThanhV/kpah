@@ -19,7 +19,7 @@ import { projectServerWorldEntities } from './protocol/server-world-projection.j
 import { advanceCharacterPartPlayback, triggerCharacterPartAction } from './protocol/character-part-data.js';
 import { decodeTemplateSpriteAtlas } from './protocol/template-assets.js';
 import { resolveOriginalEntityFactoryClass, resolveOriginalEntityFrameIndex } from './protocol/original-entity-factory.js';
-import { advanceOriginalCdMovement, advanceOriginalPlayerMovement } from './protocol/original-entity-motion.js';
+import { advanceOriginalCdMovement, advanceOriginalPlayerMovement, stopOriginalEntityMotionAtCurrentPosition } from './protocol/original-entity-motion.js';
 import { getServerCombatEventsAfter } from './protocol/server-world-combat.js';
 import { advanceEffectPlayback, createEffectPlayback, getEffectFrameParts } from './protocol/effect-playback.js';
 import { actorEffectImageResourceId } from './protocol/effect-assets.js';
@@ -1334,13 +1334,27 @@ class WorldScene extends Phaser.Scene {
       this.serverWorldDeadCharacterIds.delete(id);
       this.serverCharacterPartPlayback.set(id,{state:0,frameCursor:0,direction:0,transform:0});
       this.syncServerWorldViews();
+      const entity=this.serverWorldState?.entitiesById?.[id];
+      const motion=this.serverWorldMotion.get(id);
+      if(motion){
+        const stopped=stopOriginalEntityMotionAtCurrentPosition(motion);
+        stopped.serverTargetX=entity?.targetX??null;
+        stopped.serverTargetY=entity?.targetY??null;
+        this.serverWorldMotion.set(id,stopped);
+        const view=this.serverWorldViews.get(id);
+        view?.setPosition(stopped.x,stopped.y).setDepth(stopped.y+3);
+      }
       const isLocal=event.isLocal===true
         ||(Number.isInteger(this.serverInitializationState?.activeCharacterId)
           &&this.serverInitializationState.activeCharacterId===Number(event.characterId));
-      const entity=this.serverWorldState?.entitiesById?.[id],motion=this.serverWorldMotion.get(id);
       const x=motion?.x??(Number.isFinite(entity?.x)?entity.x:event.x);
       const y=motion?.y??(Number.isFinite(entity?.y)?entity.y:event.y);
-      if(isLocal)toast('Đã được hồi sinh.');
+      if(isLocal){
+        this.serverMoveDestination=null;
+        this.destinationPulse?.pause();
+        this.destinationMarker?.setVisible(false);
+        toast('Đã được hồi sinh.');
+      }
       else toast((typeof entity?.name==='string'&&entity.name.trim()?entity.name.trim():'Nhân vật')+' đã được hồi sinh.');
       if(!Number.isFinite(x)||!Number.isFinite(y))continue;
       const label=this.add.text(x,y-34,'Hồi sinh',{
@@ -2038,8 +2052,15 @@ class WorldScene extends Phaser.Scene {
     return xProgress>=yProgress&&xProgress>directProgress?xFirst:
       yProgress>directProgress?yFirst:direct;
   }
+  isServerLocalPlayerDead(){
+    if(!this.serverLocalPlayerEntityId)return characterState.snapshot().hp<=0;
+    const id=this.serverLocalPlayerEntityId;
+    const entity=this.serverWorldState?.entitiesById?.[id];
+    return this.serverWorldDeadCharacterIds.has(id)
+      ||(Number.isFinite(entity?.currentHp)&&entity.currentHp<=0);
+  }
   movePlayerTo(x,y,duration=120,showDestination=false){
-    if(!this.playerSprite||characterState.snapshot().hp<=0)return;
+    if(!this.playerSprite||this.isServerLocalPlayerDead())return;
     if(this.serverLocalPlayerEntityId){
       const target={x:Math.round(x),y:Math.round(y)};
       try{
