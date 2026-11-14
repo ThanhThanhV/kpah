@@ -18,6 +18,8 @@ export function mountCharacterComposer(root) {
         <div class="character-composer__bar">
           <label>Bộ phận <select data-composer-type><option value="head">Đầu</option><option value="body" selected>Thân</option><option value="leg">Chân</option></select></label>
           <label>Mẫu ảnh <select data-composer-id></select></label>
+          <button type="button" data-composer-detect>Tự tìm mảnh ảnh</button>
+          <select data-composer-candidate aria-label="Mảnh ảnh phát hiện được" disabled><option value="">Chưa quét atlas</option></select>
           <button type="button" data-composer-add disabled>Lấy vùng đã chọn</button>
         </div>
         <canvas data-composer-atlas width="480" height="260" aria-label="Chọn vùng sprite trên atlas"></canvas>
@@ -40,6 +42,9 @@ export function mountCharacterComposer(root) {
   const previewCanvas = root.querySelector('[data-composer-preview]');
   const previewContext = previewCanvas.getContext('2d');
   const addButton = root.querySelector('[data-composer-add]');
+  const detectButton = root.querySelector('[data-composer-detect]');
+  const candidateSelect = root.querySelector('[data-composer-candidate]');
+  let detectedRegions = [];
   const layerList = root.querySelector('[data-composer-layers]');
   const images = new Map();
   const layers = new Map();
@@ -155,6 +160,86 @@ export function mountCharacterComposer(root) {
     image.onerror = () => { atlasContext.fillStyle = '#ffb6a0'; atlasContext.fillText('Không tải được atlas: ' + atlasEntry.image, 12, 22); };
     image.src = assetUrl(atlasEntry.image);
   }
+
+
+  function detectTransparentRegions() {
+    if (!atlasImage) return;
+    const scan = document.createElement('canvas');
+    scan.width = atlasImage.naturalWidth;
+    scan.height = atlasImage.naturalHeight;
+    const scanContext = scan.getContext('2d', { willReadFrequently: true });
+    scanContext.drawImage(atlasImage, 0, 0);
+    let pixels;
+    try { pixels = scanContext.getImageData(0, 0, scan.width, scan.height).data; }
+    catch (error) {
+      candidateSelect.innerHTML = '<option value="">Không đọc được alpha của atlas</option>';
+      candidateSelect.disabled = true;
+      return;
+    }
+    const width = scan.width, height = scan.height, total = width * height;
+    const visited = new Uint8Array(total);
+    const queue = new Int32Array(total);
+    const regions = [];
+    for (let start = 0; start < total; start++) {
+      if (visited[start]) continue;
+      visited[start] = 1;
+      if (pixels[start * 4 + 3] < 24) continue;
+      let head = 0, tail = 0;
+      queue[tail++] = start;
+      let minX = width, minY = height, maxX = -1, maxY = -1, area = 0;
+      while (head < tail) {
+        const point = queue[head++];
+        const x = point % width, y = Math.floor(point / width);
+        minX = Math.min(minX, x); minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x); maxY = Math.max(maxY, y); area++;
+        for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
+          if (!ox && !oy) continue;
+          const nx = x + ox, ny = y + oy;
+          if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+          const next = ny * width + nx;
+          if (visited[next]) continue;
+          visited[next] = 1;
+          if (pixels[next * 4 + 3] >= 24) queue[tail++] = next;
+        }
+      }
+      const boxWidth = maxX - minX + 1, boxHeight = maxY - minY + 1;
+      if (area >= 10 && boxWidth >= 3 && boxHeight >= 3) {
+        regions.push({ x: minX, y: minY, width: boxWidth, height: boxHeight, area });
+      }
+    }
+    detectedRegions = regions.sort((a, b) => b.area - a.area);
+    candidateSelect.innerHTML = '';
+    detectedRegions.forEach((region, index) => {
+      const option = document.createElement('option');
+      option.value = String(index);
+      option.textContent = '#' + (index + 1) + ' · ' + region.width + '×' + region.height
+        + ' · (' + region.x + ',' + region.y + ')';
+      candidateSelect.append(option);
+    });
+    candidateSelect.disabled = !detectedRegions.length;
+    if (!detectedRegions.length) {
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = 'Không tìm thấy vùng alpha tách biệt';
+      candidateSelect.append(option);
+    } else {
+      candidateSelect.dispatchEvent(new Event('change'));
+    }
+  }
+
+  candidateSelect.addEventListener('change', () => {
+    const region = detectedRegions[Number(candidateSelect.value)];
+    if (!region || !atlasFit) return;
+    selection = {
+      x: atlasFit.x + region.x * atlasFit.scale,
+      y: atlasFit.y + region.y * atlasFit.scale,
+      width: region.width * atlasFit.scale,
+      height: region.height * atlasFit.scale,
+    };
+    addButton.disabled = false;
+    drawAtlas();
+  });
+  detectButton.addEventListener('click', detectTransparentRegions);
 
   function fillIds() {
     const type = typeSelect.value;
