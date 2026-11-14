@@ -91,7 +91,7 @@ export function mountCharacterStage(root) {
         <button type="button" data-stage-state="2">Di chuyển</button>
         <button type="button" data-stage-state="3">Ra đòn</button>
       </div>
-      <button type="button" data-stage-direction="toggle" aria-label="Đổi hướng">↔ Đổi hướng</button>
+      <button type="button" data-stage-direction="toggle" aria-label="Lật nhân vật trái phải">↔ Lật trái/phải</button>
     </div>
     <div class="original-character-stage__caption">Hoạt ảnh dùng frame và atlas được server gửi theo định dạng gốc.</div>`;
   const canvas = root.querySelector('canvas');
@@ -131,9 +131,13 @@ export function mountCharacterStage(root) {
       empty.hidden = false;
       return;
     }
-    empty.hidden = true;
     const frame = getFrame();
-    if (!frame) return;
+    if (!frame) {
+      empty.textContent = 'Không có frame cho trạng thái hoạt ảnh đang chọn trong dữ liệu gốc.';
+      empty.hidden = false;
+      return;
+    }
+    empty.hidden = true;
     const scale = Math.min(3.1, 270 / frame.canvas.width, 290 / frame.canvas.height);
     const width = frame.canvas.width * scale;
     const height = frame.canvas.height * scale;
