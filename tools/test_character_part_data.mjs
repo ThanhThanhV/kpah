@@ -38,7 +38,8 @@ assert.deepEqual(decoded.frames[0].pieces[0], {
   x: 5,
   y: -3,
   regionIndex: 0,
-  auxiliary: { x: 1, y: 2, regionIndex: 0, flag: 1 },
+  flip: 0,
+  discardedAuxiliary: { x: 1, y: 2, regionIndex: 0, byte: 1 },
   layerGroup: 0,
 });
 assert.deepEqual(decoded.frameHeights, [{ index: 0, rawValue: 55, byteValue: 55 }]);
@@ -106,4 +107,4 @@ assert.equal(catalog[1].decoded, false);
 assert.match(catalog[1].error, /Truncated character part data/);
 assert.deepEqual([...bytes], [...writer.toUint8Array()], "decoder must not mutate source bytes");
 
-console.log("KPAH character part decoder: PASS (regions, frame pieces, animation maps, optional tables, malformed blobs)");
+console.log("KPAH character part decoder: PASS (atlas regions, renderer piece fields, layer order data, animation maps, malformed blobs)");
