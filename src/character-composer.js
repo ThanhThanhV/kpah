@@ -366,13 +366,18 @@ export function mountCharacterComposer(root) {
         x: Math.round((320 - region.width * scale) / 2), y: layout.top, scale,
       });
     }
-    if (disposed || draft.size === 0) return;
+    if (disposed) return;
+    if (draft.size === 0) {
+      const note = root.querySelector('[data-composer-autodraft-status]');
+      if (note) note.textContent = 'Atlas không có vùng alpha tách biệt để tự ghép. Hãy khoanh vùng thủ công trên ảnh gốc.';
+      return;
+    }
     for (const [type, layer] of draft) if (!layers.has(type)) layers.set(type, layer);
     renderLayers();
     drawPreview();
     saveComposition();
     const note = root.querySelector('[data-composer-autodraft-status]');
-    if (note) note.textContent = 'Đã tạo bản ghép thử từ mảnh alpha lớn nhất của mỗi atlas. Cần kiểm tra và căn chỉnh lại vì đây chưa phải tọa độ hoạt ảnh gốc.';
+    if (note) note.textContent = 'Đã tự nhận diện ' + draft.size + '/3 bộ phận từ mảnh alpha lớn nhất. Đây là bản ghép thử; hãy kiểm tra, căn chỉnh và chọn lại nếu mảnh chưa đúng.';
   }
 
   candidateSelect.addEventListener('change', () => {
