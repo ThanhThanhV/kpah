@@ -92,9 +92,10 @@ export function loadSpriteSheetTexture(scene, definition) {
  */
 export async function loadOriginalMapTileAssets(scene, definition) {
   const { key, atlasUrl, typeUrl } = definition || {};
-  if (typeof atlasUrl !== 'string' || !/^https?:\\/\\//i.test(atlasUrl) ||
-      typeof typeUrl !== 'string' || !/^https?:\\/\\//i.test(typeUrl)) {
-    throw new Error('Original map tile assets require valid atlas and type URLs.');
+  const validAssetUrl = value => typeof value === 'string' &&
+    /^(https?:\/\/|\/assets\/)/i.test(value);
+  if (!validAssetUrl(atlasUrl) || !validAssetUrl(typeUrl)) {
+    throw new Error('Original map tile assets require HTTP(S) or same-origin /assets/ URLs.');
   }
   const response = await fetch(typeUrl);
   if (!response.ok) throw new Error('Unable to load original tile type table: HTTP ' + response.status);
