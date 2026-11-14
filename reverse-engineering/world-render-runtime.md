@@ -271,3 +271,18 @@ bytes without pretending to decode the proprietary map format. Phaser consumes
 the transition once, stops stale movement/destination feedback, syncs the local
 actor position, and centers the camera on it. Camera bounds and actual tile
 rendering remain unchanged until the map byte format is decoded.
+
+
+### Original map byte stream structure (CFR `hf.a(int, byte[])`)
+
+The original map parser is source-traced in `hf.java:65-300`. It reads an
+unsigned-byte width and height, then a row-major `width * height` tile grid
+(with tile byte 254 normalized to 255). Three sentinel-terminated sections
+follow: rectangular tile overrides (255 terminator), point tile overrides
+(255 terminator), and three-byte decoration records (254 is also normalized
+to the 255 terminator). The tail contains a one-byte map mode flag, a counted
+portal list (x/y, little-endian portal ID, two bytes), then a counted NPC list
+(x/y/id). The browser now extracts these records and retains trailing bytes.
+This does not yet identify the image atlas behind `ku.L`, collision meanings,
+portal grouping/entrance geometry or decoration asset IDs, so it does not
+attempt to draw or invent those semantics.
