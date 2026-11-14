@@ -142,6 +142,13 @@ export function decodeS2COpcode32(payload, isLocalCharacter = false) {
   if (isLocalCharacter) { localStateByte = reader.readI8(); localShortValue = reader.readI16(); }
   return { characterId, statCount, stats, localStateByte, localShortValue, trailingBytes: readRemaining(reader) };
 }
+export function decodeS2COpcode60(payload) {
+  const reader = new PacketReader(payload);
+  return { characterId: reader.readI16(), maxHp: reader.readI32(),
+    maxMp: reader.readI32(), auxiliaryShort: reader.readI16(),
+    currentHp: reader.readI32(), trailingBytes: readRemaining(reader) };
+}
+
 export function decodeS2COpcode33(payload) {
   const reader = new PacketReader(payload);
   return { characterId: reader.readI16(), level: reader.readI8(), valueA: reader.readI32(),
