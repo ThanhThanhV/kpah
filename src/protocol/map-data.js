@@ -114,6 +114,43 @@ export function decodeOriginalTileTypeData(payload) {
 
 export function isOriginalTileBlocked(tileTypeFlags, tileId) {
   if (!(tileTypeFlags instanceof Uint8Array)) throw new TypeError("Tile type flags must be Uint8Array");
-  if (!Number.isInteger(tileId) || tileId < 0 || tileId >= tileTypeFlags.length) return true;
+  if (!Number.isInteger(tileId) || tileId < 0) throw new RangeError("Tile ID is outside the type table");
+  if (tileId >= tileTypeFlags.length) throw new RangeError("Tile ID is outside the type table");
   return (tileTypeFlags[tileId] & 0x02) === 0x02;
+}
+
+
+/** Apply source-order tile overrides to the visual grid (base, rectangles, points). */
+export function buildOriginalMapTileRows(mapData) {
+  if (!mapData || !Number.isInteger(mapData.width) || !Number.isInteger(mapData.height)
+      || !Array.isArray(mapData.tileRows)) throw new TypeError("Decoded map data is required");
+  const rows = mapData.tileRows.map(row => row.map(tileId => tileId === 255 ? -1 : tileId));
+  for (const rectangle of mapData.rectangleOverrides ?? []) {
+    for (const cell of rectangle.cells ?? []) {
+      if (cell.tileId === 255) continue;
+      if (rows[cell.row] && cell.column >= 0 && cell.column < rows[cell.row].length) {
+        rows[cell.row][cell.column] = cell.tileId;
+      }
+    }
+  }
+  for (const point of mapData.pointOverrides ?? []) {
+    if (point.tileId === 255) continue;
+    if (rows[point.row] && point.column >= 0 && point.column < rows[point.row].length) {
+      rows[point.row][point.column] = point.tileId;
+    }
+  }
+  return rows;
+}
+
+/**
+ * Collision remains based on the original base grid: hf.a(Graphics) draws
+ * override tiles from its separate overlay table, while hf.g was initialized
+ * from the unmodified base tile IDs.
+ */
+export function buildOriginalMapCollisionRows(mapData, tileTypeFlags) {
+  if (!mapData || !Array.isArray(mapData.tileRows)) throw new TypeError("Decoded map data is required");
+  if (!(tileTypeFlags instanceof Uint8Array)) throw new TypeError("Tile type flags must be Uint8Array");
+  return mapData.tileRows.map(row => row.map(tileId =>
+    tileId === 255 ? false : isOriginalTileBlocked(tileTypeFlags, tileId)
+  ));
 }
