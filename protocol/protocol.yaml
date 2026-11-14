@@ -1825,6 +1825,23 @@
       "evidence": "dispatcher-only"
     },
     {
+      "name": "MAP_TRANSITION",
+      "direction": "S2C",
+      "opcode": 12,
+      "evidenceSource": "ka.java:case12",
+      "evidence": "Reads map ID short, entry tile X and Y shorts, a map/resource selector byte and short, map label UTF string, then a boolean indicating whether map data follows and the remaining map-data bytes. The client changes the active map, keeps the local player, clears entities and transient effects from the previous map, and positions the local actor at tile*16+8 when both entry coordinates are present.",
+      "sections": [
+        "map-id",
+        "entry-tile-x",
+        "entry-tile-y",
+        "map-selector",
+        "map-resource-id",
+        "map-label",
+        "has-map-data",
+        "map-data"
+      ]
+    },
+    {
       "name": "CHARACTER_REVIVE",
       "opcode": 60,
       "direction": "S2C",
