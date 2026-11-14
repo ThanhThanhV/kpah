@@ -669,6 +669,22 @@ mapState = transitioned.state;
 assert.equal(transitioned.handled,true,"opcode 12 must be handled as a world map transition");
 assert.equal(mapState.serverWorld.mapTransition.mapId,23);
 assert.equal(mapState.serverWorld.mapTransition.mapResourceId,23,"map resource falls back to map id when fourth short is -1");
+assert.equal(mapState.serverWorld.mapTransition.tileSet.family,"overworld",
+  "tileset selection must use the fallback map resource ID");
+const alternateMap = applyInboundWorldPacket(mapState, {
+  opcode:12,
+  payload:(() => {
+    const writer = new PacketWriter();
+    writer.writeI16(23).writeI16(4).writeI16(6).writeI8(9).writeI16(205)
+      .writeUTF("Thành thị").writeBool(false);
+    return writer.toUint8Array();
+  })(),
+});
+assert.equal(alternateMap.state.serverWorld.mapTransition.mapId,23);
+assert.equal(alternateMap.state.serverWorld.mapTransition.mapResourceId,205);
+assert.equal(alternateMap.state.serverWorld.mapTransition.tileSet.family,"town",
+  "tileset selection follows the fourth map resource ID, not the first map ID");
+
 assert.equal(mapState.serverWorld.mapTransition.label,"Rừng sâu");
 assert.equal(mapState.serverWorld.mapTransition.hfK,9);
 assert.deepEqual([...mapState.serverWorld.mapTransition.mapData],[2,2,1,254,3,4,255,255,255,1,0,0]);
