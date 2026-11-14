@@ -20,7 +20,7 @@ const writer = new PacketWriter()
   .writeI16(1).writeI16(55);
 
 for (let sequence = 0; sequence < 8; sequence += 1) {
-  const length = sequence === 2 ? 3 : sequence === 6 ? 2 : 1;
+  const length = sequence === 1 || sequence === 2 ? 3 : sequence === 6 ? 2 : 1;
   writer.writeI8(length);
   for (let frame = 0; frame < length; frame += 1) writer.writeI8(0);
 }
@@ -76,6 +76,11 @@ playback=advanceCharacterPartPlayback({state:0,direction:0,transform:0,frameCurs
 });
 assert.deepEqual(playback,{state:2,direction:0,transform:2,frameCursor:0},
   "diagonal movement follows the original X-first left-facing direction");
+playback=advanceCharacterPartPlayback(playback,decoded,{
+  moving:true,direction:2,x:9,y:9,targetX:4,targetY:2,
+});
+assert.equal(playback.frameCursor,1,
+  "walking advances to the next frame only after its initial pose has been shown");
 playback=advanceCharacterPartPlayback(playback,decoded,{
   moving:true,direction:3,x:10,y:10,targetX:20,targetY:2,
 });
