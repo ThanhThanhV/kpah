@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: validate-${{ github.workflow }}-${{ github.ref }}
@@ -46,18 +46,6 @@ jobs:
         run: python tools/kpah_protocol_reference.py --self-test
       - name: Test local TCP replay harness
         run: npm run test:replay-harness
-      - name: Regenerate and synchronize protocol sources on main
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        shell: bash
-        run: |
-          python tools/generate_protocol.py
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/protocol/generated/commands.js protocol/generated/java/com/kpah/protocol/generated/ProtocolCommand.java protocol/generated/java/com/kpah/protocol/generated/ProtocolPacketCodec.java
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: synchronize generated protocol sources"
-            git push
-          fi
       - name: Verify generated protocol sources
         run: npm run check:protocol-generated
       - name: Verify generated transport sources
