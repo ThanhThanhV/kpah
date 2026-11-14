@@ -11,17 +11,21 @@ const candidates = process.platform === "win32"
   ? [{ command: "py", prefix: ["-3"] }, { command: "python", prefix: [] }, { command: "python3", prefix: [] }]
   : [{ command: "python3", prefix: [] }, { command: "python", prefix: [] }];
 
-let lastError;
 for (const candidate of candidates) {
+  const version = spawnSync(candidate.command, [...candidate.prefix, "--version"], {
+    encoding: "utf8",
+    windowsHide: true
+  });
+
+  const versionText = `${version.stdout ?? ""}${version.stderr ?? ""}`;
+  if (version.error || version.status !== 0 || !/Python 3\./.test(versionText)) {
+    continue;
+  }
+
   const result = spawnSync(candidate.command, [...candidate.prefix, script, ...args], {
     stdio: "inherit",
     windowsHide: true
   });
-
-  if (result.error?.code === "ENOENT") {
-    lastError = result.error;
-    continue;
-  }
   if (result.error) {
     console.error(result.error.message);
     process.exit(1);
@@ -31,7 +35,6 @@ for (const candidate of candidates) {
 
 console.error(
   "Python 3 was not found. Install Python 3 and enable the 'py' launcher, " +
-  "or add python.exe to PATH. Then rerun this command."
+  "or add the Python 3 executable to PATH. Then rerun this command."
 );
-if (lastError) console.error(lastError.message);
 process.exit(1);
