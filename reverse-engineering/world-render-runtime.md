@@ -321,3 +321,17 @@ the final overlaid image IDs. Tile ID 255 has no base collision; an invalid
 non-sentinel ID outside the .type table raises an explicit range error rather
 than inventing a blocked value. Phaser applies collision per tile and
 recalculates neighboring faces.
+
+
+### Conditional live map rendering
+
+When an opcode-12 packet contains a decoded map payload, Phaser now requests
+the matching atlas PNG and .type file using the selected mapResourceId family.
+The loader builds a 16×16 spritesheet, decodes the type bytes, applies the
+source-order visual override grid and original base-grid collision, removes
+the previous procedural zone objects, creates the original tile layer, updates
+world/camera bounds from map width and height, and centers on the server actor.
+This path is guarded by map-transition sequence so a slow old asset response
+cannot replace a newer map. If either static asset is absent, the transition
+and server actor remain usable and the renderer logs the missing asset instead
+of fabricating a replacement.
