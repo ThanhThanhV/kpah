@@ -2692,7 +2692,7 @@
       "name": "MAP_TRANSITION",
       "direction": "S2C",
       "opcode": 12,
-      "evidenceSource": "ka.java:case12; mj.java:4009-4078",
+      "evidenceSource": "ka.java:case12",
       "fields": [
         { "name": "mapId", "type": "i16", "source": "ka.case12 first short; mj.a(s2,...); this.aJ" },
         { "name": "tileX", "type": "i16", "source": "ka.case12 second short; mj.a sets t.l/t.ay = (tileX << 4) + 8 when both tile coords != -1" },
