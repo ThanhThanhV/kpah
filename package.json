@@ -7,7 +7,7 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "extract:assets": "node tools/run_python.mjs tools/extract_kpah_jar.py KPAH_278.jar",
+    "extract:assets": "node tools/extract_kpah_jar.mjs KPAH_278.jar",
     "analyze:classes": "python tools/analyze_class_files.py tools/reports/class-files",
     "verify:assets": "python tools/verify_asset_manifest.py public/assets/kpah-original --jar KPAH_278.jar",
     "suggest:class-roles": "python tools/suggest_class_roles.py tools/reports/kpah-class-analysis.json",
@@ -61,7 +61,9 @@
     "test:original-entity-motion": "node tools/test_original_entity_motion.mjs",
     "test:character-part-data": "node tools/test_character_part_data.mjs",
     "test:world-camera": "node tools/test_world_camera.mjs",
-    "test:map-data": "node tools/test_map_data.mjs"
+    "test:map-data": "node tools/test_map_data.mjs",
+    "predev": "npm run extract:assets",
+    "prebuild": "npm run extract:assets"
   },
   "dependencies": {
     "phaser": "^3.90.0",
