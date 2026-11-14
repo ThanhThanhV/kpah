@@ -79,3 +79,41 @@ export function decodeOriginalMapData(payload) {
     consumedBytes: offset,
   };
 }
+
+/**
+ * ku.l(mapId): original client selects the full tile atlas and its parallel
+ * collision/type table using these exact map-id ranges.
+ */
+export function resolveOriginalTileSet(mapId) {
+  if (!Number.isInteger(mapId)) throw new TypeError("Map ID must be an integer");
+  if (mapId > 200) return {
+    family: "town", atlasPath: "t_thanh.png", typePath: "t_thanh.type",
+    minimapAtlasPath: "t_thanh_s.png", tileWidth: 16, tileHeight: 16,
+    atlasLayout: "vertical-strip",
+  };
+  if (mapId < 110) return {
+    family: "overworld", atlasPath: "t.png", typePath: "t.type",
+    minimapAtlasPath: "t_small.png", tileWidth: 16, tileHeight: 16,
+    atlasLayout: "vertical-strip",
+  };
+  return {
+    family: "cave", atlasPath: "t_hang.png", typePath: "t_hang.type",
+    minimapAtlasPath: "t_hang_s.png", tileWidth: 16, tileHeight: 16,
+    atlasLayout: "vertical-strip",
+  };
+}
+
+/**
+ * ku.l(mapId) reads the matching .type resource byte-for-byte into hf.h.
+ * hf.a(x,y) treats bit 1 (mask 0x02) as blocked.
+ */
+export function decodeOriginalTileTypeData(payload) {
+  if (!(payload instanceof Uint8Array)) throw new TypeError("Tile type payload must be Uint8Array");
+  return { tileTypeFlags: new Uint8Array(payload), tileTypeCount: payload.length, collisionMask: 0x02 };
+}
+
+export function isOriginalTileBlocked(tileTypeFlags, tileId) {
+  if (!(tileTypeFlags instanceof Uint8Array)) throw new TypeError("Tile type flags must be Uint8Array");
+  if (!Number.isInteger(tileId) || tileId < 0 || tileId >= tileTypeFlags.length) return true;
+  return (tileTypeFlags[tileId] & 0x02) === 0x02;
+}
