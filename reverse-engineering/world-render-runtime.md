@@ -249,3 +249,25 @@ intermediate despawn packet, the old container and its movement/death playback
 state are discarded and rebuilt. Ordinary position updates and character-part
 marker changes retain the existing view. Live server validation is still
 required for map transitions and ID reuse ordering.
+
+
+### Server map transition (S2C opcode 12)
+
+CFR evidence: `ka.java:case12` reads three signed shorts, an optional signed
+byte defaulting to -1, a fourth signed short, a UTF label and an optional
+boolean followed by remaining map bytes. It calls
+`mj.a(short, short, short, short, String, byte[])` and then assigns the
+optional byte to `hf.k`.
+
+The source-backed map handler in `mj.java:4009-4078` clears previous map
+objects/effects, keeps only the local player in the world entity collection,
+resets its action state, and when both tile coordinates differ from -1 moves
+the player to `(tileX * 16 + 8, tileY * 16 + 8)`, adding 32 pixels on either
+axis when the resulting tile coordinate is at most 1. The fourth short falls
+back to the first short when it is -1 and is used as the map resource selector.
+The browser reducer now mirrors these known state changes, preserves global
+template/resource catalogs, clears prior-map actors/effects, and stores map
+bytes without pretending to decode the proprietary map format. Phaser consumes
+the transition once, stops stale movement/destination feedback, syncs the local
+actor position, and centers the camera on it. Camera bounds and actual tile
+rendering remain unchanged until the map byte format is decoded.
