@@ -1347,3 +1347,6 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 
 
 | 2026-11-14 | B5/C2 | Truy vết ku.l(mapId) và hf.a(Graphics): mapId >200 dùng t_thanh, <110 dùng t, còn lại dùng t_hang; atlas là vertical strip 16×16, .type giữ byte flags, collision theo mask 0x02; thêm resolver + decoder + regression test | Đã nối tileSet vào opcode12 | Chưa render thật do asset PNG/type chưa có trong repository static path; chưa có kiểm chứng visual/collision live |
+
+
+| 2026-11-14 | B5/C2 | Hoàn thiện adapter dữ liệu cho Phaser: build visual matrix theo base → rectangle overrides → point overrides; collision grid giữ base tile IDs như hf.g gốc; hỗ trợ collision per-cell trong createWorldTileLayer và tính lại faces | Decoder + adapter + test fixture đã cập nhật | Chưa thể bật renderer thật cho tới khi PNG atlas và .type được đưa vào static asset root; cần test trên map payload thật |
