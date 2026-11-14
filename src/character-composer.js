@@ -9,8 +9,8 @@ const PRESETS = {
 };
 const STARTER_PARTS = {
   head: { partId: '0', crop: { x: 28, y: 0, width: 19, height: 24 }, x: 131, y: 10, scale: 3 },
-  body: { partId: '0', crop: { x: 57, y: 0, width: 29, height: 24 }, x: 116, y: 68, scale: 3 },
-  leg: { partId: '0', crop: { x: 70, y: 0, width: 24, height: 37 }, x: 124, y: 128, scale: 3 },
+  body: { partId: '1', crop: { x: 60, y: 0, width: 24, height: 24 }, x: 120, y: 68, scale: 3 },
+  leg: { partId: '1', crop: { x: 74, y: 0, width: 19, height: 37 }, x: 131, y: 128, scale: 3 },
 };
 const AUTO_LAYOUT = {
   head: { top: 20, maxWidth: 76, maxHeight: 76 },
@@ -396,7 +396,7 @@ export function mountCharacterComposer(root) {
     drawPreview();
     saveComposition();
     const note = root.querySelector('[data-composer-autodraft-status]');
-    if (note) note.textContent = 'Đã ghép nhân vật mẫu từ atlas gốc: đầu 0, thân 0, chân 0. Kéo từng phần để căn chỉnh; thay đổi được lưu tự động.';
+    if (note) note.textContent = 'Đã ghép nhân vật mẫu từ atlas gốc: đầu 0, thân 1, chân 1. Kéo từng phần để căn chỉnh; thay đổi được lưu tự động.';
   }
 
   async function resetStarterCharacter() {
