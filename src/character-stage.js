@@ -317,7 +317,7 @@ export function mountCharacterStage(root) {
     draw();
   };
   subscribers.add(onData);
-  draw();
+  onData(data);
   if (!data) initializeAtlasFallback();
   raf = requestAnimationFrame(tick);
   return () => {
