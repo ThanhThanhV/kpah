@@ -59,6 +59,20 @@ assert.equal(playerSnapAtExactXStep.y, 12);
 assert.equal(playerSnapAtExactXStep.moving, false,
   "the exact X-step boundary must not overshoot the server destination");
 
+const playerVerticalAtExactStep = advanceOriginalPlayerMovement({
+  x: 8, y: 12, targetX: 8, targetY: 9, direction: 0, moving: true,
+}, 3);
+assert.equal(playerVerticalAtExactStep.y, 9,
+  "original hd advances Y by cT when the remaining distance equals cT");
+assert.equal(playerVerticalAtExactStep.moving, true,
+  "unlike X, Y is not marked snapped at the exact cT boundary");
+const playerVerticalSnapAfterExactStep = advanceOriginalPlayerMovement(
+  playerVerticalAtExactStep, 3,
+);
+assert.equal(playerVerticalSnapAfterExactStep.y, 9);
+assert.equal(playerVerticalSnapAfterExactStep.moving, false,
+  "the following tick snaps Y because its remaining distance is now below cT");
+
 const playerVertical = advanceOriginalPlayerMovement({
   x: 8, y: 12, targetX: 8, targetY: 4, direction: 0, moving: true,
 }, 3);
