@@ -69,7 +69,8 @@ function cloneWorld(world) {
     targetLinkedActorSpawnSequence: Number.isInteger(source.targetLinkedActorSpawnSequence) ? source.targetLinkedActorSpawnSequence : 0,
     lastSpawnBatch: [...(source.lastSpawnBatch ?? [])],
     removedEntityIds: [...(source.removedEntityIds ?? [])],
-    mapTransition: source.mapTransition ? { ...source.mapTransition, mapData: copyBytes(source.mapTransition.mapData) } : null,
+    mapTransition: source.mapTransition ? { ...source.mapTransition,
+      mapData: source.mapTransition.mapData instanceof Uint8Array ? copyBytes(source.mapTransition.mapData) : null } : null,
     mapTransitionSequence: Number.isInteger(source.mapTransitionSequence) ? source.mapTransitionSequence : 0,
   };
 }
