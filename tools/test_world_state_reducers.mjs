@@ -82,9 +82,10 @@ const remoteResources = new PacketWriter()
   .writeI16(123).writeI8(1).writeUTF("hp").writeI32(88).toUint8Array();
 applied = applyInboundWorldPacket(state, { opcode: 32, payload: remoteResources });
 state = applied.state;
-assert.equal(state.serverWorld.characterResourcesById["123"].statsByKey.hp.value, 88);
-assert.equal(state.serverWorld.characterResourcesById["123"].localStateByte, null,
-  "opcode 32 only reads the additional byte/short for the active character");
+assert.equal(state.serverWorld.characterResourcesById["123"], undefined,
+  "opcode 32 resolves only kind-0 player actors; kind-1 monsters are not character resource targets");
+assert.equal(state.serverWorld.worldEvents.at(-1).entityResolved, false,
+  "unresolved opcode 32 updates are retained as diagnostic events");
 
 const ignoredResources = new PacketWriter().writeI16(777).writeI8(1).writeUTF("hp").writeI32(999).toUint8Array();
 state = applyInboundWorldPacket(state, { opcode: 32, payload: ignoredResources }).state;
