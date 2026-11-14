@@ -93,7 +93,8 @@ export function advanceOriginalPlayerMovement(motion, baseStep = 3) {
   let y = motion.y;
   let snappedX = false;
   let snappedY = false;
-  if (dx < step) { x = motion.targetX; snappedX = true; }
+  // Original hd.b() snaps X when |x-targetX| <= step (Y uses < step).
+  if (dx <= step) { x = motion.targetX; snappedX = true; }
   if (dy < step) { y = motion.targetY; snappedY = true; }
   if (snappedX && snappedY) return { ...motion, x, y, moving: false };
 
