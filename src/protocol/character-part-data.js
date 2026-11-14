@@ -141,25 +141,9 @@ export function decodeCharacterPartData(bytes) {
     animationSequences.push(readByteSequence(reader, "animation sequence"));
   }
 
-  let optionalFrameMetadata = null;
-  if (reader.remaining > 0) {
-    const marker = reader.readI8();
-    const values = [];
-    for (let index = 0; index < frameCount; index += 1) {
-      values.push({ index, d: reader.readI8(), e: reader.readI8() });
-    }
-    optionalFrameMetadata = { marker, values };
+  if (reader.remaining !== 0) {
+    throw new RangeError("Unexpected trailing character part data: " + reader.remaining + " bytes");
   }
-
-  let additionalSequences = null;
-  if (reader.remaining > 0) {
-    additionalSequences = [];
-    for (let index = 0; index < 4; index += 1) {
-      additionalSequences.push(readByteSequence(reader, "additional sequence"));
-    }
-  }
-
-  const trailingBytes = reader.readBytes(reader.remaining);
 
   return {
     format: "kpah-character-part-v1",
@@ -169,9 +153,6 @@ export function decodeCharacterPartData(bytes) {
     frames,
     frameHeights,
     animationSequences,
-    optionalFrameMetadata,
-    additionalSequences,
-    trailingBytes,
     getSequenceIndex(direction, state) {
       if (!Number.isInteger(direction) || direction < 0 || direction >= DIRECTION_STATE_TO_SEQUENCE.length) {
         return null;
@@ -193,7 +174,6 @@ export function decodeCharacterPartData(bytes) {
       return frameIndex == null ? null : this.frames[frameIndex] ?? null;
     },
   };
-}
 
 export function decodeCharacterPartCatalog(partData) {
   if (!Array.isArray(partData)) throw new TypeError("Opcode 1 partData must be an array");
