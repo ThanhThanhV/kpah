@@ -2657,8 +2657,18 @@
       "name": "MAP_TRANSITION",
       "direction": "S2C",
       "opcode": 12,
-      "evidenceSource": "ka.java:case12",
-      "evidence": "Three shorts, optional byte default -1, fourth short, UTF label, optional boolean; if true remaining bytes are map data; map handler receives the four shorts, label and nullable map bytes; optional byte becomes hf.k."
+      "evidenceSource": "ka.java:case12; mj.java:4009-4078",
+      "fields": [
+        { "name": "mapId", "type": "i16", "source": "ka.case12 first short; mj.a(s2,...); this.aJ" },
+        { "name": "tileX", "type": "i16", "source": "ka.case12 second short; mj.a sets t.l/t.ay = (tileX << 4) + 8 when both tile coords != -1" },
+        { "name": "tileY", "type": "i16", "source": "ka.case12 third short; mj.a sets t.m/t.az = (tileY << 4) + 8 when both tile coords != -1" },
+        { "name": "hfK", "type": "i8", "optional": true, "default": -1, "source": "ka.case12 optional byte; assigned to hf.k" },
+        { "name": "mapResourceId", "type": "i16", "source": "ka.case12 fourth short; mj.a falls back to mapId when -1" },
+        { "name": "label", "type": "utf", "source": "ka.case12 UTF; mj.a assigns current map label" },
+        { "name": "hasMapData", "type": "bool", "optional": true, "source": "ka.case12 optional boolean" },
+        { "name": "mapData", "type": "bytes", "optional": true, "source": "remaining payload bytes when hasMapData is true" }
+      ],
+      "evidence": "The handler calls mj.a(mapId,tileX,tileY,mapResourceId,label,mapData), sets hf.k from the optional byte, clears prior map objects/effects and remote world actors while retaining the local player, resets local action state, and positions the local actor at (tileX*16+8,tileY*16+8) with +32 edge correction on either axis when the resulting tile coordinate is <=1. Proprietary map bytes remain opaque in the browser."
     },
     {
       "name": "WORLD_ENTITY_SNAPSHOT",
