@@ -3,6 +3,9 @@ import { assetUrl, characterPartEntries, loadAssetManifest } from './kpah-assets
 const subscribers = new Set();
 let latestCharacterPart = null;
 let latestKey = null;
+let pendingKey = null;
+let pendingRequest = 0;
+let pendingPlayback = null;
 
 function toDataUrl(bytes) {
   let binary = '';
@@ -41,13 +44,28 @@ export function publishCharacterPartData(partIndex, metadata, imageBytes, playba
     publish();
     return;
   }
+  // syncServerWorldViews may publish on every 40 ms animation tick. Reuse an
+  // in-flight atlas decode instead of creating a new Image until it finishes.
+  if (key === pendingKey) {
+    pendingPlayback = nextPlayback;
+    return;
+  }
+  pendingKey = key;
+  pendingPlayback = nextPlayback;
+  const request = ++pendingRequest;
   const image = new Image();
   image.onload = () => {
+    if (request !== pendingRequest || pendingKey !== key) return;
     latestKey = key;
-    latestCharacterPart = { partIndex, metadata, image, playback: nextPlayback };
+    pendingKey = null;
+    latestCharacterPart = { partIndex, metadata, image, playback: pendingPlayback };
+    pendingPlayback = null;
     publish();
   };
   image.onerror = () => {
+    if (request !== pendingRequest || pendingKey !== key) return;
+    pendingKey = null;
+    pendingPlayback = null;
     console.warn('KPAH character preview atlas could not be decoded', partIndex);
   };
   image.src = toDataUrl(imageBytes);
