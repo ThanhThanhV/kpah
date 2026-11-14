@@ -234,3 +234,16 @@ independent offline-demo HP value, so a positive-HP revive can resume movement
 without mutating the local demo character save. Destination marker state is
 cleared on local revive. This remains source-mapped behavior awaiting live
 server validation.
+
+
+### Camera and entity identity across despawn / respawn
+
+The Phaser camera adapter now explicitly calls `stopFollow()` when configured
+without a target, preventing a removed server container from remaining as a
+hidden camera target. The server projection view registry also records a render
+identity composed from entity kind, template ID and resolved factory class.
+If a server reuses an entity ID for a different render identity without an
+intermediate despawn packet, the old container and its movement/death playback
+state are discarded and rebuilt. Ordinary position updates and character-part
+marker changes retain the existing view. Live server validation is still
+required for map transitions and ID reuse ordering.
