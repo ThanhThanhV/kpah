@@ -49,9 +49,13 @@ export function decodeOriginalMapData(payload) {
     const tileId = readI16("point override tile id");
     return { row, column, tileId };
   });
-  const decorations = readSentinelRecords("map decorations", type => ({
-    type, x: readU8("decoration x"), y: readU8("decoration y"),
-  }));
+  const decorations = [];
+  while (true) {
+    let type = readU8("map decoration marker");
+    if (type === 254) type = 255;
+    if (type === 255) break;
+    decorations.push({ type, x: readU8("decoration x"), y: readU8("decoration y") });
+  }
   const mapMode = readU8("map mode flag") === 1;
   const portalCount = readU8("portal count");
   const portals = [];
