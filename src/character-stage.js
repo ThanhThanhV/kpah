@@ -27,7 +27,32 @@ function publish() {
 export function publishCharacterPartData(partIndex, metadata, imageBytes, playback = null) {
   if (!Number.isInteger(partIndex) || !metadata?.frames?.length
     || !(imageBytes instanceof Uint8Array) || !imageBytes.length) return;
-  const key = String(partIndex) + ':' + imageBytes.length;
+  // Atlas payloads may be replaced while retaining the same part index
+  // and byte length. Include payload + frame layout in the preview cache key.
+  let hash = 2166136261;
+  const mix = value => {
+    const text = String(value);
+    for (let index = 0; index < text.length; index++) {
+      hash ^= text.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    hash ^= 255;
+    hash = Math.imul(hash, 16777619);
+  };
+  for (const byte of imageBytes) {
+    hash ^= byte;
+    hash = Math.imul(hash, 16777619);
+  }
+  for (const region of metadata.regions ?? []) {
+    mix(region.x); mix(region.y); mix(region.width); mix(region.height);
+  }
+  for (const frame of metadata.frames) {
+    mix(frame.index);
+    for (const piece of frame.pieces ?? []) {
+      mix(piece.x); mix(piece.y); mix(piece.regionIndex); mix(piece.layerGroup);
+    }
+  }
+  const key = String(partIndex) + ':' + imageBytes.length + ':' + (hash >>> 0).toString(16);
   const nextPlayback = playback && typeof playback === 'object' ? {
     state: Number.isInteger(playback.state) ? playback.state : 0,
     direction: playback.direction === 1 ? 1 : 0,
