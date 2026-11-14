@@ -1828,6 +1828,7 @@
       "name": "CHARACTER_REVIVE",
       "opcode": 60,
       "direction": "S2C",
+      "evidenceSource": "ka.java:case60",
       "payload": {
         "fields": [
           { "name": "characterId", "type": "i16", "source": "mj.f(acu): readShort" },
