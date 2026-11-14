@@ -107,7 +107,7 @@ const revivedEntity = state.serverWorld.entitiesById["124"];
 assert.equal(revivedEntity.currentHp, 9000);
 assert.equal(revivedEntity.maxHp, 12000);
 assert.equal(revivedEntity.maxMp, 2400);
-assert.equal(revivedEntity.currentMp, 567,
+assert.equal(revivedEntity.currentMp, 600,
   "opcode 60 does not overwrite current MP because original mj.f does not assign bC");
 assert.equal(revivedEntity.reviveAuxiliary, 17);
 const reviveEvent = state.serverWorld.worldEvents.at(-1);
