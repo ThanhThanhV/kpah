@@ -477,7 +477,7 @@ export function mountCharacterStage(root) {
       if (disposed || token !== atlasLoadTokens[type] || selectedAtlasIds[type] !== id) return;
       atlasImages.set(type, image);
       if (atlasOverviewImages[type]) atlasOverviewImages[type].src = url;
-      if (!data) drawAtlasFallback();
+      if (!data && !offlineComposition) drawAtlasFallback();
     };
     image.onerror = () => {
       if (disposed || token !== atlasLoadTokens[type] || selectedAtlasIds[type] !== id) return;
@@ -535,7 +535,7 @@ export function mountCharacterStage(root) {
       }
         loadAtlas(type, select.value);
       }
-      if (!data) drawAtlasFallback();
+      if (!data && !offlineComposition) drawAtlasFallback();
     }).catch(error => {
       empty.textContent = 'Chưa tìm thấy atlas nhân vật. Hãy chạy npm run extract:assets với KPAH_278.jar. (' + error.message + ')';
       empty.hidden = false;
