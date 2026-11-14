@@ -1,4 +1,5 @@
 import { assetUrl, characterPartEntries, loadAssetManifest } from './kpah-assets.js';
+import { decodeCharacterPartData } from './protocol/character-part-data.js';
 
 const subscribers = new Set();
 let latestCharacterPart = null;
@@ -339,18 +340,25 @@ export function mountCharacterStage(root) {
           .map(value => value.toString(16).padStart(2, '0')).join(' ');
         hex.push(offset.toString(16).padStart(4, '0') + '  ' + line);
       }
-      const first = bytes[0] ?? 0;
-      const parserMinimum = 1 + first * 5 + 2;
       const ascii = [...bytes].map(value => value >= 32 && value <= 126
         ? String.fromCharCode(value) : '.').join('');
+      let parserReport;
+      try {
+        const decoded = decodeCharacterPartData(bytes);
+        parserReport = 'TƯƠNG THÍCH partData: ' + decoded.regionCount + ' vùng atlas, '
+          + decoded.frameCount + ' frame, '
+          + decoded.animationSequences.filter(sequence => sequence.length).length
+          + '/8 chuỗi animation có dữ liệu.';
+      } catch (error) {
+        parserReport = 'KHÔNG tương thích định dạng partData của client: ' + error.message
+          + '. Đây là trailer metadata nhúng trong resource ảnh; không thể dùng trực tiếp '
+          + 'để ghép frame theo parser opcode 1.';
+      }
       metadataStatus.textContent = 'File: ' + entry.metadata + ' · ' + bytes.length
         + ' byte · Đã hiển thị toàn bộ nội dung hex.';
       if (metadataStructure) {
-        metadataStructure.textContent = 'Byte đầu = ' + first
-          + ' (nếu coi là số region thì parser gốc cần tối thiểu ' + parserMinimum
-          + ' byte); độ dài thực tế = ' + bytes.length
-          + ' byte. ASCII: ' + (ascii.slice(0, 160) || '(rỗng)')
-          + (ascii.length > 160 ? '…' : '');
+        metadataStructure.textContent = parserReport + '\nASCII: '
+          + (ascii.slice(0, 160) || '(rỗng)') + (ascii.length > 160 ? '…' : '');
       }
       metadataPreview.textContent = hex.join('\n') || '(file rỗng)';
     } catch (error) {
