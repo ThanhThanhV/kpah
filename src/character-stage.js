@@ -325,7 +325,7 @@ export function mountCharacterStage(root) {
     stageTag.textContent = 'NHÂN VẬT GHÉP OFFLINE';
     const caption = root.querySelector('.original-character-stage__caption');
     if (caption && !caption.dataset.offlineDraft) {
-      caption.textContent = 'Bản ghép thử tự động từ atlas nhân vật gốc. Mở công cụ tự ghép để kiểm tra, căn chỉnh và lưu lại từng bộ phận.';
+      caption.textContent = 'Nhân vật mẫu offline được ghép từ atlas đầu, thân và chân trong KPAH_278.jar. Mở công cụ tự ghép để chỉnh sửa từng bộ phận.';
       caption.dataset.offlineDraft = 'true';
     }
     atlasControls.hidden = true;
