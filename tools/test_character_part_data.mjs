@@ -24,13 +24,7 @@ for (let sequence = 0; sequence < 8; sequence += 1) {
   writer.writeI8(length);
   for (let frame = 0; frame < length; frame += 1) writer.writeI8(0);
 }
-writer.writeI8(9).writeI8(2).writeI8(3);
-for (let index = 0; index < 4; index += 1) {
-  writer.writeI8(1).writeI8(index + 4);
-}
-writer.writeU8(0xaa).writeU8(0xbb);
-
-const bytes = writer.toUint8Array();
+writerconst bytes = writer.toUint8Array();
 const decoded = decodeCharacterPartData(bytes);
 
 assert.equal(decoded.format, "kpah-character-part-v1");
@@ -94,12 +88,6 @@ playback=advanceCharacterPartPlayback(playback,decoded,{
 });
 assert.equal(playback.direction,0,"down movement selects the first animation direction");
 
-assert.deepEqual(decoded.optionalFrameMetadata, {
-  marker: 9,
-  values: [{ index: 0, d: 2, e: 3 }],
-});
-assert.deepEqual(decoded.additionalSequences, [[4], [5], [6], [7]]);
-assert.deepEqual([...decoded.trailingBytes], [0xaa, 0xbb]);
 assert.deepEqual(DIRECTION_STATE_TO_SEQUENCE[1], [4, 4, 5, 6, 7, 5, 5, 5, 5, 5, 5, 5, 5]);
 assert.equal(characterPartImageResourceId(0), 12000);
 assert.equal(characterPartImageResourceId(127), 12127);
@@ -107,6 +95,7 @@ assert.throws(() => characterPartImageResourceId(-1), /signed byte/);
 assert.throws(() => characterPartImageResourceId(128), /signed byte/);
 
 assert.throws(() => decodeCharacterPartData(new Uint8Array([1, 0])), /Truncated character part data/);
+assert.throws(() => decodeCharacterPartData(Uint8Array.from([...bytes, 0xaa])), /Unexpected trailing character part data/);
 const catalog = decodeCharacterPartCatalog([
   { index: 4, data: bytes },
   { index: 5, data: new Uint8Array([1, 0]) },
