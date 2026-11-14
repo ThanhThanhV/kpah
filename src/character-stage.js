@@ -185,6 +185,7 @@ export function mountCharacterStage(root) {
     </div>
     <details class="original-character-stage__metadata" hidden>
       <summary>Dữ liệu metadata gốc của bộ phận đang chọn</summary>
+      <p data-metadata-corpus>Đang chờ thống kê toàn bộ metadata…</p>
       <p data-metadata-status>Chưa đọc metadata.</p>
       <p data-metadata-structure></p>
       <code data-metadata-preview></code>
@@ -205,6 +206,7 @@ export function mountCharacterStage(root) {
     [type, root.querySelector('[data-atlas-overview="' + type + '"]')]));
   const metadataPanel = root.querySelector('.original-character-stage__metadata');
   const metadataStatus = root.querySelector('[data-metadata-status]');
+  const metadataCorpus = root.querySelector('[data-metadata-corpus]');
   const metadataPreview = root.querySelector('[data-metadata-preview]');
   const metadataStructure = root.querySelector('[data-metadata-structure]');
   const selectedAtlasIds = { head: '0', body: '0', leg: '0' };
@@ -400,6 +402,17 @@ export function mountCharacterStage(root) {
     loadAssetManifest().then(manifest => {
       if (disposed) return;
       atlasCatalog = characterPartEntries(manifest);
+      if (metadataCorpus) {
+        const analysis = manifest.characterMetadataAnalysis;
+        const groups = analysis?.groups ?? {};
+        metadataCorpus.textContent = ['head', 'body', 'leg'].map(type => {
+          const group = groups[type];
+          return type.toUpperCase() + ': ' + (group
+            ? group.count + ' bộ · trung bình ' + group.averageBytes + ' byte · '
+              + group.simpleRegionHeaderCandidateCount + ' bộ đủ độ dài cho header giả định'
+            : 'không có dữ liệu');
+        }).join(' | ') + (analysis?.method ? '. ' + analysis.method : '');
+      }
       for (const type of ['head', 'body', 'leg']) {
         const entries = atlasCatalog.filter(item => item.partType === type)
           .sort((a, b) => Number(a.partId) - Number(b.partId));
