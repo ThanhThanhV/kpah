@@ -269,9 +269,16 @@ export function advanceCharacterPartPlayback(playback, metadata, motion) {
       if (Math.abs(dx) > 0) worldDirection = dx < 0 ? 2 : 3;
       else if (Math.abs(dy) > 0) worldDirection = dy < 0 ? 1 : 0;
     }
-    if (worldDirection === 0 || worldDirection === 1) next.direction = worldDirection;
-    else if (worldDirection === 2) next.transform = 2;
-    else if (worldDirection === 3) next.transform = 0;
+    if (worldDirection === 0 || worldDirection === 1) {
+      next.direction = worldDirection;
+      // hd uses the vertical animation rows without horizontal mirroring.
+      // Clear a previous left-facing transform when movement turns vertically.
+      next.transform = 0;
+    } else if (worldDirection === 2) {
+      next.transform = 2;
+    } else if (worldDirection === 3) {
+      next.transform = 0;
+    }
   }
   const stateChanged = next.state !== nextState;
   if (stateChanged) {
