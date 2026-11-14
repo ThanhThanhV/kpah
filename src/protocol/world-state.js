@@ -1,4 +1,4 @@
-import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode7, decodeS2COpcode32, decodeS2COpcode33, decodeS2COpcode60, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74, decodeS2COpcodeMinus71, decodeS2COpcodeMinus73, decodeS2COpcodeMinus51, decodeS2COpcode26, decodeS2COpcode15 } from "./generated/world-state-codec.js";
+import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode7, decodeS2COpcode32, decodeS2COpcode33, decodeS2COpcode60, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74, decodeS2COpcodeMinus71, decodeS2COpcodeMinus73, decodeS2COpcodeMinus51, decodeS2COpcode26, decodeS2COpcode15, decodeS2COpcode12 } from "./generated/world-state-codec.js";
 import { decodeS2COpcode5 } from "./generated/opcode5-codec.js";
 import { decodeS2CTemplateCatalog, decodeS2CTemplateAsset } from "./template-assets.js";
 import { decodeEffectDefinition } from "./effect-definition.js";
@@ -31,6 +31,8 @@ export function createServerWorldState() {
     worldEvents: [],
     lastSpawnBatch: [],
     removedEntityIds: [],
+    mapTransition: null,
+    mapTransitionSequence: 0,
   };
 }
 
@@ -67,6 +69,8 @@ function cloneWorld(world) {
     targetLinkedActorSpawnSequence: Number.isInteger(source.targetLinkedActorSpawnSequence) ? source.targetLinkedActorSpawnSequence : 0,
     lastSpawnBatch: [...(source.lastSpawnBatch ?? [])],
     removedEntityIds: [...(source.removedEntityIds ?? [])],
+    mapTransition: source.mapTransition ? { ...source.mapTransition, mapData: copyBytes(source.mapTransition.mapData) } : null,
+    mapTransitionSequence: Number.isInteger(source.mapTransitionSequence) ? source.mapTransitionSequence : 0,
   };
 }
 
@@ -319,6 +323,83 @@ export function applyS2COpcode8World(world, packet) {
   return next;
 }
 
+/**
+ * ka.case12 -> mj.a(short mapId, short tileX, short tileY, short mapResourceId,
+ * UTF label, byte[] mapData). The original handler keeps only the local actor
+ * in the new map's entity collection and positions it at tile*16+8 when both
+ * tile coordinates are not -1.
+ */
+export function applyS2COpcode12MapTransition(world, packet, activeCharacterId = null) {
+  if (!packet || !Number.isInteger(packet.first) || !Number.isInteger(packet.second)
+      || !Number.isInteger(packet.third) || !Number.isInteger(packet.fourth)) {
+    throw new TypeError("Opcode 12 map transition fields are invalid");
+  }
+  const next = cloneWorld(world);
+  const localId = Number.isInteger(activeCharacterId) ? String(activeCharacterId) : null;
+  const local = localId === null ? null : next.entitiesById[localId];
+  const hasEntryPosition = packet.second !== -1 && packet.third !== -1;
+  let x = local?.x ?? null, y = local?.y ?? null;
+  if (hasEntryPosition) {
+    x = (packet.second << 4) + 8;
+    y = (packet.third << 4) + 8;
+    if (Math.trunc(x / 16) <= 1) x += 32;
+    if (Math.trunc(y / 16) <= 1) y += 32;
+  }
+  next.entitiesById = local ? {
+    [localId]: {
+      ...local,
+      ...(hasEntryPosition ? {
+        x, y, targetX: x, targetY: y, movementPending: false,
+        positionSource: "opcode12",
+        snapshot: local.snapshot ? { ...local.snapshot, x, y } : local.snapshot,
+      } : { targetX: null, targetY: null, movementPending: false }),
+      state: 0,
+      active: true,
+    },
+  } : {};
+  next.entityOrder = local ? [Number(activeCharacterId)] : [];
+  next.characterResourcesById = local
+    ? Object.fromEntries(Object.entries(next.characterResourcesById).filter(([id]) => id === localId)) : {};
+  next.characterLevelsById = local
+    ? Object.fromEntries(Object.entries(next.characterLevelsById).filter(([id]) => id === localId)) : {};
+  next.characterRevivesById = local
+    ? Object.fromEntries(Object.entries(next.characterRevivesById).filter(([id]) => id === localId)) : {};
+  next.targetLinkedActorsBySourceId = {};
+  next.targetLinkedEffectEvents = [];
+  next.worldEffects = [];
+  next.combatEvents = [];
+  next.lastSpawnBatch = [];
+  next.removedEntityIds = Object.keys(world?.entitiesById ?? {}).filter(id => id !== localId).map(Number);
+  next.mapTransitionSequence += 1;
+  next.mapTransition = {
+    sequence: next.mapTransitionSequence,
+    mapId: packet.first,
+    tileX: packet.second,
+    tileY: packet.third,
+    hfK: Number.isInteger(packet.hfK) ? packet.hfK : -1,
+    mapResourceId: packet.fourth === -1 ? packet.first : packet.fourth,
+    label: typeof packet.label === "string" ? packet.label : "",
+    hasMapData: packet.hasMapData === true,
+    mapData: packet.mapData instanceof Uint8Array ? copyBytes(packet.mapData) : null,
+    mapDataError: packet.mapDataError ?? null,
+    entryX: hasEntryPosition ? x : null,
+    entryY: hasEntryPosition ? y : null,
+  };
+  next.worldEvents.push({
+    opcode: 12,
+    sequence: (next.worldEvents.at(-1)?.sequence ?? 0) + 1,
+    eventType: "map-transition",
+    mapId: packet.first,
+    mapResourceId: next.mapTransition.mapResourceId,
+    label: next.mapTransition.label,
+    localCharacterId: Number.isInteger(activeCharacterId) ? activeCharacterId : null,
+    entryX: next.mapTransition.entryX,
+    entryY: next.mapTransition.entryY,
+  });
+  if (next.worldEvents.length > 100) next.worldEvents.splice(0, next.worldEvents.length - 100);
+  return next;
+}
+
 function applyCombatEvent(world, opcode, packet) {
   const next = cloneWorld(world);
   const sequence = next.combatEventSequence + 1;
@@ -452,6 +533,10 @@ export function applyInboundWorldPacket(state, frame, nowMs = Date.now()) {
     case 6:
       event = decodeS2COpcode6(frame.payload);
       nextWorld = applyCombatEvent(world, 6, event);
+      break;
+    case 12:
+      event = decodeS2COpcode12(frame.payload);
+      nextWorld = applyS2COpcode12MapTransition(world, event, state.activeCharacterId);
       break;
     case 8:
       event = decodeS2COpcode8(frame.payload);
