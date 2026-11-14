@@ -58,15 +58,27 @@ function renderStatus() {
   if (state) {
     if (!lastState) state.textContent = "Chưa nhận dữ liệu initialization";
     else {
+      const world = lastState.serverWorld;
       const resources = Object.keys(lastState.resourcesByIndex || {}).length;
+      const decodedParts = Object.values(lastState.characterPartCatalog ?? {})
+        .filter(part => part?.decoded === true).length;
+      const characterAtlases = Object.keys(world?.resourceImagePayloadsById ?? {})
+        .filter(id => Number(id) >= 12000 && Number(id) < 13000).length;
+      const visiblePartIndices = new Set((world?.entityOrder ?? [])
+        .map(id => world?.entitiesById?.[String(id)])
+        .filter(entity => entity?.kind === 0 && Number.isInteger(entity.marker))
+        .map(entity => entity.marker));
+      const missingVisibleAtlases = [...visiblePartIndices]
+        .filter(index => !world?.resourceImagePayloadsById?.[String(12000 + index)]).length;
       state.textContent = "Xu: " + (lastState.currency == null ? "chưa có" : String(lastState.currency))
         + " · Vật phẩm: " + (lastState.inventory?.length ?? 0)
         + " · Resource index: " + resources
-        + " · World entities: " + (lastState.serverWorld?.entityOrder?.length ?? 0)
-        + " · Templates: " + Object.keys(lastState.serverWorld?.templatesById ?? {}).length
-        + " · Asset payloads: " + Object.keys(lastState.serverWorld?.templateAssetPayloadsById ?? {}).length
-        + " · Ảnh nhân vật: " + Object.keys(lastState.serverWorld?.resourceImagePayloadsById ?? {})
-          .filter(id => Number(id) >= 12000 && Number(id) < 13000).length;
+        + " · World entities: " + (world?.entityOrder?.length ?? 0)
+        + " · Templates: " + Object.keys(world?.templatesById ?? {}).length
+        + " · Asset payloads: " + Object.keys(world?.templateAssetPayloadsById ?? {}).length
+        + " · PartData hợp lệ: " + decodedParts
+        + " · Atlas nhân vật: " + characterAtlases
+        + " · Nhân vật đang thiếu atlas: " + missingVisibleAtlases;
     }
   }
 }
