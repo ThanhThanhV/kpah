@@ -1672,9 +1672,11 @@ class WorldScene extends Phaser.Scene {
       const partImageBytes=partIndex===null?null:this.serverWorldState?.resourceImagePayloadsById?.[String(12000+partIndex)];
       if(partRecord?.decoded&&partImageBytes){
         this.ensureServerCharacterPartTextures(partIndex,partRecord.metadata,partImageBytes);
-        if(entity.isLocalPlayer)publishCharacterPartData(partIndex,partRecord.metadata,partImageBytes);
       }
       const partPlayback=partIndex===null?null:this.serverCharacterPartPlayback.get(id);
+      if(entity.isLocalPlayer&&partRecord?.decoded&&partImageBytes){
+        publishCharacterPartData(partIndex,partRecord.metadata,partImageBytes,partPlayback);
+      }
       const partFrameIndex=partIndex===null||!partRecord?.decoded?null:
         partRecord.metadata.getFrameIndex(partPlayback?.direction??0,partPlayback?.state??0,partPlayback?.frameCursor??0);
       const partTransform=partPlayback?.transform??0;
