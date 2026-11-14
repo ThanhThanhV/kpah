@@ -212,8 +212,11 @@ function enterWorld(){
   if(!character)return;
   const location=document.querySelector('.server span b');
   if(location)location.textContent=selectedServer;
-  window.dispatchEvent(new CustomEvent('kpah:character-selected',{detail:{id:character.id,name:character.name,className:character.className,gender:character.gender,hair:character.hair,server:selectedServer}}));
+  // Remove the login overlay before opening the character sheet. This avoids
+  // the login cover stacking above the game modal during the entry transition.
   cover.remove();
+  window.dispatchEvent(new CustomEvent('kpah:character-selected',{detail:{id:character.id,name:character.name,className:character.className,gender:character.gender,hair:character.hair,server:selectedServer}}));
+  window.dispatchEvent(new CustomEvent('kpah:open-window',{detail:{key:'character'}}));
 }
 cover.querySelector('#enter-world').addEventListener('click',enterWorld);
 cover.querySelector('#open-create-character').addEventListener('click',()=>{
