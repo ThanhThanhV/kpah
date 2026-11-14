@@ -1573,13 +1573,6 @@
       "evidence": "dispatcher-only"
     },
     {
-      "name": "MAP_DATA",
-      "opcode": 12,
-      "direction": "S2C",
-      "payload": "opaque",
-      "evidence": "dispatcher-only"
-    },
-    {
       "name": "CHARACTER_ROSTER",
       "opcode": 13,
       "direction": "S2C",
