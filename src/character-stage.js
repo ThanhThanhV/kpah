@@ -105,6 +105,8 @@ export function mountCharacterStage(root) {
   const context = canvas.getContext('2d');
   const empty = root.querySelector('.original-character-stage__empty');
   const stateButtons = [...root.querySelectorAll('[data-stage-state]')];
+  const stateControls = root.querySelector('.original-character-stage__states');
+  const directionButton = root.querySelector('[data-stage-direction]');
   const atlasControls = root.querySelector('.original-character-stage__atlas-controls');
   const atlasSelects = [...root.querySelectorAll('[data-atlas-part]')];
   const atlasImages = new Map();
@@ -170,6 +172,8 @@ export function mountCharacterStage(root) {
     context.fillText('ẢNH ATLAS GỐC · CHƯA CÓ DỮ LIỆU GHÉP FRAME', canvas.width / 2, 315);
     empty.hidden = true;
     atlasControls.hidden = false;
+    stateControls.hidden = true;
+    directionButton.hidden = true;
   }
 
   function loadAtlas(type, id) {
@@ -220,6 +224,8 @@ export function mountCharacterStage(root) {
       return;
     }
     atlasControls.hidden = true;
+    stateControls.hidden = false;
+    directionButton.hidden = false;
     const frame = getFrame();
     if (!frame) {
       empty.textContent = 'Không có frame cho trạng thái hoạt ảnh đang chọn trong dữ liệu gốc.';
@@ -255,7 +261,6 @@ export function mountCharacterStage(root) {
     raf = requestAnimationFrame(tick);
   }
   stateButtons.forEach(button => button.addEventListener('click', () => setState(Number(button.dataset.stageState))));
-  const directionButton = root.querySelector('[data-stage-direction]');
   directionButton.addEventListener('click', () => {
     transform = transform === 0 ? 2 : 0;
     cursor = 0;
