@@ -539,7 +539,7 @@ export function mountCharacterStage(root) {
       stateControls.hidden = false;
       directionButton.hidden = false;
       root.querySelector('.original-character-stage__caption').textContent =
-        'Hoạt ảnh gốc từ dữ liệu partData của máy chủ; có thể chọn đứng, di chuyển hoặc ra đòn để kiểm tra.';
+        'Chế độ offline: khoanh vùng ảnh đầu, thân, chân trong atlas JAR rồi tự căn chỉnh để tạo nhân vật hoàn chỉnh; không cần BE.';
     }
     draw();
   };
