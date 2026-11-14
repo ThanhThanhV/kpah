@@ -945,7 +945,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverLocalPlayerEntityId=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldEventSequence=0;this.serverWorldDeadCharacterIds=new Set();this.serverWorldReviveSequence=0;this.serverWorldMapTransitionSequence=0;this.serverOriginalMapLayer=null;this.serverOriginalMapLoadSequence=0;this.serverWorldDisposed=false;this.serverInitializationState=null;this.serverCharacterPartTextures=new Map();this.serverCharacterPartTextureLoads=new Set();this.serverCharacterPartPlayback=new Map();this.serverCharacterPartAccumulator=0;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;this.serverActorEffectImages=new Map();this.serverActorEffectImageLoads=new Set();this.serverActorEffectTextures=new Map();this.serverActorEffectViews=new Map();this.serverActorEffectShadows=new Map();this.serverActorShadowLoad=null;this.serverActorShadowUnavailable=false;this.serverActorEffectPlayback=new Map();this.serverActorEffectCompleted=new Set();this.serverActorEffectAccumulator=0;}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverLocalPlayerEntityId=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldEventSequence=0;this.serverWorldDeadCharacterIds=new Set();this.serverWorldReviveSequence=0;this.serverWorldMapTransitionSequence=0;this.serverOriginalMapLayer=null;this.serverOriginalMapLoadSequence=0;this.serverWorldDisposed=false;this.serverInitializationState=null;this.serverCharacterPartTextures=new Map();this.serverCharacterPartTextureLoads=new Set();this.serverCharacterPartTextureSignatures=new Map();this.serverCharacterPartPlayback=new Map();this.serverCharacterPartAccumulator=0;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;this.serverActorEffectImages=new Map();this.serverActorEffectImageLoads=new Set();this.serverActorEffectTextures=new Map();this.serverActorEffectViews=new Map();this.serverActorEffectShadows=new Map();this.serverActorShadowLoad=null;this.serverActorShadowUnavailable=false;this.serverActorEffectPlayback=new Map();this.serverActorEffectCompleted=new Set();this.serverActorEffectAccumulator=0;}
   create(){
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
@@ -990,6 +990,7 @@ class WorldScene extends Phaser.Scene {
       for(const textureSet of this.serverCharacterPartTextures.values())for(const key of textureSet.keys)this.textures.remove(key);
       this.serverCharacterPartTextures.clear();
       this.serverCharacterPartTextureLoads.clear();
+      this.serverCharacterPartTextureSignatures.clear();
       this.serverCharacterPartPlayback.clear();
       for(const view of this.serverEffectViews.values())view.destroy();
       this.serverEffectViews.clear();
@@ -1549,13 +1550,50 @@ class WorldScene extends Phaser.Scene {
   }
   ensureServerCharacterPartTextures(partIndex,metadata,imageBytes){
     const key=String(partIndex);
-    if(this.serverCharacterPartTextures.has(key)||this.serverCharacterPartTextureLoads.has(key))return;
     if(!metadata?.frames?.length||!(imageBytes instanceof Uint8Array)||!imageBytes.length)return;
-    this.serverCharacterPartTextureLoads.add(key);
+
+    // A character-part index can be reused after a fresh opcode 1/resource
+    // initialization. Cache by the actual atlas + frame metadata, not index
+    // alone, otherwise a new character appearance can keep drawing old frames.
+    let hash=2166136261;
+    const mix=value=>{
+      const text=String(value);
+      for(let index=0;index<text.length;index++){
+        hash^=text.charCodeAt(index);
+        hash=Math.imul(hash,16777619);
+      }
+      hash^=255;
+      hash=Math.imul(hash,16777619);
+    };
+    for(const byte of imageBytes){hash^=byte;hash=Math.imul(hash,16777619);}
+    for(const region of metadata.regions??[]){
+      mix(region.x);mix(region.y);mix(region.width);mix(region.height);
+    }
+    for(const frame of metadata.frames){
+      mix(frame.index);
+      for(const piece of frame.pieces??[]){
+        mix(piece.x);mix(piece.y);mix(piece.regionIndex);mix(piece.layerGroup);
+      }
+    }
+    const signature=(hash>>>0).toString(16);
+    if(this.serverCharacterPartTextureSignatures.get(key)===signature
+      &&(this.serverCharacterPartTextures.has(key)||this.serverCharacterPartTextureLoads.has(key+'@'+signature)))return;
+
+    const previous=this.serverCharacterPartTextures.get(key);
+    if(previous){
+      for(const textureKey of previous.keys){
+        if(this.textures.exists(textureKey))this.textures.remove(textureKey);
+      }
+      this.serverCharacterPartTextures.delete(key);
+    }
+    this.serverCharacterPartTextureSignatures.set(key,signature);
+    const loadKey=key+'@'+signature;
+    if(this.serverCharacterPartTextureLoads.has(loadKey))return;
+    this.serverCharacterPartTextureLoads.add(loadKey);
     const image=new window.Image();
     image.onload=()=>{
-      this.serverCharacterPartTextureLoads.delete(key);
-      if(this.serverWorldDisposed)return;
+      this.serverCharacterPartTextureLoads.delete(loadKey);
+      if(this.serverWorldDisposed||this.serverCharacterPartTextureSignatures.get(key)!==signature)return;
       const textures=new Map(),keys=[];
       for(const frame of metadata.frames){
         for(const transform of [0,2]){
@@ -1592,18 +1630,24 @@ class WorldScene extends Phaser.Scene {
               }
             }
           }
-          const textureKey='kpah-player-part-'+key+'-'+frame.index+'-'+transform;
+          const textureKey='kpah-player-part-'+key+'-'+signature+'-'+frame.index+'-'+transform;
           if(!this.textures.exists(textureKey))this.textures.addCanvas(textureKey,canvas);
           textures.set(frame.index+':'+transform,{key:textureKey,bounds:{x:minX,y:minY}});
           keys.push(textureKey);
         }
       }
-      this.serverCharacterPartTextures.set(key,{textures,keys});
+      if(this.serverCharacterPartTextureSignatures.get(key)!==signature){
+        for(const textureKey of keys)if(this.textures.exists(textureKey))this.textures.remove(textureKey);
+        return;
+      }
+      this.serverCharacterPartTextures.set(key,{signature,textures,keys});
       this.syncServerWorldViews();
     };
     image.onerror=()=>{
-      this.serverCharacterPartTextureLoads.delete(key);
-      console.warn('KPAH character part image could not be decoded',partIndex);
+      this.serverCharacterPartTextureLoads.delete(loadKey);
+      if(this.serverCharacterPartTextureSignatures.get(key)===signature){
+        console.warn('KPAH character part image could not be decoded',partIndex);
+      }
     };
     const mime=imageBytes[0]===0x89&&imageBytes[1]===0x50?'image/png'
       :imageBytes[0]===0xff&&imageBytes[1]===0xd8?'image/jpeg'
