@@ -323,6 +323,11 @@ export function mountCharacterStage(root) {
     }
     empty.hidden = true;
     stageTag.textContent = 'NHÂN VẬT GHÉP OFFLINE';
+    const caption = root.querySelector('.original-character-stage__caption');
+    if (caption && !caption.dataset.offlineDraft) {
+      caption.textContent = 'Bản ghép thử tự động từ atlas nhân vật gốc. Mở công cụ tự ghép để kiểm tra, căn chỉnh và lưu lại từng bộ phận.';
+      caption.dataset.offlineDraft = 'true';
+    }
     atlasControls.hidden = true;
     atlasOverview.hidden = true;
     stateControls.hidden = false;
