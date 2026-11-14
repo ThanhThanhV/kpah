@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { advanceOriginalCdMovement, advanceOriginalPlayerMovement, stopOriginalEntityMotionAtCurrentPosition } from "../src/protocol/original-entity-motion.js";
+import { advanceOriginalCdMovement, advanceOriginalHdMovement, advanceOriginalPlayerMovement, stopOriginalEntityMotionAtCurrentPosition } from "../src/protocol/original-entity-motion.js";
 
 let motion = {
   x: 10, y: 10, targetX: 19, targetY: 19,
@@ -59,6 +59,26 @@ assert.equal(playerSnapAtExactXStep.y, 12);
 assert.equal(playerSnapAtExactXStep.moving, false,
   "the exact X-step boundary must not overshoot the server destination");
 
+const hdStep = advanceOriginalHdMovement({
+  x: 10, y: 10, targetX: 18, targetY: 18, direction: 0, moving: true,
+});
+assert.equal(hdStep.x, 14, "original hd uses its fixed cT=4 step, not the z snapshot speed");
+assert.equal(hdStep.y, 10, "original hd advances X before Y");
+assert.equal(hdStep.direction, 3, "original hd records rightward world direction");
+const hdSnapAtExactXStep = advanceOriginalHdMovement({
+  x: 10, y: 10, targetX: 14, targetY: 10, direction: 0, moving: true,
+});
+assert.equal(hdSnapAtExactXStep.x, 14);
+assert.equal(hdSnapAtExactXStep.moving, false,
+  "original hd snaps X at the exact cT boundary when Y is already aligned");
+const hdVerticalAtExactStep = advanceOriginalHdMovement({
+  x: 10, y: 14, targetX: 10, targetY: 10, direction: 0, moving: true,
+});
+assert.equal(hdVerticalAtExactStep.y, 10);
+assert.equal(hdVerticalAtExactStep.moving, true,
+  "original hd does not snap Y at the exact cT boundary");
+assert.equal(advanceOriginalHdMovement(hdVerticalAtExactStep).moving, false,
+  "original hd snaps Y on the following tick");
 const playerVerticalAtExactStep = advanceOriginalPlayerMovement({
   x: 8, y: 12, targetX: 8, targetY: 9, direction: 0, moving: true,
 }, 3);
