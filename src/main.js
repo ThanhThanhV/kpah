@@ -949,9 +949,6 @@ window.addEventListener('kpah:character-selected',event=>{
   if(heading)heading.textContent=safeName;
   const role=document.querySelector('.character-details .muted');
   if(role)role.textContent=(className||'Kiếm khách')+' · Nhân vật';
-  // The login cover is removed only after a character is selected. Open the
-  // character sheet here so the player sees it immediately after entering.
-  openWindow('character');
 });
 
 class WorldScene extends Phaser.Scene {
