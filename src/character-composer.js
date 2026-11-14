@@ -7,6 +7,11 @@ const PRESETS = {
   body: { x: 132, y: 92, scale: 1 },
   leg: { x: 132, y: 174, scale: 1 },
 };
+const STARTER_PARTS = {
+  head: { partId: '0', crop: { x: 28, y: 0, width: 19, height: 24 }, x: 142, y: 6, scale: 2.5 },
+  body: { partId: '0', crop: { x: 57, y: 0, width: 29, height: 24 }, x: 133, y: 62, scale: 2.5 },
+  leg: { partId: '0', crop: { x: 70, y: 0, width: 24, height: 37 }, x: 145, y: 116, scale: 2.5 },
+};
 const AUTO_LAYOUT = {
   head: { top: 20, maxWidth: 76, maxHeight: 76 },
   body: { top: 94, maxWidth: 112, maxHeight: 122 },
@@ -33,6 +38,7 @@ export function mountCharacterComposer(root) {
       <section class="character-composer__result">
         <div class="character-composer__bar">
           <strong>Nhân vật tự ghép</strong>
+          <button type="button" data-composer-starter>Tạo lại nhân vật mẫu KPAH</button>
           <button type="button" data-composer-save>Lưu bản ghép</button>
           <button type="button" data-composer-import-trigger>Nhập JSON</button>
           <input type="file" data-composer-import accept="application/json,.json" hidden>
@@ -66,7 +72,7 @@ export function mountCharacterComposer(root) {
   let movingType = null;
   let moveOffset = null;
   let disposed = false;
-  const STORAGE_KEY = 'kpah.character-composition.v1';
+  const STORAGE_KEY = 'kpah.character-composition.v2';
   let restoreAttempted = false;
 
   function drawAtlas() {
@@ -331,8 +337,8 @@ export function mountCharacterComposer(root) {
   async function autoComposeFirstDraft() {
     const draft = new Map();
     for (const type of TYPES) {
-      const entry = catalog.filter(item => item.partType === type)
-        .sort((a, b) => Number(a.partId) - Number(b.partId))[0];
+      const preset = STARTER_PARTS[type];
+      const entry = catalog.find(item => item.partType === type && item.partId === preset.partId);
       if (!entry) continue;
       const image = new Image();
       image.src = assetUrl(entry.image);
@@ -341,15 +347,14 @@ export function mountCharacterComposer(root) {
         image.onerror = () => reject(new Error('Không tải được ' + entry.image));
       });
       if (disposed) return;
-      let regions = [];
-      try { regions = scanTransparentRegions(image); } catch { /* Continue to next atlas. */ }
-      const region = regions[0];
-      if (!region) continue;
+      const cropData = preset.crop;
+      const x = Math.max(0, cropData.x), y = Math.max(0, cropData.y);
+      const width = Math.min(cropData.width, image.naturalWidth - x);
+      const height = Math.min(cropData.height, image.naturalHeight - y);
+      if (width < 1 || height < 1) continue;
       const crop = document.createElement('canvas');
-      crop.width = region.width;
-      crop.height = region.height;
-      crop.getContext('2d').drawImage(image, region.x, region.y, region.width, region.height,
-        0, 0, region.width, region.height);
+      crop.width = width; crop.height = height;
+      crop.getContext('2d').drawImage(image, x, y, width, height, 0, 0, width, height);
       const croppedImage = new Image();
       croppedImage.src = crop.toDataURL('image/png');
       await new Promise((resolve, reject) => {
@@ -357,27 +362,29 @@ export function mountCharacterComposer(root) {
         croppedImage.onerror = reject;
       });
       if (disposed) return;
-      const layout = AUTO_LAYOUT[type];
-      const scale = Math.min(1.6, layout.maxWidth / region.width, layout.maxHeight / region.height);
       draft.set(type, {
         type, partId: entry.partId, source: entry.image,
-        crop: { x: region.x, y: region.y, width: region.width, height: region.height },
-        image: croppedImage, width: region.width, height: region.height,
-        x: Math.round((320 - region.width * scale) / 2), y: layout.top, scale,
+        crop: { x, y, width, height }, image: croppedImage, width, height,
+        x: preset.x, y: preset.y, scale: preset.scale,
       });
     }
-    if (disposed) return;
-    if (draft.size === 0) {
+    if (disposed || draft.size !== TYPES.length) {
       const note = root.querySelector('[data-composer-autodraft-status]');
-      if (note) note.textContent = 'Atlas không có vùng alpha tách biệt để tự ghép. Hãy khoanh vùng thủ công trên ảnh gốc.';
+      if (note) note.textContent = 'Không tìm đủ atlas đầu, thân và chân mặc định trong JAR.';
       return;
     }
-    for (const [type, layer] of draft) if (!layers.has(type)) layers.set(type, layer);
+    layers.clear();
+    for (const [type, layer] of draft) layers.set(type, layer);
     renderLayers();
     drawPreview();
     saveComposition();
     const note = root.querySelector('[data-composer-autodraft-status]');
-    if (note) note.textContent = 'Đã tự nhận diện ' + draft.size + '/3 bộ phận từ mảnh alpha lớn nhất. Đây là bản ghép thử; hãy kiểm tra, căn chỉnh và chọn lại nếu mảnh chưa đúng.';
+    if (note) note.textContent = 'Đã dựng nhân vật mẫu trực tiếp từ atlas KPAH gốc (đầu 0, thân 0, chân 0). Có thể kéo từng phần để căn chỉnh rồi lưu.';
+  }
+
+  async function resetStarterCharacter() {
+    layers.clear();
+    await autoComposeFirstDraft();
   }
 
   candidateSelect.addEventListener('change', () => {
@@ -488,6 +495,7 @@ export function mountCharacterComposer(root) {
   previewCanvas.addEventListener('pointerup', () => { moveOffset = null; renderLayers(); drawPreview(); saveComposition(); });
   typeSelect.addEventListener('change', fillIds);
   idSelect.addEventListener('change', loadSelectedAtlas);
+  root.querySelector('[data-composer-starter]').addEventListener('click', resetStarterCharacter);
   root.querySelector('[data-composer-save]').addEventListener('click', () => saveComposition(true));
   const importInput = root.querySelector('[data-composer-import]');
   root.querySelector('[data-composer-import-trigger]').addEventListener('click', () => importInput.click());
@@ -524,12 +532,12 @@ export function mountCharacterComposer(root) {
         try { await restoreComposition(JSON.parse(saved)); }
         catch (error) { console.warn('Không thể khôi phục bản ghép đã lưu:', error); }
       }
-      if (layers.size < TYPES.length) {
-        try { await autoComposeFirstDraft(); }
+      if (layers.size !== TYPES.length) {
+        try { await resetStarterCharacter(); }
         catch (error) {
-          console.warn('Không thể tự ghép đủ bộ phận:', error);
+          console.warn('Không thể dựng nhân vật mẫu từ atlas gốc:', error);
           const note = root.querySelector('[data-composer-autodraft-status]');
-          if (note) note.textContent = 'Chưa tự ghép đủ từ atlas này. Hãy chọn các mảnh còn thiếu bằng công cụ khoanh vùng.';
+          if (note) note.textContent = 'Không tải được bộ atlas mặc định. Hãy chạy npm run extract:assets rồi tải lại trang.';
         }
       }
     }
