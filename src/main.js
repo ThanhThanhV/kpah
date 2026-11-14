@@ -1282,8 +1282,8 @@ class WorldScene extends Phaser.Scene {
       const id=String(event.entityId??event.characterId);
       const entity=this.serverWorldState?.entitiesById?.[id];
       const motion=this.serverWorldMotion.get(id);
-      const x=motion?.x??(Number.isFinite(entity?.snapshot?.x)?entity.snapshot.x:event.x);
-      const y=motion?.y??(Number.isFinite(entity?.snapshot?.y)?entity.snapshot.y:event.y);
+      const x=motion?.x??(Number.isFinite(entity?.x)?entity.x:event.x);
+      const y=motion?.y??(Number.isFinite(entity?.y)?entity.y:event.y);
       if(!Number.isFinite(x)||!Number.isFinite(y))continue;
       const isLocal=Number.isInteger(this.serverInitializationState?.activeCharacterId)
         &&this.serverInitializationState.activeCharacterId===Number(event.characterId);
