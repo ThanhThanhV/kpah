@@ -1330,6 +1330,7 @@ class WorldScene extends Phaser.Scene {
     for(const event of pending){
       this.serverWorldReviveSequence=event.sequence;
       const id=String(event.entityId??event.characterId);
+      if(!Number.isFinite(event.currentHp)||event.currentHp<=0)continue;
       this.serverWorldDeadCharacterIds.delete(id);
       this.serverCharacterPartPlayback.set(id,{state:0,frameCursor:0,direction:0,transform:0});
       this.syncServerWorldViews();
@@ -1340,6 +1341,7 @@ class WorldScene extends Phaser.Scene {
       const x=motion?.x??(Number.isFinite(entity?.x)?entity.x:event.x);
       const y=motion?.y??(Number.isFinite(entity?.y)?entity.y:event.y);
       if(isLocal)toast('Đã được hồi sinh.');
+      else toast((typeof entity?.name==='string'&&entity.name.trim()?entity.name.trim():'Nhân vật')+' đã được hồi sinh.');
       if(!Number.isFinite(x)||!Number.isFinite(y))continue;
       const label=this.add.text(x,y-34,'Hồi sinh',{
         fontFamily:'Arial',fontSize:'13px',fontStyle:'bold',
