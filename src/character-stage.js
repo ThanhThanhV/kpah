@@ -100,6 +100,19 @@ export function publishCharacterPartData(partIndex, metadata, imageBytes, playba
   image.src = toDataUrl(imageBytes);
 }
 
+
+/** Clear the preview when the active local player no longer has valid part data. */
+export function clearCharacterPartData() {
+  if (!latestCharacterPart && !pendingKey) return;
+  pendingRequest += 1;
+  pendingKey = null;
+  pendingMetadata = null;
+  pendingPlayback = null;
+  latestKey = null;
+  latestCharacterPart = null;
+  publish();
+}
+
 function composeFrame(metadata, image, frameIndex, transform) {
   const frame = metadata.frames[frameIndex];
   if (!frame?.pieces?.length) return null;
