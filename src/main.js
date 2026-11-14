@@ -22,6 +22,7 @@ import { projectServerWorldEntities } from './protocol/server-world-projection.j
 import { advanceCharacterPartPlayback, triggerCharacterPartAction, getCharacterFrameDrawOrder } from './protocol/character-part-data.js';
 import { mountCharacterStage, publishCharacterPartData, clearCharacterPartData } from './character-stage.js';
 import { createStarterCharacterComposition } from './character-composer.js';
+import { OFFLINE_PLAYER_ATLASES } from './offline-player-atlases.js';
 import { decodeTemplateSpriteAtlas } from './protocol/template-assets.js';
 import { resolveOriginalEntityFactoryClass, resolveOriginalEntityFrameIndex } from './protocol/original-entity-factory.js';
 import { advanceOriginalCdMovement, advanceOriginalHdMovement, advanceOriginalPlayerMovement, stopOriginalEntityMotionAtCurrentPosition } from './protocol/original-entity-motion.js';
@@ -1027,7 +1028,8 @@ class WorldScene extends Phaser.Scene {
     const container=this.demoPlayerSprite;
     if(!container)return;
     try{
-      const manifest=await loadAssetManifest();
+      // The offline demo must not depend on generated /assets files or a server.
+      // These three tiny PNG atlases are verified extracts from KPAH_278.jar.
       const composition=createStarterCharacterComposition();
       const canvas=document.createElement('canvas');
       canvas.width=composition.canvas.width;
@@ -1036,14 +1038,11 @@ class WorldScene extends Phaser.Scene {
       if(!context)throw new Error('Canvas 2D is unavailable');
       for(const type of ['leg','body','head']){
         const part=composition.parts[type];
-        const entry=(manifest.characterParts??[]).find(item=>
-          item.partType===type&&item.partId===String(part.partId));
-        if(!entry)throw new Error('Missing original KPAH '+type+' atlas '+part.partId);
         const image=new Image();
-        image.src=assetUrl(entry.image);
+        image.src=OFFLINE_PLAYER_ATLASES[type];
         await new Promise((resolve,reject)=>{
           image.onload=resolve;
-          image.onerror=()=>reject(new Error('Cannot load '+entry.image));
+          image.onerror=()=>reject(new Error('Cannot decode bundled KPAH '+type+' atlas'));
         });
         const crop=part.crop;
         if(crop.x<0||crop.y<0||crop.width<=0||crop.height<=0
