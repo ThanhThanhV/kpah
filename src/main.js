@@ -1539,6 +1539,16 @@ class WorldScene extends Phaser.Scene {
     for(const entity of projected){
       this.ensureServerTemplateTexture(entity);
       const id=String(entity.entityId);
+      const renderIdentity=[entity.kind,entity.templateId,entity.factoryClass].join(':');
+      let existingView=this.serverWorldViews.get(id);
+      if(existingView&&existingView.getData('renderIdentity')!==renderIdentity){
+        existingView.destroy();
+        this.serverWorldViews.delete(id);
+        this.serverWorldMotion.delete(id);
+        this.serverCharacterPartPlayback.delete(id);
+        this.serverWorldDeadCharacterIds.delete(id);
+        existingView=null;
+      }
       let motion=this.serverWorldMotion.get(id);
       if(!motion){
         motion={x:entity.x,y:entity.y,direction:0,frameState:0,animationCounter:0,
@@ -1616,6 +1626,7 @@ class WorldScene extends Phaser.Scene {
         view.add(label);
         view.setDepth(entity.y+3).setAlpha(0.9);
         view.setData('label',label);
+        view.setData('renderIdentity',renderIdentity);
         this.serverWorldViews.set(id,view);
       }else{
         view.setPosition(motion.x,motion.y).setDepth(motion.y+3);
