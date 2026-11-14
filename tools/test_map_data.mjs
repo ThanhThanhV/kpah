@@ -28,3 +28,25 @@ assert.deepEqual([...map.trailingBytes],[99]);
 assert.throws(()=>decodeOriginalMapData(Uint8Array.from([2,2,1])),
   /Truncated map data while reading base tile grid/);
 console.log("Original map data decoder: PASS (tile grid, sentinels, portal, NPC and truncation)");
+
+import {
+  decodeOriginalTileTypeData, isOriginalTileBlocked, resolveOriginalTileSet,
+} from "../src/protocol/map-data.js";
+
+assert.deepEqual(resolveOriginalTileSet(100), {
+  family:"overworld",atlasPath:"t.png",typePath:"t.type",
+  minimapAtlasPath:"t_small.png",tileWidth:16,tileHeight:16,atlasLayout:"vertical-strip",
+});
+assert.equal(resolveOriginalTileSet(110).family,"cave");
+assert.equal(resolveOriginalTileSet(200).family,"cave");
+assert.equal(resolveOriginalTileSet(201).family,"town");
+const typeData=decodeOriginalTileTypeData(Uint8Array.from([0,2,4,3,255]));
+assert.equal(typeData.tileTypeCount,5);
+assert.equal(isOriginalTileBlocked(typeData.tileTypeFlags,0),false);
+assert.equal(isOriginalTileBlocked(typeData.tileTypeFlags,1),true);
+assert.equal(isOriginalTileBlocked(typeData.tileTypeFlags,2),false);
+assert.equal(isOriginalTileBlocked(typeData.tileTypeFlags,3),true);
+assert.equal(isOriginalTileBlocked(typeData.tileTypeFlags,4),true);
+assert.equal(isOriginalTileBlocked(typeData.tileTypeFlags,99),true,
+  "out-of-range tile IDs are blocked like the original client");
+console.log("Original tile atlas/type mapping: PASS (map ranges, 16px strip, collision bit)");
