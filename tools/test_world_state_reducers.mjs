@@ -10,35 +10,6 @@ import { applyInboundWorldPacket, applyTargetLinkedActorImpactToWorld } from "..
 import { createInitializationState } from "../src/protocol/initialization-state.js";
 
 let state = createInitializationState();
-const mapSpawn = new PacketWriter()
-  .writeI8(1).writeU8(7).writeI16(124).writeI16(100).writeI16(120).writeI8(2)
-  .writeI32(99).writeI8(4).writeI8(5).writeBool(true).toUint8Array();
-state = applyInboundWorldPacket(state, { opcode: 4, payload: mapSpawn }).state;
-state = { ...state, activeCharacterId: 124 };
-const remoteSpawn = new PacketWriter()
-  .writeI8(1).writeU8(8).writeI16(555).writeI16(300).writeI16(310).writeI8(1)
-  .writeI32(77).writeI8(6).writeBool(true).toUint8Array();
-state = applyInboundWorldPacket(state, { opcode: 4, payload: remoteSpawn }).state;
-const mapTransitionPayload = new PacketWriter()
-  .writeI16(23).writeI16(4).writeI16(6).writeI8(9).writeI16(-1)
-  .writeUTF("Rừng sâu").writeBool(true).writeBytes(new Uint8Array([1,2,3,4])).toUint8Array();
-const transitioned = applyInboundWorldPacket(state, { opcode: 12, payload: mapTransitionPayload });
-state = transitioned.state;
-assert.equal(transitioned.handled,true,"opcode 12 must be handled as a world map transition");
-assert.equal(state.serverWorld.mapTransition.mapId,23);
-assert.equal(state.serverWorld.mapTransition.mapResourceId,23,"map resource falls back to map id when fourth short is -1");
-assert.equal(state.serverWorld.mapTransition.label,"Rừng sâu");
-assert.equal(state.serverWorld.mapTransition.hfK,9);
-assert.deepEqual([...state.serverWorld.mapTransition.mapData],[1,2,3,4]);
-assert.deepEqual(state.serverWorld.entityOrder,[124],"map transition retains only the local actor");
-assert.equal(state.serverWorld.entitiesById["555"],undefined,"remote actors from the previous map are removed");
-assert.equal(state.serverWorld.entitiesById["124"].x,72,"tile X maps to (tile*16)+8");
-assert.equal(state.serverWorld.entitiesById["124"].y,104,"tile Y maps to (tile*16)+8");
-assert.equal(state.serverWorld.entitiesById["124"].targetX,72);
-assert.equal(state.serverWorld.entitiesById["124"].movementPending,false);
-assert.equal(state.serverWorld.entitiesById["124"].positionSource,"opcode12");
-assert.equal(state.serverWorld.mapTransitionSequence,1);
-
 const spawn = new PacketWriter()
   .writeI8(1).writeU8(7).writeI16(123).writeI16(456).writeI16(789).writeI8(2)
   .writeI32(99).writeI8(4).writeI8(5).writeBool(true)
@@ -676,3 +647,35 @@ assert.deepEqual([...state.serverWorld.effectImagePayloadsById["910"]], [0x89, 0
 assert.equal(state.serverWorld.worldEvents.at(-1).imageByteLength, 4);
 
 console.log("Inbound world-state reducers: PASS (spawn/update, guarded snapshot, combat event, despawn, unknown opcode)");
+
+// Opcode 12 transition is isolated from the other reducer fixtures.
+const mapState = createInitializationState();
+const mapSpawn = new PacketWriter()
+  .writeI8(0).writeU8(7).writeI16(124).writeI16(100).writeI16(120).writeI8(2)
+  .writeI32(99).writeI8(4).writeI8(5).writeBool(true).toUint8Array();
+mapState = applyInboundWorldPacket(mapState, { opcode: 4, payload: mapSpawn }).state;
+mapState = { ...mapState, activeCharacterId: 124 };
+const remoteSpawn = new PacketWriter()
+  .writeI8(1).writeU8(8).writeI16(555).writeI16(300).writeI16(310).writeI8(1)
+  .writeI32(77).writeI8(6).writeBool(true).toUint8Array();
+mapState = applyInboundWorldPacket(mapState, { opcode: 4, payload: remoteSpawn }).state;
+const mapTransitionPayload = new PacketWriter()
+  .writeI16(23).writeI16(4).writeI16(6).writeI8(9).writeI16(-1)
+  .writeUTF("Rừng sâu").writeBool(true).writeBytes(new Uint8Array([1,2,3,4])).toUint8Array();
+const transitioned = applyInboundWorldPacket(mapState, { opcode: 12, payload: mapTransitionPayload });
+mapState = transitioned.state;
+assert.equal(transitioned.handled,true,"opcode 12 must be handled as a world map transition");
+assert.equal(mapState.serverWorld.mapTransition.mapId,23);
+assert.equal(mapState.serverWorld.mapTransition.mapResourceId,23,"map resource falls back to map id when fourth short is -1");
+assert.equal(mapState.serverWorld.mapTransition.label,"Rừng sâu");
+assert.equal(mapState.serverWorld.mapTransition.hfK,9);
+assert.deepEqual([...mapState.serverWorld.mapTransition.mapData],[1,2,3,4]);
+assert.deepEqual(mapState.serverWorld.entityOrder,[124],"map transition retains only the local actor");
+assert.equal(mapState.serverWorld.entitiesById["555"],undefined,"remote actors from the previous map are removed");
+assert.equal(mapState.serverWorld.entitiesById["124"].x,72,"tile X maps to (tile*16)+8");
+assert.equal(mapState.serverWorld.entitiesById["124"].y,104,"tile Y maps to (tile*16)+8");
+assert.equal(mapState.serverWorld.entitiesById["124"].targetX,72);
+assert.equal(mapState.serverWorld.entitiesById["124"].movementPending,false);
+assert.equal(mapState.serverWorld.entitiesById["124"].positionSource,"opcode12");
+assert.equal(mapState.serverWorld.mapTransitionSequence,1);
+
