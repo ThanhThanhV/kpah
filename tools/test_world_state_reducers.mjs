@@ -99,6 +99,29 @@ assert.equal(state.serverWorld.entitiesById["124"].level, 26);
 assert.equal(state.serverWorld.entitiesById["124"].currentHp, 5000);
 assert.equal(state.serverWorld.entitiesById["124"].maxHp, 5000);
 assert.equal(state.serverWorld.entitiesById["124"].currentMp, 600);
+const revivePayload = new PacketWriter().writeI16(124).writeI32(12000)
+  .writeI32(2400).writeI16(17).writeI32(9000).toUint8Array();
+applied = applyInboundWorldPacket(state, { opcode: 60, payload: revivePayload });
+state = applied.state;
+const revivedEntity = state.serverWorld.entitiesById["124"];
+assert.equal(revivedEntity.currentHp, 9000);
+assert.equal(revivedEntity.maxHp, 12000);
+assert.equal(revivedEntity.maxMp, 2400);
+assert.equal(revivedEntity.currentMp, 567,
+  "opcode 60 does not overwrite current MP because original mj.f does not assign bC");
+assert.equal(revivedEntity.reviveAuxiliary, 17);
+const reviveEvent = state.serverWorld.worldEvents.at(-1);
+assert.equal(reviveEvent.opcode, 60);
+assert.equal(reviveEvent.eventType, "revive");
+assert.equal(reviveEvent.entityResolved, true);
+assert.equal(reviveEvent.isLocal, true);
+assert.equal(reviveEvent.currentHp, 9000);
+const missingRevivePayload = new PacketWriter().writeI16(777).writeI32(500)
+  .writeI32(100).writeI16(0).writeI32(500).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 60, payload: missingRevivePayload }).state;
+assert.equal(state.serverWorld.entitiesById["777"], undefined,
+  "opcode 60 never creates an unknown remote player");
+assert.equal(state.serverWorld.worldEvents.at(-1).entityResolved, false);
 assert.equal(state.serverWorld.entitiesById["124"].maxMp, 600);
 const levelUpEvent = state.serverWorld.worldEvents.at(-1);
 assert.equal(levelUpEvent.eventType, "level-up");
