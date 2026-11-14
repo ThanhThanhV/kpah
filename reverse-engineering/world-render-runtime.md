@@ -291,9 +291,9 @@ attempt to draw or invent those semantics.
 
 ### Tile atlas selection and collision type table
 
-CFR ku.java:696-735 (ku.l(mapId)) selects three paired resources:
-- map ID greater than 200: t_thanh.png, t_thanh.type, minimap t_thanh_s.png;
-- map ID less than 110: t.png, t.type, minimap t_small.png;
+CFR ku.java:696-735 (ku.l(mapResourceId)) selects three paired resources:
+- map resource ID greater than 200: t_thanh.png, t_thanh.type, minimap t_thanh_s.png;
+- map resource ID less than 110: t.png, t.type, minimap t_small.png;
 - all remaining map IDs: t_hang.png, t_hang.type, minimap t_hang_s.png.
 
 The full tile image is sampled by hf.a(Graphics) / hf.b(Graphics)
