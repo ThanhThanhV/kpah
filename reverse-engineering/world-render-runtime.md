@@ -286,3 +286,21 @@ portal list (x/y, little-endian portal ID, two bytes), then a counted NPC list
 This does not yet identify the image atlas behind `ku.L`, collision meanings,
 portal grouping/entrance geometry or decoration asset IDs, so it does not
 attempt to draw or invent those semantics.
+
+
+### Tile atlas selection and collision type table
+
+CFR ku.java:696-735 (ku.l(mapId)) selects three paired resources:
+- map ID greater than 200: t_thanh.png, t_thanh.type, minimap t_thanh_s.png;
+- map ID less than 110: t.png, t.type, minimap t_small.png;
+- all remaining map IDs: t_hang.png, t_hang.type, minimap t_hang_s.png.
+
+The full tile image is sampled by hf.a(Graphics) / hf.b(Graphics)
+as 16×16 regions at source X=0 and source Y=tileId*16, so the original
+atlas is a vertical strip. The parallel .type file is copied byte-for-byte
+to hf.h; map load initializes each cell collision flags as
+hf.g[cell] = hf.h[tileId]. hf.a(x,y) considers bit 0x02 blocked.
+The browser now records this exact tileset family/path selection in opcode 12
+state and exposes byte-table decoding plus the source collision predicate.
+This is metadata and collision lookup only: actual rendering waits for the
+matching PNG/type resources to be available from the deployed asset root.
