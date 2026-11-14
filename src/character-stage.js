@@ -1,3 +1,5 @@
+import { assetUrl, characterPartEntries, loadAssetManifest } from './kpah-assets.js';
+
 const subscribers = new Set();
 let latestCharacterPart = null;
 let latestKey = null;
@@ -82,7 +84,7 @@ export function mountCharacterStage(root) {
   root.innerHTML = `
     <div class="original-character-stage__viewport">
       <canvas width="480" height="360" aria-label="Hoạt ảnh nhân vật KPAH gốc"></canvas>
-      <div class="original-character-stage__empty">Kết nối máy chủ KPAH và vào game để nhận dữ liệu part + atlas của nhân vật</div>
+      <div class="original-character-stage__empty">Đang nạp atlas nhân vật gốc từ KPAH_278.jar…</div>
       <span class="original-character-stage__tag">NHÂN VẬT GỐC</span>
     </div>
     <div class="original-character-stage__toolbar">
@@ -93,11 +95,22 @@ export function mountCharacterStage(root) {
       </div>
       <button type="button" data-stage-direction="toggle" aria-label="Lật nhân vật trái phải">↔ Lật trái/phải</button>
     </div>
-    <div class="original-character-stage__caption">Hoạt ảnh dùng frame và atlas được server gửi theo định dạng gốc.</div>`;
+    <div class="original-character-stage__atlas-controls" hidden>
+      <label>Đầu <select data-atlas-part="head"></select></label>
+      <label>Thân <select data-atlas-part="body"></select></label>
+      <label>Chân <select data-atlas-part="leg"></select></label>
+    </div>
+    <div class="original-character-stage__caption">Atlas pixel gốc từ JAR. Khi có metadata frame từ máy chủ, sân khấu tự chuyển sang hoạt ảnh nhân vật hoàn chỉnh.</div>`;
   const canvas = root.querySelector('canvas');
   const context = canvas.getContext('2d');
   const empty = root.querySelector('.original-character-stage__empty');
   const stateButtons = [...root.querySelectorAll('[data-stage-state]')];
+  const atlasControls = root.querySelector('.original-character-stage__atlas-controls');
+  const atlasSelects = [...root.querySelectorAll('[data-atlas-part]')];
+  const atlasImages = new Map();
+  const selectedAtlasIds = { head: '0', body: '0', leg: '0' };
+  let atlasCatalog = [];
+  let atlasLoadToken = 0;
   let data = latestCharacterPart;
   let state = 0;
   let direction = 0;
@@ -125,12 +138,88 @@ export function mountCharacterStage(root) {
     }
     return frameCache.get(cacheKey);
   }
+  function drawAtlasFallback() {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.imageSmoothingEnabled = false;
+    const groups = [
+      { type: 'head', x: 8, width: 146, label: 'ĐẦU' },
+      { type: 'body', x: 167, width: 146, label: 'THÂN' },
+      { type: 'leg', x: 326, width: 146, label: 'CHÂN' },
+    ];
+    context.textAlign = 'center';
+    context.font = 'bold 11px sans-serif';
+    for (const group of groups) {
+      context.fillStyle = '#f0d49a';
+      context.fillText(group.label + ' · ' + selectedAtlasIds[group.type], group.x + group.width / 2, 25);
+      const image = atlasImages.get(group.type);
+      if (!image) {
+        context.fillStyle = '#c6ad82';
+        context.font = '9px sans-serif';
+        context.fillText('Đang tải atlas…', group.x + group.width / 2, 175);
+        continue;
+      }
+      const scale = Math.min(2.2, (group.width - 12) / image.naturalWidth, 235 / image.naturalHeight);
+      const width = image.naturalWidth * scale;
+      const height = image.naturalHeight * scale;
+      context.drawImage(image, group.x + (group.width - width) / 2, 42 + (235 - height) / 2, width, height);
+      context.strokeStyle = '#876b49';
+      context.strokeRect(group.x + 2, 38, group.width - 4, 244);
+    }
+    context.fillStyle = '#bba989';
+    context.font = '9px sans-serif';
+    context.fillText('ẢNH ATLAS GỐC · CHƯA CÓ DỮ LIỆU GHÉP FRAME', canvas.width / 2, 315);
+    empty.hidden = true;
+    atlasControls.hidden = false;
+  }
+
+  function loadAtlas(type, id) {
+    selectedAtlasIds[type] = id;
+    const entry = atlasCatalog.find(item => item.partType === type && item.partId === id);
+    if (!entry) return;
+    const token = ++atlasLoadToken;
+    const image = new Image();
+    image.onload = () => {
+      atlasImages.set(type, image);
+      if (!data && !disposed && token <= atlasLoadToken) drawAtlasFallback();
+    };
+    image.onerror = () => {
+      empty.textContent = 'Không tải được atlas gốc: ' + entry.image;
+      empty.hidden = false;
+    };
+    image.src = assetUrl(entry.image);
+  }
+
+  function initializeAtlasFallback() {
+    loadAssetManifest().then(manifest => {
+      if (disposed) return;
+      atlasCatalog = characterPartEntries(manifest);
+      for (const type of ['head', 'body', 'leg']) {
+        const entries = atlasCatalog.filter(item => item.partType === type)
+          .sort((a, b) => Number(a.partId) - Number(b.partId));
+        const select = atlasSelects.find(item => item.dataset.atlasPart === type);
+        if (!entries.length || !select) continue;
+        select.innerHTML = entries.map(item =>
+          '<option value="' + item.partId + '">' + item.partId + '</option>'
+        ).join('');
+        select.value = selectedAtlasIds[type];
+        select.addEventListener('change', () => loadAtlas(type, select.value));
+        loadAtlas(type, select.value);
+      }
+      if (!data) drawAtlasFallback();
+    }).catch(error => {
+      empty.textContent = 'Chưa tìm thấy atlas nhân vật. Hãy chạy npm run extract:assets với KPAH_278.jar. (' + error.message + ')';
+      empty.hidden = false;
+    });
+  }
+
   function draw() {
     context.clearRect(0, 0, canvas.width, canvas.height);
     if (!data) {
-      empty.hidden = false;
+      if (atlasCatalog.length) drawAtlasFallback();
+      else empty.hidden = false;
       return;
     }
+    atlasControls.hidden = true;
     const frame = getFrame();
     if (!frame) {
       empty.textContent = 'Không có frame cho trạng thái hoạt ảnh đang chọn trong dữ liệu gốc.';
@@ -182,6 +271,7 @@ export function mountCharacterStage(root) {
   };
   subscribers.add(onData);
   draw();
+  if (!data) initializeAtlasFallback();
   raf = requestAnimationFrame(tick);
   return () => {
     disposed = true;
