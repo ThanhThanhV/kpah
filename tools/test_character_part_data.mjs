@@ -72,10 +72,22 @@ assert.equal(reversePlayback.frameCursor,1,"reverse-facing action uses direction
 reversePlayback=advanceCharacterPartPlayback(reversePlayback,decoded,{moving:false});
 assert.equal(reversePlayback.state,0,"reverse-facing action also completes once");
 playback=advanceCharacterPartPlayback({state:0,direction:0,transform:0,frameCursor:0},decoded,{
-  moving:true,x:10,y:10,targetX:4,targetY:2,
+  moving:true,direction:2,x:10,y:10,targetX:4,targetY:2,
 });
-assert.deepEqual(playback,{state:2,direction:1,transform:2,frameCursor:0},
-  "walking updates original vertical direction and horizontal mirror");
+assert.deepEqual(playback,{state:2,direction:0,transform:2,frameCursor:0},
+  "diagonal movement follows the original X-first left-facing direction");
+playback=advanceCharacterPartPlayback(playback,decoded,{
+  moving:true,direction:3,x:10,y:10,targetX:20,targetY:2,
+});
+assert.equal(playback.transform,0,"right movement restores the unmirrored atlas");
+playback=advanceCharacterPartPlayback(playback,decoded,{
+  moving:true,direction:1,x:10,y:10,targetX:10,targetY:2,
+});
+assert.equal(playback.direction,1,"up movement selects the second animation direction");
+playback=advanceCharacterPartPlayback(playback,decoded,{
+  moving:true,direction:0,x:10,y:10,targetX:10,targetY:20,
+});
+assert.equal(playback.direction,0,"down movement selects the first animation direction");
 
 assert.deepEqual(decoded.optionalFrameMetadata, {
   marker: 9,
