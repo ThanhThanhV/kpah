@@ -28,6 +28,9 @@ export function mountCharacterComposer(root) {
       <section class="character-composer__result">
         <div class="character-composer__bar">
           <strong>Nhân vật tự ghép</strong>
+          <button type="button" data-composer-save>Lưu bản ghép</button>
+          <button type="button" data-composer-import-trigger>Nhập JSON</button>
+          <input type="file" data-composer-import accept="application/json,.json" hidden>
           <button type="button" data-composer-export>Xuất tọa độ JSON</button>
         </div>
         <canvas data-composer-preview width="320" height="320" aria-label="Nhân vật đang được ghép"></canvas>
@@ -57,6 +60,8 @@ export function mountCharacterComposer(root) {
   let movingType = null;
   let moveOffset = null;
   let disposed = false;
+  const STORAGE_KEY = 'kpah.character-composition.v1';
+  let restoreAttempted = false;
 
   function drawAtlas() {
     atlasContext.clearRect(0, 0, 480, 260);
@@ -105,6 +110,87 @@ export function mountCharacterComposer(root) {
     }
   }
 
+  function compositionConfig() {
+    return {
+      format: 'kpah-manual-character-composition-v1',
+      canvas: { width: 320, height: 320 },
+      parts: Object.fromEntries([...layers.entries()].map(([type, layer]) => [type, {
+        partId: layer.partId, source: layer.source, crop: layer.crop,
+        x: layer.x, y: layer.y, scale: layer.scale,
+      }])),
+    };
+  }
+
+  function saveComposition(showStatus = false) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(compositionConfig()));
+      if (showStatus) {
+        const button = root.querySelector('[data-composer-save]');
+        if (button) {
+          const previous = button.textContent;
+          button.textContent = 'Đã lưu trên máy này';
+          button.disabled = true;
+          window.setTimeout(() => {
+            if (!disposed && button.isConnected) {
+              button.textContent = previous;
+              button.disabled = false;
+            }
+          }, 1400);
+        }
+      }
+      return true;
+    } catch (error) {
+      console.warn('Không thể lưu cấu hình nhân vật KPAH:', error);
+      return false;
+    }
+  }
+
+  async function restoreComposition(config) {
+    if (!config || config.format !== 'kpah-manual-character-composition-v1' || !config.parts) {
+      throw new Error('Sai định dạng cấu hình nhân vật.');
+    }
+    const restored = new Map();
+    for (const type of TYPES) {
+      const part = config.parts[type];
+      if (!part) continue;
+      const entry = catalog.find(item => item.partType === type && item.partId === String(part.partId));
+      const cropData = part.crop;
+      if (!entry || !cropData || ![cropData.x, cropData.y, cropData.width, cropData.height, part.x, part.y, part.scale].every(Number.isFinite)
+        || cropData.width < 1 || cropData.height < 1 || part.scale <= 0) continue;
+      const image = new Image();
+      image.src = assetUrl(entry.image);
+      await new Promise((resolve, reject) => {
+        image.onload = resolve;
+        image.onerror = () => reject(new Error('Không tải được atlas ' + entry.image));
+      });
+      if (disposed) return;
+      const x = Math.max(0, Math.floor(cropData.x));
+      const y = Math.max(0, Math.floor(cropData.y));
+      const width = Math.min(Math.floor(cropData.width), image.naturalWidth - x);
+      const height = Math.min(Math.floor(cropData.height), image.naturalHeight - y);
+      if (width < 1 || height < 1) continue;
+      const crop = document.createElement('canvas');
+      crop.width = width; crop.height = height;
+      crop.getContext('2d').drawImage(image, x, y, width, height, 0, 0, width, height);
+      const partImage = new Image();
+      partImage.src = crop.toDataURL('image/png');
+      await new Promise((resolve, reject) => {
+        partImage.onload = resolve;
+        partImage.onerror = reject;
+      });
+      restored.set(type, {
+        type, partId: String(part.partId), source: entry.image,
+        crop: { x, y, width, height }, image: partImage, width, height,
+        x: part.x, y: part.y, scale: clamp(part.scale, 0.1, 5),
+      });
+    }
+    if (disposed) return;
+    layers.clear();
+    for (const [type, layer] of restored) layers.set(type, layer);
+    renderLayers();
+    drawPreview();
+  }
+
   function renderLayers() {
     layerList.innerHTML = '';
     for (const type of TYPES) {
@@ -126,13 +212,14 @@ export function mountCharacterComposer(root) {
             if (!Number.isFinite(value)) return;
             layer[key] = key === 'scale' ? clamp(value, 0.1, 5) : clamp(value, -320, 640);
             drawPreview();
+            saveComposition();
           });
           controls.append(input);
         }
         const remove = document.createElement('button');
         remove.type = 'button';
         remove.textContent = 'Bỏ';
-        remove.addEventListener('click', () => { layers.delete(type); renderLayers(); drawPreview(); });
+        remove.addEventListener('click', () => { layers.delete(type); renderLayers(); drawPreview(); saveComposition(); });
         controls.append(remove);
       }
       row.append(title, controls);
@@ -307,6 +394,7 @@ export function mountCharacterComposer(root) {
       movingType = type;
       renderLayers();
       drawPreview();
+      saveComposition();
     };
     image.src = crop.toDataURL('image/png');
   });
@@ -335,18 +423,25 @@ export function mountCharacterComposer(root) {
     layer.y = Math.round((event.clientY - bounds.top) * 320 / bounds.height - moveOffset.y);
     drawPreview();
   });
-  previewCanvas.addEventListener('pointerup', () => { moveOffset = null; renderLayers(); drawPreview(); });
+  previewCanvas.addEventListener('pointerup', () => { moveOffset = null; renderLayers(); drawPreview(); saveComposition(); });
   typeSelect.addEventListener('change', fillIds);
   idSelect.addEventListener('change', loadSelectedAtlas);
+  root.querySelector('[data-composer-save]').addEventListener('click', () => saveComposition(true));
+  const importInput = root.querySelector('[data-composer-import]');
+  root.querySelector('[data-composer-import-trigger]').addEventListener('click', () => importInput.click());
+  importInput.addEventListener('change', async () => {
+    const file = importInput.files?.[0];
+    if (!file) return;
+    try {
+      const config = JSON.parse(await file.text());
+      await restoreComposition(config);
+      saveComposition();
+    } catch (error) {
+      window.alert('Không thể nhập cấu hình: ' + error.message);
+    } finally { importInput.value = ''; }
+  });
   root.querySelector('[data-composer-export]').addEventListener('click', () => {
-    const config = {
-      format: 'kpah-manual-character-composition-v1',
-      canvas: { width: 320, height: 320 },
-      parts: Object.fromEntries([...layers.entries()].map(([type, layer]) => [type, {
-        partId: layer.partId, source: layer.source, crop: layer.crop,
-        x: layer.x, y: layer.y, scale: layer.scale,
-      }])),
-    };
+    const config = compositionConfig();
     const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
@@ -356,10 +451,19 @@ export function mountCharacterComposer(root) {
     URL.revokeObjectURL(url);
   });
 
-  loadAssetManifest().then(manifest => {
+  loadAssetManifest().then(async manifest => {
     if (disposed) return;
     catalog = characterPartEntries(manifest);
     fillIds();
+    if (!restoreAttempted) {
+      restoreAttempted = true;
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) await restoreComposition(JSON.parse(saved));
+      } catch (error) {
+        console.warn('Không thể khôi phục bản ghép nhân vật đã lưu:', error);
+      }
+    }
   }).catch(error => {
     atlasContext.fillStyle = '#ffb6a0';
     atlasContext.font = '11px sans-serif';
