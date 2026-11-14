@@ -50,6 +50,15 @@ const playerStep = advanceOriginalPlayerMovement({
 assert.equal(playerStep.x, 4, "player step uses cT + 1 when either axis exceeds 30");
 assert.equal(playerStep.y, 0, "player movement also prioritizes X");
 assert.equal(playerStep.direction, 3);
+const playerSnapAtExactXStep = advanceOriginalPlayerMovement({
+  x: 10, y: 10, targetX: 13, targetY: 12, direction: 2, moving: true,
+}, 3);
+assert.equal(playerSnapAtExactXStep.x, 13,
+  "original hd snaps X when the remaining distance equals cT");
+assert.equal(playerSnapAtExactXStep.y, 12);
+assert.equal(playerSnapAtExactXStep.moving, false,
+  "the exact X-step boundary must not overshoot the server destination");
+
 const playerVertical = advanceOriginalPlayerMovement({
   x: 8, y: 12, targetX: 8, targetY: 4, direction: 0, moving: true,
 }, 3);
