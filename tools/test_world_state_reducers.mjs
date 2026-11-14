@@ -659,9 +659,11 @@ const remoteSpawn = new PacketWriter()
   .writeI8(1).writeU8(8).writeI16(555).writeI16(300).writeI16(310).writeI8(1)
   .writeI32(77).writeI8(6).writeBool(true).toUint8Array();
 mapState = applyInboundWorldPacket(mapState, { opcode: 4, payload: remoteSpawn }).state;
-const mapTransitionPayload = new PacketWriter()
+const mapTransitionWriter = new PacketWriter()
   .writeI16(23).writeI16(4).writeI16(6).writeI8(9).writeI16(-1)
-  .writeUTF("Rừng sâu").writeBool(true).writeBytes(new Uint8Array([1,2,3,4])).toUint8Array();
+  .writeUTF("Rừng sâu").writeBool(true);
+mapTransitionWriter.bytes.push(1,2,3,4);
+const mapTransitionPayload = mapTransitionWriter.toUint8Array();
 const transitioned = applyInboundWorldPacket(mapState, { opcode: 12, payload: mapTransitionPayload });
 mapState = transitioned.state;
 assert.equal(transitioned.handled,true,"opcode 12 must be handled as a world map transition");
