@@ -62,7 +62,7 @@ export function mountCharacterComposer(root) {
           <button type="button" data-composer-export>Xuất tọa độ JSON</button>
         </div>
         <canvas data-composer-preview width="320" height="320" aria-label="Nhân vật đang được ghép"></canvas>
-        <p data-composer-autodraft-status>Đang tìm mảnh sprite đầu, thân và chân để dựng bản ghép thử…</p>
+        <p data-composer-autodraft-status>Đang ghép nhân vật mẫu từ atlas KPAH gốc…</p>
         <div class="character-composer__layers" data-composer-layers></div>
         <p>Kéo trực tiếp từng mảnh trên khung xem trước để căn vị trí. Có thể xuất cấu hình tọa độ JSON để lưu và dùng lại.</p>
       </section>
@@ -396,7 +396,7 @@ export function mountCharacterComposer(root) {
     drawPreview();
     saveComposition();
     const note = root.querySelector('[data-composer-autodraft-status]');
-    if (note) note.textContent = 'Đã dựng nhân vật mẫu trực tiếp từ atlas KPAH gốc (đầu 0, thân 0, chân 0). Có thể kéo từng phần để căn chỉnh rồi lưu.';
+    if (note) note.textContent = 'Đã ghép nhân vật mẫu từ atlas gốc: đầu 0, thân 0, chân 0. Kéo từng phần để căn chỉnh; thay đổi được lưu tự động.';
   }
 
   async function resetStarterCharacter() {
