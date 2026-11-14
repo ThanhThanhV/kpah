@@ -657,7 +657,13 @@ function executeActionSlot(slot){
 function refreshCharacterPanel(){
   const title=document.querySelector('#window-title').textContent;
   const key=title==='Thông tin nhân vật'?'character':title==='Trang bị nhân vật'?'equipment':title==='Hành trang'?'inventory':null;
-  if(key)document.querySelector('#window-content').innerHTML=renderCharacterPanel(key);
+  if(key){
+    disposeCharacterStage?.();
+    disposeCharacterStage=null;
+    document.querySelector('#window-content').innerHTML=renderCharacterPanel(key);
+    const stageRoot=document.querySelector('#window-content [data-character-stage]');
+    if(stageRoot)disposeCharacterStage=mountCharacterStage(stageRoot);
+  }
   updateCharacterHud();
 }
 function updateCharacterHud(){
