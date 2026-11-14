@@ -1091,7 +1091,7 @@ class WorldScene extends Phaser.Scene {
     sprite.setY(-bob);
     const shadow=this.demoPlayerSprite.getData('offlinePlayerShadow');
     if(shadow){
-      shadow.setScaleX(moving?1.08:1);
+      shadow.setScale(moving?1.08:1,1);
       shadow.setAlpha(moving?0.28:0.35);
     }
     if(moving&&this.offlinePlayerFacingX!==undefined&&Math.abs(x-this.offlinePlayerFacingX)>0.4){
@@ -2604,4 +2604,4 @@ class WorldScene extends Phaser.Scene {
 }
 const game=new Phaser.Game({type:Phaser.AUTO,parent:'world',width:960,height:560,backgroundColor:'#263c2d',render:{pixelArt:true,antialias:false},scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},scene:[WorldScene]});
 // Character sheet is opened after login in the kpah:character-selected handler.
-window.addEventListener('keydown',e=>{if(e.key.toLowerCase()==='e'){const scene=game.scene.getScene('world');const nearest=scene?.playerSprite?groundDropState.nearest(scene.playerSprite.x,scene.playerSprite.y,90):null;if(nearest){e.preventDefault();pickupGroundDrop(nearest.id);}return;}const dirs={ArrowLeft:[-20,0],ArrowRight:[20,0],ArrowUp:[0,-15],ArrowDown:[0,15]};if(!dirs[e.key])return;const s=game.scene.getScene('world');if(!s.playerSprite)return;e.preventDefault();const [dx,dy]=dirs[e.key];s.movePlayerTo(s.playerSprite.x+dx,s.playerSprite.y+dy,120);});
+window.addEventListener('keydown',e=>{if(typeof e.key!=='string'||!e.key)return;if(e.key.toLowerCase()==='e'){const scene=game.scene.getScene('world');const nearest=scene?.playerSprite?groundDropState.nearest(scene.playerSprite.x,scene.playerSprite.y,90):null;if(nearest){e.preventDefault();pickupGroundDrop(nearest.id);}return;}const dirs={ArrowLeft:[-20,0],ArrowRight:[20,0],ArrowUp:[0,-15],ArrowDown:[0,15]};if(!dirs[e.key])return;const s=game.scene.getScene('world');if(!s.playerSprite)return;e.preventDefault();const [dx,dy]=dirs[e.key];s.movePlayerTo(s.playerSprite.x+dx,s.playerSprite.y+dy,120);});
