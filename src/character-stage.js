@@ -645,7 +645,7 @@ export function mountCharacterStage(root) {
   window.addEventListener('kpah:character-composition-updated', onCompositionStorage);
   raf = requestAnimationFrame(tick);
   function onCompositionStorage(event) {
-    if (event.key === 'kpah.character-composition.v1') loadOfflineComposition();
+    if (!event.key || event.key === 'kpah.character-composition.v2') loadOfflineComposition();
   }
   return () => {
     disposed = true;
