@@ -2,7 +2,10 @@ import Phaser from 'phaser';
 import { assetUrl, loadAssetManifest } from './kpah-assets.js';
 import './style.css';
 import { renderResourceViewer } from './resource-viewer.js';
-import { configureWorldCamera, moveWorldEntity, setWorldEntityDepth } from './world-runtime.js';
+import {
+  configureWorldCamera, createOriginalMapTileLayer, loadOriginalMapTileAssets,
+  moveWorldEntity, setWorldEntityDepth,
+} from './world-runtime.js';
 import { createCharacterState } from './character-state.js';
 import { createSkillCombatState } from './skill-combat.js';
 import { createQuestState } from './quest-state.js';
@@ -930,7 +933,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverLocalPlayerEntityId=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldEventSequence=0;this.serverWorldDeadCharacterIds=new Set();this.serverWorldReviveSequence=0;this.serverWorldMapTransitionSequence=0;this.serverWorldDisposed=false;this.serverInitializationState=null;this.serverCharacterPartTextures=new Map();this.serverCharacterPartTextureLoads=new Set();this.serverCharacterPartPlayback=new Map();this.serverCharacterPartAccumulator=0;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;this.serverActorEffectImages=new Map();this.serverActorEffectImageLoads=new Set();this.serverActorEffectTextures=new Map();this.serverActorEffectViews=new Map();this.serverActorEffectShadows=new Map();this.serverActorShadowLoad=null;this.serverActorShadowUnavailable=false;this.serverActorEffectPlayback=new Map();this.serverActorEffectCompleted=new Set();this.serverActorEffectAccumulator=0;}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverLocalPlayerEntityId=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldEventSequence=0;this.serverWorldDeadCharacterIds=new Set();this.serverWorldReviveSequence=0;this.serverWorldMapTransitionSequence=0;this.serverOriginalMapLayer=null;this.serverOriginalMapLoadSequence=0;this.serverWorldDisposed=false;this.serverInitializationState=null;this.serverCharacterPartTextures=new Map();this.serverCharacterPartTextureLoads=new Set();this.serverCharacterPartPlayback=new Map();this.serverCharacterPartAccumulator=0;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;this.serverActorEffectImages=new Map();this.serverActorEffectImageLoads=new Set();this.serverActorEffectTextures=new Map();this.serverActorEffectViews=new Map();this.serverActorEffectShadows=new Map();this.serverActorShadowLoad=null;this.serverActorShadowUnavailable=false;this.serverActorEffectPlayback=new Map();this.serverActorEffectCompleted=new Set();this.serverActorEffectAccumulator=0;}
   create(){
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
@@ -965,6 +968,10 @@ class WorldScene extends Phaser.Scene {
     window.addEventListener('kpah:protocol-state',this.onProtocolState);
     this.events.once('shutdown',()=>{
       window.removeEventListener('kpah:protocol-state',this.onProtocolState);
+      this.serverOriginalMapLoadSequence=0;
+      this.serverOriginalMapLayer?.layer?.destroy();
+      this.serverOriginalMapLayer?.map?.destroy();
+      this.serverOriginalMapLayer=null;
       for(const view of this.serverWorldViews.values())view.destroy();
       this.serverWorldViews.clear();
       this.serverWorldMotion.clear();
@@ -1349,6 +1356,37 @@ class WorldScene extends Phaser.Scene {
     if(this.serverLocalPlayerEntityId&&this.playerSprite){
       this.configureCamera();
       this.cameras.main.centerOn(this.playerSprite.x,this.playerSprite.y);
+    }
+    this.loadAndRenderOriginalServerMap(transition);
+  }
+  async loadAndRenderOriginalServerMap(transition){
+    if(!transition?.parsedMapData||!transition.tileSet)return;
+    const sequence=transition.sequence;
+    this.serverOriginalMapLoadSequence=sequence;
+    const key='kpah-original-map-'+transition.tileSet.family;
+    try{
+      const resources=await loadOriginalMapTileAssets(this,{
+        key,
+        atlasUrl:assetUrl(transition.tileSet.atlasPath),
+        typeUrl:assetUrl(transition.tileSet.typePath)
+      });
+      if(this.serverWorldDisposed||sequence!==this.serverWorldMapTransitionSequence
+        ||sequence!==this.serverOriginalMapLoadSequence)return;
+      this.serverOriginalMapLayer?.layer?.destroy();
+      this.serverOriginalMapLayer?.map?.destroy();
+      this.clearZone();
+      this.worldObstacles=[];
+      const mapData=transition.parsedMapData;
+      this.serverOriginalMapLayer=createOriginalMapTileLayer(this,{
+        key:resources.key,mapData,tileTypeFlags:resources.tileTypeFlags,depth:-1000
+      });
+      const width=mapData.width*16,height=mapData.height*16;
+      this.worldBounds={x:0,y:0,width,height};
+      this.walkBounds={x:0,y:0,width,height};
+      this.configureCamera();
+      if(this.playerSprite)this.cameras.main.centerOn(this.playerSprite.x,this.playerSprite.y);
+    }catch(error){
+      console.warn('Không thể dựng bản đồ KPAH gốc từ tài nguyên server.',error);
     }
   }
   syncServerReviveFeedback(){
