@@ -1712,6 +1712,12 @@ class WorldScene extends Phaser.Scene {
       const texture=textureReady?this.textures.get(textureKey):null;
       const canRenderSprite=frameIndex!==null&&texture?.has(frameIndex);
       const partIndex=entity.factoryClass==='hd'&&Number.isInteger(entity.marker)&&entity.marker>=0?entity.marker:null;
+      if(view&&view.getData('characterPartIndex')!==partIndex){
+        // A reused entity id can receive a different original appearance.
+        // Reset only its animation state; preserve the entity's world motion.
+        this.serverCharacterPartPlayback.set(id,{state:0,frameCursor:0,direction:0,transform:0});
+        view.setData('characterPartIndex',partIndex);
+      }
       const partRecord=partIndex===null?null:this.serverInitializationState?.characterPartCatalog?.[partIndex];
       const partImageBytes=partIndex===null?null:this.serverWorldState?.resourceImagePayloadsById?.[String(12000+partIndex)];
       if(partRecord?.decoded&&partImageBytes){
@@ -1764,6 +1770,7 @@ class WorldScene extends Phaser.Scene {
         view.setDepth(entity.y+3).setAlpha(0.9);
         view.setData('label',label);
         view.setData('renderIdentity',renderIdentity);
+        view.setData('characterPartIndex',partIndex);
         this.serverWorldViews.set(id,view);
       }else{
         view.setPosition(motion.x,motion.y).setDepth(motion.y+3);
