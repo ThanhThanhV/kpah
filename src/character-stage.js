@@ -234,6 +234,8 @@ export function mountCharacterStage(root) {
   let accumulator = 0;
   let lastTime = 0;
   let frameCache = new Map();
+  let offlineComposition = null;
+  let offlineCompositionRequest = 0;
   let raf = 0;
   let disposed = false;
 
@@ -253,6 +255,81 @@ export function mountCharacterStage(root) {
     }
     return frameCache.get(cacheKey);
   }
+  async function loadOfflineComposition() {
+    const request = ++offlineCompositionRequest;
+    let config;
+    try {
+      config = JSON.parse(localStorage.getItem('kpah.character-composition.v1') || 'null');
+    } catch { return; }
+    if (!config || config.format !== 'kpah-manual-character-composition-v1' || !config.parts) {
+      offlineComposition = null;
+      return;
+    }
+    try {
+      const manifest = await loadAssetManifest();
+      const catalog = characterPartEntries(manifest);
+      const layers = [];
+      for (const type of ['leg', 'body', 'head']) {
+        const part = config.parts[type];
+        if (!part || !part.crop) continue;
+        const entry = catalog.find(item => item.partType === type && item.partId === String(part.partId));
+        if (!entry) continue;
+        const image = new Image();
+        image.src = assetUrl(entry.image);
+        await new Promise((resolve, reject) => {
+          image.onload = resolve;
+          image.onerror = () => reject(new Error('Không tải được ' + entry.image));
+        });
+        if (disposed || request !== offlineCompositionRequest) return;
+        const crop = part.crop;
+        const x = Math.max(0, Math.floor(crop.x));
+        const y = Math.max(0, Math.floor(crop.y));
+        const width = Math.min(Math.floor(crop.width), image.naturalWidth - x);
+        const height = Math.min(Math.floor(crop.height), image.naturalHeight - y);
+        if (width < 1 || height < 1) continue;
+        layers.push({ type, image, crop: { x, y, width, height },
+          x: Number(part.x) || 0, y: Number(part.y) || 0,
+          scale: Math.max(0.1, Math.min(5, Number(part.scale) || 1)) });
+      }
+      if (disposed || request !== offlineCompositionRequest) return;
+      offlineComposition = layers.length ? layers : null;
+      draw();
+    } catch (error) {
+      console.warn('Không thể tải bản ghép nhân vật offline:', error);
+    }
+  }
+
+  function drawOfflineComposition(time = 0) {
+    if (!offlineComposition?.length) return false;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    const bob = state === 0 ? Math.sin(time / 420) * 2 : state === 2 ? Math.sin(time / 90) * 5 : 0;
+    const thrust = state === 3 ? Math.sin(Math.min(1, cursor / 5) * Math.PI) * 13 : 0;
+    context.fillStyle = '#100d12';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = '#08070a88';
+    context.beginPath();
+    context.ellipse(240, 310, 48, 9, 0, 0, Math.PI * 2);
+    context.fill();
+    context.imageSmoothingEnabled = false;
+    const scale = 1.5;
+    const offsetX = 0;
+    const offsetY = 0;
+    for (const layer of offlineComposition) {
+      const c = layer.crop;
+      const x = 80 + (layer.x + thrust) * scale + offsetX;
+      const y = 16 + layer.y * scale + bob + offsetY;
+      context.drawImage(layer.image, c.x, c.y, c.width, c.height,
+        x, y, c.width * layer.scale * scale, c.height * layer.scale * scale);
+    }
+    empty.hidden = true;
+    stageTag.textContent = 'NHÂN VẬT GHÉP OFFLINE';
+    atlasControls.hidden = true;
+    atlasOverview.hidden = true;
+    stateControls.hidden = false;
+    directionButton.hidden = true;
+    return true;
+  }
+
   function drawAtlasFallback() {
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.imageSmoothingEnabled = false;
@@ -463,6 +540,7 @@ export function mountCharacterStage(root) {
   function draw() {
     context.clearRect(0, 0, canvas.width, canvas.height);
     if (!data) {
+      if (drawOfflineComposition(lastTime || 0)) return;
       if (atlasCatalog.length) drawAtlasFallback();
       else empty.hidden = false;
       return;
@@ -495,6 +573,10 @@ export function mountCharacterStage(root) {
     if (disposed) return;
     if (lastTime) accumulator += Math.min(100, time - lastTime);
     lastTime = time;
+    if (!data && offlineComposition) {
+      if (accumulator >= 40) accumulator %= 40;
+      drawOfflineComposition(time);
+    }
     if (data && !data.playback && accumulator >= 40) {
       const ticks = Math.min(4, Math.floor(accumulator / 40));
       accumulator %= 40;
@@ -545,10 +627,19 @@ export function mountCharacterStage(root) {
   };
   subscribers.add(onData);
   onData(data);
-  if (!data) initializeAtlasFallback();
+  if (!data) {
+    initializeAtlasFallback();
+    loadOfflineComposition();
+  }
+  window.addEventListener('storage', onCompositionStorage);
   raf = requestAnimationFrame(tick);
+  function onCompositionStorage(event) {
+    if (event.key === 'kpah.character-composition.v1') loadOfflineComposition();
+  }
   return () => {
     disposed = true;
+    window.removeEventListener('storage', onCompositionStorage);
+    offlineCompositionRequest += 1;
     cancelAnimationFrame(raf);
     subscribers.delete(onData);
     disposeComposer?.();
