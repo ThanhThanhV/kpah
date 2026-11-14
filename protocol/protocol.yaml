@@ -2873,6 +2873,20 @@
       ]
     },
     {
+      "name": "CHARACTER_REVIVE",
+      "direction": "S2C",
+      "opcode": 60,
+      "evidenceSource": "ka.java:case60",
+      "evidence": "Reads character ID short, maximum HP int, maximum MP int, auxiliary short and current HP int. The client resolves the character through the player-entity lookup, restores current/max HP and max MP, and emits the revive visual at the resolved actor position. The local character can still receive revive state when its world entity is temporarily absent.",
+      "sections": [
+        "character-id",
+        "maximum-hp",
+        "maximum-mp",
+        "auxiliary-short",
+        "current-hp"
+      ]
+    },
+    {
       "name": "CHARACTER_LEVEL_UP",
       "direction": "S2C",
       "opcode": 33,
