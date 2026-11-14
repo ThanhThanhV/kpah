@@ -146,6 +146,9 @@ export function mountCharacterComposer(root) {
     atlasEntry = catalog.find(item => item.partType === type && item.partId === id) ?? null;
     atlasImage = null;
     selection = null;
+    detectedRegions = [];
+    candidateSelect.innerHTML = '<option value="">Đang tải atlas…</option>';
+    candidateSelect.disabled = true;
     addButton.disabled = true;
     drawAtlas();
     if (!atlasEntry) return;
@@ -155,6 +158,7 @@ export function mountCharacterComposer(root) {
       atlasImage = image;
       images.set(type + ':' + id, image);
       drawAtlas();
+      detectTransparentRegions();
     };
     image.dataset.source = atlasEntry.image;
     image.onerror = () => { atlasContext.fillStyle = '#ffb6a0'; atlasContext.fillText('Không tải được atlas: ' + atlasEntry.image, 12, 22); };
@@ -183,7 +187,7 @@ export function mountCharacterComposer(root) {
     for (let start = 0; start < total; start++) {
       if (visited[start]) continue;
       visited[start] = 1;
-      if (pixels[start * 4 + 3] < 24) continue;
+      if (pixels[start * 4 + 3] < 8) continue;
       let head = 0, tail = 0;
       queue[tail++] = start;
       let minX = width, minY = height, maxX = -1, maxY = -1, area = 0;
@@ -199,7 +203,7 @@ export function mountCharacterComposer(root) {
           const next = ny * width + nx;
           if (visited[next]) continue;
           visited[next] = 1;
-          if (pixels[next * 4 + 3] >= 24) queue[tail++] = next;
+          if (pixels[next * 4 + 3] >= 8) queue[tail++] = next;
         }
       }
       const boxWidth = maxX - minX + 1, boxHeight = maxY - minY + 1;
