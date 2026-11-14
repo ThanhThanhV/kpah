@@ -8,9 +8,9 @@ const PRESETS = {
   leg: { x: 132, y: 174, scale: 1 },
 };
 const STARTER_PARTS = {
-  head: { partId: '0', crop: { x: 28, y: 0, width: 19, height: 24 }, x: 142, y: 6, scale: 2.5 },
-  body: { partId: '0', crop: { x: 57, y: 0, width: 29, height: 24 }, x: 133, y: 62, scale: 2.5 },
-  leg: { partId: '0', crop: { x: 70, y: 0, width: 24, height: 37 }, x: 145, y: 116, scale: 2.5 },
+  head: { partId: '0', crop: { x: 28, y: 0, width: 19, height: 24 }, x: 131, y: 10, scale: 3 },
+  body: { partId: '0', crop: { x: 57, y: 0, width: 29, height: 24 }, x: 116, y: 68, scale: 3 },
+  leg: { partId: '0', crop: { x: 70, y: 0, width: 24, height: 37 }, x: 124, y: 128, scale: 3 },
 };
 const AUTO_LAYOUT = {
   head: { top: 20, maxWidth: 76, maxHeight: 76 },
