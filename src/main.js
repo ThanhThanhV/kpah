@@ -628,6 +628,7 @@ function executeActionSlot(slot){
   syncCombatTarget(target);
   const character=characterState.snapshot();
   const result=skillCombat.useSlot(slot,character);
+  if(result.ok)scene?.playOfflineAttack(target,slot);
   if(!result.ok){toast(result.message);return;}
   characterState.spendMp(result.mpCost);
   if(result.healing)characterState.restoreHp(result.healing);
@@ -1097,6 +1098,42 @@ class WorldScene extends Phaser.Scene {
       sprite.setFlipX(x<this.offlinePlayerFacingX);
     }
     this.offlinePlayerFacingX=x;
+  }
+  playOfflineAttack(target,slot=1){
+    if(this.serverLocalPlayerEntityId)return;
+    const sprite=this.demoPlayerSprite?.getData('offlineCharacterSprite');
+    if(!sprite||!this.demoPlayerSprite?.active)return;
+    const player=this.playerSprite;
+    const direction=target&&player
+      ?Math.sign(target.x-player.x)||(sprite.flipX?-1:1)
+      :(sprite.flipX?-1:1);
+    sprite.setFlipX(direction<0);
+    this.offlinePlayerFacingX=player?.x??this.offlinePlayerFacingX;
+    this.tweens.killTweensOf(sprite);
+    const attack=slot===3?{x:0,y:-5,angle:0,duration:110}:{x:direction*10,y:-4,angle:direction*7,duration:85};
+    sprite.setAngle(0);
+    if(slot===3){
+      sprite.setTint(0x9ee8ff);
+      this.tweens.add({targets:sprite,alpha:0.65,duration:90,yoyo:true,onComplete:()=>sprite.clearTint()});
+      return;
+    }
+    this.tweens.add({
+      targets:sprite,x:attack.x,y:attack.y,angle:attack.angle,
+      duration:attack.duration,ease:'Quad.easeOut',yoyo:true,
+      onComplete:()=>{sprite.setPosition(0,0).setAngle(0);}
+    });
+    if(slot===1||slot===2||slot===4){
+      const slash=this.add.graphics();
+      slash.lineStyle(slot===4?3:2,slot===4?0xffe49a:0xd8f3ff,0.9);
+      slash.beginPath();
+      slash.arc(player.x+direction*15,player.y-31,slot===4?24:17,
+        direction<0?Math.PI*1.15:Math.PI*1.85,
+        direction<0?Math.PI*1.85:Math.PI*1.15,direction<0);
+      slash.strokePath();
+      slash.setDepth((this.playerSprite.depth||0)+3);
+      this.tweens.add({targets:slash,alpha:0,scaleX:1.25,scaleY:1.25,duration:180,
+        onComplete:()=>slash.destroy()});
+    }
   }
   ensureServerEffectTextures(effectId,definition,imageBytes){
     const key=String(effectId);
