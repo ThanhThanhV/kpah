@@ -181,6 +181,19 @@ export function decodeCharacterPartData(bytes) {
     },
   };
 
+/**
+ * hd.a(Graphics) rebuilds each f frame as f.b followed by f.a:
+ * non-zero layer-group pieces first, then group-zero pieces. Preserve
+ * original order within each group.
+ */
+export function getCharacterFrameDrawOrder(frame) {
+  const pieces = Array.isArray(frame?.pieces) ? frame.pieces : [];
+  return [
+    ...pieces.filter(piece => piece.layerGroup !== 0),
+    ...pieces.filter(piece => piece.layerGroup === 0),
+  ];
+}
+
 export function decodeCharacterPartCatalog(partData) {
   if (!Array.isArray(partData)) throw new TypeError("Opcode 1 partData must be an array");
   return partData.map(record => {
