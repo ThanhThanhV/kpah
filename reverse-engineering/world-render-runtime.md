@@ -269,8 +269,9 @@ The browser reducer now mirrors these known state changes, preserves global
 template/resource catalogs, clears prior-map actors/effects, and stores map
 bytes without pretending to decode the proprietary map format. Phaser consumes
 the transition once, stops stale movement/destination feedback, syncs the local
-actor position, and centers the camera on it. Camera bounds and actual tile
-rendering remain unchanged until the map byte format is decoded.
+actor position, and centers the camera on it. Camera bounds remain unchanged; the map byte format and tile-layer adapter
+are decoded, but actual tile rendering remains gated on the deployed PNG/type
+assets.
 
 
 ### Original map byte stream structure (CFR `hf.a(int, byte[])`)
@@ -302,7 +303,9 @@ to hf.h; map load initializes each cell collision flags as
 hf.g[cell] = hf.h[tileId]. hf.a(x,y) considers bit 0x02 blocked.
 The browser now records this exact tileset family/path selection in opcode 12
 state and exposes byte-table decoding plus the source collision predicate.
-This is metadata and collision lookup only: actual rendering waits for the
+The Phaser adapter createOriginalMapTileLayer builds the visual grid from base
+tiles plus source-ordered rectangle/point overrides and applies collision per
+cell from the unmodified base grid. Actual rendering still waits for the
 matching PNG/type resources to be available from the deployed asset root.
 
 
