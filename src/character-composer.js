@@ -8,9 +8,11 @@ const PRESETS = {
   leg: { x: 132, y: 174, scale: 1 },
 };
 const STARTER_PARTS = {
+  // Male adventurer set: dark-haired male head with matching green vest and trousers.
+  // body/2 and leg/2 share the same green outfit palette; body/1 + leg/1 is a female tunic set.
   head: { partId: '0', crop: { x: 28, y: 0, width: 19, height: 24 }, x: 131, y: 10, scale: 3 },
-  body: { partId: '1', crop: { x: 60, y: 0, width: 24, height: 24 }, x: 120, y: 68, scale: 3 },
-  leg: { partId: '1', crop: { x: 74, y: 0, width: 19, height: 37 }, x: 131, y: 128, scale: 3 },
+  body: { partId: '2', crop: { x: 60, y: 0, width: 24, height: 24 }, x: 120, y: 68, scale: 3 },
+  leg: { partId: '2', crop: { x: 74, y: 0, width: 19, height: 37 }, x: 131, y: 128, scale: 3 },
 };
 const AUTO_LAYOUT = {
   head: { top: 20, maxWidth: 76, maxHeight: 76 },
@@ -89,7 +91,7 @@ export function mountCharacterComposer(root) {
   let movingType = null;
   let moveOffset = null;
   let disposed = false;
-  const STORAGE_KEY = 'kpah.character-composition.v3';
+  const STORAGE_KEY = 'kpah.character-composition.v4';
   let restoreAttempted = false;
 
   function drawAtlas() {
@@ -396,7 +398,7 @@ export function mountCharacterComposer(root) {
     drawPreview();
     saveComposition();
     const note = root.querySelector('[data-composer-autodraft-status]');
-    if (note) note.textContent = 'Đã ghép nhân vật mẫu từ atlas gốc: đầu 0, thân 1, chân 1. Kéo từng phần để căn chỉnh; thay đổi được lưu tự động.';
+    if (note) note.textContent = 'Đã ghép nhân vật nam từ atlas gốc: đầu 0, thân 2, chân 2. Kéo từng phần để căn chỉnh; thay đổi được lưu tự động.';
   }
 
   async function resetStarterCharacter() {
