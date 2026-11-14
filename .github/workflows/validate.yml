@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: validate-${{ github.workflow }}-${{ github.ref }}
@@ -46,6 +46,18 @@ jobs:
         run: python tools/kpah_protocol_reference.py --self-test
       - name: Test local TCP replay harness
         run: npm run test:replay-harness
+      - name: Regenerate and synchronize protocol sources on main
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          python tools/generate_protocol.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/protocol/generated/commands.js protocol/generated/java/com/kpah/protocol/generated/ProtocolCommand.java protocol/generated/java/com/kpah/protocol/generated/ProtocolPacketCodec.java
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: synchronize generated protocol sources"
+            git push
+          fi
       - name: Verify generated protocol sources
         run: npm run check:protocol-generated
       - name: Verify generated transport sources
@@ -904,8 +916,6 @@ jobs:
         run: python tools/extract_protocol_catalog.py tools/reports/cfr-source --json tools/reports/protocol-opcode-catalog.json --markdown tools/reports/protocol-opcode-catalog.md
       - name: Build evidence-ranked class role map
         run: python tools/suggest_class_roles.py tools/reports/kpah-class-analysis.json --json tools/reports/class-role-candidates.json --markdown tools/reports/class-role-candidates.md
-      - name: Generate protocol source snapshots for synchronization
-        run: python tools/generate_protocol.py
       - name: Upload reverse-engineering reports
         uses: actions/upload-artifact@v4
         with:
@@ -922,8 +932,5 @@ jobs:
             public/assets/kpah-original/character-parts/**/*.metadata.bin
             public/assets/kpah-original/decoded-packed/**
             public/assets/kpah-original/decoded-sh/**
-            src/protocol/generated/commands.js
-            protocol/generated/java/com/kpah/protocol/generated/ProtocolCommand.java
-            protocol/generated/java/com/kpah/protocol/generated/ProtocolPacketCodec.java
           if-no-files-found: error
           retention-days: 14
