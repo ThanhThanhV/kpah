@@ -183,6 +183,7 @@ export function mountCharacterStage(root) {
   const stateButtons = [...root.querySelectorAll('[data-stage-state]')];
   const stateControls = root.querySelector('.original-character-stage__states');
   const directionButton = root.querySelector('[data-stage-direction]');
+  const stageTag = root.querySelector('.original-character-stage__tag');
   const atlasControls = root.querySelector('.original-character-stage__atlas-controls');
   const atlasSelects = [...root.querySelectorAll('[data-atlas-part]')];
   const atlasImages = new Map();
@@ -247,6 +248,7 @@ export function mountCharacterStage(root) {
     context.font = '9px sans-serif';
     context.fillText('ẢNH ATLAS GỐC · CHƯA CÓ DỮ LIỆU GHÉP FRAME', canvas.width / 2, 315);
     empty.hidden = true;
+    stageTag.textContent = 'ATLAS BỘ PHẬN GỐC';
     atlasControls.hidden = false;
     stateControls.hidden = true;
     directionButton.hidden = true;
@@ -319,6 +321,7 @@ export function mountCharacterStage(root) {
       return;
     }
     empty.hidden = true;
+    stageTag.textContent = 'NHÂN VẬT GỐC · ĐÃ GHÉP FRAME';
     const scale = Math.min(3.1, 270 / frame.canvas.width, 290 / frame.canvas.height);
     const width = frame.canvas.width * scale;
     const height = frame.canvas.height * scale;
@@ -368,6 +371,7 @@ export function mountCharacterStage(root) {
       stateButtons.forEach(button => button.classList.toggle('selected', Number(button.dataset.stageState) === state));
       stateControls.hidden = true;
       directionButton.hidden = true;
+      stageTag.textContent = 'NHÂN VẬT GỐC · ĐỒNG BỘ MÁY CHỦ';
       root.querySelector('.original-character-stage__caption').textContent =
         'Hoạt ảnh nhân vật gốc đang đồng bộ trực tiếp với trạng thái di chuyển và chiến đấu từ máy chủ KPAH.';
     } else {
