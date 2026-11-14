@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { advanceOriginalCdMovement, advanceOriginalPlayerMovement } from "../src/protocol/original-entity-motion.js";
+import { advanceOriginalCdMovement, advanceOriginalPlayerMovement, stopOriginalEntityMotionAtCurrentPosition } from "../src/protocol/original-entity-motion.js";
 
 let motion = {
   x: 10, y: 10, targetX: 19, targetY: 19,
@@ -62,3 +62,21 @@ assert.equal(playerComplete.x, 12);
 assert.equal(playerComplete.y, 12);
 assert.equal(playerComplete.moving, false);
 console.log("Original entity movement: PASS (cd template ticks and z player distance-banded movement)");
+
+const stoppedAfterRevive = stopOriginalEntityMotionAtCurrentPosition({
+  x: 41, y: 52, targetX: 200, targetY: 220, serverTargetX: 200, serverTargetY: 220,
+  direction: 3, animationCounter: 5, frameState: 1, moving: true,
+});
+assert.deepEqual(
+  {x:stoppedAfterRevive.x,y:stoppedAfterRevive.y,targetX:stoppedAfterRevive.targetX,
+    targetY:stoppedAfterRevive.targetY,moving:stoppedAfterRevive.moving,
+    frameState:stoppedAfterRevive.frameState,animationCounter:stoppedAfterRevive.animationCounter,
+    direction:stoppedAfterRevive.direction},
+  {x:41,y:52,targetX:41,targetY:52,moving:false,frameState:0,animationCounter:0,direction:3},
+  "revive stops stale movement without teleporting or changing facing",
+);
+const resumedAfterServerTarget = advanceOriginalPlayerMovement({
+  ...stoppedAfterRevive, targetX: 80, targetY: 52, moving: true,
+}, 3);
+assert.equal(resumedAfterServerTarget.moving, true,
+  "a later authoritative movement target can resume after revive");
