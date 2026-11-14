@@ -59,7 +59,8 @@
     "test:server-world-projection": "node tools/test_server_world_projection.mjs",
     "test:template-assets": "node tools/test_template_assets.mjs",
     "test:original-entity-motion": "node tools/test_original_entity_motion.mjs",
-    "test:character-part-data": "node tools/test_character_part_data.mjs"
+    "test:character-part-data": "node tools/test_character_part_data.mjs",
+    "test:world-camera": "node tools/test_world_camera.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0",
