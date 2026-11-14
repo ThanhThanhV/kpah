@@ -489,7 +489,8 @@
 }
 
 @media(max-width:700px){
- .character-overview{grid-template-columns:minmax(128px,.85fr) minmax(0,1.15fr)}
+ .character-overview{grid-template-columns:minmax(0,1fr)}
+ .character-window .character-portrait .original-character-stage__viewport{height:290px}
 }
 
 
