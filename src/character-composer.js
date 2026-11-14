@@ -30,7 +30,7 @@ export function mountCharacterComposer(root) {
         </div>
         <canvas data-composer-preview width="320" height="320" aria-label="Nhân vật đang được ghép"></canvas>
         <div class="character-composer__layers" data-composer-layers></div>
-        <p>Kéo trực tiếp từng mảnh trên khung xem trước để căn vị trí. Dữ liệu ghép được lưu trong trình duyệt.</p>
+        <p>Kéo trực tiếp từng mảnh trên khung xem trước để căn vị trí. Có thể xuất cấu hình tọa độ JSON để lưu và dùng lại.</p>
       </section>
     </div>`;
   const typeSelect = root.querySelector('[data-composer-type]');
