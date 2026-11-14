@@ -124,6 +124,7 @@ export function mountCharacterComposer(root) {
   function saveComposition(showStatus = false) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(compositionConfig()));
+      window.dispatchEvent(new CustomEvent('kpah:character-composition-updated'));
       if (showStatus) {
         const button = root.querySelector('[data-composer-save]');
         if (button) {
