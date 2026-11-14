@@ -1,5 +1,5 @@
 import { assetUrl, characterPartEntries, loadAssetManifest } from './kpah-assets.js';
-import { decodeCharacterPartData } from './protocol/character-part-data.js';
+import { decodeCharacterPartData, getCharacterFrameDrawOrder } from './protocol/character-part-data.js';
 import { createStarterCharacterComposition, mountCharacterComposer } from './character-composer.js';
 
 const subscribers = new Set();
@@ -118,7 +118,7 @@ export function clearCharacterPartData() {
 function composeFrame(metadata, image, frameIndex, transform) {
   const frame = metadata.frames[frameIndex];
   if (!frame?.pieces?.length) return null;
-  const pieces = frame.pieces.map(piece => {
+  const pieces = getCharacterFrameDrawOrder(frame).map(piece => {
     const region = metadata.regions[piece.regionIndex];
     if (!region || region.width <= 0 || region.height <= 0
       || region.x < 0 || region.y < 0
@@ -136,21 +136,19 @@ function composeFrame(metadata, image, frameIndex, transform) {
   canvas.height = Math.max(1, Math.ceil(maxY - minY));
   const context = canvas.getContext('2d');
   if (!context) return null;
-  for (const group of [pieces.filter(piece => piece.layerGroup !== 0), pieces.filter(piece => piece.layerGroup === 0)]) {
-    for (const piece of group) {
-      const x = piece.drawX - minX;
-      const y = piece.y - minY;
-      if (transform === 2) {
-        context.save();
-        context.translate(x + piece.region.width, y);
-        context.scale(-1, 1);
-        context.drawImage(image, piece.region.x, piece.region.y, piece.region.width, piece.region.height,
-          0, 0, piece.region.width, piece.region.height);
-        context.restore();
-      } else {
-        context.drawImage(image, piece.region.x, piece.region.y, piece.region.width, piece.region.height,
-          x, y, piece.region.width, piece.region.height);
-      }
+  for (const piece of pieces) {
+    const x = piece.drawX - minX;
+    const y = piece.y - minY;
+    if (transform === 2) {
+      context.save();
+      context.translate(x + piece.region.width, y);
+      context.scale(-1, 1);
+      context.drawImage(image, piece.region.x, piece.region.y, piece.region.width, piece.region.height,
+        0, 0, piece.region.width, piece.region.height);
+      context.restore();
+    } else {
+      context.drawImage(image, piece.region.x, piece.region.y, piece.region.width, piece.region.height,
+        x, y, piece.region.width, piece.region.height);
     }
   }
   return { canvas, minX, minY };
