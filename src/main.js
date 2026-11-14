@@ -2176,7 +2176,7 @@ class WorldScene extends Phaser.Scene {
     this.advanceServerCharacterPartPlayback(delta);
     this.advanceServerActorEffectPlayback(delta);
     this.syncMonsterViews();
-    if(!this.playerSprite||characterState.snapshot().hp<=0)return;
+    if(!this.playerSprite||this.isServerLocalPlayerDead())return;
     if(this.serverLocalPlayerEntityId){
       const {x,y}=this.playerSprite,now=Date.now();
       if(this.serverMoveDestination
