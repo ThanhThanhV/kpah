@@ -3,6 +3,7 @@ import { PacketWriter } from "../src/protocol/generated/packet-codec.js";
 import {
   decodeCharacterPartCatalog,
   decodeCharacterPartData,
+  getCharacterFrameDrawOrder,
   DIRECTION_STATE_TO_SEQUENCE,
   characterPartImageResourceId,
   advanceCharacterPartPlayback,
@@ -48,6 +49,10 @@ assert.equal(decoded.getSequenceIndex(0, 3), 2);
 assert.equal(decoded.getSequenceIndex(1, 3), 6);
 assert.equal(decoded.getFrameIndex(0, 3, 0), 0);
 assert.equal(decoded.getFrame(1, 3, 0).index, 0);
+assert.deepEqual(getCharacterFrameDrawOrder({pieces:[
+  {index:0,layerGroup:0},{index:1,layerGroup:2},{index:2,layerGroup:0},{index:3,layerGroup:-1},
+]}).map(piece=>piece.index),[1,3,0,2],
+  "renderer draws f.b (non-zero groups) before f.a (group zero), preserving source order");
 
 let playback=triggerCharacterPartAction({state:0,direction:0,transform:2,frameCursor:4});
 assert.deepEqual(playback,{state:3,direction:0,transform:2,frameCursor:0},
