@@ -6,10 +6,10 @@
  * - c(byte[]): reads atlas rectangles, frame compositions and animation maps.
  * - c.e[direction][state]: selects one of eight animation frame-index lists.
  *
- * Field names stay neutral where the obfuscated client does not establish
- * business semantics. The auxiliary per-piece tuple is preserved separately:
- * CFR emits it through a temporary g instance, while hd later reads g.d from
- * the primary instance. Do not treat that discrepancy as a verified flip flag.
+ * The original renderer hd.a(Graphics) reads only the primary g tuple:
+ * a=x, b=y, c=atlas-region index, d=flip flag, e=layer group. The parser
+ * creates a second temporary g tuple and discards it. The primary g.d is
+ * never assigned by c(byte[]), so its Java default is zero (no per-piece flip).
  */
 
 const DIRECTION_STATE_TO_SEQUENCE = Object.freeze([
@@ -67,12 +67,11 @@ function readByteSequence(reader, label) {
  * Layout mirrors c(byte[]):
  * 1. signed-byte atlas-region count; each region is 5 unsigned bytes
  * 2. signed-short frame count; each frame has signed-byte piece count
- * 3. each piece has primary (short x, short y, byte region index), an
- *    auxiliary (short x, short y, byte region index, byte flag), and byte layer
+ * 3. each piece has primary (short x, short y, byte region index), a
+ *    discarded temporary tuple (short x, short y, byte region index, byte),
+ *    then a byte layer group
  * 4. signed-short frame-height table count and short values
- * 5. eight signed-byte-length-prefixed animation frame-index arrays
- * 6. optional byte + two bytes per frame
- * 7. optional four additional byte arrays
+ * 5. exactly eight signed-byte-length-prefixed animation frame-index arrays
  */
 export function decodeCharacterPartData(bytes) {
   const reader = new PartReader(bytes);
@@ -106,11 +105,14 @@ export function decodeCharacterPartData(bytes) {
         y: reader.readI16(),
         regionIndex: reader.readI8(),
       };
-      const auxiliary = {
+      // c(byte[]) constructs this second g instance, assigns its d field,
+      // and immediately discards it. Consume its bytes but do not expose
+      // them as drawable state.
+      const discardedAuxiliary = {
         x: reader.readI16(),
         y: reader.readI16(),
         regionIndex: reader.readI8(),
-        flag: reader.readI8(),
+        byte: reader.readI8(),
       };
       const layerGroup = reader.readI8();
       if (primary.regionIndex < 0 || primary.regionIndex >= regions.length) {
@@ -119,7 +121,11 @@ export function decodeCharacterPartData(bytes) {
       pieces.push({
         index: pieceIndex,
         ...primary,
-        auxiliary,
+        // g.d on the primary instance is never assigned by c(byte[]), so
+        // Java initializes it to zero. hd.drawRegion therefore uses no
+        // per-piece flip; horizontal facing is handled by the renderer.
+        flip: 0,
+        discardedAuxiliary,
         layerGroup,
       });
     }
