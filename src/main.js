@@ -1332,6 +1332,8 @@ class WorldScene extends Phaser.Scene {
     const localId=Number.isInteger(this.serverInitializationState?.activeCharacterId)
       ?String(this.serverInitializationState.activeCharacterId):null;
     if(localId){
+      this.serverWorldDeadCharacterIds.delete(localId);
+      this.serverCharacterPartPlayback.set(localId,{state:0,frameCursor:0,direction:0,transform:0});
       const motion=this.serverWorldMotion.get(localId);
       if(motion){
         motion.targetX=motion.x;
