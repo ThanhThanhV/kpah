@@ -20,6 +20,7 @@ import { createLocalSave } from './local-save.js';
 import { mountProtocolConnectionPanel, sendPlayerMovement } from './protocol/connection-panel.js';
 import { projectServerWorldEntities } from './protocol/server-world-projection.js';
 import { advanceCharacterPartPlayback, triggerCharacterPartAction } from './protocol/character-part-data.js';
+import { mountCharacterStage, publishCharacterPartData } from './character-stage.js';
 import { decodeTemplateSpriteAtlas } from './protocol/template-assets.js';
 import { resolveOriginalEntityFactoryClass, resolveOriginalEntityFrameIndex } from './protocol/original-entity-factory.js';
 import { advanceOriginalCdMovement, advanceOriginalPlayerMovement, stopOriginalEntityMotionAtCurrentPosition } from './protocol/original-entity-motion.js';
@@ -213,13 +214,18 @@ function saveGameProgress(){
 }
 
 let disposeProtocolConnectionPanel = null;
+let disposeCharacterStage = null;
 function openWindow(key){
   disposeProtocolConnectionPanel?.();
   disposeProtocolConnectionPanel = null;
+  disposeCharacterStage?.();
+  disposeCharacterStage = null;
   const p=panelData[key]||panelData.help;
   document.querySelector('#window-title').textContent=p.title;
   const html=['character','inventory','equipment'].includes(key)?renderCharacterPanel(key):key==='skills'?renderSkillPanel():key==='quests'?renderQuestPanel():key==='shop'?renderShopPanel():key==='map'?renderWorldMapPanel():key==='friends'?renderFriendsPanel():key==='party'?renderPartyPanel():key==='guild'?renderGuildPanel():key==='mail'?renderMailPanel():p.html;
   document.querySelector('#window-content').innerHTML=html;
+  const characterStageRoot=document.querySelector('#window-content [data-character-stage]');
+  if(characterStageRoot)disposeCharacterStage=mountCharacterStage(characterStageRoot);
   document.querySelector('#game-window').classList.add('open');
   document.querySelector('#modal-backdrop').classList.add('show');
   document.querySelectorAll('.side-nav button').forEach(b=>b.classList.toggle('active',b.dataset.window===key));
@@ -227,7 +233,7 @@ function openWindow(key){
   if(key==='settings')syncDisplaySettings();
   if(key==='connection')disposeProtocolConnectionPanel=mountProtocolConnectionPanel(document.querySelector('[data-protocol-connection-root]'));
 }
-function closeWindow(){disposeProtocolConnectionPanel?.();disposeProtocolConnectionPanel=null;document.querySelector('#game-window').classList.remove('open');document.querySelector('#modal-backdrop').classList.remove('show');}
+function closeWindow(){disposeProtocolConnectionPanel?.();disposeProtocolConnectionPanel=null;disposeCharacterStage?.();disposeCharacterStage=null;document.querySelector('#game-window').classList.remove('open');document.querySelector('#modal-backdrop').classList.remove('show');}
 const DISPLAY_SETTINGS_KEY='kpah.display-settings.v1';
 const displaySettings={playerName:true,coordinates:true,minimap:true};
 function loadDisplaySettings(){try{const saved=JSON.parse(localStorage.getItem(DISPLAY_SETTINGS_KEY)||'null');if(saved&&typeof saved==='object'){for(const key of Object.keys(displaySettings)){if(typeof saved[key]==='boolean')displaySettings[key]=saved[key];}}}catch(error){console.warn('Không thể đọc cài đặt hiển thị đã lưu.',error);}}
@@ -310,7 +316,7 @@ function renderCharacterPanel(key){
     <div class="progression-stat"><div><small>${label}</small><b>${stats[id]}</b></div><button type="button" data-stat-up="${id}" ${data.statPoints<=0?'disabled':''}>+</button></div>`).join('');
   if(key==='character')return `
     <div class="character-overview">
-      <div class="character-portrait"><div class="portrait-art">⚔</div><span>Cấp ${data.level}</span></div>
+      <div class="character-portrait"><div data-character-stage></div><span>Cấp ${data.level}</span></div>
       <div class="character-overview-main"><h2>${escapeHtml(data.name)}</h2><p class="muted">${escapeHtml(data.profession)} · Nhân vật</p>
         <div class="character-xp"><div><span>Kinh nghiệm</span><b>${data.experience.toLocaleString('vi-VN')} / ${data.nextLevelExperience.toLocaleString('vi-VN')}</b></div><i><em style="width:${Math.min(100,data.experience/data.nextLevelExperience*100)}%"></em></i></div>
         <div class="character-vitals"><div><span>HP</span><b>${data.hp.toLocaleString('vi-VN')} / ${data.maxHp.toLocaleString('vi-VN')}</b></div><div><span>MP</span><b>${data.mp.toLocaleString('vi-VN')} / ${data.maxMp.toLocaleString('vi-VN')}</b></div></div>
@@ -332,7 +338,7 @@ function renderCharacterPanel(key){
       return `<div class="equip-cell ${itemId?'filled':''}"><span>${icon}</span><small>${label}</small><b>${escapeHtml(item?.name||'Chưa trang bị')}</b>${bonus?`<em>${escapeHtml(bonus)}</em>`:''}${itemId?`<button type="button" data-unequip="${id}">Tháo</button>`:''}</div>`;
     }).join('');
     const bonusRows=Object.entries(stats).map(([id,value])=>`<div><span>${escapeHtml(characterState.statLabels[id])}</span><b>${value}</b></div>`).join('');
-    return `<div class="equipment-screen"><div class="equip-slots">${equippedItems}</div><div class="equip-preview"><div class="equip-character">⚔</div><b>${escapeHtml(data.name)}</b><small>${escapeHtml(data.profession)} · Cấp ${data.level}</small><div class="equip-summary"><span>HP <b>${data.hp.toLocaleString('vi-VN')} / ${data.maxHp.toLocaleString('vi-VN')}</b></span><span>MP <b>${data.mp.toLocaleString('vi-VN')} / ${data.maxMp.toLocaleString('vi-VN')}</b></span></div><div class="equip-stat-summary">${bonusRows}</div></div></div><p class="panel-hint">Chỉ số bên phải đã bao gồm thuộc tính cộng thêm từ trang bị đang mặc. Tháo trang bị sẽ đưa vật phẩm về hành trang.</p><button type="button" class="gold-button" data-character-open="inventory">Mở hành trang</button>`;
+    return `<div class="equipment-screen"><div class="equip-slots">${equippedItems}</div><div class="equip-preview"><div class="equip-character" data-character-stage></div><b>${escapeHtml(data.name)}</b><small>${escapeHtml(data.profession)} · Cấp ${data.level}</small><div class="equip-summary"><span>HP <b>${data.hp.toLocaleString('vi-VN')} / ${data.maxHp.toLocaleString('vi-VN')}</b></span><span>MP <b>${data.mp.toLocaleString('vi-VN')} / ${data.maxMp.toLocaleString('vi-VN')}</b></span></div><div class="equip-stat-summary">${bonusRows}</div></div></div><p class="panel-hint">Chỉ số bên phải đã bao gồm thuộc tính cộng thêm từ trang bị đang mặc. Tháo trang bị sẽ đưa vật phẩm về hành trang.</p><button type="button" class="gold-button" data-character-open="inventory">Mở hành trang</button>`;
   }
   const categories=[['all','Tất cả'],['equipment','Trang bị'],['consumable','Tiêu hao'],['material','Nguyên liệu'],['quest','Nhiệm vụ']];
   const items=data.inventory.map(item=>{
@@ -1658,7 +1664,10 @@ class WorldScene extends Phaser.Scene {
       const partIndex=entity.factoryClass==='hd'&&Number.isInteger(entity.marker)&&entity.marker>=0?entity.marker:null;
       const partRecord=partIndex===null?null:this.serverInitializationState?.characterPartCatalog?.[partIndex];
       const partImageBytes=partIndex===null?null:this.serverWorldState?.resourceImagePayloadsById?.[String(12000+partIndex)];
-      if(partRecord?.decoded&&partImageBytes)this.ensureServerCharacterPartTextures(partIndex,partRecord.metadata,partImageBytes);
+      if(partRecord?.decoded&&partImageBytes){
+        this.ensureServerCharacterPartTextures(partIndex,partRecord.metadata,partImageBytes);
+        if(entity.isLocalPlayer)publishCharacterPartData(partIndex,partRecord.metadata,partImageBytes);
+      }
       const partPlayback=partIndex===null?null:this.serverCharacterPartPlayback.get(id);
       const partFrameIndex=partIndex===null||!partRecord?.decoded?null:
         partRecord.metadata.getFrameIndex(partPlayback?.direction??0,partPlayback?.state??0,partPlayback?.frameCursor??0);
