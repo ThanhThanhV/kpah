@@ -513,6 +513,7 @@
 .original-character-stage__metadata[hidden]{display:none}
 .original-character-stage__metadata summary{cursor:pointer;color:#e5c98f;font-weight:600}
 .original-character-stage__metadata p{margin:7px 0;color:#b8aa94;line-height:1.5;overflow-wrap:anywhere}
+.original-character-stage__metadata p[data-metadata-structure]{padding:6px;border-left:2px solid #9c7846;background:#171419;color:#e3cda8;white-space:pre-wrap;overflow-wrap:anywhere}
 .original-character-stage__metadata code{display:block;max-height:220px;overflow:auto;padding:6px;background:#151219;color:#a9c69c;font:9px/1.5 ui-monospace,monospace;overflow-wrap:normal;white-space:pre}
  
 /* Original atlas fallback controls: real sprite sheets, never placeholder art. */
