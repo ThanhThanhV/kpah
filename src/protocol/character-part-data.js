@@ -180,6 +180,7 @@ export function decodeCharacterPartData(bytes) {
       return frameIndex == null ? null : this.frames[frameIndex] ?? null;
     },
   };
+}
 
 /**
  * hd.a(Graphics) rebuilds each f frame as f.b followed by f.a:
