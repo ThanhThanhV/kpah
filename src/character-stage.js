@@ -185,6 +185,7 @@ export function mountCharacterStage(root) {
     <details class="original-character-stage__metadata" hidden>
       <summary>Dữ liệu metadata gốc của bộ phận đang chọn</summary>
       <p data-metadata-status>Chưa đọc metadata.</p>
+      <p data-metadata-structure></p>
       <code data-metadata-preview></code>
     </details>
     <div class="original-character-stage__caption">Đang hiển thị atlas bộ phận gốc từ JAR. Để ghép đúng nhân vật và chạy hoạt ảnh như client KPAH, cần partData cùng ảnh nhân vật do máy chủ cung cấp.</div>`;
@@ -204,6 +205,7 @@ export function mountCharacterStage(root) {
   const metadataPanel = root.querySelector('.original-character-stage__metadata');
   const metadataStatus = root.querySelector('[data-metadata-status]');
   const metadataPreview = root.querySelector('[data-metadata-preview]');
+  const metadataStructure = root.querySelector('[data-metadata-structure]');
   const selectedAtlasIds = { head: '0', body: '0', leg: '0' };
   let atlasType = 'body';
   let atlasCatalog = [];
@@ -315,6 +317,7 @@ export function mountCharacterStage(root) {
     metadataPanel.hidden = false;
     metadataStatus.textContent = 'Đang đọc metadata ' + entry.partType + '/' + entry.partId + '…';
     metadataPreview.textContent = '';
+    if (metadataStructure) metadataStructure.textContent = '';
     if (typeof entry.metadata !== 'string') {
       metadataStatus.textContent = 'Manifest không khai báo file metadata cho bộ phận này.';
       return;
@@ -330,11 +333,26 @@ export function mountCharacterStage(root) {
       const bytes = new Uint8Array(await response.arrayBuffer());
       if (disposed || token !== atlasLoadTokens[entry.partType]
         || selectedAtlasIds[entry.partType] !== entry.partId) return;
-      const preview = [...bytes.subarray(0, 96)]
-        .map(value => value.toString(16).padStart(2, '0')).join(' ');
+      const hex = [];
+      for (let offset = 0; offset < bytes.length; offset += 16) {
+        const line = [...bytes.subarray(offset, offset + 16)]
+          .map(value => value.toString(16).padStart(2, '0')).join(' ');
+        hex.push(offset.toString(16).padStart(4, '0') + '  ' + line);
+      }
+      const first = bytes[0] ?? 0;
+      const parserMinimum = 1 + first * 5 + 2;
+      const ascii = [...bytes].map(value => value >= 32 && value <= 126
+        ? String.fromCharCode(value) : '.').join('');
       metadataStatus.textContent = 'File: ' + entry.metadata + ' · ' + bytes.length
-        + ' byte · SHA-256 được lưu trong manifest. Hiển thị tối đa 96 byte đầu.';
-      metadataPreview.textContent = preview || '(file rỗng)';
+        + ' byte · Đã hiển thị toàn bộ nội dung hex.';
+      if (metadataStructure) {
+        metadataStructure.textContent = 'Byte đầu = ' + first
+          + ' (nếu coi là số region thì parser gốc cần tối thiểu ' + parserMinimum
+          + ' byte); độ dài thực tế = ' + bytes.length
+          + ' byte. ASCII: ' + (ascii.slice(0, 160) || '(rỗng)')
+          + (ascii.length > 160 ? '…' : '');
+      }
+      metadataPreview.textContent = hex.join('\n') || '(file rỗng)';
     } catch (error) {
       if (disposed || token !== atlasLoadTokens[entry.partType]) return;
       metadataStatus.textContent = 'Không đọc được metadata: ' + error.message;
