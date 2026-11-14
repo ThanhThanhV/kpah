@@ -69,6 +69,43 @@ export function advanceOriginalCdMovement(motion, template) {
 
 
 /**
+ * One movement tick from original hd.b() state 2.
+ * The original character-part actor resets cT to 4 on every walking tick;
+ * X snaps at <= cT while Y snaps only at < cT, then X is advanced before Y.
+ */
+export function advanceOriginalHdMovement(motion) {
+  if (!motion || !Number.isFinite(motion.x) || !Number.isFinite(motion.y)
+    || !Number.isFinite(motion.targetX) || !Number.isFinite(motion.targetY)) {
+    return { ...motion, moving: false, targetX: null, targetY: null };
+  }
+
+  const step = 4;
+  let x = motion.x;
+  let y = motion.y;
+  let snappedX = false;
+  let snappedY = false;
+
+  if (Math.abs(x - motion.targetX) <= step) {
+    x = motion.targetX;
+    snappedX = true;
+  }
+  if (Math.abs(y - motion.targetY) < step) {
+    y = motion.targetY;
+    snappedY = true;
+  }
+  if (snappedX && snappedY) return { ...motion, x, y, moving: false };
+
+  let direction = motion.direction ?? 0;
+  if (x < motion.targetX) { x += step; direction = 3; }
+  else if (x > motion.targetX) { x -= step; direction = 2; }
+  else if (y > motion.targetY) { y -= step; direction = 1; }
+  else if (y < motion.targetY) { y += step; direction = 0; }
+
+  return { ...motion, x, y, direction, moving: true };
+}
+
+
+/**
  * One movement tick from original z.b() state 1. Player speed starts from
  * z.cT (default 3, refreshed by the opcode-5 snapshot) and gains distance
  * bands before applying the same X-before-Y axis priority.
