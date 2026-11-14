@@ -30,6 +30,7 @@ assert.throws(()=>decodeOriginalMapData(Uint8Array.from([2,2,1])),
 console.log("Original map data decoder: PASS (tile grid, sentinels, portal, NPC and truncation)");
 
 import {
+  buildOriginalMapCollisionRows, buildOriginalMapTileRows,
   decodeOriginalTileTypeData, isOriginalTileBlocked, resolveOriginalTileSet,
 } from "../src/protocol/map-data.js";
 
@@ -47,6 +48,15 @@ assert.equal(isOriginalTileBlocked(typeData.tileTypeFlags,1),true);
 assert.equal(isOriginalTileBlocked(typeData.tileTypeFlags,2),false);
 assert.equal(isOriginalTileBlocked(typeData.tileTypeFlags,3),true);
 assert.equal(isOriginalTileBlocked(typeData.tileTypeFlags,4),true);
-assert.equal(isOriginalTileBlocked(typeData.tileTypeFlags,99),true,
-  "out-of-range tile IDs are blocked like the original client");
+assert.throws(()=>isOriginalTileBlocked(typeData.tileTypeFlags,99),/outside the type table/);
+const visualRows=buildOriginalMapTileRows({
+  width:2,height:2,tileRows:[[1,255],[3,4]],
+  rectangleOverrides:[{cells:[{row:0,column:0,tileId:5},{row:0,column:1,tileId:255}]}],
+  pointOverrides:[{row:1,column:1,tileId:6}],
+});
+assert.deepEqual(visualRows,[[5,-1],[3,6]]);
+assert.deepEqual(buildOriginalMapCollisionRows({
+  tileRows:[[1,255],[3,4]],
+},typeData.tileTypeFlags),[[true,false],[true,false]],
+  "collision follows base tile IDs, not visual override IDs");
 console.log("Original tile atlas/type mapping: PASS (map ranges, 16px strip, collision bit)");
