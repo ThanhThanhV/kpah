@@ -243,8 +243,8 @@ def main() -> None:
     asset_version = hashlib.sha256(version_material).hexdigest()[:16]
     # Character-part resources are stored as a compact record:
     # unsigned-short PNG byte length, PNG bytes, unsigned-short metadata length,
-    # then the original metadata payload. Keep the metadata untouched: it is
-    # consumed by the original character-part decoder and must not be guessed.
+    # then the original metadata payload. Preserve it byte-for-byte for
+    # reverse engineering; it is not yet proven to match class c's frame format.
     character_parts = []
     with zipfile.ZipFile(args.jar) as character_archive:
         for info in character_archive.infolist():
@@ -299,7 +299,9 @@ def main() -> None:
         "classCount": sum(1 for item in entries if item["isClass"]),
         "extensionCounts": dict(sorted(counts.items())),
         "decodedPackedCount": len(decoded_entries),
-        "decodedPackedEntries": decoded_entries,\n        "characterPartCount": len(character_parts),\n        "characterParts": character_parts,
+        "decodedPackedEntries": decoded_entries,
+        "characterPartCount": len(character_parts),
+        "characterParts": character_parts,
         "entries": entries,
     }
     manifest_path = args.output / "archive-manifest.json"
