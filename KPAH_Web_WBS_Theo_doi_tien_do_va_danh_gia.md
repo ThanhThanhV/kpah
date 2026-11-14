@@ -144,7 +144,7 @@
 | [ ] | E1 | R1 | P0 | Scaffold client và scale pixel-perfect | Vite + TS + Phaser 3, scene manager, canvas độ phân giải logic của jar, scale số nguyên, pixelated | A3 | CL | 4 | Một phần – Vite + Phaser đang chạy bằng JavaScript; WBS yêu cầu TypeScript và chuẩn hóa scene/scale |
 | [ ] | E2 | R1 | P0 | Tầng mạng client | Message reader/writer bằng DataView; Cipher XOR; auto-reconnect; hàng đợi gửi; ping | B14 | CL | 5 | Chưa triển khai theo WBS |
 | [ ] | E3 | R1 | P0 | Asset loader và atlas manager | Nạp manifest có hash, atlas, nạp lười theo map, bộ nhớ đệm | C9 | CL | 4 | Một phần – có manifest loader/resource viewer; atlas manager và lazy loading theo map chưa hoàn tất |
-| [ ] | E4 | R1 | P0 | Render nhân vật ghép part | Container sprite theo layer (thân, chân, đầu, áo, mũ, vũ khí), animation theo trạng thái và hướng | C2,C3 | CL | 8 | Chưa triển khai theo WBS |
+| [ ] | E4 | R1 | P0 | Render nhân vật ghép part | Container sprite theo layer (thân, chân, đầu, áo, mũ, vũ khí), animation theo trạng thái và hướng | C2,C3 | CL | 8 | Một phần – renderer world đã ghép part từ metadata + atlas server; thêm Character Stage trong Nhân vật/Trang bị để xem idle, walk, action và lật trái-phải; chưa có dữ liệu part offline và chưa kiểm chứng live/visual |
 | [ ] | E5 | R1 | P0 | Tilemap, camera, va chạm | Dựng tilemap từ JSON, camera theo nhân vật, va chạm theo bảng .type | C6 | CL | 6 | Một phần – có camera, va chạm và bản đồ demo; chưa render tilemap/va chạm từ dữ liệu gốc |
 | [ ] | E6 | R1 | P0 | Input: bàn phím, touch, soft-key | Ánh xạ phím J2ME (số, soft key) sang bàn phím, D-pad ảo cho mobile | E1 | CL | 5 | Một phần – đã có keyboard/touch controls; chưa port đầy đủ soft-key J2ME |
 | [ ] | E7 | R1 | P0 | UI framework | Port Form/List/Dialog/Tab từ jar bằng bitmap font; focus/điều hướng bằng phím | E1,C7 | CL | 12 | Một phần – có UI web/panel; chưa port Form/List/Dialog/Tab và bitmap font như JAR |
@@ -1356,3 +1356,6 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 
 
 | 2026-11-14 | B5/C2 | Nối loader atlas + .type vào Phaser: khi opcode12 có parsedMapData thì tải resource theo mapResourceId, tạo spritesheet 16×16, tạo tile layer, collision base-grid, bỏ nền procedural cũ, cập nhật world/camera bounds; guard race bằng transition sequence | `87c8934`, `141d473`, `a4a2421`, `7abd83a` | Chưa xác minh trên server vì static root hiện chưa có PNG/.type; lỗi tải resource chỉ log và không thay dữ liệu server |
+
+
+| 2026-11-14 | E4 | Tách Character Stage độc lập dùng đúng metadata + atlas part của local player từ opcode 1 và resource image 12000+partIndex; tích hợp vào màn Nhân vật và Trang bị; có điều khiển idle/walk/action, lật ngang và giữ animation khi refresh panel | `b6014ee`, `7de5931`, `b8762e7`, `6128683`, `b5af9e2`, `081e106` | Mới tích hợp code; nếu chưa kết nối server/nhận đủ part metadata và atlas thì stage hiển thị trạng thái chờ, không dùng hình giả; chưa chạy build hoặc xác minh browser/live server |
