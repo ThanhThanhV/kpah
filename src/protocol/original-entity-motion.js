@@ -104,3 +104,18 @@ export function advanceOriginalPlayerMovement(motion, baseStep = 3) {
   else if (y < motion.targetY) { y += step; direction = 0; }
   return { ...motion, x, y, direction, moving: true };
 }
+
+
+/**
+ * A revive packet has no coordinates. Stop the stale pre-death route at the
+ * actor's current authoritative render position; a later opcode 4 may install
+ * a new server target and resume movement.
+ */
+export function stopOriginalEntityMotionAtCurrentPosition(motion) {
+  if (!motion || !Number.isFinite(motion.x) || !Number.isFinite(motion.y)) {
+    return { ...motion, moving: false, targetX: null, targetY: null,
+      frameState: 0, animationCounter: 0 };
+  }
+  return { ...motion, targetX: motion.x, targetY: motion.y,
+    moving: false, frameState: 0, animationCounter: 0 };
+}
