@@ -192,3 +192,18 @@ Vietnamese level message. The sparkle is an explicit temporary fallback:
 the proprietary `level-up` effect atlas has not yet been identified or bound.
 Unresolved/non-kind-0 IDs still do not create entities or trigger visuals.
 This is source-mapped integration, not live-server visual validation.
+
+## Player death-state transition (combat events)
+
+CFR tracing confirms the player death transition is not inferred from a HUD-only
+HP refresh. In the original mj combat handlers, the target receives
+z.a_(damageResultHp), which writes the pending HP field cE; the handler
+then sets z.w=3 when current HP cG or pending HP cE is non-positive.
+Opcode 106 similarly assigns current/pending HP and sets state 3 for a target
+whose resulting HP is non-positive. The browser now watches the authoritative
+post-hit HP in opcode 6/9 and opcode 106 combat target records. For a kind-0
+player, a transition to HP <= 0 triggers the original part action sequence
+(state 3) once and a short “Đã gục” world label; a later positive combat HP
+clears the local dead latch. This does not yet implement server respawn or
+prove the full animation visually; opcode 7 is a separate cd.a(ce) update
+path and is not treated as a combat death signal.
