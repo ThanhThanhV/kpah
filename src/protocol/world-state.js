@@ -3,6 +3,7 @@ import { decodeS2COpcode5 } from "./generated/opcode5-codec.js";
 import { decodeS2CTemplateCatalog, decodeS2CTemplateAsset } from "./template-assets.js";
 import { decodeEffectDefinition } from "./effect-definition.js";
 import { decodeActorEffectDefinition } from "./actor-effect-definition.js";
+import { decodeOriginalMapData } from "./map-data.js";
 
 export function createServerWorldState() {
   return {
@@ -382,6 +383,9 @@ export function applyS2COpcode12MapTransition(world, packet, activeCharacterId =
     label: typeof packet.label === "string" ? packet.label : "",
     hasMapData: packet.hasMapData === true,
     mapData: packet.mapData instanceof Uint8Array ? copyBytes(packet.mapData) : null,
+    parsedMapData: packet.mapData instanceof Uint8Array
+      ? (() => { try { return decodeOriginalMapData(packet.mapData); } catch (error) { return null; } })()
+      : null,
     mapDataError: packet.mapDataError ?? null,
     entryX: hasEntryPosition ? x : null,
     entryY: hasEntryPosition ? y : null,
