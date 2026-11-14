@@ -378,14 +378,15 @@ export function applyS2COpcode12MapTransition(world, packet, activeCharacterId =
     catch (error) { parsedMapDataError = error instanceof Error ? error.message : String(error); }
   }
   next.mapTransitionSequence += 1;
+  const mapResourceId = packet.fourth === -1 ? packet.first : packet.fourth;
   next.mapTransition = {
     sequence: next.mapTransitionSequence,
     mapId: packet.first,
-    tileSet: resolveOriginalTileSet(packet.first),
+    tileSet: resolveOriginalTileSet(mapResourceId),
     tileX: packet.second,
     tileY: packet.third,
     hfK: Number.isInteger(packet.hfK) ? packet.hfK : -1,
-    mapResourceId: packet.fourth === -1 ? packet.first : packet.fourth,
+    mapResourceId,
     label: typeof packet.label === "string" ? packet.label : "",
     hasMapData: packet.hasMapData === true,
     mapData: packet.mapData instanceof Uint8Array ? copyBytes(packet.mapData) : null,
