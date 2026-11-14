@@ -11,6 +11,7 @@ let lastState = null;
 let lastError = "";
 let requestedTemplateAssets = new Set();
 let requestedEffectAssets = new Set();
+let requestedCharacterPartAssets = new Set();
 
 export function encodePlayerMovementPayload(x, y) {
   if (!Number.isInteger(x) || !Number.isInteger(y)
@@ -63,7 +64,9 @@ function renderStatus() {
         + " · Resource index: " + resources
         + " · World entities: " + (lastState.serverWorld?.entityOrder?.length ?? 0)
         + " · Templates: " + Object.keys(lastState.serverWorld?.templatesById ?? {}).length
-        + " · Asset payloads: " + Object.keys(lastState.serverWorld?.templateAssetPayloadsById ?? {}).length;
+        + " · Asset payloads: " + Object.keys(lastState.serverWorld?.templateAssetPayloadsById ?? {}).length
+        + " · Ảnh nhân vật: " + Object.keys(lastState.serverWorld?.resourceImagePayloadsById ?? {})
+          .filter(id => Number(id) >= 12000 && Number(id) < 13000).length;
     }
   }
 }
@@ -120,6 +123,7 @@ export function mountProtocolConnectionPanel(root) {
     lastState = null;
     requestedTemplateAssets = new Set();
     requestedEffectAssets = new Set();
+    requestedCharacterPartAssets = new Set();
     renderStatus();
     const socket = new WebSocket(url);
     const session = new KpahProtocolSession(socket, {
@@ -138,12 +142,12 @@ export function mountProtocolConnectionPanel(root) {
           if (!part?.decoded) continue;
           const resourceId = characterPartImageResourceId(partIndex);
           const key = String(resourceId);
-          if (world.resourceImagePayloadsById?.[key] || requestedEffectAssets.has(resourceId)) continue;
-          requestedEffectAssets.add(resourceId);
+          if (world.resourceImagePayloadsById?.[key] || requestedCharacterPartAssets.has(resourceId)) continue;
+          requestedCharacterPartAssets.add(resourceId);
           try {
             session.sendPacket(-51, encodeEffectAssetRequest(resourceId));
           } catch (error) {
-            requestedEffectAssets.delete(resourceId);
+            requestedCharacterPartAssets.delete(resourceId);
             lastError = "Không thể yêu cầu character part image " + resourceId + ": " + error.message;
           }
         }
