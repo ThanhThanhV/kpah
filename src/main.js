@@ -2475,4 +2475,6 @@ class WorldScene extends Phaser.Scene {
   }
 }
 const game=new Phaser.Game({type:Phaser.AUTO,parent:'world',width:960,height:560,backgroundColor:'#263c2d',render:{pixelArt:true,antialias:false},scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},scene:[WorldScene]});
+// Open the character sheet on entry so the original character UI is immediately visible.
+openWindow('character');
 window.addEventListener('keydown',e=>{if(e.key.toLowerCase()==='e'){const scene=game.scene.getScene('world');const nearest=scene?.playerSprite?groundDropState.nearest(scene.playerSprite.x,scene.playerSprite.y,90):null;if(nearest){e.preventDefault();pickupGroundDrop(nearest.id);}return;}const dirs={ArrowLeft:[-20,0],ArrowRight:[20,0],ArrowUp:[0,-15],ArrowDown:[0,15]};if(!dirs[e.key])return;const s=game.scene.getScene('world');if(!s.playerSprite)return;e.preventDefault();const [dx,dy]=dirs[e.key];s.movePlayerTo(s.playerSprite.x+dx,s.playerSprite.y+dy,120);});
