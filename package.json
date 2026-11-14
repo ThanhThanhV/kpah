@@ -61,9 +61,7 @@
     "test:original-entity-motion": "node tools/test_original_entity_motion.mjs",
     "test:character-part-data": "node tools/test_character_part_data.mjs",
     "test:world-camera": "node tools/test_world_camera.mjs",
-    "test:map-data": "node tools/test_map_data.mjs",
-    "predev": "npm run extract:assets",
-    "prebuild": "npm run extract:assets"
+    "test:map-data": "node tools/test_map_data.mjs"
   },
   "dependencies": {
     "phaser": "^3.90.0",
