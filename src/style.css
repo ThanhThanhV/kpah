@@ -560,3 +560,23 @@
   .character-window .character-overview{gap:12px}
   .character-window .original-character-stage__toolbar button{font-size:8px;padding:6px 8px}
 }
+
+
+/* Offline character composition workspace: crop real atlas pixels and arrange parts. */
+.character-composer{display:grid;gap:10px;padding:10px;border:1px solid #80613d;background:#1c171d;color:#e8d8b8}
+.character-composer[hidden]{display:none}
+.character-composer__layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(260px,.8fr);gap:10px}
+.character-composer__source,.character-composer__result{display:grid;align-content:start;gap:7px;min-width:0;padding:8px;border:1px solid #594632;background:#241e23}
+.character-composer__bar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:space-between}
+.character-composer__bar label{display:grid;gap:3px;color:#d9c49b;font-size:9px}
+.character-composer__bar select,.character-composer__bar button,.character-composer__layer input,.character-composer__layer button{min-width:0;padding:5px;background:#30272b;border:1px solid #705638;color:#f0d7a4;font-size:10px}
+.character-composer__source canvas,.character-composer__result canvas{display:block;width:100%;height:auto;max-height:320px;object-fit:contain;background:#17141b;image-rendering:pixelated;touch-action:none}
+.character-composer__source canvas{cursor:crosshair}
+.character-composer__result canvas{cursor:move;max-width:320px;margin:0 auto}
+.character-composer p{margin:0;color:#b9a98e;font-size:9px;line-height:1.5}
+.character-composer__layers{display:grid;gap:5px}
+.character-composer__layer{display:grid;gap:4px;padding:6px;background:#17141b;border:1px solid #4d3d30}
+.character-composer__layer strong{font-size:9px;color:#e7c98d}
+.character-composer__layer>div{display:flex;gap:4px;flex-wrap:wrap}
+.character-composer__layer input{width:62px}
+@media(max-width:700px){.character-composer__layout{grid-template-columns:minmax(0,1fr)}}
