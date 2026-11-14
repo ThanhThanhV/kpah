@@ -282,6 +282,26 @@ export function mountCharacterStage(root) {
     directionButton.hidden = true;
   }
 
+  function selectAtlasType(type) {
+    if (!['head', 'body', 'leg'].includes(type)) return;
+    atlasType = type;
+    const select = atlasSelects.find(item => item.dataset.atlasPart === type);
+    if (select && select.value !== selectedAtlasIds[type]) select.value = selectedAtlasIds[type];
+    drawAtlasFallback();
+  }
+
+  // The three panels in the canvas are directly selectable, so the user can
+  // inspect a part without having to target the small native select control.
+  canvas.addEventListener('click', event => {
+    if (data || !atlasCatalog.length) return;
+    const bounds = canvas.getBoundingClientRect();
+    if (!bounds.width) return;
+    const x = (event.clientX - bounds.left) * canvas.width / bounds.width;
+    const panelWidth = (canvas.width - 36 - 16) / 3;
+    const index = Math.floor((x - 18) / (panelWidth + 8));
+    if (index >= 0 && index < 3) selectAtlasType(['head', 'body', 'leg'][index]);
+  });
+
   function loadAtlas(type, id) {
     selectedAtlasIds[type] = id;
     const entry = atlasCatalog.find(item => item.partType === type && item.partId === id);
@@ -324,8 +344,21 @@ export function mountCharacterStage(root) {
         ).join('');
         select.value = selectedAtlasIds[type];
         select.addEventListener('change', () => loadAtlas(type, select.value));
-      select.addEventListener('focus', () => { atlasType = type; drawAtlasFallback(); });
-      select.addEventListener('pointerdown', () => { atlasType = type; drawAtlasFallback(); });
+      select.addEventListener('focus', () => selectAtlasType(type));
+      select.addEventListener('pointerdown', () => selectAtlasType(type));
+      const overviewImage = atlasOverviewImages[type];
+      overviewImage?.addEventListener('click', () => selectAtlasType(type));
+      overviewImage?.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          selectAtlasType(type);
+        }
+      });
+      if (overviewImage) {
+        overviewImage.tabIndex = 0;
+        overviewImage.setAttribute('role', 'button');
+        overviewImage.setAttribute('aria-label', 'Chọn atlas ' + type);
+      }
         loadAtlas(type, select.value);
       }
       if (!data) drawAtlasFallback();
