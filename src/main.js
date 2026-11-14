@@ -1486,7 +1486,7 @@ class WorldScene extends Phaser.Scene {
     const projected=projectServerWorldEntities(this.serverWorldState, this.serverInitializationState?.activeCharacterId ?? null);
     const present=new Set(projected.map(entity=>String(entity.entityId)));
     for(const [id,view] of this.serverWorldViews){
-      if(!present.has(id)){view.destroy();this.serverWorldViews.delete(id);this.serverWorldMotion.delete(id);this.serverCharacterPartPlayback.delete(id);}
+      if(!present.has(id)){view.destroy();this.serverWorldViews.delete(id);this.serverWorldMotion.delete(id);this.serverCharacterPartPlayback.delete(id);this.serverWorldDeadCharacterIds.delete(id);}
     }
     for(const id of this.serverCharacterPartPlayback.keys())if(!present.has(id))this.serverCharacterPartPlayback.delete(id);
     for(const entity of projected){
