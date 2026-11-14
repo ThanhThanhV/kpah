@@ -126,6 +126,12 @@ public final class ProtocolWorldStateCodec {
         if(isLocalCharacter){state=in.readI8();localShort=in.readI16();}
         return new Opcode32(id,count,List.copyOf(stats),state,localShort,readRemaining(in));
     }
+    public record Opcode60(short characterId, int maxHp, int maxMp, short auxiliaryShort,
+                           int currentHp, byte[] trailingBytes) {}
+    public static Opcode60 decodeS2COpcode60(byte[] payload) throws IOException {
+        PacketReader in=new PacketReader(payload);
+        return new Opcode60(in.readI16(),in.readI32(),in.readI32(),in.readI16(),in.readI32(),readRemaining(in));
+    }
     public record Opcode33(short characterId, byte level, int valueA, int valueB, byte[] trailingBytes) {}
     public static Opcode33 decodeS2COpcode33(byte[] payload) throws IOException {
         PacketReader in=new PacketReader(payload);
