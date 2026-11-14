@@ -1,6 +1,6 @@
 import { assetUrl, characterPartEntries, loadAssetManifest } from './kpah-assets.js';
 import { decodeCharacterPartData } from './protocol/character-part-data.js';
-import { mountCharacterComposer } from './character-composer.js';
+import { createStarterCharacterComposition, mountCharacterComposer } from './character-composer.js';
 
 const subscribers = new Set();
 let latestCharacterPart = null;
@@ -259,11 +259,11 @@ export function mountCharacterStage(root) {
     const request = ++offlineCompositionRequest;
     let config;
     try {
-      config = JSON.parse(localStorage.getItem('kpah.character-composition.v2') || 'null');
+      const saved = localStorage.getItem('kpah.character-composition.v2');
+      config = saved ? JSON.parse(saved) : createStarterCharacterComposition();
     } catch { return; }
     if (!config || config.format !== 'kpah-manual-character-composition-v1' || !config.parts) {
-      offlineComposition = null;
-      return;
+      config = createStarterCharacterComposition();
     }
     try {
       const manifest = await loadAssetManifest();
