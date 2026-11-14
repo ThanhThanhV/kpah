@@ -7,6 +7,11 @@ const PRESETS = {
   body: { x: 132, y: 92, scale: 1 },
   leg: { x: 132, y: 174, scale: 1 },
 };
+const AUTO_LAYOUT = {
+  head: { top: 20, maxWidth: 76, maxHeight: 76 },
+  body: { top: 94, maxWidth: 112, maxHeight: 122 },
+  leg: { top: 216, maxWidth: 112, maxHeight: 94 },
+};
 
 function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
 
@@ -352,11 +357,13 @@ export function mountCharacterComposer(root) {
         croppedImage.onerror = reject;
       });
       if (disposed) return;
+      const layout = AUTO_LAYOUT[type];
+      const scale = Math.min(1.6, layout.maxWidth / region.width, layout.maxHeight / region.height);
       draft.set(type, {
         type, partId: entry.partId, source: entry.image,
         crop: { x: region.x, y: region.y, width: region.width, height: region.height },
         image: croppedImage, width: region.width, height: region.height,
-        ...PRESETS[type],
+        x: Math.round((320 - region.width * scale) / 2), y: layout.top, scale,
       });
     }
     if (disposed || draft.size === 0) return;
