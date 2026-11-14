@@ -21,6 +21,7 @@ import { mountProtocolConnectionPanel, sendPlayerMovement } from './protocol/con
 import { projectServerWorldEntities } from './protocol/server-world-projection.js';
 import { advanceCharacterPartPlayback, triggerCharacterPartAction } from './protocol/character-part-data.js';
 import { mountCharacterStage, publishCharacterPartData, clearCharacterPartData } from './character-stage.js';
+import { createStarterCharacterComposition } from './character-composer.js';
 import { decodeTemplateSpriteAtlas } from './protocol/template-assets.js';
 import { resolveOriginalEntityFactoryClass, resolveOriginalEntityFrameIndex } from './protocol/original-entity-factory.js';
 import { advanceOriginalCdMovement, advanceOriginalPlayerMovement, stopOriginalEntityMotionAtCurrentPosition } from './protocol/original-entity-motion.js';
@@ -957,7 +958,7 @@ class WorldScene extends Phaser.Scene {
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
     this.drawZone(initialZone);
-    this.demoPlayerSprite=this.add.container(this.player.x,this.player.y);const shadow=this.add.ellipse(0,19,28,9,0x111510,0.35);const cape=this.add.triangle(0,2,0,-2,-17,20,13,20,0x9b3f32);const body=this.add.rectangle(0,0,17,25,0xd5d0b9).setStrokeStyle(2,0x42372b);const head=this.add.circle(0,-17,8,0xe0b88d).setStrokeStyle(2,0x42372b);const hair=this.add.triangle(0,-23,-8,-16,0,-31,9,-15,0x29232a);const sword=this.add.rectangle(13,-3,4,27,0xd6d8d1).setAngle(25).setStrokeStyle(1,0x514d48);this.demoPlayerSprite.add([shadow,cape,body,head,hair,sword]);setWorldEntityDepth(this.demoPlayerSprite);this.playerSprite=this.demoPlayerSprite;
+    this.demoPlayerSprite=this.add.container(this.player.x,this.player.y);const shadow=this.add.ellipse(0,3,28,9,0x111510,0.35);this.demoPlayerSprite.add(shadow);this.demoPlayerSprite.setData('offlineCharacterLoading',true);this.loadOfflinePlayerSprite();setWorldEntityDepth(this.demoPlayerSprite);this.playerSprite=this.demoPlayerSprite;
     this.playerLabel=this.add.text(this.player.x,this.player.y-52,'Kiếm Khách',{fontFamily:'Arial',fontSize:'12px',color:'#fff3c6',stroke:'#34251d',strokeThickness:3}).setOrigin(.5).setDepth(999);
     this.destinationMarker=this.add.circle(0,0,12,0xf4d58c,0.18)
       .setStrokeStyle(2,0xf4d58c,0.9).setDepth(500).setVisible(false);
@@ -1020,6 +1021,61 @@ class WorldScene extends Phaser.Scene {
       this.serverActorEffectImageLoads.clear();
       this.serverWorldDisposed=true;
     });
+  }
+  async loadOfflinePlayerSprite(){
+    const container=this.demoPlayerSprite;
+    if(!container)return;
+    try{
+      const manifest=await loadAssetManifest();
+      const composition=createStarterCharacterComposition();
+      const canvas=document.createElement('canvas');
+      canvas.width=composition.canvas.width;
+      canvas.height=composition.canvas.height;
+      const context=canvas.getContext('2d');
+      if(!context)throw new Error('Canvas 2D is unavailable');
+      for(const type of ['leg','body','head']){
+        const part=composition.parts[type];
+        const entry=(manifest.characterParts??[]).find(item=>
+          item.partType===type&&item.partId===String(part.partId));
+        if(!entry)throw new Error('Missing original KPAH '+type+' atlas '+part.partId);
+        const image=new Image();
+        image.src=assetUrl(entry.image);
+        await new Promise((resolve,reject)=>{
+          image.onload=resolve;
+          image.onerror=()=>reject(new Error('Cannot load '+entry.image));
+        });
+        const crop=part.crop;
+        if(crop.x<0||crop.y<0||crop.width<=0||crop.height<=0
+          ||crop.x+crop.width>image.naturalWidth||crop.y+crop.height>image.naturalHeight){
+          throw new Error('Invalid sprite crop for '+type);
+        }
+        context.drawImage(image,crop.x,crop.y,crop.width,crop.height,
+          part.x,part.y,crop.width*part.scale,crop.height*part.scale);
+      }
+      const pixels=context.getImageData(0,0,canvas.width,canvas.height);
+      let minX=canvas.width,minY=canvas.height,maxX=-1,maxY=-1;
+      for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++){
+        if(pixels.data[(y*canvas.width+x)*4+3]===0)continue;
+        if(x<minX)minX=x;if(y<minY)minY=y;if(x>maxX)maxX=x;if(y>maxY)maxY=y;
+      }
+      if(maxX<minX||maxY<minY)throw new Error('Starter character has no visible pixels');
+      const trimmed=document.createElement('canvas');
+      trimmed.width=maxX-minX+1;trimmed.height=maxY-minY+1;
+      trimmed.getContext('2d').drawImage(canvas,minX,minY,trimmed.width,trimmed.height,0,0,trimmed.width,trimmed.height);
+      const textureKey='kpah-offline-original-player';
+      if(this.textures.exists(textureKey))this.textures.remove(textureKey);
+      this.textures.addCanvas(textureKey,trimmed);
+      if(this.serverWorldDisposed||!container.active)return;
+      const sprite=this.add.image(0,0,textureKey).setOrigin(0.5,1).setScale(0.26);
+      container.add(sprite);
+      container.setData('offlineCharacterSprite',sprite);
+      container.setData('offlineCharacterLoading',false);
+      container.setSize(Math.max(24,trimmed.width*0.26),Math.max(48,trimmed.height*0.26));
+      sprite.setDepth(2);
+    }catch(error){
+      container.setData('offlineCharacterLoading',false);
+      console.warn('Cannot compose verified KPAH gameplay player sprite:',error);
+    }
   }
   ensureServerEffectTextures(effectId,definition,imageBytes){
     const key=String(effectId);
