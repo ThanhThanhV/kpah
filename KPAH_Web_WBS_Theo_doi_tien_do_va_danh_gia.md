@@ -1346,7 +1346,10 @@ Các giả định trong workbook: dự phòng 15%; 5 người làm song song; 5
 | 2026-11-14 | B5/C2 | Bắt đầu giải mã map bytes theo `hf.java:65-300`: width/height, row-major base tile grid, 3 section sentinel, rectangle/point tile overrides, decoration records, map flag, portal records little-endian ID và NPC records; nối parsed data vào opcode 12, vẫn giữ raw bytes và không suy diễn atlas/collision | Decoder `0854575`, reducer `5c2cf3a`, test `28b0321`, package `cf8350e`, sentinel fix `6f79353`, test mở rộng `bd3104d`; opcode12 fixture `231678e`, `a9c825d` | Chưa chạy test; còn cần map atlas `ku.L`, collision, portal geometry và xác nhận payload thực tế |
 
 
-| 2026-11-14 | B5/C2 | Truy vết ku.l(mapId) và hf.a(Graphics): mapId >200 dùng t_thanh, <110 dùng t, còn lại dùng t_hang; atlas là vertical strip 16×16, .type giữ byte flags, collision theo mask 0x02; thêm resolver + decoder + regression test | Đã nối tileSet vào opcode12 | Chưa render thật do asset PNG/type chưa có trong repository static path; chưa có kiểm chứng visual/collision live |
+| 2026-11-14 | B5/C2 | Truy vết ku.l(mapId) và hf.a(Graphics): mapResourceId (short thứ tư, fallback mapId) >200 dùng t_thanh, <110 dùng t, còn lại dùng t_hang; atlas vertical strip 16×16; .type collision mask 0x02; visual overrides + base collision grid; thêm createOriginalMapTileLayer | b5db03e, 653aa99, bd62492, 87b2854, b65e561 | Chưa render thật do asset PNG/type chưa có trong repository static path; chưa có kiểm chứng visual/collision live |
 
 
 | 2026-11-14 | B5/C2 | Hoàn thiện adapter dữ liệu cho Phaser: build visual matrix theo base → rectangle overrides → point overrides; collision grid giữ base tile IDs như hf.g gốc; hỗ trợ collision per-cell trong createWorldTileLayer và tính lại faces | Decoder + adapter + test fixture đã cập nhật | Chưa thể bật renderer thật cho tới khi PNG atlas và .type được đưa vào static asset root; cần test trên map payload thật |
+
+
+| 2026-11-14 | B5/C2 | Sửa chọn tileset theo short thứ tư (mapResourceId, fallback mapId) đúng mj.a:4009-4088; thêm createOriginalMapTileLayer nối decoded map, visual override và collision grid vào Phaser Tilemap 16×16 | b5db03e, 653aa99, bd62492, 87b2854, b65e561 | Chưa chạy test; chưa có PNG atlas/.type trong static root để dựng hình thật |
