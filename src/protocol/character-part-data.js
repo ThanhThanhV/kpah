@@ -275,9 +275,11 @@ export function advanceCharacterPartPlayback(playback, metadata, motion) {
       // Clear a previous left-facing transform when movement turns vertically.
       next.transform = 0;
     } else if (worldDirection === 2) {
-      next.transform = 2;
-    } else if (worldDirection === 3) {
+      // hd.b() keeps e=0 while moving left: the atlas's default facing is left.
       next.transform = 0;
+    } else if (worldDirection === 3) {
+      // hd.b() sets e=2 while moving right, mirroring each piece.
+      next.transform = 2;
     }
   }
   const stateChanged = next.state !== nextState;
