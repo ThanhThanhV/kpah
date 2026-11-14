@@ -74,8 +74,8 @@ assert.equal(reversePlayback.state,0,"reverse-facing action also completes once"
 playback=advanceCharacterPartPlayback({state:0,direction:0,transform:0,frameCursor:0},decoded,{
   moving:true,direction:2,x:10,y:10,targetX:4,targetY:2,
 });
-assert.deepEqual(playback,{state:2,direction:0,transform:2,frameCursor:0},
-  "diagonal movement follows the original X-first left-facing direction");
+assert.deepEqual(playback,{state:2,direction:0,transform:0,frameCursor:0},
+  "diagonal movement follows the original X-first left-facing direction without mirroring");
 playback=advanceCharacterPartPlayback(playback,decoded,{
   moving:true,direction:2,x:9,y:9,targetX:4,targetY:2,
 });
@@ -89,11 +89,11 @@ assert.equal(playback.transform,0,"vertical turn clears the previous left-facing
 playback=advanceCharacterPartPlayback(playback,decoded,{
   moving:true,direction:2,x:10,y:10,targetX:4,targetY:2,
 });
-assert.equal(playback.transform,2,"left movement applies the original horizontal mirror");
+assert.equal(playback.transform,0,"left movement keeps the original atlas facing without mirroring");
 playback=advanceCharacterPartPlayback(playback,decoded,{
   moving:true,direction:3,x:10,y:10,targetX:20,targetY:2,
 });
-assert.equal(playback.transform,0,"right movement restores the unmirrored atlas");
+assert.equal(playback.transform,2,"right movement mirrors the original left-facing atlas");
 playback=advanceCharacterPartPlayback(playback,decoded,{
   moving:true,direction:1,x:10,y:10,targetX:10,targetY:2,
 });
