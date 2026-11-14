@@ -304,3 +304,17 @@ The browser now records this exact tileset family/path selection in opcode 12
 state and exposes byte-table decoding plus the source collision predicate.
 This is metadata and collision lookup only: actual rendering waits for the
 matching PNG/type resources to be available from the deployed asset root.
+
+
+### Phaser tile-layer adapter and collision fidelity
+
+The map renderer adapter now accepts a per-cell collision grid in addition to
+the visual tile matrix. The visual matrix applies rectangle overrides first
+and point overrides second, skipping tile ID 255 (the source's transparent/
+no-override sentinel). Collision is deliberately computed from the original
+base tile matrix: CFR hf.java initializes hf.g from the base IDs before
+drawing the separate override layer, so collision must not be inferred from
+the final overlaid image IDs. Tile ID 255 has no base collision; an invalid
+non-sentinel ID outside the .type table raises an explicit range error rather
+than inventing a blocked value. Phaser applies collision per tile and
+recalculates neighboring faces.
