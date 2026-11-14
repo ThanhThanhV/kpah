@@ -487,3 +487,7 @@
  .equip-preview .original-character-stage__viewport{height:180px}
  .original-character-stage__toolbar button{padding:5px 6px;font-size:7px}
 }
+
+@media(max-width:700px){
+ .character-overview{grid-template-columns:minmax(128px,.85fr) minmax(0,1.15fr)}
+}
