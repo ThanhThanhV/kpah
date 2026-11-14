@@ -170,13 +170,14 @@ export function mountCharacterStage(root) {
         <button type="button" data-stage-state="3">Ra đòn</button>
       </div>
       <button type="button" data-stage-direction="toggle" aria-label="Lật nhân vật trái phải">↔ Lật trái/phải</button>
+      <button type="button" data-stage-connect>Nhận hoạt ảnh từ máy chủ</button>
     </div>
     <div class="original-character-stage__atlas-controls" hidden>
       <label>Đầu <select data-atlas-part="head"></select></label>
       <label>Thân <select data-atlas-part="body"></select></label>
       <label>Chân <select data-atlas-part="leg"></select></label>
     </div>
-    <div class="original-character-stage__caption">Atlas pixel gốc từ JAR. Khi có metadata frame từ máy chủ, sân khấu tự chuyển sang hoạt ảnh nhân vật hoàn chỉnh.</div>`;
+    <div class="original-character-stage__caption">Đang hiển thị atlas bộ phận gốc từ JAR. Để ghép đúng nhân vật và chạy hoạt ảnh như client KPAH, cần partData cùng ảnh nhân vật do máy chủ cung cấp.</div>`;
   const canvas = root.querySelector('canvas');
   const context = canvas.getContext('2d');
   const empty = root.querySelector('.original-character-stage__empty');
@@ -359,6 +360,9 @@ export function mountCharacterStage(root) {
     directionButton.textContent = transform === 0 ? '↔ Lật trái/phải' : '↔ Lật trái/phải';
     frameCache.clear();
     draw();
+  });
+  root.querySelector('[data-stage-connect]')?.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('kpah:open-window', { detail: { key: 'connection' } }));
   });
   const onData = next => {
     data = next;
