@@ -101,6 +101,7 @@ export function mountCharacterStage(root) {
   let data = latestCharacterPart;
   let state = 0;
   let direction = 0;
+  let transform = 0;
   let cursor = 0;
   let accumulator = 0;
   let lastTime = 0;
@@ -118,9 +119,9 @@ export function mountCharacterStage(root) {
     if (!data) return null;
     const frameIndex = data.metadata.getFrameIndex(direction, state, cursor);
     if (frameIndex == null) return null;
-    const cacheKey = frameIndex + ':' + direction;
+    const cacheKey = frameIndex + ':' + transform;
     if (!frameCache.has(cacheKey)) {
-      frameCache.set(cacheKey, composeFrame(data.metadata, data.image, frameIndex, direction === 0 ? 0 : 2));
+      frameCache.set(cacheKey, composeFrame(data.metadata, data.image, frameIndex, transform));
     }
     return frameCache.get(cacheKey);
   }
@@ -163,9 +164,9 @@ export function mountCharacterStage(root) {
   stateButtons.forEach(button => button.addEventListener('click', () => setState(Number(button.dataset.stageState))));
   const directionButton = root.querySelector('[data-stage-direction]');
   directionButton.addEventListener('click', () => {
-    direction = direction === 0 ? 1 : 0;
+    transform = transform === 0 ? 2 : 0;
     cursor = 0;
-    directionButton.textContent = direction === 0 ? '↔ Đổi hướng' : '↔ Đổi hướng';
+    directionButton.textContent = transform === 0 ? '↔ Lật trái/phải' : '↔ Lật trái/phải';
     frameCache.clear();
     draw();
   });
