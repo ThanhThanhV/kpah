@@ -652,7 +652,7 @@ console.log("Inbound world-state reducers: PASS (spawn/update, guarded snapshot,
 let mapState = createInitializationState();
 const mapSpawn = new PacketWriter()
   .writeI8(0).writeU8(7).writeI16(124).writeI16(100).writeI16(120).writeI8(2)
-  .writeI32(99).writeI8(4).writeI8(5).writeBool(true).toUint8Array();
+  .writeI32(99).writeI8(4).writeBool(true).toUint8Array();
 mapState = applyInboundWorldPacket(mapState, { opcode: 4, payload: mapSpawn }).state;
 mapState = { ...mapState, activeCharacterId: 124 };
 const remoteSpawn = new PacketWriter()
