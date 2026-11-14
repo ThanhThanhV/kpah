@@ -182,6 +182,11 @@ export function mountCharacterStage(root) {
       <figure><figcaption>THÂN</figcaption><img data-atlas-overview="body" alt="Atlas thân gốc"></figure>
       <figure><figcaption>CHÂN</figcaption><img data-atlas-overview="leg" alt="Atlas chân gốc"></figure>
     </div>
+    <details class="original-character-stage__metadata" hidden>
+      <summary>Dữ liệu metadata gốc của bộ phận đang chọn</summary>
+      <p data-metadata-status>Chưa đọc metadata.</p>
+      <code data-metadata-preview></code>
+    </details>
     <div class="original-character-stage__caption">Đang hiển thị atlas bộ phận gốc từ JAR. Để ghép đúng nhân vật và chạy hoạt ảnh như client KPAH, cần partData cùng ảnh nhân vật do máy chủ cung cấp.</div>`;
   const canvas = root.querySelector('canvas');
   const context = canvas.getContext('2d');
@@ -196,6 +201,9 @@ export function mountCharacterStage(root) {
   const atlasOverview = root.querySelector('.original-character-stage__atlas-overview');
   const atlasOverviewImages = Object.fromEntries(['head', 'body', 'leg'].map(type =>
     [type, root.querySelector('[data-atlas-overview="' + type + '"]')]));
+  const metadataPanel = root.querySelector('.original-character-stage__metadata');
+  const metadataStatus = root.querySelector('[data-metadata-status]');
+  const metadataPreview = root.querySelector('[data-metadata-preview]');
   const selectedAtlasIds = { head: '0', body: '0', leg: '0' };
   let atlasType = 'body';
   let atlasCatalog = [];
@@ -302,11 +310,43 @@ export function mountCharacterStage(root) {
     if (index >= 0 && index < 3) selectAtlasType(['head', 'body', 'leg'][index]);
   });
 
+  async function inspectPartMetadata(entry, token) {
+    if (!metadataPanel || !metadataStatus || !metadataPreview) return;
+    metadataPanel.hidden = false;
+    metadataStatus.textContent = 'Đang đọc metadata ' + entry.partType + '/' + entry.partId + '…';
+    metadataPreview.textContent = '';
+    if (typeof entry.metadata !== 'string') {
+      metadataStatus.textContent = 'Manifest không khai báo file metadata cho bộ phận này.';
+      return;
+    }
+    const url = assetUrl(entry.metadata);
+    if (!url) {
+      metadataStatus.textContent = 'Đường dẫn metadata không hợp lệ.';
+      return;
+    }
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      if (disposed || token !== atlasLoadTokens[entry.partType]
+        || selectedAtlasIds[entry.partType] !== entry.partId) return;
+      const preview = [...bytes.subarray(0, 96)]
+        .map(value => value.toString(16).padStart(2, '0')).join(' ');
+      metadataStatus.textContent = 'File: ' + entry.metadata + ' · ' + bytes.length
+        + ' byte · SHA-256 được lưu trong manifest. Hiển thị tối đa 96 byte đầu.';
+      metadataPreview.textContent = preview || '(file rỗng)';
+    } catch (error) {
+      if (disposed || token !== atlasLoadTokens[entry.partType]) return;
+      metadataStatus.textContent = 'Không đọc được metadata: ' + error.message;
+    }
+  }
+
   function loadAtlas(type, id) {
     selectedAtlasIds[type] = id;
     const entry = atlasCatalog.find(item => item.partType === type && item.partId === id);
     if (!entry) return;
     const token = ++atlasLoadTokens[type];
+    inspectPartMetadata(entry, token);
     const image = new Image();
     image.onload = () => {
       // Each part selector has its own request sequence. A slow response for
