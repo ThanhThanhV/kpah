@@ -100,6 +100,14 @@ assert.equal(state.serverWorld.entitiesById["124"].currentHp, 5000);
 assert.equal(state.serverWorld.entitiesById["124"].maxHp, 5000);
 assert.equal(state.serverWorld.entitiesById["124"].currentMp, 600);
 assert.equal(state.serverWorld.entitiesById["124"].maxMp, 600);
+const levelUpEvent = state.serverWorld.worldEvents.at(-1);
+assert.equal(levelUpEvent.eventType, "level-up");
+assert.equal(levelUpEvent.entityId, 124);
+assert.equal(levelUpEvent.level, 26);
+assert.equal(levelUpEvent.x, 500);
+assert.equal(levelUpEvent.y, 600);
+assert.equal(levelUpEvent.entityResolved, true,
+  "opcode 33 retains the resolved actor position for one-shot level-up rendering");
 
 const ignoredLevelUp = new PacketWriter().writeI16(777).writeI8(27).writeI32(7000).writeI32(900).toUint8Array();
 state = applyInboundWorldPacket(state, { opcode: 33, payload: ignoredLevelUp }).state;
