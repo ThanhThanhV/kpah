@@ -493,6 +493,18 @@
 }
 
 
+/* Offline atlas overview: keep all three original character-part sheets visible together. */
+.original-character-stage__atlas-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;min-width:0}
+.original-character-stage__atlas-overview[hidden]{display:none}
+.original-character-stage__atlas-overview figure{min-width:0;margin:0;padding:5px;border:1px solid #66513b;background:#211b20}
+.original-character-stage__atlas-overview figcaption{margin-bottom:4px;text-align:center;color:#e2c48e;font-size:8px;letter-spacing:1px}
+.original-character-stage__atlas-overview img{display:block;width:100%;height:78px;object-fit:contain;image-rendering:pixelated;background:#17141b}
+@media(max-width:520px){
+ .original-character-stage__atlas-overview{gap:4px}
+ .original-character-stage__atlas-overview figure{padding:3px}
+ .original-character-stage__atlas-overview img{height:58px}
+}
+ 
 /* Original atlas fallback controls: real sprite sheets, never placeholder art. */
 .original-character-stage__atlas-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
 .original-character-stage__atlas-controls[hidden]{display:none}
