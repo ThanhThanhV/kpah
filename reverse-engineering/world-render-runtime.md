@@ -207,3 +207,16 @@ player, a transition to HP <= 0 triggers the original part action sequence
 clears the local dead latch. This does not yet implement server respawn or
 prove the full animation visually; opcode 7 is a separate cd.a(ce) update
 path and is not treated as a combat death signal.
+
+## Player revive synchronization (S2C opcode 60)
+
+CFR source mapping: `ka.case 60` delegates to `mj.f(acu)`. The payload is
+`i16 characterId, i32 maxHP, i32 maxMP, i16 cW, i32 currentHP`. The original
+handler updates `cH`, `bB`, `cW`, `cG`, and pending `cE`; it does not assign
+current MP (`bC`), so the browser preserves the previous current-MP value.
+For the local active character, `mj.f` clears `w=3` to `w=0` when current HP is
+positive and shows “Đã được hồi sinh.”. For a remote kind-0 actor it restores
+HP/max HP/max MP and the revive event clears the browser death latch, resets
+part playback to idle, and displays a short “Hồi sinh” world label. Unknown
+remote IDs are not inserted into the world entity map. This is mapped from
+source but still needs live-server packet and visual validation.
