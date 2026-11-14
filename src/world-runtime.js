@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { setCameraFollowTarget } from './protocol/camera-follow.js';
+import { buildOriginalMapCollisionRows, buildOriginalMapTileRows } from './protocol/map-data.js';
 
 /**
  * Runtime helpers for the original game's scrolling world.
@@ -10,6 +11,22 @@ import { setCameraFollowTarget } from './protocol/camera-follow.js';
 export function setWorldEntityDepth(entity, groundOffset = 0) {
   if (!entity || !Number.isFinite(entity.y)) return;
   entity.setDepth(Math.round(entity.y + groundOffset));
+}
+
+/**
+ * Create the original KPAH map tile layer from decoded opcode-12 map bytes.
+ * The caller must load the selected 16px vertical atlas and .type bytes first.
+ */
+export function createOriginalMapTileLayer(scene, definition) {
+  const { key, mapData, tileTypeFlags, x = 0, y = 0, depth = -1000 } = definition || {};
+  if (!mapData || !Number.isInteger(mapData.width) || !Number.isInteger(mapData.height)) {
+    throw new Error('Original map layer requires decoded map data.');
+  }
+  const data = buildOriginalMapTileRows(mapData);
+  const collisionGrid = buildOriginalMapCollisionRows(mapData, tileTypeFlags);
+  return createWorldTileLayer(scene, {
+    key, data, collisionGrid, tileWidth: 16, tileHeight: 16, x, y, depth,
+  });
 }
 
 /**
