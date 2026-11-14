@@ -662,7 +662,7 @@ mapState = applyInboundWorldPacket(mapState, { opcode: 4, payload: remoteSpawn }
 const mapTransitionWriter = new PacketWriter()
   .writeI16(23).writeI16(4).writeI16(6).writeI8(9).writeI16(-1)
   .writeUTF("Rừng sâu").writeBool(true);
-mapTransitionWriter.bytes.push(1,2,3,4);
+mapTransitionWriter.bytes.push(2,2,1,254,3,4,255,255,255,1,0,0);
 const mapTransitionPayload = mapTransitionWriter.toUint8Array();
 const transitioned = applyInboundWorldPacket(mapState, { opcode: 12, payload: mapTransitionPayload });
 mapState = transitioned.state;
@@ -671,7 +671,10 @@ assert.equal(mapState.serverWorld.mapTransition.mapId,23);
 assert.equal(mapState.serverWorld.mapTransition.mapResourceId,23,"map resource falls back to map id when fourth short is -1");
 assert.equal(mapState.serverWorld.mapTransition.label,"Rừng sâu");
 assert.equal(mapState.serverWorld.mapTransition.hfK,9);
-assert.deepEqual([...mapState.serverWorld.mapTransition.mapData],[1,2,3,4]);
+assert.deepEqual([...mapState.serverWorld.mapTransition.mapData],[2,2,1,254,3,4,255,255,255,1,0,0]);
+assert.deepEqual(mapState.serverWorld.mapTransition.parsedMapData.tileRows,[[1,255],[3,4]],
+  "opcode 12 stores a parsed tile grid while retaining the original bytes");
+assert.equal(mapState.serverWorld.mapTransition.parsedMapDataError,null);
 assert.deepEqual(mapState.serverWorld.entityOrder,[124],"map transition retains only the local actor");
 assert.equal(mapState.serverWorld.entitiesById["555"],undefined,"remote actors from the previous map are removed");
 assert.equal(mapState.serverWorld.entitiesById["124"].x,72,"tile X maps to (tile*16)+8");
