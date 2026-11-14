@@ -308,12 +308,12 @@ export function mountCharacterStage(root) {
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.fillStyle = '#08070a88';
     context.beginPath();
-    context.ellipse(canvas.width / 2, canvas.height - 26, 42, 8, 0, 0, Math.PI * 2);
+    context.ellipse(canvas.width / 2, canvas.height - 80, 42, 8, 0, 0, Math.PI * 2);
     context.fill();
     context.imageSmoothingEnabled = false;
     const scale = Math.min(1.15, canvas.width / 320, (canvas.height - 52) / 320);
     const offsetX = (canvas.width - 320 * scale) / 2;
-    const offsetY = 18;
+    const offsetY = 65;
     for (const layer of offlineComposition) {
       const c = layer.crop;
       const x = offsetX + (layer.x + thrust) * scale;
