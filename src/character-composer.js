@@ -89,7 +89,7 @@ export function mountCharacterComposer(root) {
   let movingType = null;
   let moveOffset = null;
   let disposed = false;
-  const STORAGE_KEY = 'kpah.character-composition.v2';
+  const STORAGE_KEY = 'kpah.character-composition.v3';
   let restoreAttempted = false;
 
   function drawAtlas() {
