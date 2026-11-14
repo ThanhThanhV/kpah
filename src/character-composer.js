@@ -360,8 +360,7 @@ export function mountCharacterComposer(root) {
       });
     }
     if (disposed || draft.size === 0) return;
-    layers.clear();
-    for (const [type, layer] of draft) layers.set(type, layer);
+    for (const [type, layer] of draft) if (!layers.has(type)) layers.set(type, layer);
     renderLayers();
     drawPreview();
     saveComposition();
@@ -508,14 +507,18 @@ export function mountCharacterComposer(root) {
     fillIds();
     if (!restoreAttempted) {
       restoreAttempted = true;
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) await restoreComposition(JSON.parse(saved));
-        else await autoComposeFirstDraft();
-      } catch (error) {
-        console.warn('Không thể khôi phục hoặc tự ghép nhân vật:', error);
-        const note = root.querySelector('[data-composer-autodraft-status]');
-        if (note) note.textContent = 'Chưa tự ghép được từ atlas này. Hãy chọn từng mảnh bằng công cụ khoanh vùng.';
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try { await restoreComposition(JSON.parse(saved)); }
+        catch (error) { console.warn('Không thể khôi phục bản ghép đã lưu:', error); }
+      }
+      if (layers.size < TYPES.length) {
+        try { await autoComposeFirstDraft(); }
+        catch (error) {
+          console.warn('Không thể tự ghép đủ bộ phận:', error);
+          const note = root.querySelector('[data-composer-autodraft-status]');
+          if (note) note.textContent = 'Chưa tự ghép đủ từ atlas này. Hãy chọn các mảnh còn thiếu bằng công cụ khoanh vùng.';
+        }
       }
     }
   }).catch(error => {
