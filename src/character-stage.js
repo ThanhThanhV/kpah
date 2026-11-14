@@ -20,15 +20,31 @@ function publish() {
 }
 
 /** Publish only the active local player's decoded original part and atlas. */
-export function publishCharacterPartData(partIndex, metadata, imageBytes) {
+export function publishCharacterPartData(partIndex, metadata, imageBytes, playback = null) {
   if (!Number.isInteger(partIndex) || !metadata?.frames?.length
     || !(imageBytes instanceof Uint8Array) || !imageBytes.length) return;
   const key = String(partIndex) + ':' + imageBytes.length;
-  if (key === latestKey && latestCharacterPart?.metadata === metadata) return;
+  const nextPlayback = playback && typeof playback === 'object' ? {
+    state: Number.isInteger(playback.state) ? playback.state : 0,
+    direction: playback.direction === 1 ? 1 : 0,
+    transform: playback.transform === 2 ? 2 : 0,
+    frameCursor: Number.isInteger(playback.frameCursor) && playback.frameCursor >= 0
+      ? playback.frameCursor : 0,
+  } : null;
+  if (key === latestKey && latestCharacterPart?.metadata === metadata) {
+    const previous = latestCharacterPart.playback;
+    if (previous?.state === nextPlayback?.state
+      && previous?.direction === nextPlayback?.direction
+      && previous?.transform === nextPlayback?.transform
+      && previous?.frameCursor === nextPlayback?.frameCursor) return;
+    latestCharacterPart = { ...latestCharacterPart, playback: nextPlayback };
+    publish();
+    return;
+  }
   const image = new Image();
   image.onload = () => {
     latestKey = key;
-    latestCharacterPart = { partIndex, metadata, image };
+    latestCharacterPart = { partIndex, metadata, image, playback: nextPlayback };
     publish();
   };
   image.onerror = () => {
@@ -256,7 +272,7 @@ export function mountCharacterStage(root) {
     if (disposed) return;
     if (lastTime) accumulator += Math.min(100, time - lastTime);
     lastTime = time;
-    if (data && accumulator >= 40) {
+    if (data && !data.playback && accumulator >= 40) {
       const ticks = Math.min(4, Math.floor(accumulator / 40));
       accumulator %= 40;
       const sequenceIndex = data.metadata.getSequenceIndex(direction, state);
@@ -281,7 +297,23 @@ export function mountCharacterStage(root) {
   const onData = next => {
     data = next;
     frameCache.clear();
-    cursor = 0;
+    if (data?.playback) {
+      state = data.playback.state;
+      direction = data.playback.direction;
+      transform = data.playback.transform;
+      cursor = data.playback.frameCursor;
+      stateButtons.forEach(button => button.classList.toggle('selected', Number(button.dataset.stageState) === state));
+      stateControls.hidden = true;
+      directionButton.hidden = true;
+      root.querySelector('.original-character-stage__caption').textContent =
+        'Hoạt ảnh nhân vật gốc đang đồng bộ trực tiếp với trạng thái di chuyển và chiến đấu từ máy chủ KPAH.';
+    } else {
+      cursor = 0;
+      stateControls.hidden = false;
+      directionButton.hidden = false;
+      root.querySelector('.original-character-stage__caption').textContent =
+        'Hoạt ảnh gốc từ dữ liệu partData của máy chủ; có thể chọn đứng, di chuyển hoặc ra đòn để kiểm tra.';
+    }
     draw();
   };
   subscribers.add(onData);
