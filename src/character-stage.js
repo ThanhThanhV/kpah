@@ -6,6 +6,7 @@ let latestKey = null;
 let pendingKey = null;
 let pendingRequest = 0;
 let pendingPlayback = null;
+let pendingMetadata = null;
 
 function toDataUrl(bytes) {
   let binary = '';
@@ -46,11 +47,12 @@ export function publishCharacterPartData(partIndex, metadata, imageBytes, playba
   }
   // syncServerWorldViews may publish on every 40 ms animation tick. Reuse an
   // in-flight atlas decode instead of creating a new Image until it finishes.
-  if (key === pendingKey) {
+  if (key === pendingKey && pendingMetadata === metadata) {
     pendingPlayback = nextPlayback;
     return;
   }
   pendingKey = key;
+  pendingMetadata = metadata;
   pendingPlayback = nextPlayback;
   const request = ++pendingRequest;
   const image = new Image();
@@ -58,6 +60,7 @@ export function publishCharacterPartData(partIndex, metadata, imageBytes, playba
     if (request !== pendingRequest || pendingKey !== key) return;
     latestKey = key;
     pendingKey = null;
+    pendingMetadata = null;
     latestCharacterPart = { partIndex, metadata, image, playback: pendingPlayback };
     pendingPlayback = null;
     publish();
@@ -65,6 +68,7 @@ export function publishCharacterPartData(partIndex, metadata, imageBytes, playba
   image.onerror = () => {
     if (request !== pendingRequest || pendingKey !== key) return;
     pendingKey = null;
+    pendingMetadata = null;
     pendingPlayback = null;
     console.warn('KPAH character preview atlas could not be decoded', partIndex);
   };
