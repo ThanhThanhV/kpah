@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { setCameraFollowTarget } from './protocol/camera-follow.js';
 
 /**
  * Runtime helpers for the original game's scrolling world.
@@ -140,12 +141,11 @@ export function configureWorldCamera(scene, target, bounds, options = {}) {
   camera.setBounds(world.x, world.y, world.width, world.height);
   camera.setRoundPixels(options.roundPixels !== false);
   if (target) {
-    camera.startFollow(
-      target,
+    setCameraFollowTarget(camera,target,[
       true,
       Phaser.Math.Clamp(options.lerpX ?? 0.12, 0.01, 1),
       Phaser.Math.Clamp(options.lerpY ?? 0.12, 0.01, 1)
-    );
+    ]);
     if (options.deadzone) {
       camera.setDeadzone(
         Math.max(1, options.deadzone.width | 0),
@@ -154,7 +154,7 @@ export function configureWorldCamera(scene, target, bounds, options = {}) {
     }
   } else {
     // A destroyed server actor must never remain as the camera's hidden target.
-    camera.stopFollow();
+    setCameraFollowTarget(camera,null);
   }
   return camera;
 }
