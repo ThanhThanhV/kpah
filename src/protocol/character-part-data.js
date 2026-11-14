@@ -260,10 +260,19 @@ export function advanceCharacterPartPlayback(playback, metadata, motion) {
   const moving = motion?.moving === true;
   const nextState = moving ? 2 : 0;
   if (moving) {
-    const dx = Number.isFinite(motion.targetX) ? motion.targetX - motion.x : 0;
-    const dy = Number.isFinite(motion.targetY) ? motion.targetY - motion.y : 0;
-    if (Math.abs(dy) > 0) next.direction = dy < 0 ? 1 : 0;
-    if (Math.abs(dx) > 0) next.transform = dx < 0 ? 2 : 0;
+    // The original player movement routine prioritizes X over Y and stores
+    // four world directions: 0=down, 1=up, 2=left, 3=right. Character-part
+    // atlases expose two animation directions; horizontal facing is mirrored.
+    let worldDirection = Number.isInteger(motion.direction) ? motion.direction : null;
+    if (worldDirection === null || worldDirection < 0 || worldDirection > 3) {
+      const dx = Number.isFinite(motion.targetX) ? motion.targetX - motion.x : 0;
+      const dy = Number.isFinite(motion.targetY) ? motion.targetY - motion.y : 0;
+      if (Math.abs(dx) > 0) worldDirection = dx < 0 ? 2 : 3;
+      else if (Math.abs(dy) > 0) worldDirection = dy < 0 ? 1 : 0;
+    }
+    if (worldDirection === 0 || worldDirection === 1) next.direction = worldDirection;
+    else if (worldDirection === 2) next.transform = 2;
+    else if (worldDirection === 3) next.transform = 0;
   }
   if (next.state !== nextState) {
     next.state = nextState;
