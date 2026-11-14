@@ -238,9 +238,11 @@ server validation.
 
 ### Camera and entity identity across despawn / respawn
 
-The Phaser camera adapter now explicitly calls `stopFollow()` when configured
+The Phaser camera adapter now delegates follow ownership to the Phaser-independent
+`setCameraFollowTarget` helper. It explicitly calls `stopFollow()` when configured
 without a target, preventing a removed server container from remaining as a
-hidden camera target. The server projection view registry also records a render
+hidden camera target. The helper has a Node regression test independent of the
+browser-only Phaser runtime. The server projection view registry also records a render
 identity composed from entity kind, template ID and resolved factory class.
 If a server reuses an entity ID for a different render identity without an
 intermediate despawn packet, the old container and its movement/death playback
