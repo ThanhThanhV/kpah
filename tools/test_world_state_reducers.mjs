@@ -188,6 +188,14 @@ assert.equal(combatEvent.attackerEntityId, 124);
 assert.equal(combatEvent.targetEntityId, 124);
 assert.equal(combatEvent.damage, 125);
 assert.equal(combatEvent.targetCurrentHp, 875);
+const lethalCombat = new PacketWriter().writeI16(123).writeI16(124).writeI8(3)
+  .writeI32(875).writeI32(0).writeI8(1).writeI8(2).writeI8(3).writeI8(4).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 6, payload: lethalCombat }).state;
+const lethalEvent = state.serverWorld.combatEvents.at(-1);
+assert.equal(lethalEvent.targetEntityId, 124);
+assert.equal(lethalEvent.targetCurrentHp, 0,
+  "combat packet carries the target's authoritative post-hit HP for the death-state transition");
+assert.equal(state.serverWorld.entitiesById["124"].currentHp, 0);
 assert.equal(state.serverWorld.entitiesById["124"].currentHp, 875);
 assert.equal(beforeCombat.serverWorld.entitiesById["124"].currentHp, 900,
   "combat reducer must not mutate the previous world snapshot");
