@@ -259,7 +259,7 @@ export function mountCharacterStage(root) {
     const request = ++offlineCompositionRequest;
     let config;
     try {
-      const saved = localStorage.getItem('kpah.character-composition.v3');
+      const saved = localStorage.getItem('kpah.character-composition.v4');
       config = saved ? JSON.parse(saved) : createStarterCharacterComposition();
     } catch {
       config = createStarterCharacterComposition();
