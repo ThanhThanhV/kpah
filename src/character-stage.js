@@ -261,7 +261,9 @@ export function mountCharacterStage(root) {
     try {
       const saved = localStorage.getItem('kpah.character-composition.v2');
       config = saved ? JSON.parse(saved) : createStarterCharacterComposition();
-    } catch { return; }
+    } catch {
+      config = createStarterCharacterComposition();
+    }
     if (!config || config.format !== 'kpah-manual-character-composition-v1' || !config.parts) {
       config = createStarterCharacterComposition();
     }
