@@ -230,7 +230,12 @@ function applyCharacterLevel(world, packet) {
     opcode: 33,
     sequence: (next.worldEvents.at(-1)?.sequence ?? 0) + 1,
     characterId: packet.characterId,
+    entityId: packet.characterId,
+    level: packet.level,
+    x: Number.isFinite(entity.snapshot?.x) ? entity.snapshot.x : entity.x,
+    y: Number.isFinite(entity.snapshot?.y) ? entity.snapshot.y : entity.y,
     entityResolved: true,
+    eventType: "level-up",
   });
   if (next.worldEvents.length > 100) next.worldEvents.splice(0, next.worldEvents.length - 100);
   return next;
