@@ -99,6 +99,22 @@ assert.equal(state.serverWorld.entitiesById["124"].level, 26);
 assert.equal(state.serverWorld.entitiesById["124"].currentHp, 5000);
 assert.equal(state.serverWorld.entitiesById["124"].maxHp, 5000);
 assert.equal(state.serverWorld.entitiesById["124"].currentMp, 600);
+assert.equal(state.serverWorld.entitiesById["124"].maxMp, 600);
+const levelUpEvent = state.serverWorld.worldEvents.at(-1);
+assert.equal(levelUpEvent.eventType, "level-up");
+assert.equal(levelUpEvent.entityId, 124);
+assert.equal(levelUpEvent.level, 26);
+assert.equal(levelUpEvent.x, 500);
+assert.equal(levelUpEvent.y, 600);
+assert.equal(levelUpEvent.entityResolved, true,
+  "opcode 33 retains the resolved actor position for one-shot level-up rendering");
+
+const ignoredLevelUp = new PacketWriter().writeI16(777).writeI8(27).writeI32(7000).writeI32(900).toUint8Array();
+state = applyInboundWorldPacket(state, { opcode: 33, payload: ignoredLevelUp }).state;
+assert.equal(state.serverWorld.entitiesById["777"], undefined,
+  "opcode 33 does not create missing player entities");
+assert.equal(state.serverWorld.characterLevelsById["777"], undefined);
+
 const revivePayload = new PacketWriter().writeI16(124).writeI32(12000)
   .writeI32(2400).writeI16(17).writeI32(9000).toUint8Array();
 applied = applyInboundWorldPacket(state, { opcode: 60, payload: revivePayload });
@@ -122,21 +138,7 @@ state = applyInboundWorldPacket(state, { opcode: 60, payload: missingRevivePaylo
 assert.equal(state.serverWorld.entitiesById["777"], undefined,
   "opcode 60 never creates an unknown remote player");
 assert.equal(state.serverWorld.worldEvents.at(-1).entityResolved, false);
-assert.equal(state.serverWorld.entitiesById["124"].maxMp, 600);
-const levelUpEvent = state.serverWorld.worldEvents.at(-1);
-assert.equal(levelUpEvent.eventType, "level-up");
-assert.equal(levelUpEvent.entityId, 124);
-assert.equal(levelUpEvent.level, 26);
-assert.equal(levelUpEvent.x, 500);
-assert.equal(levelUpEvent.y, 600);
-assert.equal(levelUpEvent.entityResolved, true,
-  "opcode 33 retains the resolved actor position for one-shot level-up rendering");
 
-const ignoredLevelUp = new PacketWriter().writeI16(777).writeI8(27).writeI32(7000).writeI32(900).toUint8Array();
-state = applyInboundWorldPacket(state, { opcode: 33, payload: ignoredLevelUp }).state;
-assert.equal(state.serverWorld.entitiesById["777"], undefined,
-  "opcode 33 does not create missing player entities");
-assert.equal(state.serverWorld.characterLevelsById["777"], undefined);
 
 const entityStateUpdate = new PacketWriter()
   .writeI16(124).writeU8(8).writeI16(940).writeI16(950)
