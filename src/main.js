@@ -930,7 +930,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverLocalPlayerEntityId=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldEventSequence=0;this.serverWorldDeadCharacterIds=new Set();this.serverWorldReviveSequence=0;this.serverWorldDisposed=false;this.serverInitializationState=null;this.serverCharacterPartTextures=new Map();this.serverCharacterPartTextureLoads=new Set();this.serverCharacterPartPlayback=new Map();this.serverCharacterPartAccumulator=0;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;this.serverActorEffectImages=new Map();this.serverActorEffectImageLoads=new Set();this.serverActorEffectTextures=new Map();this.serverActorEffectViews=new Map();this.serverActorEffectShadows=new Map();this.serverActorShadowLoad=null;this.serverActorShadowUnavailable=false;this.serverActorEffectPlayback=new Map();this.serverActorEffectCompleted=new Set();this.serverActorEffectAccumulator=0;}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverLocalPlayerEntityId=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldEventSequence=0;this.serverWorldDeadCharacterIds=new Set();this.serverWorldReviveSequence=0;this.serverWorldMapTransitionSequence=0;this.serverWorldDisposed=false;this.serverInitializationState=null;this.serverCharacterPartTextures=new Map();this.serverCharacterPartTextureLoads=new Set();this.serverCharacterPartPlayback=new Map();this.serverCharacterPartAccumulator=0;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;this.serverActorEffectImages=new Map();this.serverActorEffectImageLoads=new Set();this.serverActorEffectTextures=new Map();this.serverActorEffectViews=new Map();this.serverActorEffectShadows=new Map();this.serverActorShadowLoad=null;this.serverActorShadowUnavailable=false;this.serverActorEffectPlayback=new Map();this.serverActorEffectCompleted=new Set();this.serverActorEffectAccumulator=0;}
   create(){
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
@@ -960,6 +960,7 @@ class WorldScene extends Phaser.Scene {
       this.syncServerCombatFeedback();
       this.syncServerLevelUpFeedback();
       this.syncServerReviveFeedback();
+      this.syncServerMapTransitionFeedback();
     };
     window.addEventListener('kpah:protocol-state',this.onProtocolState);
     this.events.once('shutdown',()=>{
@@ -1320,6 +1321,34 @@ class WorldScene extends Phaser.Scene {
       this.serverWorldEventSequence=latestSequence;
     }
   }
+  syncServerMapTransitionFeedback(){
+    const transition=this.serverWorldState?.mapTransition;
+    if(!transition||!Number.isInteger(transition.sequence)
+      ||transition.sequence<=this.serverWorldMapTransitionSequence)return;
+    this.serverWorldMapTransitionSequence=transition.sequence;
+    this.serverMoveDestination=null;
+    this.destinationPulse?.pause();
+    this.destinationMarker?.setVisible(false);
+    const localId=Number.isInteger(this.serverInitializationState?.activeCharacterId)
+      ?String(this.serverInitializationState.activeCharacterId):null;
+    if(localId){
+      const motion=this.serverWorldMotion.get(localId);
+      if(motion){
+        motion.targetX=motion.x;
+        motion.targetY=motion.y;
+        motion.moving=false;
+        motion.animationCounter=0;
+        motion.frameState=0;
+        const view=this.serverWorldViews.get(localId);
+        view?.setPosition(motion.x,motion.y).setDepth(motion.y+3);
+      }
+    }
+    this.syncServerWorldViews();
+    if(this.serverLocalPlayerEntityId&&this.playerSprite){
+      this.configureCamera();
+      this.cameras.main.centerOn(this.playerSprite.x,this.playerSprite.y);
+    }
+  }
   syncServerReviveFeedback(){
     const events=this.serverWorldState?.worldEvents??[];
     const latestSequence=events.reduce((max,event)=>Number.isInteger(event.sequence)?Math.max(max,event.sequence):max,0);
@@ -1557,7 +1586,7 @@ class WorldScene extends Phaser.Scene {
           serverX:entity.x,serverY:entity.y,coordinateSource:entity.coordinateSource};
         this.serverWorldMotion.set(id,motion);
       }else{
-        if(entity.coordinateSource==='opcode5'&&(entity.x!==motion.serverX||entity.y!==motion.serverY)){
+        if((entity.coordinateSource==='opcode5'||entity.coordinateSource==='opcode12')&&(entity.x!==motion.serverX||entity.y!==motion.serverY)){
           motion.x=entity.x;motion.y=entity.y;motion.serverX=entity.x;motion.serverY=entity.y;
           motion.coordinateSource=entity.coordinateSource;
         }
