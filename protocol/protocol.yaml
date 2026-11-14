@@ -1829,15 +1829,33 @@
       "opcode": 60,
       "direction": "S2C",
       "evidenceSource": "ka.java:case60",
-      "payload": {
-        "fields": [
-          { "name": "characterId", "type": "i16", "source": "mj.f(acu): readShort" },
-          { "name": "maxHp", "type": "i32", "source": "mj.f(acu): n2 -> cH" },
-          { "name": "maxMp", "type": "i32", "source": "mj.f(acu): n3 -> bB" },
-          { "name": "auxiliaryShort", "type": "i16", "source": "mj.f(acu): s3 -> cW" },
-          { "name": "currentHp", "type": "i32", "source": "mj.f(acu): n4 -> cG and cE" }
-        ]
-      },
+      "payload": [
+        {
+          "name": "characterId",
+          "type": "i16",
+          "source": "mj.f(acu): readShort"
+        },
+        {
+          "name": "maxHp",
+          "type": "i32",
+          "source": "mj.f(acu): n2 -> cH"
+        },
+        {
+          "name": "maxMp",
+          "type": "i32",
+          "source": "mj.f(acu): n3 -> bB"
+        },
+        {
+          "name": "auxiliaryShort",
+          "type": "i16",
+          "source": "mj.f(acu): s3 -> cW"
+        },
+        {
+          "name": "currentHp",
+          "type": "i32",
+          "source": "mj.f(acu): n4 -> cG and cE"
+        }
+      ],
       "evidence": "ka.java:case 60 delegates to mj.f(acu); mj.java:mj.f reads short, int, int, short, int. Local branch restores w=3 to w=0 when current HP is positive and emits the Vietnamese revive message. Current MP bC is not assigned."
     },
     {
