@@ -930,7 +930,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverLocalPlayerEntityId=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldEventSequence=0;this.serverWorldDisposed=false;this.serverInitializationState=null;this.serverCharacterPartTextures=new Map();this.serverCharacterPartTextureLoads=new Set();this.serverCharacterPartPlayback=new Map();this.serverCharacterPartAccumulator=0;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;this.serverActorEffectImages=new Map();this.serverActorEffectImageLoads=new Set();this.serverActorEffectTextures=new Map();this.serverActorEffectViews=new Map();this.serverActorEffectShadows=new Map();this.serverActorShadowLoad=null;this.serverActorShadowUnavailable=false;this.serverActorEffectPlayback=new Map();this.serverActorEffectCompleted=new Set();this.serverActorEffectAccumulator=0;}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverLocalPlayerEntityId=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldEventSequence=0;this.serverWorldDeadCharacterIds=new Set();this.serverWorldDisposed=false;this.serverInitializationState=null;this.serverCharacterPartTextures=new Map();this.serverCharacterPartTextureLoads=new Set();this.serverCharacterPartPlayback=new Map();this.serverCharacterPartAccumulator=0;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;this.serverActorEffectImages=new Map();this.serverActorEffectImageLoads=new Set();this.serverActorEffectTextures=new Map();this.serverActorEffectViews=new Map();this.serverActorEffectShadows=new Map();this.serverActorShadowLoad=null;this.serverActorShadowUnavailable=false;this.serverActorEffectPlayback=new Map();this.serverActorEffectCompleted=new Set();this.serverActorEffectAccumulator=0;}
   create(){
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
@@ -1333,14 +1333,41 @@ class WorldScene extends Phaser.Scene {
           this.syncServerWorldViews();
         }
       }
-      const targets=Array.isArray(event.targets)&&event.targets.length
-        ?event.targets.map(target=>target.entityId)
-        :[event.targetEntityId];
-      for(const targetId of targets){
+      const targetRecords=Array.isArray(event.targets)&&event.targets.length
+        ?event.targets.map(target=>({entityId:target.entityId??target.targetEntityId,
+          currentHp:target.targetCurrentHp??target.value}))
+        :[{entityId:event.targetEntityId,currentHp:event.targetCurrentHp}];
+      for(const targetRecord of targetRecords){
+        const targetId=targetRecord.entityId;
         if(!Number.isInteger(targetId))continue;
         const id=String(targetId);
         const entity=this.serverWorldState?.entitiesById?.[id];
         const motion=this.serverWorldMotion.get(id);
+        const targetHp=Number.isFinite(targetRecord.currentHp)?targetRecord.currentHp:entity?.currentHp;
+        if(entity?.kind===0&&Number.isFinite(targetHp)){
+          if(targetHp<=0&&!this.serverWorldDeadCharacterIds.has(id)){
+            this.serverWorldDeadCharacterIds.add(id);
+            const partRecord=Number.isInteger(entity.marker)
+              ?this.serverInitializationState?.characterPartCatalog?.[entity.marker]:null;
+            if(partRecord?.decoded){
+              this.serverCharacterPartPlayback.set(id,
+                triggerCharacterPartAction(this.serverCharacterPartPlayback.get(id)));
+            }
+            this.syncServerWorldViews();
+            const deathX=motion?.x??entity.snapshot?.x??entity.x;
+            const deathY=motion?.y??entity.snapshot?.y??entity.y;
+            if(Number.isFinite(deathX)&&Number.isFinite(deathY)){
+              const label=this.add.text(deathX,deathY-34,'Đã gục',{
+                fontFamily:'Arial',fontSize:'13px',fontStyle:'bold',
+                color:'#ffb5a8',stroke:'#301b1b',strokeThickness:4
+              }).setOrigin(0.5).setDepth(deathY+152);
+              this.tweens.add({targets:label,y:deathY-58,alpha:0,duration:1600,
+                ease:'Cubic.easeOut',onComplete:()=>label.destroy()});
+            }
+          }else if(targetHp>0){
+            this.serverWorldDeadCharacterIds.delete(id);
+          }
+        }
         const x=motion?.x??entity?.snapshot?.x??entity?.x;
         const y=motion?.y??entity?.snapshot?.y??entity?.y;
         if(!Number.isFinite(x)||!Number.isFinite(y))continue;
