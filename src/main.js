@@ -1717,7 +1717,14 @@ class WorldScene extends Phaser.Scene {
       if(partRecord?.decoded&&partImageBytes){
         this.ensureServerCharacterPartTextures(partIndex,partRecord.metadata,partImageBytes);
       }
-      const partPlayback=partIndex===null?null:this.serverCharacterPartPlayback.get(id);
+      let partPlayback=partIndex===null?null:this.serverCharacterPartPlayback.get(id);
+      if(partIndex!==null&&partRecord?.decoded&&!partPlayback){
+        // Start every original character from the same explicit idle frame.
+        // This also makes the character window consume the exact playback
+        // state used by the map instead of exposing an unrelated local preview.
+        partPlayback={state:0,frameCursor:0,direction:0,transform:0};
+        this.serverCharacterPartPlayback.set(id,partPlayback);
+      }
       if(entity.isLocalPlayer&&partRecord?.decoded&&partImageBytes){
         publishCharacterPartData(partIndex,partRecord.metadata,partImageBytes,partPlayback);
       }
