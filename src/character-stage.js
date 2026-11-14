@@ -1,5 +1,6 @@
 import { assetUrl, characterPartEntries, loadAssetManifest } from './kpah-assets.js';
 import { decodeCharacterPartData } from './protocol/character-part-data.js';
+import { mountCharacterComposer } from './character-composer.js';
 
 const subscribers = new Set();
 let latestCharacterPart = null;
@@ -171,6 +172,7 @@ export function mountCharacterStage(root) {
         <button type="button" data-stage-state="3">Ra đòn</button>
       </div>
       <button type="button" data-stage-direction="toggle" aria-label="Lật nhân vật trái phải">↔ Lật trái/phải</button>
+      <button type="button" data-stage-compose>Tự ghép nhân vật offline</button>
       <button type="button" data-stage-connect>Nhận hoạt ảnh từ máy chủ</button>
     </div>
     <div class="original-character-stage__atlas-controls" hidden>
@@ -190,7 +192,18 @@ export function mountCharacterStage(root) {
       <p data-metadata-structure></p>
       <code data-metadata-preview></code>
     </details>
-    <div class="original-character-stage__caption">Đang hiển thị atlas bộ phận gốc từ JAR. Để ghép đúng nhân vật và chạy hoạt ảnh như client KPAH, cần partData cùng ảnh nhân vật do máy chủ cung cấp.</div>`;
+    <div class="original-character-stage__caption">Atlas gốc từ JAR. Dùng công cụ tự ghép offline để khoanh vùng và căn chỉnh đầu, thân, chân; không cần BE.</div>
+    <section class="character-composer" data-character-composer hidden></section>`;
+  const composerRoot = root.querySelector('[data-character-composer]');
+  const disposeComposer = mountCharacterComposer(composerRoot);
+  const composeToggle = root.querySelector('[data-stage-compose]');
+  composeToggle?.addEventListener('click', () => {
+    const opening = composerRoot.hidden;
+    composerRoot.hidden = !opening;
+    composeToggle.classList.toggle('selected', opening);
+    composeToggle.textContent = opening ? 'Ẩn công cụ tự ghép' : 'Tự ghép nhân vật offline';
+    if (opening) composerRoot.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  });
   const canvas = root.querySelector('canvas');
   const context = canvas.getContext('2d');
   const empty = root.querySelector('.original-character-stage__empty');
@@ -538,6 +551,7 @@ export function mountCharacterStage(root) {
     disposed = true;
     cancelAnimationFrame(raf);
     subscribers.delete(onData);
+    disposeComposer?.();
     root.replaceChildren();
     root.classList.remove('original-character-stage');
   };
