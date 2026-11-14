@@ -930,7 +930,7 @@ window.addEventListener('kpah:character-selected',event=>{
 });
 
 class WorldScene extends Phaser.Scene {
-  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverLocalPlayerEntityId=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldDisposed=false;this.serverInitializationState=null;this.serverCharacterPartTextures=new Map();this.serverCharacterPartTextureLoads=new Set();this.serverCharacterPartPlayback=new Map();this.serverCharacterPartAccumulator=0;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;this.serverActorEffectImages=new Map();this.serverActorEffectImageLoads=new Set();this.serverActorEffectTextures=new Map();this.serverActorEffectViews=new Map();this.serverActorEffectShadows=new Map();this.serverActorShadowLoad=null;this.serverActorShadowUnavailable=false;this.serverActorEffectPlayback=new Map();this.serverActorEffectCompleted=new Set();this.serverActorEffectAccumulator=0;}
+  constructor(){super('world');this.player={x:480,y:330};this.worldBounds={x:0,y:0,width:960,height:560};this.walkBounds={x:30,y:270,width:900,height:250};this.monsterViews=[];this.zoneObjects=[];this.npcViews=[];this.worldObstacles=[];this.monsterAttackAt=new Map();this.monsterAttackWindupAt=new Map();this.lastMonsterAiAt=0;this.serverWorldState=null;this.serverLocalPlayerEntityId=null;this.serverWorldViews=new Map();this.serverWorldTextureLoads=new Set();this.serverWorldMotion=new Map();this.serverWorldMotionAccumulator=0;this.serverWorldCombatSequence=0;this.serverWorldEventSequence=0;this.serverWorldDisposed=false;this.serverInitializationState=null;this.serverCharacterPartTextures=new Map();this.serverCharacterPartTextureLoads=new Set();this.serverCharacterPartPlayback=new Map();this.serverCharacterPartAccumulator=0;this.serverEffectTextureLoads=new Set();this.serverEffectTextures=new Map();this.serverEffectViews=new Map();this.serverEffectPlayback=new Map();this.serverEffectAccumulator=0;this.serverActorEffectImages=new Map();this.serverActorEffectImageLoads=new Set();this.serverActorEffectTextures=new Map();this.serverActorEffectViews=new Map();this.serverActorEffectShadows=new Map();this.serverActorShadowLoad=null;this.serverActorShadowUnavailable=false;this.serverActorEffectPlayback=new Map();this.serverActorEffectCompleted=new Set();this.serverActorEffectAccumulator=0;}
   create(){
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
@@ -958,6 +958,7 @@ class WorldScene extends Phaser.Scene {
       this.syncServerEffectViews();
       this.syncServerActorEffectViews();
       this.syncServerCombatFeedback();
+      this.syncServerLevelUpFeedback();
     };
     window.addEventListener('kpah:protocol-state',this.onProtocolState);
     this.events.once('shutdown',()=>{
@@ -1268,6 +1269,51 @@ class WorldScene extends Phaser.Scene {
         }
       }
       this.syncServerActorEffectViews();
+    }
+  }
+  syncServerLevelUpFeedback(){
+    const events=this.serverWorldState?.worldEvents??[];
+    const latestSequence=events.reduce((max,event)=>Number.isInteger(event.sequence)?Math.max(max,event.sequence):max,0);
+    if(this.serverWorldEventSequence>latestSequence)this.serverWorldEventSequence=0;
+    const pending=events.filter(event=>event?.opcode===33&&event.entityResolved===true
+      &&Number.isInteger(event.sequence)&&event.sequence>this.serverWorldEventSequence)
+      .sort((a,b)=>a.sequence-b.sequence);
+    for(const event of pending){
+      const id=String(event.entityId??event.characterId);
+      const entity=this.serverWorldState?.entitiesById?.[id];
+      const motion=this.serverWorldMotion.get(id);
+      const x=motion?.x??(Number.isFinite(entity?.snapshot?.x)?entity.snapshot.x:event.x);
+      const y=motion?.y??(Number.isFinite(entity?.snapshot?.y)?entity.snapshot.y:event.y);
+      if(!Number.isFinite(x)||!Number.isFinite(y))continue;
+      const isLocal=Number.isInteger(this.serverInitializationState?.activeCharacterId)
+        &&this.serverInitializationState.activeCharacterId===Number(event.characterId);
+      const level=Number.isInteger(event.level)?event.level:entity?.level;
+      const label=isLocal?'Đạt được level '+level:'Lv. '+level;
+      const popup=this.add.text(x,y-34,label,{
+        fontFamily:'Arial',fontSize:isLocal?'15px':'13px',fontStyle:'bold',
+        color:'#ffe89a',stroke:'#34251d',strokeThickness:4
+      }).setOrigin(0.5).setDepth(y+150);
+      this.tweens.add({
+        targets:popup,y:y-72,alpha:0,duration:1500,ease:'Cubic.easeOut',
+        onComplete:()=>popup.destroy()
+      });
+      // Four diagonal sparks mirror the original handler's four level-up
+      // effect spawns. Until the proprietary "level-up" effect atlas is bound,
+      // use a small deterministic Phaser fallback rather than a guessed asset.
+      for(const [dx,dy] of [[-1,-1],[1,-1],[-1,1],[1,1]]){
+        const spark=this.add.text(x,y-30,'✦',{
+          fontFamily:'Arial',fontSize:'16px',fontStyle:'bold',
+          color:'#fff4bf',stroke:'#8b6424',strokeThickness:2
+        }).setOrigin(0.5).setDepth(y+151);
+        this.tweens.add({
+          targets:spark,x:x+dx*25,y:y-30+dy*25,alpha:0,scale:0.25,
+          duration:620,ease:'Cubic.easeOut',onComplete:()=>spark.destroy()
+        });
+      }
+      this.serverWorldEventSequence=event.sequence;
+    }
+    if(!pending.length&&latestSequence>this.serverWorldEventSequence){
+      this.serverWorldEventSequence=latestSequence;
     }
   }
   syncServerCombatFeedback(){
