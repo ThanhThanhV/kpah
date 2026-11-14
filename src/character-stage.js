@@ -574,7 +574,12 @@ export function mountCharacterStage(root) {
     if (lastTime) accumulator += Math.min(100, time - lastTime);
     lastTime = time;
     if (!data && offlineComposition) {
-      if (accumulator >= 40) accumulator %= 40;
+      if (accumulator >= 40) {
+        const ticks = Math.min(4, Math.floor(accumulator / 40));
+        accumulator %= 40;
+        cursor += ticks;
+        if (state === 3 && cursor >= 8) setState(0);
+      }
       drawOfflineComposition(time);
     }
     if (data && !data.playback && accumulator >= 40) {
