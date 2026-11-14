@@ -220,7 +220,7 @@ public enum ProtocolCommand {
     S2C_OP_57((byte) 57, Direction.S2C),
     S2C_OP_58((byte) 58, Direction.S2C),
     S2C_OP_59((byte) 59, Direction.S2C),
-    S2C_OP_60((byte) 60, Direction.S2C),
+    S2C_CHARACTER_REVIVE((byte) 60, Direction.S2C),
     S2C_OP_61((byte) 61, Direction.S2C),
     S2C_OP_62((byte) 62, Direction.S2C),
     S2C_OP_64((byte) 64, Direction.S2C),
