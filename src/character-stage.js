@@ -161,7 +161,7 @@ export function mountCharacterStage(root) {
   root.classList.add('original-character-stage');
   root.innerHTML = `
     <div class="original-character-stage__viewport">
-      <canvas width="480" height="360" aria-label="Hoạt ảnh nhân vật KPAH gốc"></canvas>
+      <canvas width="320" height="420" aria-label="Hoạt ảnh nhân vật KPAH gốc"></canvas>
       <div class="original-character-stage__empty">Đang nạp atlas nhân vật gốc từ KPAH_278.jar…</div>
       <span class="original-character-stage__tag">NHÂN VẬT GỐC</span>
     </div>
@@ -308,16 +308,16 @@ export function mountCharacterStage(root) {
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.fillStyle = '#08070a88';
     context.beginPath();
-    context.ellipse(240, 310, 48, 9, 0, 0, Math.PI * 2);
+    context.ellipse(canvas.width / 2, canvas.height - 26, 42, 8, 0, 0, Math.PI * 2);
     context.fill();
     context.imageSmoothingEnabled = false;
-    const scale = 1.5;
-    const offsetX = 0;
-    const offsetY = 0;
+    const scale = Math.min(1.15, canvas.width / 320, (canvas.height - 52) / 320);
+    const offsetX = (canvas.width - 320 * scale) / 2;
+    const offsetY = 18;
     for (const layer of offlineComposition) {
       const c = layer.crop;
-      const x = 80 + (layer.x + thrust) * scale + offsetX;
-      const y = 16 + layer.y * scale + bob + offsetY;
+      const x = offsetX + (layer.x + thrust) * scale;
+      const y = offsetY + layer.y * scale + bob;
       context.drawImage(layer.image, c.x, c.y, c.width, c.height,
         x, y, c.width * layer.scale * scale, c.height * layer.scale * scale);
     }
