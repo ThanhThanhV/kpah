@@ -90,12 +90,30 @@ for(const entry of entries){
   const partId=parts[2],image='character-parts/'+parts[1]+'/'+partId+'.png',metadataFile='character-parts/'+parts[1]+'/'+partId+'.metadata.bin';
   for(const pair of [[image,data.subarray(2,pngEnd)],[metadataFile,metadata]]){const target=safePath(outputRoot,pair[0]);fs.mkdirSync(path.dirname(target),{recursive:true});fs.writeFileSync(target,pair[1]);}
   const dim=pngDimensions(data.subarray(2,pngEnd));
-  characterParts.push({partType:parts[1],partId,source:name,image,metadata:metadataFile,metadataBytes:metadata.length,pngBytes:pngSize,sha256:sha256(data.subarray(2,pngEnd)),width:dim?.width??null,height:dim?.height??null});
+  const metadataFirstByte=metadata[0]??null;
+  const metadataHeaderMinimumBytes=metadataFirstByte===null?null:1+metadataFirstByte*5+2;
+  characterParts.push({
+   partType:parts[1],partId,source:name,image,metadata:metadataFile,
+   metadataBytes:metadata.length,metadataFirstByte,
+   metadataHeaderMinimumBytes,
+   metadataCanContainSimpleRegionHeader:metadataHeaderMinimumBytes!==null&&metadata.length>=metadataHeaderMinimumBytes,
+   metadataPrefixHex:metadata.subarray(0,24).toString('hex').match(/.{1,2}/g)?.join(' ')??'',
+   pngBytes:pngSize,sha256:sha256(data.subarray(2,pngEnd)),
+   width:dim?.width??null,height:dim?.height??null
+  });
  }
 }
 const extensionCounts={};for(const item of manifestEntries)extensionCounts[item.extension]=(extensionCounts[item.extension]||0)+1;
 const versionMaterial=JSON.stringify({sourceSha256,files:[...manifestEntries.map(x=>[x.path,x.sha256]),...decodedPackedEntries.map(x=>[x.output,x.sha256])].sort((a,b)=>a[0].localeCompare(b[0]))});
-const manifest={source:path.basename(jarPath),hashAlgorithm:'SHA-256',sourceSha256,assetVersion:sha256(Buffer.from(versionMaterial)).slice(0,16),entryCount:manifestEntries.length,extractedCount,classCount:manifestEntries.filter(x=>x.isClass).length,extensionCounts:Object.fromEntries(Object.entries(extensionCounts).sort()),decodedPackedCount:decodedPackedEntries.length,decodedPackedEntries,characterPartCount:characterParts.length,characterParts,entries:manifestEntries};
+const metadataGroups={};
+for(const item of characterParts){
+ const group=metadataGroups[item.partType]??={count:0,totalBytes:0,firstByteHistogram:{},simpleRegionHeaderCandidateCount:0};
+ group.count++;group.totalBytes+=item.metadataBytes;
+ if(item.metadataFirstByte!==null)group.firstByteHistogram[item.metadataFirstByte]=(group.firstByteHistogram[item.metadataFirstByte]||0)+1;
+ if(item.metadataCanContainSimpleRegionHeader)group.simpleRegionHeaderCandidateCount++;
+}
+for(const group of Object.values(metadataGroups))group.averageBytes=Number((group.totalBytes/group.count).toFixed(2));
+const manifest={source:path.basename(jarPath),hashAlgorithm:'SHA-256',sourceSha256,assetVersion:sha256(Buffer.from(versionMaterial)).slice(0,16),entryCount:manifestEntries.length,extractedCount,classCount:manifestEntries.filter(x=>x.isClass).length,extensionCounts:Object.fromEntries(Object.entries(extensionCounts).sort()),decodedPackedCount:decodedPackedEntries.length,decodedPackedEntries,characterPartCount:characterParts.length,characterMetadataAnalysis:{method:'Heuristic only: checks whether the trailer is long enough for a one-byte region count followed by five bytes per region; this does not prove the trailer format.',groups:metadataGroups},characterParts,entries:manifestEntries};
 fs.writeFileSync(path.join(outputRoot,'archive-manifest.json'),JSON.stringify(manifest,null,2)+'\n','utf8');
 console.log('Entries: '+manifest.entryCount);
 console.log('Extracted files: '+extractedCount);
