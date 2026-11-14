@@ -45,8 +45,8 @@ export function projectServerWorldEntities(world, localCharacterId = null) {
       targetY: Number.isFinite(entity.targetY) ? entity.targetY : null,
       movementPending: entity.movementPending === true,
       playerMovementStep: Number.isFinite(snapshot?.cT) ? snapshot.cT : 3,
-      coordinateSource: Number.isFinite(snapshot?.x) && Number.isFinite(snapshot?.y)
-        ? "opcode5" : "opcode4",
+      coordinateSource: entity.positionSource === "opcode12" ? "opcode12"
+        : Number.isFinite(snapshot?.x) && Number.isFinite(snapshot?.y) ? "opcode5" : "opcode4",
       presentation: kind === 0 ? "player-like" : kind === 1 ? "monster-npc-family" : "unknown-kind",
       factoryClass: resolveOriginalEntityFactoryClass(kind, templateId, entity.state, kind === 0 ? entity.marker : (entity.kind1Subtype ?? -1)),
       frameWidth: template?.frameWidth ?? null,
