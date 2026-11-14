@@ -178,3 +178,17 @@ under `opcode7State` without changing render coordinates or interpreting the
 opaque integer. The local HUD displays the server HP ratio only when current
 and maximum HP are both available. Unknown entity IDs are recorded as
 unresolved world events and never inserted into the entity map.
+
+## Level-up visual feedback (S2C opcode 33)
+
+The original `mj.a(short,byte,int,int)` handler updates the existing kind-0
+player's level and HP/MP, then spawns four `level-up` effects at the actor's
+world position (`x`, `y - 30`). For the active local player it also emits the
+message “Đạt được level N”. The reducer now records a bounded `level-up`
+world event with the resolved character ID, level and source actor coordinates.
+The Phaser scene consumes each event sequence once, displays a level popup and
+four diagonal sparkle particles; the local actor receives the original
+Vietnamese level message. The sparkle is an explicit temporary fallback:
+the proprietary `level-up` effect atlas has not yet been identified or bound.
+Unresolved/non-kind-0 IDs still do not create entities or trigger visuals.
+This is source-mapped integration, not live-server visual validation.
