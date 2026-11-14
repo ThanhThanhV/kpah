@@ -259,7 +259,7 @@ export function mountCharacterStage(root) {
     const request = ++offlineCompositionRequest;
     let config;
     try {
-      const saved = localStorage.getItem('kpah.character-composition.v2');
+      const saved = localStorage.getItem('kpah.character-composition.v3');
       config = saved ? JSON.parse(saved) : createStarterCharacterComposition();
     } catch {
       config = createStarterCharacterComposition();
@@ -645,7 +645,7 @@ export function mountCharacterStage(root) {
   window.addEventListener('kpah:character-composition-updated', onCompositionStorage);
   raf = requestAnimationFrame(tick);
   function onCompositionStorage(event) {
-    if (!event.key || event.key === 'kpah.character-composition.v2') loadOfflineComposition();
+    if (!event.key || event.key === 'kpah.character-composition.v3') loadOfflineComposition();
   }
   return () => {
     disposed = true;
