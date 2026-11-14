@@ -958,7 +958,7 @@ class WorldScene extends Phaser.Scene {
     const initialZone=worldMapState.snapshot().current;
     this.player={x:initialZone.entry.x,y:initialZone.entry.y};
     this.drawZone(initialZone);
-    this.demoPlayerSprite=this.add.container(this.player.x,this.player.y);const shadow=this.add.ellipse(0,3,28,9,0x111510,0.35);this.demoPlayerSprite.add(shadow);this.demoPlayerSprite.setData('offlineCharacterLoading',true);this.loadOfflinePlayerSprite();setWorldEntityDepth(this.demoPlayerSprite);this.playerSprite=this.demoPlayerSprite;
+    this.demoPlayerSprite=this.add.container(this.player.x,this.player.y);const shadow=this.add.ellipse(0,3,28,9,0x111510,0.35);this.demoPlayerSprite.add(shadow);this.demoPlayerSprite.setData('offlinePlayerShadow',shadow);this.demoPlayerSprite.setData('offlineCharacterLoading',true);this.loadOfflinePlayerSprite();setWorldEntityDepth(this.demoPlayerSprite);this.playerSprite=this.demoPlayerSprite;
     this.playerLabel=this.add.text(this.player.x,this.player.y-52,'Kiếm Khách',{fontFamily:'Arial',fontSize:'12px',color:'#fff3c6',stroke:'#34251d',strokeThickness:3}).setOrigin(.5).setDepth(999);
     this.destinationMarker=this.add.circle(0,0,12,0xf4d58c,0.18)
       .setStrokeStyle(2,0xf4d58c,0.9).setDepth(500).setVisible(false);
@@ -1076,6 +1076,27 @@ class WorldScene extends Phaser.Scene {
       container.setData('offlineCharacterLoading',false);
       console.warn('Cannot compose verified KPAH gameplay player sprite:',error);
     }
+  }
+  updateOfflinePlayerAnimation(x,y,time){
+    const sprite=this.demoPlayerSprite?.getData('offlineCharacterSprite');
+    if(!sprite||this.serverLocalPlayerEntityId)return;
+    const previous=this.offlinePlayerMotion??{x,y,time,phase:0};
+    const elapsed=Math.max(0,Math.min(80,time-previous.time));
+    const distance=Math.hypot(x-previous.x,y-previous.y);
+    const moving=distance>0.35;
+    const phase=previous.phase+(moving?elapsed/1000*13:elapsed/1000*2.2);
+    this.offlinePlayerMotion={x,y,time,phase};
+    const bob=moving?Math.abs(Math.sin(phase))*2.1:Math.sin(phase)*0.65;
+    sprite.setY(-bob);
+    const shadow=this.demoPlayerSprite.getData('offlinePlayerShadow');
+    if(shadow){
+      shadow.setScaleX(moving?1.08:1);
+      shadow.setAlpha(moving?0.28:0.35);
+    }
+    if(moving&&this.offlinePlayerFacingX!==undefined&&Math.abs(x-this.offlinePlayerFacingX)>0.4){
+      sprite.setFlipX(x<this.offlinePlayerFacingX);
+    }
+    this.offlinePlayerFacingX=x;
   }
   ensureServerEffectTextures(effectId,definition,imageBytes){
     const key=String(effectId);
@@ -2406,6 +2427,7 @@ class WorldScene extends Phaser.Scene {
     if(!this.playerSprite||this.isServerLocalPlayerDead())return;
     if(this.serverLocalPlayerEntityId){
       const {x,y}=this.playerSprite,now=Date.now();
+      this.updateOfflinePlayerAnimation(x,y,time);
       if(this.serverMoveDestination
         &&Math.hypot(this.serverMoveDestination.x-x,this.serverMoveDestination.y-y)<=8){
         this.serverMoveDestination=null;
@@ -2429,6 +2451,7 @@ class WorldScene extends Phaser.Scene {
       return;
     }
     const {x,y}=this.playerSprite;
+    this.updateOfflinePlayerAnimation(x,y,time);
     const now=Date.now();
     // Demo monster AI: acquire the player, close distance, then attack on cooldown.
     // Aggro range, movement speed, attack reach and cadence are provisional client values.
