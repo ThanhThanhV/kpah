@@ -18,6 +18,23 @@ const AUTO_LAYOUT = {
   leg: { top: 216, maxWidth: 112, maxHeight: 94 },
 };
 
+
+export function createStarterCharacterComposition() {
+  return {
+    format: 'kpah-manual-character-composition-v1',
+    canvas: { width: 320, height: 320 },
+    parts: Object.fromEntries(TYPES.map(type => {
+      const part = STARTER_PARTS[type];
+      return [type, {
+        partId: part.partId,
+        source: 'character-parts/' + type + '/' + part.partId + '.png',
+        crop: { ...part.crop },
+        x: part.x, y: part.y, scale: part.scale,
+      }];
+    })),
+  };
+}
+
 function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
 
 export function mountCharacterComposer(root) {
