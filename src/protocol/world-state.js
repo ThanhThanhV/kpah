@@ -372,6 +372,11 @@ export function applyS2COpcode12MapTransition(world, packet, activeCharacterId =
   next.combatEvents = [];
   next.lastSpawnBatch = [];
   next.removedEntityIds = Object.keys(world?.entitiesById ?? {}).filter(id => id !== localId).map(Number);
+  let parsedMapData = null, parsedMapDataError = null;
+  if (packet.mapData instanceof Uint8Array) {
+    try { parsedMapData = decodeOriginalMapData(packet.mapData); }
+    catch (error) { parsedMapDataError = error instanceof Error ? error.message : String(error); }
+  }
   next.mapTransitionSequence += 1;
   next.mapTransition = {
     sequence: next.mapTransitionSequence,
@@ -383,9 +388,8 @@ export function applyS2COpcode12MapTransition(world, packet, activeCharacterId =
     label: typeof packet.label === "string" ? packet.label : "",
     hasMapData: packet.hasMapData === true,
     mapData: packet.mapData instanceof Uint8Array ? copyBytes(packet.mapData) : null,
-    parsedMapData: packet.mapData instanceof Uint8Array
-      ? (() => { try { return decodeOriginalMapData(packet.mapData); } catch (error) { return null; } })()
-      : null,
+    parsedMapData,
+    parsedMapDataError,
     mapDataError: packet.mapDataError ?? null,
     entryX: hasEntryPosition ? x : null,
     entryY: hasEntryPosition ? y : null,
