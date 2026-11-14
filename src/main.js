@@ -220,6 +220,9 @@ function openWindow(key){
   disposeProtocolConnectionPanel = null;
   disposeCharacterStage?.();
   disposeCharacterStage = null;
+  const windowRoot=document.querySelector('#game-window');
+  windowRoot.classList.toggle('character-window',key==='character');
+  windowRoot.classList.toggle('equipment-window',key==='equipment');
   const p=panelData[key]||panelData.help;
   document.querySelector('#window-title').textContent=p.title;
   const html=['character','inventory','equipment'].includes(key)?renderCharacterPanel(key):key==='skills'?renderSkillPanel():key==='quests'?renderQuestPanel():key==='shop'?renderShopPanel():key==='map'?renderWorldMapPanel():key==='friends'?renderFriendsPanel():key==='party'?renderPartyPanel():key==='guild'?renderGuildPanel():key==='mail'?renderMailPanel():p.html;
@@ -234,6 +237,10 @@ function openWindow(key){
   if(key==='connection')disposeProtocolConnectionPanel=mountProtocolConnectionPanel(document.querySelector('[data-protocol-connection-root]'));
 }
 function closeWindow(){disposeProtocolConnectionPanel?.();disposeProtocolConnectionPanel=null;disposeCharacterStage?.();disposeCharacterStage=null;document.querySelector('#game-window').classList.remove('open');document.querySelector('#modal-backdrop').classList.remove('show');}
+window.addEventListener('kpah:open-window',event=>{
+  const key=event.detail?.key;
+  if(typeof key==='string')openWindow(key);
+});
 const DISPLAY_SETTINGS_KEY='kpah.display-settings.v1';
 const displaySettings={playerName:true,coordinates:true,minimap:true};
 function loadDisplaySettings(){try{const saved=JSON.parse(localStorage.getItem(DISPLAY_SETTINGS_KEY)||'null');if(saved&&typeof saved==='object'){for(const key of Object.keys(displaySettings)){if(typeof saved[key]==='boolean')displaySettings[key]=saved[key];}}}catch(error){console.warn('Không thể đọc cài đặt hiển thị đã lưu.',error);}}
@@ -942,6 +949,9 @@ window.addEventListener('kpah:character-selected',event=>{
   if(heading)heading.textContent=safeName;
   const role=document.querySelector('.character-details .muted');
   if(role)role.textContent=(className||'Kiếm khách')+' · Nhân vật';
+  // The login cover is removed only after a character is selected. Open the
+  // character sheet here so the player sees it immediately after entering.
+  openWindow('character');
 });
 
 class WorldScene extends Phaser.Scene {
@@ -2475,6 +2485,5 @@ class WorldScene extends Phaser.Scene {
   }
 }
 const game=new Phaser.Game({type:Phaser.AUTO,parent:'world',width:960,height:560,backgroundColor:'#263c2d',render:{pixelArt:true,antialias:false},scale:{mode:Phaser.Scale.RESIZE,autoCenter:Phaser.Scale.CENTER_BOTH},scene:[WorldScene]});
-// Open the character sheet on entry so the original character UI is immediately visible.
-openWindow('character');
+// Character sheet is opened after login in the kpah:character-selected handler.
 window.addEventListener('keydown',e=>{if(e.key.toLowerCase()==='e'){const scene=game.scene.getScene('world');const nearest=scene?.playerSprite?groundDropState.nearest(scene.playerSprite.x,scene.playerSprite.y,90):null;if(nearest){e.preventDefault();pickupGroundDrop(nearest.id);}return;}const dirs={ArrowLeft:[-20,0],ArrowRight:[20,0],ArrowUp:[0,-15],ArrowDown:[0,15]};if(!dirs[e.key])return;const s=game.scene.getScene('world');if(!s.playerSprite)return;e.preventDefault();const [dx,dy]=dirs[e.key];s.movePlayerTo(s.playerSprite.x+dx,s.playerSprite.y+dy,120);});
