@@ -20,7 +20,7 @@ import { createLocalSave } from './local-save.js';
 import { mountProtocolConnectionPanel, sendPlayerMovement } from './protocol/connection-panel.js';
 import { projectServerWorldEntities } from './protocol/server-world-projection.js';
 import { advanceCharacterPartPlayback, triggerCharacterPartAction } from './protocol/character-part-data.js';
-import { mountCharacterStage, publishCharacterPartData } from './character-stage.js';
+import { mountCharacterStage, publishCharacterPartData, clearCharacterPartData } from './character-stage.js';
 import { decodeTemplateSpriteAtlas } from './protocol/template-assets.js';
 import { resolveOriginalEntityFactoryClass, resolveOriginalEntityFrameIndex } from './protocol/original-entity-factory.js';
 import { advanceOriginalCdMovement, advanceOriginalPlayerMovement, stopOriginalEntityMotionAtCurrentPosition } from './protocol/original-entity-motion.js';
@@ -1797,6 +1797,11 @@ class WorldScene extends Phaser.Scene {
       }
     }
     const localEntity=projected.find(entity=>entity.isLocalPlayer);
+    const localPartIndex=localEntity?.factoryClass==='hd'&&Number.isInteger(localEntity.marker)&&localEntity.marker>=0
+      ?localEntity.marker:null;
+    const localPartRecord=localPartIndex===null?null:this.serverInitializationState?.characterPartCatalog?.[localPartIndex];
+    const localPartImage=localPartIndex===null?null:this.serverWorldState?.resourceImagePayloadsById?.[String(12000+localPartIndex)];
+    if(!localPartRecord?.decoded||!localPartImage)clearCharacterPartData();
     const nextLocalId=localEntity?String(localEntity.entityId):null;
     const nextLocalView=nextLocalId?this.serverWorldViews.get(nextLocalId):null;
     if(nextLocalView&&this.playerSprite!==nextLocalView){
