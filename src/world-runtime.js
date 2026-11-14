@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { setCameraFollowTarget } from './protocol/camera-follow.js';
-import { buildOriginalMapCollisionRows, buildOriginalMapTileRows } from './protocol/map-data.js';
+import {
+  buildOriginalMapCollisionRows, buildOriginalMapTileRows, decodeOriginalTileTypeData,
+} from './protocol/map-data.js';
 
 /**
  * Runtime helpers for the original game's scrolling world.
@@ -82,6 +84,23 @@ export function loadSpriteSheetTexture(scene, definition) {
     });
     scene.load.start();
   });
+}
+
+/**
+ * Load the selected original map atlas and its parallel .type collision table.
+ * URLs are supplied by the app asset resolver; missing files fail explicitly.
+ */
+export async function loadOriginalMapTileAssets(scene, definition) {
+  const { key, atlasUrl, typeUrl } = definition || {};
+  if (typeof atlasUrl !== 'string' || !/^https?:\\/\\//i.test(atlasUrl) ||
+      typeof typeUrl !== 'string' || !/^https?:\\/\\//i.test(typeUrl)) {
+    throw new Error('Original map tile assets require valid atlas and type URLs.');
+  }
+  const response = await fetch(typeUrl);
+  if (!response.ok) throw new Error('Unable to load original tile type table: HTTP ' + response.status);
+  const typeData = decodeOriginalTileTypeData(new Uint8Array(await response.arrayBuffer()));
+  await loadSpriteSheetTexture(scene, { key, url: atlasUrl, frameWidth: 16, frameHeight: 16 });
+  return { key, ...typeData };
 }
 
 /**
