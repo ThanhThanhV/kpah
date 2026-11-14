@@ -177,6 +177,11 @@ export function mountCharacterStage(root) {
       <label>Thân <select data-atlas-part="body"></select></label>
       <label>Chân <select data-atlas-part="leg"></select></label>
     </div>
+    <div class="original-character-stage__atlas-overview" hidden aria-label="Ba atlas bộ phận nhân vật gốc">
+      <figure><figcaption>ĐẦU</figcaption><img data-atlas-overview="head" alt="Atlas đầu gốc"></figure>
+      <figure><figcaption>THÂN</figcaption><img data-atlas-overview="body" alt="Atlas thân gốc"></figure>
+      <figure><figcaption>CHÂN</figcaption><img data-atlas-overview="leg" alt="Atlas chân gốc"></figure>
+    </div>
     <div class="original-character-stage__caption">Đang hiển thị atlas bộ phận gốc từ JAR. Để ghép đúng nhân vật và chạy hoạt ảnh như client KPAH, cần partData cùng ảnh nhân vật do máy chủ cung cấp.</div>`;
   const canvas = root.querySelector('canvas');
   const context = canvas.getContext('2d');
@@ -188,6 +193,9 @@ export function mountCharacterStage(root) {
   const atlasControls = root.querySelector('.original-character-stage__atlas-controls');
   const atlasSelects = [...root.querySelectorAll('[data-atlas-part]')];
   const atlasImages = new Map();
+  const atlasOverview = root.querySelector('.original-character-stage__atlas-overview');
+  const atlasOverviewImages = Object.fromEntries(['head', 'body', 'leg'].map(type =>
+    [type, root.querySelector('[data-atlas-overview="' + type + '"]')]));
   const selectedAtlasIds = { head: '0', body: '0', leg: '0' };
   let atlasType = 'body';
   let atlasCatalog = [];
@@ -248,6 +256,7 @@ export function mountCharacterStage(root) {
     empty.hidden = true;
     stageTag.textContent = 'ATLAS BỘ PHẬN GỐC';
     atlasControls.hidden = false;
+    atlasOverview.hidden = false;
     stateControls.hidden = true;
     directionButton.hidden = true;
   }
@@ -263,6 +272,7 @@ export function mountCharacterStage(root) {
       // an older selection must never overwrite the image currently selected.
       if (disposed || token !== atlasLoadTokens[type] || selectedAtlasIds[type] !== id) return;
       atlasImages.set(type, image);
+      if (atlasOverviewImages[type]) atlasOverviewImages[type].src = url;
       if (!data) drawAtlasFallback();
     };
     image.onerror = () => {
@@ -312,6 +322,7 @@ export function mountCharacterStage(root) {
       return;
     }
     atlasControls.hidden = true;
+    atlasOverview.hidden = true;
     stateControls.hidden = false;
     directionButton.hidden = false;
     const frame = getFrame();
