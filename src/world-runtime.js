@@ -152,6 +152,9 @@ export function configureWorldCamera(scene, target, bounds, options = {}) {
         Math.max(1, options.deadzone.height | 0)
       );
     }
+  } else {
+    // A destroyed server actor must never remain as the camera's hidden target.
+    camera.stopFollow();
   }
   return camera;
 }
