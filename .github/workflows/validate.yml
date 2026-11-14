@@ -916,5 +916,9 @@ jobs:
             tools/reports/protocol-opcode-catalog.md
             tools/reports/cfr-source/**/*.java
             public/assets/kpah-original/archive-manifest.json
+            public/assets/kpah-original/character-parts/**/*.png
+            public/assets/kpah-original/character-parts/**/*.metadata.bin
+            public/assets/kpah-original/decoded-packed/**
+            public/assets/kpah-original/decoded-sh/**
           if-no-files-found: error
           retention-days: 14
