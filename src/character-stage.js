@@ -189,6 +189,7 @@ export function mountCharacterStage(root) {
   const atlasSelects = [...root.querySelectorAll('[data-atlas-part]')];
   const atlasImages = new Map();
   const selectedAtlasIds = { head: '0', body: '0', leg: '0' };
+  let atlasType = 'body';
   let atlasCatalog = [];
   const atlasLoadTokens = { head: 0, body: 0, leg: 0 };
   let data = latestCharacterPart;
@@ -221,33 +222,29 @@ export function mountCharacterStage(root) {
   function drawAtlasFallback() {
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.imageSmoothingEnabled = false;
-    const groups = [
-      { type: 'head', x: 8, width: 146, label: 'ĐẦU' },
-      { type: 'body', x: 167, width: 146, label: 'THÂN' },
-      { type: 'leg', x: 326, width: 146, label: 'CHÂN' },
-    ];
+    const selectedType = atlasType;
+    const labels = { head: 'ĐẦU', body: 'THÂN', leg: 'CHÂN' };
+    const image = atlasImages.get(selectedType);
     context.textAlign = 'center';
-    context.font = 'bold 11px sans-serif';
-    for (const group of groups) {
-      context.fillStyle = '#f0d49a';
-      context.fillText(group.label + ' · ' + selectedAtlasIds[group.type], group.x + group.width / 2, 25);
-      const image = atlasImages.get(group.type);
-      if (!image) {
-        context.fillStyle = '#c6ad82';
-        context.font = '9px sans-serif';
-        context.fillText('Đang tải atlas…', group.x + group.width / 2, 175);
-        continue;
-      }
-      const scale = Math.min(2.2, (group.width - 12) / image.naturalWidth, 235 / image.naturalHeight);
+    context.fillStyle = '#f0d49a';
+    context.font = 'bold 12px sans-serif';
+    context.fillText(labels[selectedType] + ' · MẢNH ' + selectedAtlasIds[selectedType], canvas.width / 2, 24);
+    context.strokeStyle = '#876b49';
+    context.strokeRect(18, 34, canvas.width - 36, 274);
+    if (!image) {
+      context.fillStyle = '#c6ad82';
+      context.font = '11px sans-serif';
+      context.fillText('Đang tải atlas…', canvas.width / 2, 175);
+    } else {
+      const scale = Math.min(3.1, (canvas.width - 48) / image.naturalWidth, 250 / image.naturalHeight);
       const width = image.naturalWidth * scale;
       const height = image.naturalHeight * scale;
-      context.drawImage(image, group.x + (group.width - width) / 2, 42 + (235 - height) / 2, width, height);
-      context.strokeStyle = '#876b49';
-      context.strokeRect(group.x + 2, 38, group.width - 4, 244);
+      context.imageSmoothingEnabled = false;
+      context.drawImage(image, (canvas.width - width) / 2, 45 + (250 - height) / 2, width, height);
     }
     context.fillStyle = '#bba989';
     context.font = '9px sans-serif';
-    context.fillText('ẢNH ATLAS GỐC · CHƯA CÓ DỮ LIỆU GHÉP FRAME', canvas.width / 2, 315);
+    context.fillText('ATLAS GỐC · CHƯA THỂ GHÉP NHÂN VẬT NẾU THIẾU PARTDATA', canvas.width / 2, 330);
     empty.hidden = true;
     stageTag.textContent = 'ATLAS BỘ PHẬN GỐC';
     atlasControls.hidden = false;
@@ -296,6 +293,8 @@ export function mountCharacterStage(root) {
         ).join('');
         select.value = selectedAtlasIds[type];
         select.addEventListener('change', () => loadAtlas(type, select.value));
+      select.addEventListener('focus', () => { atlasType = type; drawAtlasFallback(); });
+      select.addEventListener('pointerdown', () => { atlasType = type; drawAtlasFallback(); });
         loadAtlas(type, select.value);
       }
       if (!data) drawAtlasFallback();
