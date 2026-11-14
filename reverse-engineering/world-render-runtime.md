@@ -220,3 +220,17 @@ HP/max HP/max MP and the revive event clears the browser death latch, resets
 part playback to idle, and displays a short “Hồi sinh” world label. Unknown
 remote IDs are not inserted into the world entity map. This is mapped from
 source but still needs live-server packet and visual validation.
+
+
+### Revive movement and position continuity
+
+Opcode 60 contains no position coordinates. The browser therefore does not
+teleport the revived actor: it keeps the current rendered/server position,
+stops any stale pre-death movement target, resets movement frame counters and
+returns character-part playback to idle. A subsequent authoritative opcode 4
+target is allowed to start movement again. For the local server actor, movement
+blocking now uses the server death latch/current server HP rather than the
+independent offline-demo HP value, so a positive-HP revive can resume movement
+without mutating the local demo character save. Destination marker state is
+cleared on local revive. This remains source-mapped behavior awaiting live
+server validation.
