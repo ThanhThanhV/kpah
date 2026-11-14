@@ -10,8 +10,9 @@ export async function loadAssetManifest() {
         return response.json();
       })
       .then(manifest => {
-        if (!manifest || !Array.isArray(manifest.decodedPackedEntries)) {
-          throw new Error('Manifest không đúng định dạng hoặc thiếu decodedPackedEntries.');
+        if (!manifest || (!Array.isArray(manifest.decodedPackedEntries)
+          && !Array.isArray(manifest.characterParts))) {
+          throw new Error('Manifest không có danh mục tài nguyên KPAH hợp lệ.');
         }
         assetVersion = typeof manifest.assetVersion === 'string' &&
           /^[a-f0-9]{16}$/i.test(manifest.assetVersion) ? manifest.assetVersion : '';
@@ -37,5 +38,15 @@ export function decodedPngEntries(manifest) {
   return (manifest?.decodedPackedEntries || []).filter(item =>
     item && typeof item.output === 'string' && assetUrl(item.output) &&
     /\.png$/i.test(item.path || '')
+  );
+}
+
+
+/** Original player-part atlases extracted from c/{head,body,leg} in KPAH_278.jar. */
+export function characterPartEntries(manifest) {
+  return (manifest?.characterParts || []).filter(item =>
+    item && ['head', 'body', 'leg', 'hat', 'coat'].includes(item.partType) &&
+    typeof item.partId === 'string' && typeof item.image === 'string' &&
+    assetUrl(item.image)
   );
 }
