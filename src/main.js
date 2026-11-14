@@ -1693,7 +1693,7 @@ class WorldScene extends Phaser.Scene {
     for(const frame of metadata.frames){
       mix(frame.index);
       for(const piece of frame.pieces??[]){
-        mix(piece.x);mix(piece.y);mix(piece.regionIndex);mix(piece.layerGroup);
+        mix(piece.x);mix(piece.y);mix(piece.regionIndex);mix(piece.flip);mix(piece.layerGroup);
       }
     }
     const signature=(hash>>>0).toString(16);
@@ -1722,7 +1722,8 @@ class WorldScene extends Phaser.Scene {
             const region=metadata.regions?.[piece.regionIndex];
             if(!region||region.width<=0||region.height<=0||region.x<0||region.y<0
               ||region.x+region.width>image.naturalWidth||region.y+region.height>image.naturalHeight)return null;
-            return {...piece,region,drawX:transform===2?-piece.x-region.width:piece.x};
+            return {...piece,region,drawX:transform===2?-piece.x-region.width:piece.x,
+              pieceTransform:piece.flip===1?(transform===2?0:2):transform};
           }).filter(Boolean);
           if(!drawable.length)continue;
           const minX=Math.min(0,...drawable.map(part=>part.drawX));
@@ -1737,7 +1738,7 @@ class WorldScene extends Phaser.Scene {
           // The shared order reproduces hd.a(Graphics): f.b, then f.a.
           for(const part of drawable){
             const dx=part.drawX-minX,dy=part.y-minY;
-            if(transform===2){
+            if(part.pieceTransform===2){
               context.save();
               context.translate(dx+part.region.width,dy);
               context.scale(-1,1);
