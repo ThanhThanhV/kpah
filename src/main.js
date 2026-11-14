@@ -19,7 +19,7 @@ import { createMailState } from './mail-state.js';
 import { createLocalSave } from './local-save.js';
 import { mountProtocolConnectionPanel, sendPlayerMovement } from './protocol/connection-panel.js';
 import { projectServerWorldEntities } from './protocol/server-world-projection.js';
-import { advanceCharacterPartPlayback, triggerCharacterPartAction } from './protocol/character-part-data.js';
+import { advanceCharacterPartPlayback, triggerCharacterPartAction, getCharacterFrameDrawOrder } from './protocol/character-part-data.js';
 import { mountCharacterStage, publishCharacterPartData, clearCharacterPartData } from './character-stage.js';
 import { createStarterCharacterComposition } from './character-composer.js';
 import { decodeTemplateSpriteAtlas } from './protocol/template-assets.js';
@@ -1718,7 +1718,7 @@ class WorldScene extends Phaser.Scene {
       const textures=new Map(),keys=[];
       for(const frame of metadata.frames){
         for(const transform of [0,2]){
-          const drawable=(frame.pieces??[]).map(piece=>{
+          const drawable=getCharacterFrameDrawOrder(frame).map(piece=>{
             const region=metadata.regions?.[piece.regionIndex];
             if(!region||region.width<=0||region.height<=0||region.x<0||region.y<0
               ||region.x+region.width>image.naturalWidth||region.y+region.height>image.naturalHeight)return null;
@@ -1734,21 +1734,19 @@ class WorldScene extends Phaser.Scene {
           canvas.height=Math.max(1,Math.ceil(maxY-minY));
           const context=canvas.getContext('2d');
           if(!context)continue;
-          // hd.a(Graphics) draws non-zero layer groups before layer group zero.
-          for(const group of [drawable.filter(part=>part.layerGroup!==0),drawable.filter(part=>part.layerGroup===0)]){
-            for(const part of group){
-              const dx=part.drawX-minX,dy=part.y-minY;
-              if(transform===2){
-                context.save();
-                context.translate(dx+part.region.width,dy);
-                context.scale(-1,1);
-                context.drawImage(image,part.region.x,part.region.y,part.region.width,part.region.height,
-                  0,0,part.region.width,part.region.height);
-                context.restore();
-              }else{
-                context.drawImage(image,part.region.x,part.region.y,part.region.width,part.region.height,
-                  dx,dy,part.region.width,part.region.height);
-              }
+          // The shared order reproduces hd.a(Graphics): f.b, then f.a.
+          for(const part of drawable){
+            const dx=part.drawX-minX,dy=part.y-minY;
+            if(transform===2){
+              context.save();
+              context.translate(dx+part.region.width,dy);
+              context.scale(-1,1);
+              context.drawImage(image,part.region.x,part.region.y,part.region.width,part.region.height,
+                0,0,part.region.width,part.region.height);
+              context.restore();
+            }else{
+              context.drawImage(image,part.region.x,part.region.y,part.region.width,part.region.height,
+                dx,dy,part.region.width,part.region.height);
             }
           }
           const textureKey='kpah-player-part-'+key+'-'+signature+'-'+frame.index+'-'+transform;
