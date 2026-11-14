@@ -2300,6 +2300,10 @@ class WorldScene extends Phaser.Scene {
       return;
     }
     const destination=this.resolveWalkDestination(x,y);
+    const offlineSprite=this.demoPlayerSprite?.getData('offlineCharacterSprite');
+    if(offlineSprite&&Math.abs(destination.x-this.playerSprite.x)>1){
+      offlineSprite.setFlipX(destination.x<this.playerSprite.x);
+    }
     if(showDestination&&this.destinationMarker){
       this.destinationMarker.setPosition(destination.x,destination.y+18).setScale(1).setAlpha(0.9).setVisible(true);
       this.destinationPulse?.restart();
