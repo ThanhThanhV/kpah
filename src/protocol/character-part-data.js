@@ -6,10 +6,8 @@
  * - c(byte[]): reads atlas rectangles, frame compositions and animation maps.
  * - c.e[direction][state]: selects one of eight animation frame-index lists.
  *
- * The original renderer hd.a(Graphics) reads only the primary g tuple:
- * a=x, b=y, c=atlas-region index, d=flip flag, e=layer group. The parser
- * creates a second temporary g tuple and discards it. The primary g.d is
- * never assigned by c(byte[]), so its Java default is zero (no per-piece flip).
+ * The original renderer hd.a(Graphics) reads each g tuple as:
+ * a=x, b=y, c=atlas-region index, d=flip flag, e=layer group.
  */
 
 const DIRECTION_STATE_TO_SEQUENCE = Object.freeze([
@@ -67,9 +65,8 @@ function readByteSequence(reader, label) {
  * Layout mirrors c(byte[]):
  * 1. signed-byte atlas-region count; each region is 5 unsigned bytes
  * 2. signed-short frame count; each frame has signed-byte piece count
- * 3. each piece has primary (short x, short y, byte region index), a
- *    discarded temporary tuple (short x, short y, byte region index, byte),
- *    then a byte layer group
+ * 3. each piece has short x, short y, signed-byte region index,
+ *    signed-byte flip flag, and signed-byte layer group
  * 4. signed-short frame-height table count and short values
  * 5. exactly eight signed-byte-length-prefixed animation frame-index arrays
  */
@@ -100,34 +97,15 @@ export function decodeCharacterPartData(bytes) {
     const pieceCount = reader.readCount("frame piece", MAX_PARTS);
     const pieces = [];
     for (let pieceIndex = 0; pieceIndex < pieceCount; pieceIndex += 1) {
-      const primary = {
-        x: reader.readI16(),
-        y: reader.readI16(),
-        regionIndex: reader.readI8(),
-      };
-      // c(byte[]) constructs this second g instance, assigns its d field,
-      // and immediately discards it. Consume its bytes but do not expose
-      // them as drawable state.
-      const discardedAuxiliary = {
-        x: reader.readI16(),
-        y: reader.readI16(),
-        regionIndex: reader.readI8(),
-        byte: reader.readI8(),
-      };
+      const x = reader.readI16();
+      const y = reader.readI16();
+      const regionIndex = reader.readI8();
+      const flip = reader.readI8();
       const layerGroup = reader.readI8();
-      if (primary.regionIndex < 0 || primary.regionIndex >= regions.length) {
-        throw new RangeError("Frame " + frameIndex + " references missing atlas region " + primary.regionIndex);
+      if (regionIndex < 0 || regionIndex >= regions.length) {
+        throw new RangeError("Frame " + frameIndex + " references missing atlas region " + regionIndex);
       }
-      pieces.push({
-        index: pieceIndex,
-        ...primary,
-        // g.d on the primary instance is never assigned by c(byte[]), so
-        // Java initializes it to zero. hd.drawRegion therefore uses no
-        // per-piece flip; horizontal facing is handled by the renderer.
-        flip: 0,
-        discardedAuxiliary,
-        layerGroup,
-      });
+      pieces.push({ index: pieceIndex, x, y, regionIndex, flip, layerGroup });
     }
     frames.push({ index: frameIndex, pieces });
   }
