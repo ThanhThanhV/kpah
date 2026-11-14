@@ -580,3 +580,8 @@
 .character-composer__layer>div{display:flex;gap:4px;flex-wrap:wrap}
 .character-composer__layer input{width:62px}
 @media(max-width:700px){.character-composer__layout{grid-template-columns:minmax(0,1fr)}}
+
+
+.character-composer__bar select[data-composer-candidate]{flex:1 1 150px;max-width:240px;min-width:110px;padding:5px;background:#211b20;border:1px solid #705638;color:#f0d7a4;font-size:9px}
+.character-composer__bar select:disabled{opacity:.55}
+.character-composer__bar button[data-composer-detect]{background:#3a3023;border-color:#a17a45;color:#ffe1a2}
