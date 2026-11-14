@@ -285,9 +285,12 @@ export function mountCharacterStage(root) {
     const width = frame.canvas.width * scale;
     const height = frame.canvas.height * scale;
     context.imageSmoothingEnabled = false;
+    // Frame bounds are offsets from the character's world anchor. Center
+    // that anchor in the preview instead of centering the cropped bitmap;
+    // otherwise poses with asymmetric limbs visibly jump between frames.
     context.drawImage(frame.canvas,
-      (canvas.width - width) / 2,
-      (canvas.height - height) / 2 + 12,
+      canvas.width / 2 + frame.minX * scale,
+      canvas.height / 2 + frame.minY * scale + 12,
       width, height);
   }
   function tick(time) {
