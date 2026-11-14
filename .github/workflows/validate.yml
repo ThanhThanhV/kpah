@@ -904,6 +904,8 @@ jobs:
         run: python tools/extract_protocol_catalog.py tools/reports/cfr-source --json tools/reports/protocol-opcode-catalog.json --markdown tools/reports/protocol-opcode-catalog.md
       - name: Build evidence-ranked class role map
         run: python tools/suggest_class_roles.py tools/reports/kpah-class-analysis.json --json tools/reports/class-role-candidates.json --markdown tools/reports/class-role-candidates.md
+      - name: Generate protocol source snapshots for synchronization
+        run: python tools/generate_protocol.py
       - name: Upload reverse-engineering reports
         uses: actions/upload-artifact@v4
         with:
@@ -920,5 +922,8 @@ jobs:
             public/assets/kpah-original/character-parts/**/*.metadata.bin
             public/assets/kpah-original/decoded-packed/**
             public/assets/kpah-original/decoded-sh/**
+            src/protocol/generated/commands.js
+            protocol/generated/java/com/kpah/protocol/generated/ProtocolCommand.java
+            protocol/generated/java/com/kpah/protocol/generated/ProtocolPacketCodec.java
           if-no-files-found: error
           retention-days: 14
