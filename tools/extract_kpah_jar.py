@@ -241,6 +241,54 @@ def main() -> None:
         ],
     }, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")
     asset_version = hashlib.sha256(version_material).hexdigest()[:16]
+    # Character-part resources are stored as a compact record:
+    # unsigned-short PNG byte length, PNG bytes, unsigned-short metadata length,
+    # then the original metadata payload. Keep the metadata untouched: it is
+    # consumed by the original character-part decoder and must not be guessed.
+    character_parts = []
+    with zipfile.ZipFile(args.jar) as character_archive:
+        for info in character_archive.infolist():
+            if info.is_dir():
+                continue
+            parts = PurePosixPath(info.filename).parts
+            if len(parts) != 3 or parts[0] != "c" or parts[1] not in {"leg", "body", "head", "hat", "coat"}:
+                continue
+            raw = character_archive.read(info)
+            if len(raw) < 4:
+                raise ValueError(f"Truncated character-part resource: {info.filename}")
+            png_size = int.from_bytes(raw[:2], "big")
+            png_end = 2 + png_size
+            if png_size < 8 or png_end + 2 > len(raw):
+                raise ValueError(f"Invalid embedded PNG length: {info.filename}")
+            png = raw[2:png_end]
+            if png[:8] != bytes((137, 80, 78, 71, 13, 10, 26, 10)):
+                raise ValueError(f"Invalid embedded PNG signature: {info.filename}")
+            metadata_size = int.from_bytes(raw[png_end:png_end + 2], "big")
+            metadata = raw[png_end + 2:]
+            if metadata_size != len(metadata):
+                raise ValueError(f"Character metadata length mismatch: {info.filename}")
+            part_id = parts[2]
+            png_relative = PurePosixPath("character-parts") / parts[1] / f"{part_id}.png"
+            metadata_relative = PurePosixPath("character-parts") / parts[1] / f"{part_id}.metadata.bin"
+            png_target = safe_target(args.output, png_relative.as_posix())
+            metadata_target = safe_target(args.output, metadata_relative.as_posix())
+            png_target.parent.mkdir(parents=True, exist_ok=True)
+            png_target.write_bytes(png)
+            metadata_target.write_bytes(metadata)
+            dimensions = png_dimensions(png)
+            character_parts.append({
+                "partType": parts[1],
+                "partId": part_id,
+                "source": info.filename,
+                "image": png_relative.as_posix(),
+                "metadata": metadata_relative.as_posix(),
+                "metadataBytes": len(metadata),
+                "pngBytes": len(png),
+                "sha256": hashlib.sha256(png).hexdigest(),
+                "width": dimensions[0] if dimensions else None,
+                "height": dimensions[1] if dimensions else None,
+            })
+
     manifest = {
         "source": args.jar.name,
         "hashAlgorithm": "SHA-256",
@@ -251,7 +299,7 @@ def main() -> None:
         "classCount": sum(1 for item in entries if item["isClass"]),
         "extensionCounts": dict(sorted(counts.items())),
         "decodedPackedCount": len(decoded_entries),
-        "decodedPackedEntries": decoded_entries,
+        "decodedPackedEntries": decoded_entries,\n        "characterPartCount": len(character_parts),\n        "characterParts": character_parts,
         "entries": entries,
     }
     manifest_path = args.output / "archive-manifest.json"
