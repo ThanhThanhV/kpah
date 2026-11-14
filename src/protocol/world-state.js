@@ -1,4 +1,4 @@
-import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode7, decodeS2COpcode32, decodeS2COpcode33, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74, decodeS2COpcodeMinus71, decodeS2COpcodeMinus73, decodeS2COpcodeMinus51, decodeS2COpcode26, decodeS2COpcode15 } from "./generated/world-state-codec.js";
+import { decodeS2COpcode4, decodeS2COpcode6, decodeS2COpcode8, decodeS2COpcode9, decodeS2COpcode10, decodeS2COpcode7, decodeS2COpcode32, decodeS2COpcode33, decodeS2COpcode60, decodeS2COpcode83, decodeS2COpcode106, decodeS2COpcodeMinus74, decodeS2COpcodeMinus71, decodeS2COpcodeMinus73, decodeS2COpcodeMinus51, decodeS2COpcode26, decodeS2COpcode15 } from "./generated/world-state-codec.js";
 import { decodeS2COpcode5 } from "./generated/opcode5-codec.js";
 import { decodeS2CTemplateCatalog, decodeS2CTemplateAsset } from "./template-assets.js";
 import { decodeEffectDefinition } from "./effect-definition.js";
@@ -10,6 +10,7 @@ export function createServerWorldState() {
     entityOrder: [],
     characterResourcesById: {},
     characterLevelsById: {},
+    characterRevivesById: {},
     templatesById: {},
     templateAssetPayloadsById: {},
     effectDefinitionsById: {},
@@ -45,6 +46,7 @@ function cloneWorld(world) {
     entityOrder: [...(source.entityOrder ?? [])],
     characterResourcesById: { ...(source.characterResourcesById ?? {}) },
     characterLevelsById: { ...(source.characterLevelsById ?? {}) },
+    characterRevivesById: { ...(source.characterRevivesById ?? {}) },
     templatesById: { ...(source.templatesById ?? {}) },
     templateAssetPayloadsById: { ...(source.templateAssetPayloadsById ?? {}) },
     effectDefinitionsById: { ...(source.effectDefinitionsById ?? {}) },
@@ -203,6 +205,30 @@ function applyCharacterResources(world, packet) {
  * kind-0 player entity, setting HP current/max from valueA and MP current/max
  * from valueB. The original handler is a no-op when the player entity is absent.
  */
+function applyCharacterRevive(world, packet, activeCharacterId = null) {
+  const next = cloneWorld(world);
+  const id = String(packet.characterId), entity = next.entitiesById[id];
+  const isLocal = Number.isInteger(activeCharacterId) && activeCharacterId === packet.characterId;
+  const resolved = entity?.kind === 0 || isLocal;
+  if (entity?.kind === 0) next.entitiesById[id] = {
+    ...entity, currentHp: packet.currentHp, maxHp: packet.maxHp,
+    maxMp: packet.maxMp, reviveAuxiliary: packet.auxiliaryShort,
+  };
+  next.characterRevivesById[id] = {
+    maxHp: packet.maxHp, maxMp: packet.maxMp,
+    currentHp: packet.currentHp, auxiliaryShort: packet.auxiliaryShort,
+  };
+  next.worldEvents.push({
+    opcode: 60, sequence: (next.worldEvents.at(-1)?.sequence ?? 0) + 1,
+    characterId: packet.characterId, entityId: resolved ? packet.characterId : null,
+    currentHp: packet.currentHp, entityResolved: resolved, eventType: "revive", isLocal,
+    x: Number.isFinite(entity?.x) ? entity.x : entity?.snapshot?.x,
+    y: Number.isFinite(entity?.y) ? entity.y : entity?.snapshot?.y,
+  });
+  if (next.worldEvents.length > 100) next.worldEvents.splice(0, next.worldEvents.length - 100);
+  return next;
+}
+
 function applyCharacterLevel(world, packet) {
   const next = cloneWorld(world);
   const id = String(packet.characterId);
@@ -414,6 +440,10 @@ export function applyInboundWorldPacket(state, frame, nowMs = Date.now()) {
     case 33:
       event = decodeS2COpcode33(frame.payload);
       nextWorld = applyCharacterLevel(world, event);
+      break;
+    case 60:
+      event = decodeS2COpcode60(frame.payload);
+      nextWorld = applyCharacterRevive(world, event, state.activeCharacterId);
       break;
     case 7:
       event = decodeS2COpcode7(frame.payload);
