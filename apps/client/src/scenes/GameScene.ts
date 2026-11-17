@@ -88,10 +88,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   private applyWorldSnapshot(snapshot: WorldSnapshot): void {
-    const ownPlayer = snapshot.players[0];
+    const ownPlayer = this.worldSocket.getOwnPlayer(snapshot);
     if (!ownPlayer) return;
-    // Until authenticated identity is introduced, the gateway returns this socket's
-    // player first; remote entities will be rendered in the multiplayer milestone.
     this.playerX = ownPlayer.x;
     this.playerY = ownPlayer.y;
   }

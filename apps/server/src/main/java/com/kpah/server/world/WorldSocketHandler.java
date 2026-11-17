@@ -13,10 +13,6 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import org.springframework.web.util.UriComponentsBuilder;
 
-/**
- * Development world gateway. Clients send movement intent only; the server owns
- * coordinates and broadcasts snapshots to sessions in the same map.
- */
 @Component
 public class WorldSocketHandler extends TextWebSocketHandler {
     private static final String DEFAULT_MAP = "starter-meadow";
@@ -30,13 +26,15 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) {
+    public void afterConnectionEstablished(WebSocketSession session) throws IOException {
         String mapId = UriComponentsBuilder.fromUri(session.getUri())
                 .build().getQueryParams().getFirst("mapId");
         if (mapId == null || mapId.isBlank()) mapId = DEFAULT_MAP;
         PlayerMotionState initial = new PlayerMotionState(mapId, 640, 384, 0);
-        players.put(session.getId(), new ConnectedPlayer(
-                UUID.randomUUID().toString(), session, initial, System.nanoTime()));
+        ConnectedPlayer player = new ConnectedPlayer(
+                UUID.randomUUID().toString(), session, initial, System.nanoTime());
+        players.put(session.getId(), player);
+        send(session, Map.of("type", "welcome", "playerId", player.playerId(), "mapId", mapId));
         broadcast(mapId);
     }
 
@@ -47,7 +45,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         try {
             JsonNode input = mapper.readTree(message.getPayload());
             if (!"move".equals(input.path("type").asText())) {
-                sendError(session, "Unsupported message type.");
+                send(session, Map.of("type", "error", "message", "Unsupported message type."));
                 return;
             }
             long sequence = input.path("sequence").asLong(-1);
@@ -62,7 +60,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     player.playerId(), session, next, now));
             broadcast(next.mapId());
         } catch (IllegalArgumentException exception) {
-            sendError(session, exception.getMessage());
+            send(session, Map.of("type", "error", "message", exception.getMessage()));
         }
     }
 
@@ -82,34 +80,26 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                         "y", player.state().y(),
                         "sequence", player.state().lastSequence()))
                 .toList();
-        try {
-            String payload = mapper.writeValueAsString(Map.of("type", "snapshot", "players", snapshots));
-            TextMessage frame = new TextMessage(payload);
-            for (ConnectedPlayer player : players.values()) {
-                if (mapId.equals(player.state().mapId()) && player.session().isOpen()) {
-                    synchronized (player.session()) {
-                        player.session().sendMessage(frame);
-                    }
+        Map<String, Object> payload = Map.of("type", "snapshot", "players", snapshots);
+        for (ConnectedPlayer player : players.values()) {
+            if (mapId.equals(player.state().mapId()) && player.session().isOpen()) {
+                try {
+                    send(player.session(), payload);
+                } catch (IOException ignored) {
+                    // A failed connection is removed by the websocket close lifecycle.
                 }
             }
-        } catch (IOException ignored) {
-            // A failed connection is removed by the websocket close lifecycle.
         }
     }
 
-    private void sendError(WebSocketSession session, String reason) throws IOException {
-        if (session.isOpen()) {
-            synchronized (session) {
-                session.sendMessage(new TextMessage(mapper.writeValueAsString(
-                        Map.of("type", "error", "message", reason))));
-            }
+    private void send(WebSocketSession session, Object payload) throws IOException {
+        if (!session.isOpen()) return;
+        synchronized (session) {
+            session.sendMessage(new TextMessage(mapper.writeValueAsString(payload)));
         }
     }
 
     private record ConnectedPlayer(
-            String playerId,
-            WebSocketSession session,
-            PlayerMotionState state,
-            long lastAcceptedNanos
+            String playerId, WebSocketSession session, PlayerMotionState state, long lastAcceptedNanos
     ) {}
 }

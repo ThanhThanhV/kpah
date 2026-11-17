@@ -4,24 +4,16 @@ export interface WorldMoveIntent {
   axisX: number;
   axisY: number;
 }
-
 export interface WorldPlayerSnapshot {
-  playerId: string;
-  mapId: string;
-  x: number;
-  y: number;
-  sequence: number;
+  playerId: string; mapId: string; x: number; y: number; sequence: number;
 }
+export interface WorldSnapshot { type: "snapshot"; players: WorldPlayerSnapshot[]; }
 
-export interface WorldSnapshot {
-  type: "snapshot";
-  players: WorldPlayerSnapshot[];
-}
-
-/** Small version-1 websocket transport. Simulation remains authoritative on the server. */
+/** Version-1 websocket transport. The server owns all authoritative coordinates. */
 export class WorldSocketClient {
   private socket?: WebSocket;
   private sequence = 0;
+  private localPlayerId?: string;
   private readonly listeners = new Set<(snapshot: WorldSnapshot) => void>();
   private readonly statusListeners = new Set<(connected: boolean) => void>();
 
@@ -36,8 +28,10 @@ export class WorldSocketClient {
     socket.addEventListener("error", () => this.statusListeners.forEach((listener) => listener(false)));
     socket.addEventListener("message", (event) => {
       try {
-        const message = JSON.parse(String(event.data)) as WorldSnapshot;
-        if (message.type === "snapshot" && Array.isArray(message.players)) {
+        const message = JSON.parse(String(event.data)) as { type?: string; playerId?: string } | WorldSnapshot;
+        if (message.type === "welcome" && "playerId" in message) {
+          this.localPlayerId = message.playerId;
+        } else if (message.type === "snapshot" && "players" in message && Array.isArray(message.players)) {
           this.listeners.forEach((listener) => listener(message));
         }
       } catch {
@@ -60,12 +54,13 @@ export class WorldSocketClient {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
-
   onStatus(listener: (connected: boolean) => void): () => void {
     this.statusListeners.add(listener);
     return () => this.statusListeners.delete(listener);
   }
-
+  getOwnPlayer(snapshot: WorldSnapshot): WorldPlayerSnapshot | undefined {
+    return snapshot.players.find((player) => player.playerId === this.localPlayerId);
+  }
   destroy(): void {
     this.socket?.close(1000, "scene shutdown");
     this.socket = undefined;
