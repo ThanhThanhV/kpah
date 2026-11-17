@@ -20,6 +20,11 @@ public class MovementService {
         this.worlds = worlds;
     }
 
+    public PlayerMotionState initialState(String mapId) {
+        WorldMapGeometry map = worlds.require(mapId);
+        return new PlayerMotionState(map.mapId(), map.spawnX(), map.spawnY(), 0);
+    }
+
     public PlayerMotionState apply(
             PlayerMotionState current,
             MovementInput input,
@@ -67,16 +72,12 @@ public class MovementService {
             boolean overlapsOther = horizontal
                     ? otherAxis + HALF_HEIGHT > box.y() && otherAxis - HALF_HEIGHT < box.y() + box.height()
                     : otherAxis + HALF_WIDTH > box.x() && otherAxis - HALF_WIDTH < box.x() + box.width();
-            if (!overlapsOther) {
-                continue;
-            }
+            if (!overlapsOther) continue;
 
             boolean overlapsCandidate = horizontal
                     ? candidate + HALF_WIDTH > box.x() && candidate - HALF_WIDTH < box.x() + box.width()
                     : candidate + HALF_HEIGHT > box.y() && candidate - HALF_HEIGHT < box.y() + box.height();
-            if (!overlapsCandidate) {
-                continue;
-            }
+            if (!overlapsCandidate) continue;
 
             if (horizontal) {
                 return candidate > current

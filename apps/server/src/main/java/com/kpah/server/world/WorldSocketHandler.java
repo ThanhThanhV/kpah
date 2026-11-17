@@ -30,7 +30,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         String mapId = UriComponentsBuilder.fromUri(session.getUri())
                 .build().getQueryParams().getFirst("mapId");
         if (mapId == null || mapId.isBlank()) mapId = DEFAULT_MAP;
-        PlayerMotionState initial = new PlayerMotionState(mapId, 640, 384, 0);
+        PlayerMotionState initial = movementService.initialState(mapId);
         ConnectedPlayer player = new ConnectedPlayer(
                 UUID.randomUUID().toString(), session, initial, System.nanoTime());
         players.put(session.getId(), player);
