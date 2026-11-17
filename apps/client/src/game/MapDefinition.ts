@@ -11,7 +11,7 @@ export interface CollisionRect {
   kind: "wall" | "obstacle" | "water";
 }
 
-export interface WorldMapDefinition {
+export interface WorldObject {\n  id: string;\n  kind: "npc" | "monster-spawn" | "portal";\n  name: string;\n  x: number;\n  y: number;\n  width: number;\n  height: number;\n}\n\nexport interface WorldMapDefinition {
   id: string;
   name: string;
   width: number;
