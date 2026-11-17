@@ -1,38 +1,47 @@
 import Phaser from "phaser";
 import { CharacterEntity } from "../game/CharacterEntity";
-
-interface Obstacle { x: number; y: number; width: number; height: number; }
+import { createStarterMap } from "../game/MapDefinition";
+import { MapRenderer } from "../game/MapRenderer";
 
 export class GameScene extends Phaser.Scene {
   private player!: CharacterEntity;
+  private mapRenderer!: MapRenderer;
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
-  private playerX = 640;
-  private playerY = 390;
+  private playerX = 0;
+  private playerY = 0;
   private readonly speed = 190;
-  private readonly obstacles: Obstacle[] = [
-    { x: 430, y: 260, width: 130, height: 34 },
-    { x: 720, y: 420, width: 160, height: 38 },
-    { x: 270, y: 500, width: 70, height: 90 },
-    { x: 980, y: 210, width: 55, height: 120 }
-  ];
   private attackKey!: Phaser.Input.Keyboard.Key;
+  private castKey!: Phaser.Input.Keyboard.Key;
 
   constructor() { super("GameScene"); }
 
   create(): void {
-    this.drawArena();
+    const map = createStarterMap();
+    this.mapRenderer = new MapRenderer(this, map);
+    this.playerX = map.spawn.x;
+    this.playerY = map.spawn.y;
     this.player = new CharacterEntity(this, this.playerX, this.playerY);
+    this.cameras.main.setBounds(0, 0, this.mapRenderer.worldWidth, this.mapRenderer.worldHeight);
+    this.cameras.main.startFollow(this.player.cameraTarget, true, 0.12, 0.12);
+
     this.cursors = this.input.keyboard!.createCursorKeys();
     this.keys = this.input.keyboard!.addKeys("W,A,S,D") as Record<string, Phaser.Input.Keyboard.Key>;
     this.attackKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    this.add.text(18, 18, "P0 · CHARACTER RENDERER + MOVEMENT SPIKE", {
+    this.castKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+
+    this.add.text(18, 18, "P0 · CHARACTER + MAP ENGINE", {
       fontFamily: "Arial, sans-serif", fontSize: "13px", color: "#e6f1dc",
       backgroundColor: "#14262acc", padding: { x: 10, y: 7 }
     }).setScrollFactor(0).setDepth(2000);
-    this.add.text(18, 54, "Move with WASD / arrows · Space to attack · Obstacles are solid", {
+    this.add.text(18, 54, "WASD / arrows · Space: attack · Shift: cast", {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#c0d0c4"
     }).setScrollFactor(0).setDepth(2000);
+    this.add.text(map.spawn.x, map.spawn.y + 34, map.name, {
+      fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#e2d7aa"
+    }).setOrigin(0.5).setDepth(1);
+
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
   }
 
   update(_time: number, delta: number): void {
@@ -48,22 +57,23 @@ export class GameScene extends Phaser.Scene {
 
     const previousX = this.playerX;
     const previousY = this.playerY;
-    const nextX = this.playerX + vx * this.speed * dt;
-    const nextY = this.playerY + vy * this.speed * dt;
-    // Axis-separated resolution gives wall sliding instead of stopping both axes.
-    const resolvedX = this.resolveAxis(this.playerX, nextX, this.playerY, true);
-    const resolvedY = this.resolveAxis(this.playerY, nextY, resolvedX, false);
-    this.playerX = Phaser.Math.Clamp(resolvedX, 28, 1252);
-    this.playerY = Phaser.Math.Clamp(resolvedY, 80, 690);
+    const candidateX = this.playerX + vx * this.speed * dt;
+    const candidateY = this.playerY + vy * this.speed * dt;
+    const resolvedX = this.resolveAxis(this.playerX, candidateX, this.playerY, true);
+    const resolvedY = this.resolveAxis(this.playerY, candidateY, resolvedX, false);
+    this.playerX = Phaser.Math.Clamp(resolvedX, 14, this.mapRenderer.worldWidth - 14);
+    this.playerY = Phaser.Math.Clamp(resolvedY, 14, this.mapRenderer.worldHeight - 14);
     this.player.setMotion(this.playerX, this.playerY, this.playerX - previousX, this.playerY - previousY);
+
     if (Phaser.Input.Keyboard.JustDown(this.attackKey)) this.player.attack();
+    if (Phaser.Input.Keyboard.JustDown(this.castKey)) this.player.cast();
     this.player.update(delta);
   }
 
   private resolveAxis(current: number, candidate: number, otherAxis: number, horizontal: boolean): number {
     const halfWidth = 12;
     const halfHeight = 9;
-    for (const obstacle of this.obstacles) {
+    for (const obstacle of this.mapRenderer.collisionRects) {
       const overlapsOther = horizontal
         ? otherAxis + halfHeight > obstacle.y && otherAxis - halfHeight < obstacle.y + obstacle.height
         : otherAxis + halfWidth > obstacle.x && otherAxis - halfWidth < obstacle.x + obstacle.width;
@@ -79,21 +89,8 @@ export class GameScene extends Phaser.Scene {
     return candidate;
   }
 
-  private drawArena(): void {
-    const g = this.add.graphics();
-    g.fillGradientStyle(0x294a45, 0x294a45, 0x1b353a, 0x1b353a, 1);
-    g.fillRect(0, 0, 1280, 720);
-    g.lineStyle(1, 0x9ab5a1, 0.08);
-    for (let x = 0; x <= 1280; x += 32) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, 720); g.strokePath(); }
-    for (let y = 0; y <= 720; y += 32) { g.beginPath(); g.moveTo(0, y); g.lineTo(1280, y); g.strokePath(); }
-    for (const o of this.obstacles) {
-      g.fillStyle(0x10272a, 0.45).fillRoundedRect(o.x + 5, o.y + 7, o.width, o.height, 6);
-      g.fillStyle(0x647b67, 1).fillRoundedRect(o.x, o.y, o.width, o.height, 6);
-      g.lineStyle(2, 0x9caf87, 0.75).strokeRoundedRect(o.x, o.y, o.width, o.height, 6);
-    }
-    g.lineStyle(5, 0x91a58b, 0.8).strokeRect(2, 2, 1276, 716);
-    this.add.text(640, 690, "DEBUG WORLD · COLLISION TEST ARENA", {
-      fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#b9cbb4"
-    }).setOrigin(0.5).setDepth(1);
+  private handleShutdown(): void {
+    this.player?.destroy();
+    this.mapRenderer?.destroy();
   }
 }
