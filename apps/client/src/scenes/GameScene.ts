@@ -3,13 +3,23 @@ import { CharacterEntity } from "../game/CharacterEntity";
 import { loadTiledWorldMap } from "../game/TiledMapLoader";
 import { MapRenderer } from "../game/MapRenderer";
 import { MovementController } from "../game/MovementController";
-import { WorldSocketClient, type WorldSnapshot } from "../game/WorldSocketClient";
+import { WorldSocketClient, type WorldPlayerSnapshot, type WorldSnapshot } from "../game/WorldSocketClient";
+
+interface RemotePlayerView {
+  entity: CharacterEntity;
+  x: number;
+  y: number;
+  targetX: number;
+  targetY: number;
+  lastSeenAt: number;
+}
 
 export class GameScene extends Phaser.Scene {
   private player!: CharacterEntity;
   private mapRenderer!: MapRenderer;
   private movement!: MovementController;
   private worldSocket!: WorldSocketClient;
+  private readonly remotePlayers = new Map<string, RemotePlayerView>();
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   private playerX = 0;
@@ -44,7 +54,7 @@ export class GameScene extends Phaser.Scene {
     this.attackKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.castKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
-    this.add.text(18, 18, "P1 · TILED MAP + SERVER MOVEMENT", {
+    this.add.text(18, 18, "P1 · TILED MAP + MULTIPLAYER", {
       fontFamily: "Arial, sans-serif", fontSize: "13px", color: "#e6f1dc",
       backgroundColor: "#14262acc", padding: { x: 10, y: 7 }
     }).setScrollFactor(0).setDepth(2000);
@@ -85,19 +95,70 @@ export class GameScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.attackKey)) this.player.attack();
     if (Phaser.Input.Keyboard.JustDown(this.castKey)) this.player.cast();
     this.player.update(delta);
+    this.updateRemotePlayers(delta);
   }
 
   private applyWorldSnapshot(snapshot: WorldSnapshot): void {
     const ownPlayer = this.worldSocket.getOwnPlayer(snapshot);
-    if (!ownPlayer) return;
-    this.playerX = ownPlayer.x;
-    this.playerY = ownPlayer.y;
+    if (ownPlayer) {
+      // Keep local prediction smooth; gently reconcile instead of snapping each frame.
+      this.playerX = Phaser.Math.Linear(this.playerX, ownPlayer.x, 0.35);
+      this.playerY = Phaser.Math.Linear(this.playerY, ownPlayer.y, 0.35);
+    }
+
+    const visibleRemoteIds = new Set<string>();
+    const now = this.time.now;
+    for (const remote of snapshot.players) {
+      if (remote.playerId === ownPlayer?.playerId) continue;
+      visibleRemoteIds.add(remote.playerId);
+      let view = this.remotePlayers.get(remote.playerId);
+      if (!view) {
+        const entity = new CharacterEntity(this, remote.x, remote.y, {
+          key: "remote-player",
+          displayName: "Adventurer",
+          maxHp: 100,
+          feetPivot: { x: 0.5, y: 1 },
+          logicalSize: { width: 44, height: 64 }
+        });
+        view = {
+          entity, x: remote.x, y: remote.y,
+          targetX: remote.x, targetY: remote.y, lastSeenAt: now
+        };
+        this.remotePlayers.set(remote.playerId, view);
+      } else {
+        view.targetX = remote.x;
+        view.targetY = remote.y;
+        view.lastSeenAt = now;
+      }
+    }
+
+    for (const [playerId, view] of this.remotePlayers) {
+      if (!visibleRemoteIds.has(playerId) && now - view.lastSeenAt > 1500) {
+        view.entity.destroy();
+        this.remotePlayers.delete(playerId);
+      }
+    }
+  }
+
+  private updateRemotePlayers(delta: number): void {
+    // Exponential smoothing absorbs packet jitter without allowing unbounded lag.
+    const alpha = 1 - Math.exp(-delta / 90);
+    for (const view of this.remotePlayers.values()) {
+      const oldX = view.x;
+      const oldY = view.y;
+      view.x = Phaser.Math.Linear(view.x, view.targetX, alpha);
+      view.y = Phaser.Math.Linear(view.y, view.targetY, alpha);
+      view.entity.setMotion(view.x, view.y, view.x - oldX, view.y - oldY);
+      view.entity.update(delta);
+    }
   }
 
   private handleShutdown(): void {
     this.unsubscribeSnapshot?.();
     this.unsubscribeStatus?.();
     this.worldSocket?.destroy();
+    for (const view of this.remotePlayers.values()) view.entity.destroy();
+    this.remotePlayers.clear();
     this.player?.destroy();
     this.mapRenderer?.destroy();
   }
