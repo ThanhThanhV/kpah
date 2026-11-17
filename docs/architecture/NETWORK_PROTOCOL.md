@@ -5,7 +5,14 @@
 - WebSocket endpoint: `/ws/world`
 - Development default client URL: `ws://localhost:8080/ws/world`
 - Optional query parameter: `mapId`; defaults to `starter-meadow`.
+- On connect, the server sends a `welcome` frame containing the socket's ephemeral `playerId` and selected `mapId`.
 - The gateway currently creates an ephemeral player identity per socket. Authentication, account-to-character binding and reconnect tokens are not implemented.
+
+## Server to client: welcome
+
+```json
+{ "type": "welcome", "playerId": "ephemeral-session-player-id", "mapId": "starter-meadow" }
+```
 
 ## Client to server: movement intent
 
@@ -37,7 +44,7 @@ The client sends intent, never authoritative coordinates. Axis values must be fi
 }
 ```
 
-Snapshots include all connected players in the same map. Coordinates are calculated by `MovementService` using server-measured elapsed time (capped at 50 ms), map bounds and collision geometry.
+Snapshots include all connected players in the same map. The client identifies its own player using the preceding welcome frame. Coordinates are calculated by `MovementService` using server-measured elapsed time (capped at 50 ms), map bounds and collision geometry.
 
 ## Server to client: error
 
