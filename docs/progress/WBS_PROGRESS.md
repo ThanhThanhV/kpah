@@ -51,7 +51,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | 4.3 | Character composition and world presentation | IN PROGRESS | Feet pivot, nameplate, HP bar and Y-based depth implemented; equipment layers and full world sorting remain. |
 | 4.4 | Character performance and visibility | NOT STARTED | Culling, LOD and crowd profiling remain. |
 | 4.5 | Character preview and asset validation | IN PROGRESS | Playable debug preview exists; dedicated inspector and asset validator remain. |
-| 5 | Map Engine | IN PROGRESS | Typed map definition, row-major ground layer, validation, spawn point, collision rectangles and Phaser renderer wired into the scene. Tiled import, object layers, asset atlas and streaming remain. |
+| 5 | Map Engine | IN PROGRESS | Finite orthogonal Tiled JSON is now loaded at scene startup. Ground GIDs map through tileset terrainId properties; object layers supply player spawn, collision rectangles, NPC, monster-spawn and portal markers. Debug marker rendering is wired; texture atlas, richer collision shapes, map transitions, streaming and final art remain. |
 | 6.1 | Input capture | IN PROGRESS | WASD/arrow keyboard input and attack/cast actions wired; touch joystick and focus recovery remain. |
 | 6.2 | Free movement and collision | IN PROGRESS | Reusable client MovementController handles normalized input, map bounds, axis-separated collision and wall sliding. Java MovementService now computes authoritative coordinates from directional intent and server tick; WebSocket integration and tuning remain. |
 | 6.3 | Facing and animation synchronization | IN PROGRESS | Four cardinal facings, dominant-axis selection and stable diagonal tie; character state transitions cover idle/walk/attack/cast/hit/death; skill intent and real animation clips remain. |
