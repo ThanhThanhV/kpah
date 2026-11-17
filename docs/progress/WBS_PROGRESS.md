@@ -51,10 +51,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | 4.3 | Character composition and world presentation | IN PROGRESS | Feet pivot, nameplate, HP bar and Y-based depth implemented; equipment layers and full world sorting remain. |
 | 4.4 | Character performance and visibility | NOT STARTED | Culling, LOD and crowd profiling remain. |
 | 4.5 | Character preview and asset validation | IN PROGRESS | Playable debug preview exists; dedicated inspector and asset validator remain. |
-| 5 | Map Engine | IN PROGRESS | Typed map definition, row-major ground layer, map validation, spawn point, collision rectangles and Phaser map renderer committed. Tiled import, object layers, asset atlas and map streaming remain. |
+| 5 | Map Engine | IN PROGRESS | Typed map definition, row-major ground layer, validation, spawn point, collision rectangles and Phaser renderer wired into the scene. Tiled import, object layers, asset atlas and streaming remain. |
 | 6.1 | Input capture | IN PROGRESS | WASD/arrow keyboard input and attack/cast actions wired; touch joystick and focus recovery remain. |
-| 6.2 | Free movement and collision | IN PROGRESS | Normalized vector movement, map-bound clamping, axis-separated collision and wall sliding committed; server validation and tuning remain. |
-| 6.3 | Facing and animation synchronization | IN PROGRESS | Four cardinal facings, dominant-axis selection and stable diagonal tie; skill intent integration remains. |
+| 6.2 | Free movement and collision | IN PROGRESS | Reusable client MovementController handles normalized input, map bounds, axis-separated collision and wall sliding. Java MovementService now computes authoritative coordinates from directional intent and server tick; WebSocket integration and tuning remain. |
+| 6.3 | Facing and animation synchronization | IN PROGRESS | Four cardinal facings, dominant-axis selection and stable diagonal tie; character state transitions cover idle/walk/attack/cast/hit/death; skill intent and real animation clips remain. |
 | 7–17 | Monster, Combat, Skills/VFX, Multiplayer, progression, economy, quests, QA and live operations | NOT STARTED | No implementation committed for these workstreams yet. |
 
 ## Current risks
@@ -68,6 +68,6 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 
 1. Add Tiled JSON import and map object layers; separate collision geometry from debug rendering.
 2. Add movement controller as a reusable module and mobile virtual joystick.
-3. Add Java authoritative movement model and versioned WebSocket input/snapshot messages.
+3. Connect the Java authoritative MovementService to versioned WebSocket input/snapshot messages.
 4. Add monster entity/AI, server-side combat and skill event pipeline.
 5. Continue through inventory, NPC/quest, persistence, multiplayer QA and release gates.

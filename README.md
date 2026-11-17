@@ -4,8 +4,8 @@ A greenfield, top-down 2D MMORPG prototype. The project uses original code and o
 
 ## Current vertical slice
 
-- `apps/client`: TypeScript + Phaser browser client with a procedural debug character, four-direction facing, free movement, normalized diagonals, a collision test arena, and a small HUD.
-- `apps/server`: Java 21 + Spring Boot API skeleton with a health endpoint.
+- `apps/client`: TypeScript + Phaser browser client with a procedural debug character, typed starter-map definition, row-major ground renderer, collision geometry, four-direction facing, free movement and normalized diagonals.
+- `apps/server`: Java 21 + Spring Boot API skeleton, health endpoint and server-side movement rules for the starter map.
 - `infra`: local PostgreSQL service for the persistence phase.
 - `docs`: architecture decisions and WBS progress evidence.
 
@@ -39,8 +39,8 @@ docker compose -f infra/docker-compose.yml up -d
 
 - WASD or arrow keys: move freely in 8-way vector space.
 - Facing: four directions; dominant axis wins, exact diagonal ties preserve the last facing.
-- Space: temporary attack pose.
-- Obstacles and arena bounds are collision-tested on the client as a prototype only. The future game server remains authoritative.
+- Space: temporary attack pose; Shift: cast pose.
+- Map bounds and collision rectangles are tested on the client for responsiveness. The Java MovementService is the authoritative movement calculation; realtime WebSocket wiring is the next step.
 
 ## Project status
 
