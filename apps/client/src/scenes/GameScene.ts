@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { CharacterEntity } from "../game/CharacterEntity";
-import { createStarterMap } from "../game/MapDefinition";
+import { loadTiledWorldMap } from "../game/TiledMapLoader";
 import { MapRenderer } from "../game/MapRenderer";
 import { MovementController } from "../game/MovementController";
 
