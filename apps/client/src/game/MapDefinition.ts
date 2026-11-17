@@ -1,7 +1,4 @@
-export interface WorldPoint {
-  x: number;
-  y: number;
-}
+export interface WorldPoint { x: number; y: number; }
 
 export interface CollisionRect {
   x: number;
@@ -11,16 +8,27 @@ export interface CollisionRect {
   kind: "wall" | "obstacle" | "water";
 }
 
-export interface WorldObject {\n  id: string;\n  kind: "npc" | "monster-spawn" | "portal";\n  name: string;\n  x: number;\n  y: number;\n  width: number;\n  height: number;\n}\n\nexport interface WorldMapDefinition {
+export interface WorldObject {
+  id: string;
+  kind: "npc" | "monster-spawn" | "portal";
+  name: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface WorldMapDefinition {
   id: string;
   name: string;
   width: number;
   height: number;
   tileSize: number;
   spawn: WorldPoint;
-  /** Row-major tile IDs. 0 = grass, 1 = path, 2 = darker grass. */
+  /** Row-major terrain IDs. 0 = grass, 1 = path, 2 = darker grass. */
   ground: number[];
   collisions: CollisionRect[];
+  worldObjects: WorldObject[];
 }
 
 export function validateWorldMap(map: WorldMapDefinition): void {
@@ -45,9 +53,14 @@ export function validateWorldMap(map: WorldMapDefinition): void {
       throw new Error(`Invalid collision rectangle in map ${map.id}.`);
     }
   }
+  for (const object of map.worldObjects) {
+    if (![object.x, object.y, object.width, object.height].every(Number.isFinite)) {
+      throw new Error(`Invalid world object ${object.id} in map ${map.id}.`);
+    }
+  }
 }
 
-/** Deterministic original placeholder map. Replace tile IDs/art without changing the map contract. */
+/** Deterministic original placeholder map, retained for isolated renderer previews. */
 export function createStarterMap(): WorldMapDefinition {
   const width = 40;
   const height = 22;
@@ -57,21 +70,16 @@ export function createStarterMap(): WorldMapDefinition {
     if (x >= 16 && x <= 23 && y >= 8 && y <= 13) return 1;
     return ((x * 17 + y * 31) % 11 === 0) ? 2 : 0;
   });
-
   const map: WorldMapDefinition = {
-    id: "starter-meadow",
-    name: "Starter Meadow",
-    width,
-    height,
-    tileSize: 32,
-    spawn: { x: 20 * 32, y: 12 * 32 },
-    ground,
+    id: "starter-meadow", name: "Starter Meadow", width, height, tileSize: 32,
+    spawn: { x: 20 * 32, y: 12 * 32 }, ground,
     collisions: [
       { x: 8 * 32, y: 6 * 32, width: 4 * 32, height: 32, kind: "obstacle" },
       { x: 27 * 32, y: 12 * 32, width: 5 * 32, height: 32, kind: "obstacle" },
       { x: 5 * 32, y: 15 * 32, width: 2 * 32, height: 3 * 32, kind: "obstacle" },
       { x: 34 * 32, y: 5 * 32, width: 32, height: 4 * 32, kind: "obstacle" }
-    ]
+    ],
+    worldObjects: []
   };
   validateWorldMap(map);
   return map;
