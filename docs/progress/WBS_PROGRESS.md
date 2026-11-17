@@ -50,19 +50,19 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | 4.3.1–4.3.4 | Character composition and world presentation | IN PROGRESS | Feet pivot, nameplate/HP and depth ordering started; equipment overlays and full Y-sort integration pending. |
 | 4.4.1–4.4.4 | Character runtime performance/visibility | NOT STARTED | Culling, LOD and crowd profiling pending. |
 | 4.5.1–4.5.4 | Character preview/debug and asset validation | IN PROGRESS | Debug arena/character preview committed; dedicated animation inspector and asset validation pending. |
-| 6.1.1 | Capture keyboard directional input | DONE | WASD/arrow input implemented in client spike; runtime test pending. |
+| 6.1.1 | Capture keyboard directional input | IN PROGRESS | WASD/arrow input implemented in client spike; runtime test pending. |
 | 6.1.2 | Capture virtual joystick/touch input | NOT STARTED | Mobile control implementation pending. |
-| 6.1.3 | Normalize simultaneous inputs and diagonal speed | DONE | Movement vector normalization implemented. |
+| 6.1.3 | Normalize simultaneous inputs and diagonal speed | IN PROGRESS | Movement vector normalization implemented. |
 | 6.1.4 | Handle input focus, key release and lost-focus recovery | IN PROGRESS | Phaser keyboard lifecycle used; browser focus recovery test pending. |
-| 6.2.1 | Implement free 2D vector movement | DONE | Continuous 2D movement implemented in client spike. |
-| 6.2.2 | Normalize diagonal movement at consistent speed | DONE | Vector normalization implemented. |
+| 6.2.1 | Implement free 2D vector movement | IN PROGRESS | Continuous 2D movement implemented in client spike. |
+| 6.2.2 | Normalize diagonal movement at consistent speed | IN PROGRESS | Vector normalization implemented. |
 | 6.2.3 | Acceleration/deceleration tuning | NOT STARTED | Deferred until movement feel review. |
 | 6.2.4 | Collision resolution and sliding | IN PROGRESS | Test arena obstacles and axis-separated collision implemented; runtime edge-case validation pending. |
-| 6.3.1 | Resolve facing from movement vector | DONE | Four-direction dominant-axis resolver implemented. |
-| 6.3.2 | Diagonal facing priority and stable last-facing | DONE | Exact diagonal tie retains previous facing. |
+| 6.3.1 | Resolve facing from movement vector | IN PROGRESS | Four-direction dominant-axis resolver implemented. |
+| 6.3.2 | Diagonal facing priority and stable last-facing | IN PROGRESS | Exact diagonal tie retains previous facing. |
 | 6.3.3 | Drive walk/idle from movement state | IN PROGRESS | Character entity receives moving state; visual runtime test pending. |
 | 6.3.4 | Synchronize facing with attack/skill intent | IN PROGRESS | Attack pose uses current facing; skill intent integration pending. |
-| 3.5+ | Remaining WBS activities | NOT STARTED | To be updated as implementation reaches each dependency. |
+| 5–17 | Remaining WBS control accounts (Map, Movement hardening, Monster, Combat, Skills/VFX, Multiplayer, MVP systems, QA and Operations) | NOT STARTED | No implementation evidence committed for these workstreams yet; start after the renderer/movement spike is verified. |
 
 ## Current blockers / risks
 
