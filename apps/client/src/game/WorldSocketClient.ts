@@ -7,7 +7,15 @@ export interface WorldMoveIntent {
 export interface WorldPlayerSnapshot {
   playerId: string; mapId: string; x: number; y: number; sequence: number;
 }
-export interface WorldSnapshot { type: "snapshot"; players: WorldPlayerSnapshot[]; }
+export interface WorldMonsterSnapshot {
+  monsterId: string; monsterType: string; mapId: string; spawnRegionId: string;
+  x: number; y: number; homeX: number; homeY: number; hp: number; maxHp: number; state: string;
+}
+export interface WorldSnapshot {
+  type: "snapshot";
+  players: WorldPlayerSnapshot[];
+  monsters: WorldMonsterSnapshot[];
+}
 
 /** Version-1 websocket transport. The server owns all authoritative coordinates. */
 export class WorldSocketClient {
@@ -32,7 +40,10 @@ export class WorldSocketClient {
         if (message.type === "welcome" && "playerId" in message) {
           this.localPlayerId = message.playerId;
         } else if (message.type === "snapshot" && "players" in message && Array.isArray(message.players)) {
-          this.listeners.forEach((listener) => listener(message));
+          this.listeners.forEach((listener) => listener({
+            ...message,
+            monsters: Array.isArray(message.monsters) ? message.monsters : []
+          }));
         }
       } catch {
         // Ignore malformed frames; the next valid snapshot will restore the view.

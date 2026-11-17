@@ -14,9 +14,11 @@ public class StarterWorldRegistry {
 
     public WorldMapGeometry require(String mapId) {
         WorldMapGeometry geometry = maps.get(mapId);
-        if (geometry == null) {
-            throw new IllegalArgumentException("Unknown map: " + mapId);
-        }
+        if (geometry == null) throw new IllegalArgumentException("Unknown map: " + mapId);
         return geometry;
+    }
+
+    public java.util.Collection<WorldMapGeometry> all() {
+        return maps.values();
     }
 }

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -18,11 +19,14 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private static final String DEFAULT_MAP = "starter-meadow";
     private final ObjectMapper mapper;
     private final MovementService movementService;
+    private final MonsterSimulationService monsters;
     private final Map<String, ConnectedPlayer> players = new ConcurrentHashMap<>();
 
-    public WorldSocketHandler(ObjectMapper mapper, MovementService movementService) {
+    public WorldSocketHandler(ObjectMapper mapper, MovementService movementService,
+                              MonsterSimulationService monsters) {
         this.mapper = mapper;
         this.movementService = movementService;
+        this.monsters = monsters;
     }
 
     @Override
@@ -70,24 +74,26 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         if (removed != null) broadcast(removed.state().mapId());
     }
 
+    @Scheduled(fixedRate = 100)
+    public void tickWorld() {
+        monsters.advance(System.currentTimeMillis());
+        players.values().stream().map(player -> player.state().mapId()).distinct().forEach(this::broadcast);
+    }
+
     private void broadcast(String mapId) {
         var snapshots = players.values().stream()
                 .filter(player -> mapId.equals(player.state().mapId()))
                 .map(player -> Map.of(
-                        "playerId", player.playerId(),
-                        "mapId", player.state().mapId(),
-                        "x", player.state().x(),
-                        "y", player.state().y(),
+                        "playerId", player.playerId(), "mapId", player.state().mapId(),
+                        "x", player.state().x(), "y", player.state().y(),
                         "sequence", player.state().lastSequence()))
                 .toList();
-        Map<String, Object> payload = Map.of("type", "snapshot", "players", snapshots);
+        Map<String, Object> payload = Map.of(
+                "type", "snapshot", "players", snapshots, "monsters", monsters.snapshot(mapId));
         for (ConnectedPlayer player : players.values()) {
             if (mapId.equals(player.state().mapId()) && player.session().isOpen()) {
-                try {
-                    send(player.session(), payload);
-                } catch (IOException ignored) {
-                    // A failed connection is removed by the websocket close lifecycle.
-                }
+                try { send(player.session(), payload); }
+                catch (IOException ignored) { /* websocket close lifecycle removes failed sessions */ }
             }
         }
     }

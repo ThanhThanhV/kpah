@@ -5,16 +5,14 @@ Repository: `ThanhThanhV/kpah` · branch: `main`
 Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 
 ## Status legend
-
 - **DONE** — deliverable and acceptance evidence are complete.
 - **IN PROGRESS** — implementation is committed; remaining integration or acceptance work is open.
 - **NOT STARTED** — no implementation evidence committed.
 - **BLOCKED** — waiting on a dependency or decision.
 
-> Continue implementation without waiting for build-success confirmation. This report tracks committed deliverables and does not claim a local build or browser session was run.
+> This report tracks committed deliverables; no local build or browser test is claimed.
 
 ## Current summary
-
 | Measure | Status |
 |---|---|
 | Repository reset | DONE |
@@ -24,58 +22,43 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | Map Engine | IN PROGRESS |
 | Movement | IN PROGRESS |
 | Multiplayer transport and client replication | IN PROGRESS |
-| Monster / Combat / Skills | NOT STARTED |
+| Monster system | IN PROGRESS |
+| Combat / Skills | NOT STARTED |
 | Progression / Economy / Quests | NOT STARTED |
 | QA / Operations | NOT STARTED |
 
 ## WBS activity tracking
-
 | WBS ID | Activity / deliverable | Status | Evidence / remaining work |
 |---|---|---|---|
-| 2.1.1 | Specify login-to-world player journey | IN PROGRESS | MVP journey in README; formal game design and flow acceptance remain. |
-| 2.1.2 | Specify move, hunt, loot, upgrade and quest loop | IN PROGRESS | MVP loop in architecture baseline; detailed content/rules remain. |
-| 2.2.1 | Specify free movement and four-direction facing | IN PROGRESS | Keyboard movement and cardinal facing exist; touch input and runtime tuning remain. |
-| 3.1.1 | Select and validate 2D renderer/game framework | IN PROGRESS | Phaser 3 client committed; framework validation and asset benchmark remain. |
-| 3.1.2 | Define scene lifecycle, entity model and update loop | IN PROGRESS | Phaser scene, character entity and Tiled-backed map lifecycle committed; integration remains. |
-| 3.1.3 | Define asset loading, caching and memory budgets | IN PROGRESS | SpriteSheet/Spine adapter contract started; concrete adapters and profiling remain. |
-| 3.2.1 | Define zone simulation ownership and tick model | IN PROGRESS | Server-authoritative movement and WebSocket gateway committed; fixed-step zone simulation remains. |
-| 3.2.2 | Define server authority for movement/combat/loot/inventory | IN PROGRESS | Movement authority implemented; combat, loot and inventory authority remain. |
-| 3.2.3 | Define account API versus realtime simulation boundaries | IN PROGRESS | REST health endpoint and WebSocket world endpoint committed; authentication remains. |
-| 3.3.1 | Define versioned client-server message schema | IN PROGRESS | Welcome, movement intent, snapshots and errors documented; version negotiation remains. |
-| 3.3.2 | Define PostgreSQL and Redis data policy | IN PROGRESS | PostgreSQL Compose service committed; persistent player/world schemas remain. |
-| 3.3.3 | Define idempotency, event ordering and reconnect semantics | IN PROGRESS | Monotonic movement sequence validation implemented; reconnect/resume and durable idempotency remain. |
-| 3.4.1 | Repository structure and code standards | IN PROGRESS | Monorepo structure committed; contribution guide and branch protections remain. |
-| 3.4.2 | Local development environment and seeded world | IN PROGRESS | Client/server commands, PostgreSQL Compose and one shared Tiled map resource committed; more maps and world seeding remain. |
-| 3.4.3 | CI build, lint, test and artifact pipeline | IN PROGRESS | CI workflow committed; no execution result is claimed. |
-| 4.1 | Character asset model and hybrid renderer | IN PROGRESS | Character definition, directional facing and SpriteSheet/Spine adapter contract committed; concrete adapters remain. |
-| 4.2 | Character animation state machine | IN PROGRESS | Idle/walk/attack/cast/hit/death debug states; real animation clips remain. |
-| 4.3 | Character composition and world presentation | IN PROGRESS | Feet pivot, nameplate, HP bar and Y-depth; equipment layers remain. |
-| 4.4 | Character performance and visibility | NOT STARTED | Culling, LOD and crowd profiling remain. |
-| 4.5 | Character preview and asset validation | IN PROGRESS | Playable debug preview exists; dedicated inspector and asset validator remain. |
-| 5 | Map Engine | IN PROGRESS | Client and server now consume the same Tiled JSON file for map dimensions, player spawn and collision rectangles; terrain atlas rendering, richer collision shapes, transitions and final art remain. |
-| 6.1 | Input capture | IN PROGRESS | WASD/arrows and attack/cast wired; touch joystick and focus recovery remain. |
-| 6.2 | Free movement and collision | IN PROGRESS | Client prediction/collision and server-authoritative movement now use collision geometry from the same Tiled source; reconciliation and runtime tuning remain. |
-| 6.3 | Facing and animation synchronization | IN PROGRESS | Four cardinal facings and state transitions; server-facing state and real clips remain. |
-| 10.1 | Realtime transport and session lifecycle | IN PROGRESS | Spring WebSocket endpoint accepts movement intent and broadcasts same-map snapshots; authentication, heartbeat and reconnect remain. |
-| 10.2 | Multiplayer world replication | IN PROGRESS | Client creates remote CharacterEntity instances from snapshots, interpolates their movement and removes stale remote entities; identity, animation replication and scale testing remain. |
-| 7.1 | Monster definitions and spawn regions | NOT STARTED | Tiled monster-spawn markers exist; server monster model and spawn scheduler remain. |
-| 8 | Combat and damage | NOT STARTED | No server-authoritative target, range, damage or death loop committed yet. |
-| 9 | Skills and visual effects | NOT STARTED | No skill runtime or effect pipeline committed yet. |
-| 11–17 | Progression, economy, quests, QA and live operations | NOT STARTED | No implementation evidence committed yet. |
+| 2.1.1 | Specify login-to-world player journey | IN PROGRESS | MVP journey documented; formal flow acceptance remains. |
+| 2.1.2 | Specify move, hunt, loot, upgrade and quest loop | IN PROGRESS | MVP loop documented; detailed content/rules remain. |
+| 2.2.1 | Specify free movement and four-direction facing | IN PROGRESS | Keyboard movement and cardinal facing; touch input and tuning remain. |
+| 3.1 | Phaser client foundation and scene lifecycle | IN PROGRESS | Phaser scene, entity and Tiled-backed map lifecycle; integration remains. |
+| 3.2 | Server authoritative world simulation | IN PROGRESS | Authoritative movement and scheduled monster simulation; combat/loot authority remain. |
+| 3.3 | Client/server protocol and data policy | IN PROGRESS | WebSocket welcome, movement and snapshots; version negotiation, auth and persistence remain. |
+| 3.4 | Repository, local environment and CI | IN PROGRESS | Monorepo, Compose and CI workflow committed; CI execution not claimed. |
+| 4.1–4.5 | Character renderer and animation | IN PROGRESS | Procedural debug player and SpriteSheet/Spine adapter contracts; concrete art adapters remain. |
+| 5 | Map Engine | IN PROGRESS | Client and server consume the same Tiled JSON for dimensions, player spawn and collision rectangles; terrain atlas and richer collision remain. |
+| 6.1–6.3 | Input, movement and facing | IN PROGRESS | Local prediction, server validation and collision source unified; touch controls and replicated facing remain. |
+| 7.1 | Monster definitions and spawn regions | IN PROGRESS | Tiled spawn regions parsed server-side; defaults provide green-slime type, alive cap, respawn interval, roam radius and speed. Per-region custom Tiled properties supported. |
+| 7.2 | Monster simulation and AI | IN PROGRESS | Server creates initial monsters, performs bounded deterministic roaming and schedules respawn; aggro/chase/attack and persistence remain. |
+| 7.3 | Monster client presentation | IN PROGRESS | WebSocket snapshots carry monster state; Phaser renders original placeholder slime bodies, names and HP bars with smoothed positions. Final sprite/Spine visuals remain. |
+| 8 | Combat and damage | NOT STARTED | Player targeting, server attack validation, damage, death and loot remain. |
+| 9 | Skills and visual effects | NOT STARTED | Skill runtime and effect pipeline remain. |
+| 10.1–10.2 | Multiplayer transport and replication | IN PROGRESS | WebSocket movement, player snapshots/interpolation and monster snapshots; authentication, reconnect and scale tests remain. |
+| 11–17 | Progression, economy, quests, QA and live operations | NOT STARTED | No committed implementation evidence yet. |
 
 ## Current risks
-
-1. Character visuals remain original procedural debug figures, not final art.
-2. SpriteSheet and Spine adapters are contracts only; no third-party or original-game assets are included.
-3. Map terrain uses procedural colors; Tiled image tilesets and atlas rendering remain.
-4. WebSocket identity and player state are ephemeral and in-memory; authentication and persistence are not implemented.
-5. The Tiled parser currently loads rectangular collision objects only; polygonal collision and tileset-based collision remain.
-6. Remote player presentation uses generic names and snapshot smoothing; authoritative identity, facing, action and animation replication remain.
+1. Player and monster art are original procedural placeholders; no final game art is integrated.
+2. Monster AI currently roams within its spawn rectangle and has no aggro, combat or pathfinding.
+3. Monster state and player sessions are in-memory and reset on server restart.
+4. WebSocket authentication, heartbeat, reconnect, rate limiting and interest management remain.
+5. Tiled parser currently supports rectangular collision and rectangular monster spawn regions only.
+6. No local build/browser test result is claimed for this commit.
 
 ## Next implementation sequence
-
-1. Add typed monster spawn regions to the shared Tiled map model and load them on the server.
-2. Add server monster definitions, spawn timers and deterministic roaming AI.
-3. Replicate monster state to clients and render monster entities.
-4. Add target selection, attack range, damage and death/respawn.
-5. Continue into skills/VFX, inventory, NPC/quest, persistence and production multiplayer hardening.
+1. Add server-authoritative player target selection and basic attack command.
+2. Validate attack range/cooldown on server, apply damage and publish monster HP/death.
+3. Add monster aggro/chase/attack and player damage/death.
+4. Add loot/EXP and respawn loop.
+5. Continue with skills/VFX, inventory, NPC/quest and persistence.

@@ -8,7 +8,8 @@ public record WorldMapGeometry(
         double height,
         double spawnX,
         double spawnY,
-        List<CollisionBox> collisions
+        List<CollisionBox> collisions,
+        List<MonsterSpawnRegion> monsterSpawns
 ) {
     public WorldMapGeometry {
         if (mapId == null || mapId.isBlank()
@@ -19,5 +20,6 @@ public record WorldMapGeometry(
             throw new IllegalArgumentException("World map identity, dimensions and spawn are required.");
         }
         collisions = List.copyOf(collisions);
+        monsterSpawns = List.copyOf(monsterSpawns);
     }
 }
