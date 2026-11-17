@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class WorldCombatService {
     private static final long ATTACK_COOLDOWN_MILLIS = 600;
-    private static final Map<String, Long> lastAttackAt = new ConcurrentHashMap<>();
+    private final Map<String, Long> lastAttackAt = new ConcurrentHashMap<>();
     private final MonsterSimulationService monsters;
 
     public WorldCombatService(MonsterSimulationService monsters) {

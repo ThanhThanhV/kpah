@@ -45,7 +45,7 @@ public class MonsterSimulationService {
             monster.advance(nowMillis);
             if (monster.hp <= 0 && nowMillis >= monster.respawnAt) {
                 monsters.remove(monster.id);
-                nextSpawnAt.get(monster.mapId).merge(monster.region.id(), nowMillis, Math::min);
+                // The spawn timer was scheduled when the monster was defeated.
             }
         }
     }
@@ -63,7 +63,7 @@ public class MonsterSimulationService {
         synchronized (monster) {
             if (monster.hp <= 0) return MonsterAttackResult.rejected("Target is already defeated.");
             monster.hp = Math.max(0, monster.hp - BASIC_ATTACK_DAMAGE);
-            if (monster.hp == 0) monster.respawnAt = nowMillis + monster.region.respawnMillis();
+            if (monster.hp == 0) {\n                long respawnAt = nowMillis + monster.region.respawnMillis();\n                monster.respawnAt = respawnAt;\n                nextSpawnAt.get(mapId).put(monster.region.id(), respawnAt);\n            }
             return new MonsterAttackResult(true, "Hit", monster.snapshot(), BASIC_ATTACK_DAMAGE);
         }
     }

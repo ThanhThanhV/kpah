@@ -31,7 +31,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | 7.2 | Monster simulation and AI | IN PROGRESS | Initial spawn, bounded roaming and timed respawn; aggro/chase/attack remain. |
 | 7.3 | Monster presentation | IN PROGRESS | WebSocket snapshots and original placeholder slime with HP/name/damage feedback; final art remains. |
 | 8.1 | Target selection and basic attack | IN PROGRESS | Client selects nearest visible monster; server validates map, target, 58px range and 600ms cooldown. |
-| 8.2 | Damage and monster defeat | IN PROGRESS | Server applies 20 damage to 60 HP monsters, publishes updated HP and schedules defeated monster respawn; loot/EXP and player damage remain. |
+| 8.2 | Damage and monster defeat | IN PROGRESS | Server applies 20 damage to 60 HP monsters, validates 58px range and 600ms cooldown, publishes HP/damage feedback and respects the configured respawn timer; loot/EXP and player damage remain. |
 | 9 | Skills and visual effects | NOT STARTED | Skill runtime and effect pipeline remain. |
 | 10 | Multiplayer replication | IN PROGRESS | Player and monster snapshots; authentication, reconnect, interest management and scale testing remain. |
 | 11–17 | Progression, economy, inventory, quests, QA and operations | NOT STARTED | No committed implementation evidence yet. |

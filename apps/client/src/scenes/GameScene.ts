@@ -95,7 +95,7 @@ export class GameScene extends Phaser.Scene {
       const distance = Phaser.Math.Distance.Between(this.playerX, this.playerY, entity.worldX, entity.worldY);
       if (!nearest || distance < nearest.distance) nearest = { monsterId, distance };
     }
-    return nearest && nearest.distance <= 100 ? nearest : undefined;
+    return nearest && nearest.distance <= 58 ? nearest : undefined;
   }
 
   private applyWorldSnapshot(snapshot: WorldSnapshot): void {
