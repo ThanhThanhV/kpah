@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import type { CollisionRect, WorldMapDefinition } from "./MapDefinition";
+import type { CollisionRect, WorldMapDefinition, WorldObject } from "./MapDefinition";
 
 const TILE_COLORS: Record<number, number> = {
   0: 0x315b45,
@@ -9,13 +9,13 @@ const TILE_COLORS: Record<number, number> = {
 
 export class MapRenderer {
   private readonly groundGraphics: Phaser.GameObjects.Graphics;
-  private readonly collisionGraphics: Phaser.GameObjects.Graphics;
+  private readonly collisionGraphics: Phaser.GameObjects.Graphics;\n  private readonly objectGraphics: Phaser.GameObjects.Graphics;\n  private readonly objectLabels: Phaser.GameObjects.Text[] = [];
 
   constructor(private readonly scene: Phaser.Scene, private readonly map: WorldMapDefinition) {
     this.groundGraphics = scene.add.graphics().setDepth(-10000);
-    this.collisionGraphics = scene.add.graphics().setDepth(-100);
+    this.collisionGraphics = scene.add.graphics().setDepth(-100);\n    this.objectGraphics = scene.add.graphics().setDepth(2);
     this.drawGround();
-    this.drawCollisionHints();
+    this.drawCollisionHints();\n    this.drawWorldObjects();
   }
 
   get collisionRects(): readonly CollisionRect[] {
@@ -32,10 +32,10 @@ export class MapRenderer {
 
   destroy(): void {
     this.groundGraphics.destroy();
-    this.collisionGraphics.destroy();
+    this.collisionGraphics.destroy();\n    this.objectGraphics.destroy();\n    this.objectLabels.forEach((label) => label.destroy());
   }
 
-  private drawGround(): void {
+  private drawWorldObjects(): void {\n    const colors: Record<WorldObject["kind"], number> = { npc: 0x79c7e8, "monster-spawn": 0xe17c68, portal: 0xb99be8 };\n    for (const object of this.map.worldObjects ?? []) {\n      const color = colors[object.kind];\n      const width = Math.max(object.width, 18);\n      const height = Math.max(object.height, 18);\n      this.objectGraphics.lineStyle(2, color, 0.9).strokeRect(object.x, object.y, width, height);\n      this.objectGraphics.fillStyle(color, 0.14).fillRect(object.x, object.y, width, height);\n      const label = this.scene.add.text(object.x + width / 2, object.y - 5, object.name, {\n        fontFamily: "Arial, sans-serif", fontSize: "10px", color: "#f2eee3",\n        backgroundColor: "#142126cc", padding: { x: 4, y: 2 }\n      }).setOrigin(0.5, 1).setDepth(3);\n      this.objectLabels.push(label);\n    }\n  }\n\n  private drawGround(): void {
     const g = this.groundGraphics;
     const size = this.map.tileSize;
     for (let y = 0; y < this.map.height; y += 1) {
