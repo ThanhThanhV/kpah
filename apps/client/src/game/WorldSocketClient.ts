@@ -1,9 +1,5 @@
-export interface WorldMoveIntent {
-  type: "move";
-  sequence: number;
-  axisX: number;
-  axisY: number;
-}
+export interface WorldMoveIntent { type: "move"; sequence: number; axisX: number; axisY: number; }
+export interface WorldAttackIntent { type: "attack"; targetMonsterId: string; }
 export interface WorldPlayerSnapshot {
   playerId: string; mapId: string; x: number; y: number; sequence: number;
 }
@@ -11,13 +7,8 @@ export interface WorldMonsterSnapshot {
   monsterId: string; monsterType: string; mapId: string; spawnRegionId: string;
   x: number; y: number; homeX: number; homeY: number; hp: number; maxHp: number; state: string;
 }
-export interface WorldSnapshot {
-  type: "snapshot";
-  players: WorldPlayerSnapshot[];
-  monsters: WorldMonsterSnapshot[];
-}
+export interface WorldSnapshot { type: "snapshot"; players: WorldPlayerSnapshot[]; monsters: WorldMonsterSnapshot[]; }
 
-/** Version-1 websocket transport. The server owns all authoritative coordinates. */
 export class WorldSocketClient {
   private socket?: WebSocket;
   private sequence = 0;
@@ -37,17 +28,13 @@ export class WorldSocketClient {
     socket.addEventListener("message", (event) => {
       try {
         const message = JSON.parse(String(event.data)) as { type?: string; playerId?: string } | WorldSnapshot;
-        if (message.type === "welcome" && "playerId" in message) {
-          this.localPlayerId = message.playerId;
-        } else if (message.type === "snapshot" && "players" in message && Array.isArray(message.players)) {
+        if (message.type === "welcome" && "playerId" in message) this.localPlayerId = message.playerId;
+        else if (message.type === "snapshot" && "players" in message && Array.isArray(message.players)) {
           this.listeners.forEach((listener) => listener({
-            ...message,
-            monsters: Array.isArray(message.monsters) ? message.monsters : []
+            ...message, monsters: Array.isArray(message.monsters) ? message.monsters : []
           }));
         }
-      } catch {
-        // Ignore malformed frames; the next valid snapshot will restore the view.
-      }
+      } catch { /* Ignore malformed frames; the next valid snapshot restores the view. */ }
     });
   }
 
@@ -61,21 +48,23 @@ export class WorldSocketClient {
     this.socket.send(JSON.stringify(message));
   }
 
+  sendAttack(targetMonsterId: string): void {
+    if (this.socket?.readyState !== WebSocket.OPEN || !targetMonsterId) return;
+    const message: WorldAttackIntent = { type: "attack", targetMonsterId };
+    this.socket.send(JSON.stringify(message));
+  }
+
   onSnapshot(listener: (snapshot: WorldSnapshot) => void): () => void {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
+    this.listeners.add(listener); return () => this.listeners.delete(listener);
   }
   onStatus(listener: (connected: boolean) => void): () => void {
-    this.statusListeners.add(listener);
-    return () => this.statusListeners.delete(listener);
+    this.statusListeners.add(listener); return () => this.statusListeners.delete(listener);
   }
   getOwnPlayer(snapshot: WorldSnapshot): WorldPlayerSnapshot | undefined {
     return snapshot.players.find((player) => player.playerId === this.localPlayerId);
   }
   destroy(): void {
     this.socket?.close(1000, "scene shutdown");
-    this.socket = undefined;
-    this.listeners.clear();
-    this.statusListeners.clear();
+    this.socket = undefined; this.listeners.clear(); this.statusListeners.clear();
   }
 }

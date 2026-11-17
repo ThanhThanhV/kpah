@@ -4,7 +4,7 @@ import { MonsterEntity } from "../game/MonsterEntity";
 import { loadTiledWorldMap } from "../game/TiledMapLoader";
 import { MapRenderer } from "../game/MapRenderer";
 import { MovementController } from "../game/MovementController";
-import { WorldSocketClient, type WorldMonsterSnapshot, type WorldSnapshot } from "../game/WorldSocketClient";
+import { WorldSocketClient, type WorldSnapshot } from "../game/WorldSocketClient";
 
 interface RemotePlayerView {
   entity: CharacterEntity; x: number; y: number; targetX: number; targetY: number; lastSeenAt: number;
@@ -29,17 +29,13 @@ export class GameScene extends Phaser.Scene {
   private unsubscribeStatus?: () => void;
 
   constructor() { super("GameScene"); }
-
   preload(): void { this.load.json("starter-meadow", "maps/starter-meadow.json"); }
 
   create(): void {
     const map = loadTiledWorldMap(this.cache.json.get("starter-meadow"));
     this.mapRenderer = new MapRenderer(this, map);
-    this.playerX = map.spawn.x;
-    this.playerY = map.spawn.y;
-    this.movement = new MovementController(
-      this.mapRenderer.worldWidth, this.mapRenderer.worldHeight, this.mapRenderer.collisionRects
-    );
+    this.playerX = map.spawn.x; this.playerY = map.spawn.y;
+    this.movement = new MovementController(this.mapRenderer.worldWidth, this.mapRenderer.worldHeight, this.mapRenderer.collisionRects);
     this.player = new CharacterEntity(this, this.playerX, this.playerY);
     this.cameras.main.setBounds(0, 0, this.mapRenderer.worldWidth, this.mapRenderer.worldHeight);
     this.cameras.main.startFollow(this.player.cameraTarget, true, 0.12, 0.12);
@@ -77,18 +73,29 @@ export class GameScene extends Phaser.Scene {
     const down = this.cursors.down.isDown || this.keys["S"].isDown;
     const input = { x: Number(right) - Number(left), y: Number(down) - Number(up) };
     const movement = this.movement.step({ x: this.playerX, y: this.playerY }, input, delta / 1000);
-    this.playerX = movement.position.x;
-    this.playerY = movement.position.y;
+    this.playerX = movement.position.x; this.playerY = movement.position.y;
     this.player.setMotion(this.playerX, this.playerY, movement.delta.x, movement.delta.y);
     this.networkAccumulator += delta;
     if (this.networkAccumulator >= 50) {
-      this.networkAccumulator %= 50;
-      this.worldSocket.sendMovement(input.x, input.y);
+      this.networkAccumulator %= 50; this.worldSocket.sendMovement(input.x, input.y);
     }
-    if (Phaser.Input.Keyboard.JustDown(this.attackKey)) this.player.attack();
+    if (Phaser.Input.Keyboard.JustDown(this.attackKey)) {
+      this.player.attack();
+      const target = this.findNearestMonster();
+      if (target) this.worldSocket.sendAttack(target.monsterId);
+    }
     if (Phaser.Input.Keyboard.JustDown(this.castKey)) this.player.cast();
     this.player.update(delta);
     this.updateRemotePlayers(delta);
+  }
+
+  private findNearestMonster(): { monsterId: string; distance: number } | undefined {
+    let nearest: { monsterId: string; distance: number } | undefined;
+    for (const [monsterId, entity] of this.monsters) {
+      const distance = Phaser.Math.Distance.Between(this.playerX, this.playerY, entity.worldX, entity.worldY);
+      if (!nearest || distance < nearest.distance) nearest = { monsterId, distance };
+    }
+    return nearest && nearest.distance <= 100 ? nearest : undefined;
   }
 
   private applyWorldSnapshot(snapshot: WorldSnapshot): void {
@@ -110,9 +117,7 @@ export class GameScene extends Phaser.Scene {
         });
         view = { entity, x: remote.x, y: remote.y, targetX: remote.x, targetY: remote.y, lastSeenAt: now };
         this.remotePlayers.set(remote.playerId, view);
-      } else {
-        view.targetX = remote.x; view.targetY = remote.y; view.lastSeenAt = now;
-      }
+      } else { view.targetX = remote.x; view.targetY = remote.y; view.lastSeenAt = now; }
     }
     for (const [playerId, view] of this.remotePlayers) {
       if (!visibleRemoteIds.has(playerId) && now - view.lastSeenAt > 1500) {
@@ -128,9 +133,7 @@ export class GameScene extends Phaser.Scene {
       else this.monsters.set(monster.monsterId, new MonsterEntity(this, monster));
     }
     for (const [monsterId, entity] of this.monsters) {
-      if (!visibleMonsterIds.has(monsterId)) {
-        entity.destroy(); this.monsters.delete(monsterId);
-      }
+      if (!visibleMonsterIds.has(monsterId)) { entity.destroy(); this.monsters.delete(monsterId); }
     }
   }
 
