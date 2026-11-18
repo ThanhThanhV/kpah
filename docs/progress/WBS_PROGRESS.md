@@ -422,3 +422,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Entering a portal validates its destination map and coordinates against the registered map geometry, then changes the player's authoritative map and position.
 - The character's new map and coordinates are persisted immediately; both source and destination map snapshots are scheduled for broadcast.
 - The server emits a `map-transition` message to the player. Client-side map replacement and camera/collision reset remain to be completed.
+
+
+## Latest implementation batch — client map transition rendering
+- Preloaded both Starter Meadow and Forest Edge Tiled assets in Phaser.
+- Added a typed WebSocket map-transition event and listener lifecycle.
+- On the server-authoritative transition event, the client swaps map renderer and collision controller, updates camera bounds/position and NPC definitions, and clears entities from the previous area.
+- The client does not decide when a portal activates; only the server movement/portal check can initiate a map transition.
