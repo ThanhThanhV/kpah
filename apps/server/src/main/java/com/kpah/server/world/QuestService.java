@@ -33,26 +33,33 @@ public class QuestService {
             throw new IllegalArgumentException("Move closer to the NPC to talk.");
         }
 
-        QuestCatalog.QuestDefinition definition = catalog.findByNpcId(npcId);
-        if (definition == null) {
+        List<QuestCatalog.QuestDefinition> npcQuests = catalog.findByNpcId(npcId);
+        if (npcQuests.isEmpty()) {
             return new QuestInteractionResult(npc.name(), npc.dialogue(), "", "dialogue", 0, 0, 0);
         }
 
-        QuestProgress quest = progress.findById(key(characterId, definition.questId())).orElse(null);
-        if (quest == null) {
-            quest = progress.save(new QuestProgress(characterId, definition.questId()));
-            return result(definition, definition.startMessage(), quest, 0);
+        QuestCatalog.QuestDefinition lastClaimed = null;
+        for (QuestCatalog.QuestDefinition definition : npcQuests) {
+            QuestProgress quest = progress.findById(key(characterId, definition.questId())).orElse(null);
+            if (quest == null) {
+                quest = progress.save(new QuestProgress(characterId, definition.questId()));
+                return result(definition, definition.startMessage(), quest, 0);
+            }
+            if (quest.isClaimed()) {
+                lastClaimed = definition;
+                continue;
+            }
+            if (quest.getProgress() >= definition.requiredKills()) {
+                quest.claim();
+                progress.save(quest);
+                return result(definition, definition.completionMessage(), quest, definition.experienceReward());
+            }
+            return result(definition, "Defeat " + definition.targetDisplayName() + ": "
+                    + quest.getProgress() + "/" + definition.requiredKills(), quest, 0);
         }
-        if (quest.isClaimed()) {
-            return result(definition, definition.claimedMessage(), quest, 0);
-        }
-        if (quest.getProgress() >= definition.requiredKills()) {
-            quest.claim();
-            progress.save(quest);
-            return result(definition, definition.completionMessage(), quest, definition.experienceReward());
-        }
-        return result(definition, "Defeat " + definition.targetDisplayName() + ": "
-                + quest.getProgress() + "/" + definition.requiredKills(), quest, 0);
+        return new QuestInteractionResult(lastClaimed.npcName(), lastClaimed.claimedMessage(),
+                lastClaimed.questId(), "claimed", lastClaimed.requiredKills(),
+                lastClaimed.requiredKills(), 0);
     }
 
     @Transactional
