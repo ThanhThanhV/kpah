@@ -1078,6 +1078,78 @@
               "value": 30
             }
           ]
+        },
+        {
+          "id": 107,
+          "name": "Sentinel Patrol",
+          "class": "monster-spawn",
+          "x": 704,
+          "y": 496,
+          "width": 160,
+          "height": 128,
+          "properties": [
+            {
+              "name": "monsterType",
+              "type": "string",
+              "value": "forest-sentinel"
+            },
+            {
+              "name": "maxAlive",
+              "type": "int",
+              "value": 2
+            },
+            {
+              "name": "respawnMillis",
+              "type": "int",
+              "value": 15000
+            },
+            {
+              "name": "roamRadius",
+              "type": "float",
+              "value": 64
+            },
+            {
+              "name": "moveSpeed",
+              "type": "float",
+              "value": 18
+            }
+          ]
+        },
+        {
+          "id": 108,
+          "name": "Alpha Wolf Lair",
+          "class": "monster-spawn",
+          "x": 1056,
+          "y": 160,
+          "width": 128,
+          "height": 128,
+          "properties": [
+            {
+              "name": "monsterType",
+              "type": "string",
+              "value": "alpha-wolf"
+            },
+            {
+              "name": "maxAlive",
+              "type": "int",
+              "value": 1
+            },
+            {
+              "name": "respawnMillis",
+              "type": "int",
+              "value": 30000
+            },
+            {
+              "name": "roamRadius",
+              "type": "float",
+              "value": 48
+            },
+            {
+              "name": "moveSpeed",
+              "type": "float",
+              "value": 34
+            }
+          ]
         }
       ]
     }
