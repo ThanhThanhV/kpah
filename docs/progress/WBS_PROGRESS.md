@@ -393,3 +393,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Configured the world WebSocket handshake handler to select and echo the offered `auth.<session-token>` subprotocol after the handshake interceptor validates its format.
 - This addresses the browser error where the client sent `Sec-WebSocket-Protocol` but the server returned no selected protocol; the token remains excluded from URL query parameters and application logs.
 - Runtime verification still requires pulling the commit, restarting the backend and confirming HTTP `101 Switching Protocols` in the browser Network panel.
+
+
+## Latest implementation batch — live world snapshot diagnostics
+- Added a compact in-game world-state line showing the authoritative map ID and the counts of players, monsters and loot drops in each received snapshot.
+- The monster count changes color when the server is returning visible monsters, making AOI/spawn/snapshot problems distinguishable from a rendering or connection problem during local playtesting.
+- Moved the keyboard-help line down to preserve spacing; gameplay behavior and server authority are unchanged.
+- World snapshot receipt is now observable in the running client; multi-map registry and portal transitions remain the next implementation milestone.
