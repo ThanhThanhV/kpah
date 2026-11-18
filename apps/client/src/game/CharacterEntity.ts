@@ -97,7 +97,7 @@ export class CharacterEntity {
   }
 
   setAction(action: CharacterAction): void {
-    if (this.action === "death" && action !== "death") return;
+    if (this.action === "death" && this.hp <= 0 && action !== "death") return;
     this.action = action;
     this.elapsed = 0;
     this.visualAdapter?.play(this.action, this.facing);
