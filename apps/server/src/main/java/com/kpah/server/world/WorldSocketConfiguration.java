@@ -10,6 +10,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
+import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.web.socket.server.HandshakeHandler;
+import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 import org.springframework.web.socket.server.standard.ServletServerContainerFactoryBean;
 
 @Configuration
@@ -49,8 +52,22 @@ public class WorldSocketConfiguration implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+        HandshakeHandler handshakeHandler = new DefaultHandshakeHandler() {
+            @Override
+            protected String selectProtocol(List<String> requestedProtocols, WebSocketHandler webSocketHandler) {
+                // The browser requires the server to select one of the offered subprotocols.
+                // The auth interceptor has already validated the token format and stored it
+                // for the authenticated session; echo the offered auth protocol for negotiation.
+                return requestedProtocols.stream()
+                        .filter(protocol -> protocol.startsWith("auth."))
+                        .findFirst()
+                        .orElse(null);
+            }
+        };
+
         registry.addHandler(handler, "/ws/world")
                 .addInterceptors(authInterceptor)
+                .setHandshakeHandler(handshakeHandler)
                 .setAllowedOriginPatterns(allowedOriginPatterns.toArray(String[]::new));
     }
 }
