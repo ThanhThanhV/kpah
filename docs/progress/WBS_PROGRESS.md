@@ -520,3 +520,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - The client renders a red ground telegraph at the locked impact point; the warning remains fixed even if the player moves.
 - At resolution, the server damages every living player still inside the 92-pixel radius, so moving outside the circle during the windup avoids the hit and multiple players can be hit by the same area attack.
 - Normal monster attacks retain their immediate single-target behavior. CI verification and local gameplay feel-test remain pending.
+
+
+## Latest implementation batch — Ancient Guardian directional sweep boss
+- Added a second elite boss archetype, Ancient Guardian, with its own 520 HP / 28 damage combat profile and a directional sweep special attack.
+- The sweep locks its facing direction and a 184 × 64 pixel rectangular danger zone during the 1-second windup; the server uses oriented-rectangle collision at resolution.
+- The Phaser client renders the rectangular warning separately from Alpha Wolf's circular danger telegraph.
+- Added a dedicated Ancient Guardian Grove spawn on Forest Edge, synced between server and client map definitions (one alive, 45-second respawn).
+- Preserved the existing MonsterArchetype and MonsterState constructor signatures for source compatibility. CI verification and local gameplay feel-test pending.
