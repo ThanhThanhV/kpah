@@ -376,7 +376,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private createQuestJournal(): void {
-    const background = this.add.rectangle(0, 0, 270, 132, 0x14262c, 0.92)
+    const background = this.add.rectangle(0, 0, 270, 198, 0x14262c, 0.92)
       .setOrigin(0).setStrokeStyle(1, 0x78918a, 0.9);
     const title = this.add.text(12, 9, "QUEST JOURNAL · J", {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#f5dfa0",
@@ -392,26 +392,38 @@ export class GameScene extends Phaser.Scene {
     ]).setScrollFactor(0).setDepth(2000);
   }
 
-  private updateQuestJournal(quest?: WorldSnapshot["players"][number]["quest"]): void {
+  private updateQuestJournal(
+    quests?: WorldSnapshot["players"][number]["quests"],
+    legacyQuest?: WorldSnapshot["players"][number]["quest"]
+  ): void {
     if (!this.questJournalBody || !this.questJournalProgress) return;
-    const status = quest?.status ?? "available";
-    const progress = quest?.progress ?? 0;
-    const required = quest?.required ?? 3;
-    const npcName = quest?.npcName ?? "Meadow Guide";
-    const targetName = quest?.targetDisplayName ?? "Green Slimes";
-    const reward = quest?.experienceReward ?? 100;
-    const messages: Record<string, string> = {
-      available: `Talk to ${npcName} (E) to begin the hunt.`,
-      active: `Defeat ${targetName}\nProgress: ${progress}/${required}\nReturn to ${npcName} when complete.`,
-      ready: `Objective complete!\nReturn to ${npcName} (E) to claim ${reward} EXP.`,
-      claimed: `Quest complete.\nThe meadow is safe. Reward claimed.`
-    };
-    this.questJournalBody.setText(messages[status] ?? "Quest status unavailable.");
-    const ratio = required > 0 ? Phaser.Math.Clamp(progress / required, 0, 1) : 0;
+    const entries = (quests?.length ? quests : legacyQuest ? [legacyQuest] : []).slice(0, 3);
     this.questJournalProgress.clear();
-    this.questJournalProgress.fillStyle(0x30443e, 1).fillRoundedRect(12, 112, 246, 7, 3);
-    this.questJournalProgress.fillStyle(status === "claimed" ? 0x8bd69a : 0xd8b86c, 1)
-      .fillRoundedRect(12, 112, 246 * (status === "claimed" ? 1 : ratio), 7, 3);
+    if (entries.length === 0) {
+      this.questJournalBody.setText("No quests available.\nExplore the area and talk to NPCs (E).");
+      return;
+    }
+
+    const lines: string[] = [];
+    entries.forEach((quest, index) => {
+      const progress = quest.progress ?? 0;
+      const required = quest.required ?? 1;
+      const ratio = required > 0 ? Phaser.Math.Clamp(progress / required, 0, 1) : 0;
+      const statusLabel = quest.status === "claimed" ? "COMPLETE"
+        : quest.status === "ready" ? "READY TO CLAIM"
+        : quest.status === "available" ? "AVAILABLE" : "IN PROGRESS";
+      lines.push(`${quest.npcName} · ${statusLabel}`);
+      if (quest.status === "available") lines.push(`Talk to NPC (E) · Reward ${quest.experienceReward} EXP`);
+      else if (quest.status === "ready") lines.push(`Return to NPC (E) · ${quest.experienceReward} EXP`);
+      else if (quest.status === "claimed") lines.push(`Reward claimed · ${quest.experienceReward} EXP`);
+      else lines.push(`Defeat ${quest.targetDisplayName}: ${progress}/${required}`);
+
+      const barY = 69 + index * 42;
+      this.questJournalProgress!.fillStyle(0x30443e, 1).fillRoundedRect(12, barY, 246, 6, 3);
+      this.questJournalProgress!.fillStyle(quest.status === "claimed" ? 0x8bd69a : 0xd8b86c, 1)
+        .fillRoundedRect(12, barY, 246 * (quest.status === "claimed" ? 1 : ratio), 6, 3);
+    });
+    this.questJournalBody.setText(lines.join("\\n"));
   }
 
   private interactWithNearestNpc(): void {
@@ -523,7 +535,7 @@ export class GameScene extends Phaser.Scene {
       this.progressionLabel?.setText(
         `Lv ${ownPlayer.level} · EXP ${ownPlayer.experience % 100}/100 · Bag ${itemCount}`
       );
-      this.updateQuestJournal(ownPlayer.quest);
+      this.updateQuestJournal(ownPlayer.quests, ownPlayer.quest);
       this.updateInventoryPanel(ownPlayer);
     }
     const visibleRemoteIds = new Set<string>();
