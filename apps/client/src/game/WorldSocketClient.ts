@@ -33,10 +33,16 @@ export class WorldSocketClient {
   private readonly statusListeners = new Set<(connected: boolean) => void>();
   private readonly combatListeners = new Set<(event: WorldCombatEvent) => void>();
   private readonly questListeners = new Set<(event: WorldQuestEvent) => void>();
+  private reconnectTimer?: number;
+  private heartbeatTimer?: number;
+  private pongTimeoutTimer?: number;
+  private reconnectAttempt = 0;
+  private destroyed = false;
 
   constructor(private readonly url: string) {}
 
   connect(): void {
+    if (this.destroyed) return;
     if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) return;
     const url = new URL(this.url);
     const characterId = localStorage.getItem("kpah.characterId");
@@ -45,13 +51,28 @@ export class WorldSocketClient {
     url.searchParams.set("characterId", characterId);
     const socket = new WebSocket(url.toString(), "auth." + token);
     this.socket = socket;
-    socket.addEventListener("open", () => this.statusListeners.forEach((listener) => listener(true)));
-    socket.addEventListener("close", () => this.statusListeners.forEach((listener) => listener(false)));
-    socket.addEventListener("error", () => this.statusListeners.forEach((listener) => listener(false)));
+    socket.addEventListener("open", () => {
+      this.reconnectAttempt = 0;
+      this.statusListeners.forEach((listener) => listener(true));
+      this.startHeartbeat(socket);
+    });
+    socket.addEventListener("close", () => {
+      this.stopHeartbeat();
+      if (this.socket === socket) this.socket = undefined;
+      this.statusListeners.forEach((listener) => listener(false));
+      this.scheduleReconnect();
+    });
+    socket.addEventListener("error", () => {
+      this.statusListeners.forEach((listener) => listener(false));
+      socket.close();
+    });
     socket.addEventListener("message", (event) => {
       try {
         const message = JSON.parse(String(event.data)) as { type?: string; playerId?: string } | WorldSnapshot;
-        if (message.type === "welcome" && "playerId" in message) this.localPlayerId = message.playerId;
+        if (message.type === "pong") {
+          if (this.pongTimeoutTimer !== undefined) window.clearTimeout(this.pongTimeoutTimer);
+          this.pongTimeoutTimer = undefined;
+        } else if (message.type === "welcome" && "playerId" in message) this.localPlayerId = message.playerId;
         else if (message.type === "combat") this.combatListeners.forEach((listener) => listener(message as WorldCombatEvent));
         else if (message.type === "quest") this.questListeners.forEach((listener) => listener(message as WorldQuestEvent));
         else if (message.type === "snapshot" && "players" in message && Array.isArray(message.players)) {
@@ -122,8 +143,48 @@ export class WorldSocketClient {
   getOwnPlayer(snapshot: WorldSnapshot): WorldPlayerSnapshot | undefined {
     return snapshot.players.find((player) => player.playerId === this.localPlayerId);
   }
+  private startHeartbeat(socket: WebSocket): void {
+    this.stopHeartbeat();
+    this.heartbeatTimer = window.setInterval(() => {
+      if (socket !== this.socket || socket.readyState !== WebSocket.OPEN) return;
+      if (this.pongTimeoutTimer !== undefined) {
+        socket.close(4000, "heartbeat timeout");
+        return;
+      }
+      socket.send(JSON.stringify({ type: "ping" }));
+      this.pongTimeoutTimer = window.setTimeout(() => {
+        this.pongTimeoutTimer = undefined;
+        if (socket === this.socket && socket.readyState === WebSocket.OPEN) {
+          socket.close(4000, "heartbeat timeout");
+        }
+      }, 10_000);
+    }, 20_000);
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatTimer !== undefined) window.clearInterval(this.heartbeatTimer);
+    if (this.pongTimeoutTimer !== undefined) window.clearTimeout(this.pongTimeoutTimer);
+    this.heartbeatTimer = undefined;
+    this.pongTimeoutTimer = undefined;
+  }
+
+  private scheduleReconnect(): void {
+    if (this.destroyed || this.reconnectTimer !== undefined) return;
+    const delay = Math.min(30_000, 1_000 * (2 ** Math.min(this.reconnectAttempt, 5)));
+    this.reconnectAttempt += 1;
+    this.reconnectTimer = window.setTimeout(() => {
+      this.reconnectTimer = undefined;
+      this.connect();
+    }, delay);
+  }
+
   destroy(): void {
+    this.destroyed = true;
+    if (this.reconnectTimer !== undefined) window.clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = undefined;
+    this.stopHeartbeat();
     this.socket?.close(1000, "scene shutdown");
-    this.socket = undefined; this.listeners.clear(); this.statusListeners.clear(); this.combatListeners.clear(); this.questListeners.clear();
+    this.socket = undefined;
+    this.listeners.clear(); this.statusListeners.clear(); this.combatListeners.clear(); this.questListeners.clear();
   }
 }

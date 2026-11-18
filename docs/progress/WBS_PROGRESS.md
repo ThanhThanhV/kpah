@@ -245,3 +245,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - When a character changes facing during attack, cast or hit, the visual adapter restarts the matching directional clip; the logical action timer now resets at the same moment.
 - Applied the same rule to explicit facing changes, preventing a restarted clip from being cut off by elapsed time accumulated on the previous direction.
 - Looping idle/walk behavior and the death hold state are unchanged; server-authoritative combat and movement are unaffected.
+
+
+## Latest implementation batch — WebSocket heartbeat and reconnect
+- The client now sends an application-level heartbeat every 20 seconds and closes a connection that does not answer within 10 seconds.
+- The server answers heartbeat messages with a pong frame without routing them through gameplay command handling.
+- Unexpected disconnects trigger bounded exponential reconnect delays (1–30 seconds); scene shutdown cancels reconnect and heartbeat timers.
+- Authentication continues to use the existing session token and selected character when reconnecting; gameplay authority and snapshot handling are unchanged.

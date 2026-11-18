@@ -96,7 +96,9 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         try {
             JsonNode input = mapper.readTree(message.getPayload());
             String type = input.path("type").asText();
-            if ("move".equals(type)) {
+            if ("ping".equals(type)) {
+                send(session, Map.of("type", "pong"));
+            } else if ("move".equals(type)) {
                 if (player.hp() <= 0) return;
                 long sequence = input.path("sequence").asLong(-1);
                 double axisX = input.path("axisX").asDouble(Double.NaN);
