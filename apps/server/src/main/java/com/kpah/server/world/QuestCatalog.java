@@ -16,13 +16,13 @@ public class QuestCatalog {
     public QuestCatalog() {
         List<QuestDefinition> definitions = List.of(
                 new QuestDefinition(
-                        "meadow-slime-hunt", "6", "Meadow Guide",
+                        "meadow-slime-hunt", "6", "starter-meadow", "Meadow Guide",
                         "green-slime", "Green Slimes", 3, 100,
                         "Help the meadow: defeat 3 Green Slimes, then return to claim your reward.",
                         "Thank you for helping the meadow!",
                         "Quest complete! You received 100 EXP."),
                 new QuestDefinition(
-                        "forest-slime-hunt", "105", "Forest Warden",
+                        "forest-slime-hunt", "105", "forest-edge", "Forest Warden",
                         "green-slime", "Forest Green Slimes", 5, 180,
                         "The forest edge is overrun. Defeat 5 Green Slimes and report back.",
                         "The forest is safer thanks to you.",
@@ -43,6 +43,7 @@ public class QuestCatalog {
     public record QuestDefinition(
             String questId,
             String npcId,
+            String targetMapId,
             String npcName,
             String targetMonsterType,
             String targetDisplayName,
@@ -54,7 +55,7 @@ public class QuestCatalog {
     ) {
         public QuestDefinition {
             if (questId == null || questId.isBlank() || npcId == null || npcId.isBlank()
-                    || npcName == null || npcName.isBlank() || targetMonsterType == null
+                    || targetMapId == null || targetMapId.isBlank() || npcName == null || npcName.isBlank() || targetMonsterType == null
                     || targetMonsterType.isBlank() || requiredKills < 1 || experienceReward < 0) {
                 throw new IllegalArgumentException("Quest definition is invalid.");
             }
