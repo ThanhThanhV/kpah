@@ -13,7 +13,7 @@ public class MonsterArchetypeRegistry {
                     "forest-wolf", "Forest Wolf", 110, 14, 34.0, 190.0, 900L, 1.55,
                     MonsterBehavior.AGGRESSIVE),
             "forest-sentinel", new MonsterArchetype(
-                    "forest-sentinel", "Forest Sentinel", 180, 12, 30.0, 0.0, 1_300L, 0.75,
+                    "forest-sentinel", "Forest Sentinel", 180, 12, 30.0, 30.0, 1_300L, 0.75,
                     MonsterBehavior.PATROL),
             "alpha-wolf", new MonsterArchetype(
                     "alpha-wolf", "Alpha Wolf", 260, 22, 42.0, 240.0, 850L, 1.7,
