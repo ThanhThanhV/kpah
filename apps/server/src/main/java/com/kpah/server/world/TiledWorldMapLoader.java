@@ -15,6 +15,32 @@ public class TiledWorldMapLoader {
 
     public TiledWorldMapLoader(ObjectMapper mapper) { this.mapper = mapper; }
 
+    public List<WorldMapGeometry> loadAll(String manifestPath) {
+        try (InputStream stream = new ClassPathResource(manifestPath).getInputStream()) {
+            JsonNode root = mapper.readTree(stream);
+            JsonNode entries = root.path("maps");
+            if (!entries.isArray() || entries.isEmpty()) {
+                throw new IllegalStateException("Map manifest must contain a non-empty maps array: " + manifestPath);
+            }
+            List<WorldMapGeometry> maps = new ArrayList<>();
+            java.util.Set<String> ids = new java.util.HashSet<>();
+            for (JsonNode entry : entries) {
+                if (!entry.isTextual() || entry.asText().isBlank()
+                        || entry.asText().contains("..") || entry.asText().startsWith("/")) {
+                    throw new IllegalStateException("Invalid map resource in manifest: " + manifestPath);
+                }
+                WorldMapGeometry map = load("maps/" + entry.asText());
+                if (!ids.add(map.mapId())) {
+                    throw new IllegalStateException("Duplicate map ID in manifest: " + map.mapId());
+                }
+                maps.add(map);
+            }
+            return List.copyOf(maps);
+        } catch (IOException exception) {
+            throw new IllegalStateException("Unable to load map manifest: " + manifestPath, exception);
+        }
+    }
+
     public WorldMapGeometry load(String resourcePath) {
         try (InputStream stream = new ClassPathResource(resourcePath).getInputStream()) {
             JsonNode root = mapper.readTree(stream);
