@@ -528,3 +528,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - The Phaser client renders the rectangular warning separately from Alpha Wolf's circular danger telegraph.
 - Added a dedicated Ancient Guardian Grove spawn on Forest Edge, synced between server and client map definitions (one alive, 45-second respawn).
 - Preserved the existing MonsterArchetype and MonsterState constructor signatures for source compatibility. CI verification and local gameplay feel-test pending.
+
+
+## Latest implementation batch — Ancient Guardian quest and trophy rewards
+- Extended the Forest Warden's sequential quest chain with Ancient Guardian Hunt after Alpha Wolf Hunt (1 boss kill, 1,100 EXP).
+- Ancient Guardian guarantees one Ancient Guardian Core and 2–4 Forest Resin on defeat.
+- Registered Ancient Guardian Core as a stackable material (maximum stack 10).
+- Added quest-chain, deterministic boss-drop and item-catalog tests. Local gameplay playtest remains pending.
