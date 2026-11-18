@@ -9,7 +9,7 @@ export class LootEntity {
   private x: number;
   private y: number;
 
-  constructor(private readonly scene: Phaser.Scene, snapshot: WorldLootSnapshot) {
+  constructor(scene: Phaser.Scene, snapshot: WorldLootSnapshot) {
     this.x = snapshot.x;
     this.y = snapshot.y;
     this.glow = scene.add.circle(this.x, this.y - 5, 13, 0xf5d76e, 0.18).setDepth(this.y - 1);
