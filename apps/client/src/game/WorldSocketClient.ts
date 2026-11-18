@@ -9,6 +9,7 @@ export interface WorldItemDefinition { itemCode: string; name: string; type: str
 export interface WorldPlayerSnapshot {
   playerId: string; name?: string; classCode?: string; mapId: string; x: number; y: number; sequence: number;
   hp: number; maxHp: number; dead: boolean; mana: number; maxMana: number;
+  classStats?: { attack: number; defense: number };
   skills?: Record<string, { skillId: string; displayName: string; classCode: string; damage: number; range: number; cooldownMillis: number; manaCost: number; requiredLevel: number }>;
   experience: number; level: number; inventory?: Record<string, number>;
   equipment?: Record<string, string>; itemCatalog?: Record<string, WorldItemDefinition>;
