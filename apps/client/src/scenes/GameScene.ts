@@ -21,6 +21,7 @@ export class GameScene extends Phaser.Scene {
   private readonly remotePlayers = new Map<string, RemotePlayerView>();
   private readonly monsters = new Map<string, MonsterEntity>();
   private readonly pendingMonsterHits = new Map<string, { event: WorldCombatEvent; expiresAt: number }[]>();
+  private readonly pendingPlayerHits = new Map<string, { damage: number; expiresAt: number }[]>();
   private readonly loot = new Map<string, LootEntity>();
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
@@ -145,9 +146,10 @@ export class GameScene extends Phaser.Scene {
         const ownPlayerId = this.worldSocket.getOwnPlayerId();
         if (event.targetPlayerId === ownPlayerId) {
           this.player.receiveHit(event.damage);
-        } else {
+        } else if (event.damage !== undefined && event.damage > 0) {
           const target = this.remotePlayers.get(event.targetPlayerId);
           if (target) target.entity.receiveHit(event.damage);
+          else this.queueRemotePlayerHit(event.targetPlayerId, event.damage);
         }
       } else if (event.sourcePlayerId && event.sourcePlayerId !== this.worldSocket.getOwnPlayerId()) {
         const source = this.remotePlayers.get(event.sourcePlayerId);
@@ -204,6 +206,7 @@ export class GameScene extends Phaser.Scene {
     this.player.update(delta);
     this.updateRemotePlayers(delta);
     this.prunePendingMonsterHits();
+    this.prunePendingPlayerHits();
   }
 
 
@@ -460,6 +463,7 @@ export class GameScene extends Phaser.Scene {
         view = { entity, x: remote.x, y: remote.y, targetX: remote.x, targetY: remote.y, lastSeenAt: now };
         entity.setHp(remote.hp, remote.maxHp);
         this.remotePlayers.set(remote.playerId, view);
+        this.flushPendingPlayerHits(remote.playerId);
       } else {
         view.entity.setHp(remote.hp, remote.maxHp);
         const dx = remote.x - view.targetX;
@@ -499,6 +503,34 @@ export class GameScene extends Phaser.Scene {
       if (!visibleMonsterIds.has(monsterId)) { entity.destroy(); this.monsters.delete(monsterId); }
     }
     for (const monsterId of visibleMonsterIds) this.flushPendingMonsterHits(monsterId);
+  }
+
+  private queueRemotePlayerHit(playerId: string, damage: number): void {
+    const pending = this.pendingPlayerHits.get(playerId) ?? [];
+    pending.push({ damage, expiresAt: this.time.now + 1_500 });
+    if (pending.length > 8) pending.shift();
+    this.pendingPlayerHits.set(playerId, pending);
+  }
+
+  private flushPendingPlayerHits(playerId: string): void {
+    const pending = this.pendingPlayerHits.get(playerId);
+    if (!pending) return;
+    this.pendingPlayerHits.delete(playerId);
+    const target = this.remotePlayers.get(playerId);
+    if (!target) return;
+    const now = this.time.now;
+    for (const hit of pending) {
+      if (hit.expiresAt >= now) target.entity.receiveHit(hit.damage);
+    }
+  }
+
+  private prunePendingPlayerHits(): void {
+    const now = this.time.now;
+    for (const [playerId, pending] of this.pendingPlayerHits) {
+      const active = pending.filter((hit) => hit.expiresAt >= now);
+      if (active.length === 0) this.pendingPlayerHits.delete(playerId);
+      else if (active.length !== pending.length) this.pendingPlayerHits.set(playerId, active);
+    }
   }
 
   private presentOrQueueMonsterHit(event: WorldCombatEvent): void {
@@ -578,6 +610,7 @@ export class GameScene extends Phaser.Scene {
     for (const monster of this.monsters.values()) monster.destroy();
     this.monsters.clear();
     this.pendingMonsterHits.clear();
+    this.pendingPlayerHits.clear();
     for (const drop of this.loot.values()) drop.destroy();
     this.loot.clear();
     this.player?.destroy(); this.mapRenderer?.destroy();

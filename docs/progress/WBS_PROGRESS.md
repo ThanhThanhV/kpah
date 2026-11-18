@@ -226,3 +226,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Pending events are pruned during the scene update loop and cleared on scene shutdown; authoritative damage and HP remain snapshot/server-owned.
 - Skill hits now render a second, wider cyan impact ring in addition to the base impact ring and damage number; basic attacks retain the simpler white impact.
 - No guessed critical-hit state or client-side damage calculation was introduced.
+
+
+## Latest implementation batch — out-of-order remote player hit feedback
+- Added a bounded per-player queue for authoritative player-hit events that arrive before the corresponding remote-player snapshot creates its renderer.
+- Pending hits replay when that remote character is first created; events expire after 1.5 seconds and are capped at eight per player.
+- Expired entries are pruned during the scene update loop, and all pending player-hit state is cleared during scene shutdown.
+- Existing remote hit events still apply immediately when the target renderer exists; local-player handling and server-authoritative HP snapshots remain unchanged.
