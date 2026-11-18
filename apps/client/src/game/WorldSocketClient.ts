@@ -2,6 +2,7 @@ export interface WorldMoveIntent { type: "move"; sequence: number; axisX: number
 export interface WorldAttackIntent { type: "attack"; targetMonsterId: string; }
 export interface WorldPlayerSnapshot {
   playerId: string; mapId: string; x: number; y: number; sequence: number;
+  hp: number; maxHp: number; dead: boolean;
 }
 export interface WorldMonsterSnapshot {
   monsterId: string; monsterType: string; mapId: string; spawnRegionId: string;

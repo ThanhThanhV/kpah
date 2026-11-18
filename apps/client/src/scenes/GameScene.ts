@@ -25,6 +25,7 @@ export class GameScene extends Phaser.Scene {
   private castKey!: Phaser.Input.Keyboard.Key;
   private networkAccumulator = 0;
   private connectionLabel?: Phaser.GameObjects.Text;
+  private vitalsLabel?: Phaser.GameObjects.Text;
   private unsubscribeSnapshot?: () => void;
   private unsubscribeStatus?: () => void;
 
@@ -51,7 +52,11 @@ export class GameScene extends Phaser.Scene {
     this.connectionLabel = this.add.text(18, 42, "World: connecting…", {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#f0d18b"
     }).setScrollFactor(0).setDepth(2000);
-    this.add.text(18, 62, "WASD / arrows · Space: attack · Shift: cast", {
+    this.vitalsLabel = this.add.text(18, 60, "HP: -- / 100", {
+      fontFamily: "Arial, sans-serif", fontSize: "12px", color: "#ffaaa0",
+      backgroundColor: "#14262acc", padding: { x: 7, y: 4 }
+    }).setScrollFactor(0).setDepth(2000);
+    this.add.text(18, 84, "WASD / arrows · Space: attack · Shift: cast", {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#c0d0c4"
     }).setScrollFactor(0).setDepth(2000);
 
@@ -103,6 +108,10 @@ export class GameScene extends Phaser.Scene {
     if (ownPlayer) {
       this.playerX = Phaser.Math.Linear(this.playerX, ownPlayer.x, 0.35);
       this.playerY = Phaser.Math.Linear(this.playerY, ownPlayer.y, 0.35);
+      this.vitalsLabel?.setText(ownPlayer.hp > 0
+        ? `HP: ${ownPlayer.hp} / ${ownPlayer.maxHp}`
+        : "DEFEATED · Respawning…");
+      this.vitalsLabel?.setColor(ownPlayer.hp > 0 ? "#ffaaa0" : "#ff6b62");
     }
     const visibleRemoteIds = new Set<string>();
     const now = this.time.now;
