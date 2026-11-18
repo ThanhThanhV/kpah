@@ -178,6 +178,7 @@ public class MonsterSimulationService {
         private volatile long respawnAt = Long.MAX_VALUE;
         private volatile long nextAttackAt;
         private volatile String targetPlayerId;
+        private int attacksPerformed;
         private volatile String provokedPlayerId;
         private volatile long provokedUntil;
         private volatile String state = "idle";
@@ -217,7 +218,14 @@ public class MonsterSimulationService {
                     state = "attack";
                     if (nowMillis >= nextAttackAt) {
                         nextAttackAt = nowMillis + archetype.attackCooldownMillis();
-                        return new MonsterPlayerAttack(target.playerId(), id, archetype.attackDamage());
+                        attacksPerformed++;
+                        boolean specialAttack = archetype.behavior() == MonsterBehavior.ELITE
+                                && attacksPerformed % 3 == 0;
+                        int damage = specialAttack
+                                ? (int) Math.ceil(archetype.attackDamage() * 1.8)
+                                : archetype.attackDamage();
+                        return new MonsterPlayerAttack(target.playerId(), id, archetype.displayName(),
+                                damage, specialAttack ? "monster-special" : "monster-attack");
                     }
                     return null;
                 }
