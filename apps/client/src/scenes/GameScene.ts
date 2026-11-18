@@ -483,6 +483,9 @@ export class GameScene extends Phaser.Scene {
 
   private applyWorldSnapshot(snapshot: WorldSnapshot): void {
     const ownPlayer = this.worldSocket.getOwnPlayer(snapshot);
+    if (ownPlayer && ownPlayer.mapId !== this.currentMapId) {
+      this.handleMapTransition(ownPlayer.mapId, ownPlayer.x, ownPlayer.y);
+    }
     const mapId = ownPlayer?.mapId ?? snapshot.players[0]?.mapId ?? "unknown";
     this.worldStateLabel?.setText(
       `Map: ${mapId} · Players: ${snapshot.players.length} · Monsters: ${snapshot.monsters.length} · Loot: ${snapshot.lootDrops.length}`
