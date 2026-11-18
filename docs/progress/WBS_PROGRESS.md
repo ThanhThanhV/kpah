@@ -343,3 +343,12 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Initial character state and the latest state on WebSocket disconnect are still persisted. Other gameplay state changes continue using immediate persistence.
 - This trades a maximum 5-second movement-position rollback on abrupt process failure for substantially fewer database writes under active movement.
 - CI is the verification gate for this batch.
+
+
+## Latest implementation batch — per-player world interest area
+- World snapshots now use a server-side circular AOI radius of 900 world pixels for each recipient.
+- The recipient's own player entry is always retained; only nearby players, living monsters and loot drops are included in that recipient's snapshot.
+- Recipient-private inventory, equipment, item catalog and quest state remain in the existing `selfState` boundary.
+- The client already destroys monster and loot renderers absent from the latest snapshot and applies a 1.5-second grace period to remote players, so entities naturally leave and re-enter rendering as they cross the AOI boundary.
+- This first increment filters delivery and client rendering but still scans map entity lists per recipient. Spatial partitioning, AOI-aware combat event routing and load testing remain follow-up work.
+- CI verification is pending.
