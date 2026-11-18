@@ -150,18 +150,18 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private void broadcast(String mapId) {
         var snapshots = players.values().stream()
                 .filter(player -> mapId.equals(player.state().mapId()))
-                .map(player -> Map.of(
-                        "playerId", player.playerId(),
-                        "mapId", player.state().mapId(),
-                        "x", player.state().x(),
-                        "y", player.state().y(),
-                        "sequence", player.state().lastSequence(),
-                        "hp", player.hp(),
-                        "maxHp", PLAYER_MAX_HP,
-                        "dead", player.hp() <= 0,
-                        "experience", player.experience(),
-                        "level", ExperienceProgression.levelFor(player.experience()),
-                        "inventory", player.inventory()))
+                .map(player -> Map.ofEntries(
+                        Map.entry("playerId", player.playerId()),
+                        Map.entry("mapId", player.state().mapId()),
+                        Map.entry("x", player.state().x()),
+                        Map.entry("y", player.state().y()),
+                        Map.entry("sequence", player.state().lastSequence()),
+                        Map.entry("hp", player.hp()),
+                        Map.entry("maxHp", PLAYER_MAX_HP),
+                        Map.entry("dead", player.hp() <= 0),
+                        Map.entry("experience", player.experience()),
+                        Map.entry("level", ExperienceProgression.levelFor(player.experience())),
+                        Map.entry("inventory", player.inventory())))
                 .toList();
         Map<String, Object> payload = Map.of(
                 "type", "snapshot", "players", snapshots, "monsters", monsters.snapshot(mapId),
