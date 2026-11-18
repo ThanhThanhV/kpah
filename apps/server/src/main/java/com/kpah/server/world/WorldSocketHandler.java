@@ -115,7 +115,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 }
                 String targetId = input.path("targetMonsterId").asText("");
                 MonsterAttackResult result = combat.basicAttack(
-                        player.playerId(), player.state(), targetId, items.attackBonus(player.equipment()) + classes.attackBonus(player.classCode()),
+                        player.playerId(), player.state(), targetId, items.attackBonus(player.equipment()) + classes.attackBonus(player.classCode(), ExperienceProgression.levelFor(player.experience())),
                         System.currentTimeMillis());
                 if (!result.accepted()) {
                     send(session, Map.of("type", "error", "message", result.message()));
@@ -123,7 +123,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     if (result.monster().hp() == 0) {
                         players.computeIfPresent(session.getId(), (id, current) -> {
                             quests.onMonsterDefeated(current.playerId(), result.monster().monsterType());
-                            ConnectedPlayer rewarded = current.withExperience(current.experience() + 25);
+                            ConnectedPlayer rewarded = awardExperience(current, 25);
                             persist(rewarded);
                             return rewarded;
                         });
@@ -168,8 +168,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                         player.state().x(), player.state().y());
                 if (result.experienceReward() > 0) {
                     players.computeIfPresent(session.getId(), (id, current) -> {
-                        ConnectedPlayer rewarded = current.withExperience(
-                                current.experience() + result.experienceReward());
+                        ConnectedPlayer rewarded = awardExperience(current, result.experienceReward());
                         persist(rewarded);
                         return rewarded;
                     });
@@ -184,7 +183,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 String skillId = input.path("skillId").asText("");
                 String targetId = input.path("targetMonsterId").asText("");
                 SkillCastResult result = skills.cast(player.playerId(), player.classCode(), player.state(), skillId,
-                        targetId, items.attackBonus(player.equipment()) + classes.attackBonus(player.classCode()), System.currentTimeMillis());
+                        targetId, items.attackBonus(player.equipment()) + classes.attackBonus(player.classCode(), ExperienceProgression.levelFor(player.experience())),
+                        ExperienceProgression.levelFor(player.experience()), System.currentTimeMillis());
                 if (!result.accepted()) {
                     send(session, Map.of("type", "error", "message", result.message()));
                 } else {
@@ -192,7 +192,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     if (attack.monster().hp() == 0) {
                         players.computeIfPresent(session.getId(), (id, current) -> {
                             quests.onMonsterDefeated(current.playerId(), attack.monster().monsterType());
-                            ConnectedPlayer rewarded = current.withExperience(current.experience() + 25);
+                            ConnectedPlayer rewarded = awardExperience(current, 25);
                             persist(rewarded);
                             return rewarded;
                         });
@@ -238,7 +238,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             players.replaceAll((sessionId, player) -> {
                 if (!player.playerId().equals(attack.playerId()) || player.hp() <= 0) return player;
                 int mitigatedDamage = ItemCatalog.mitigateDamage(
-                        attack.damage(), items.defenseBonus(player.equipment()) + classes.defenseBonus(player.classCode()));
+                        attack.damage(), items.defenseBonus(player.equipment()) + classes.defenseBonus(player.classCode(), ExperienceProgression.levelFor(player.experience())));
                 int hp = Math.max(0, player.hp() - mitigatedDamage);
                 long respawnAt = hp == 0 ? now + PLAYER_RESPAWN_MILLIS : 0L;
                 ConnectedPlayer damaged = player.withVitals(hp, respawnAt);
@@ -276,13 +276,22 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             PlayerMotionState spawn = movementService.initialState(player.state().mapId());
             PlayerMotionState respawned = new PlayerMotionState(
                     spawn.mapId(), spawn.x(), spawn.y(), player.state().lastSequence());
-            ConnectedPlayer revived = player.withRespawn(respawned, classes.maxHp(player.classCode()), 0L, System.nanoTime());
+            ConnectedPlayer revived = player.withRespawn(respawned, classes.maxHp(player.classCode(), ExperienceProgression.levelFor(player.experience())), 0L, System.nanoTime());
             persist(revived);
             return revived;
         });
 
         players.values().stream().map(player -> player.state().mapId())
                 .distinct().forEach(this::broadcast);
+    }
+
+    private ConnectedPlayer awardExperience(ConnectedPlayer player, int amount) {
+        int nextExperience = player.experience() + Math.max(0, amount);
+        int oldLevel = ExperienceProgression.levelFor(player.experience());
+        int nextLevel = ExperienceProgression.levelFor(nextExperience);
+        int hpIncrease = classes.maxHp(player.classCode(), nextLevel)
+                - classes.maxHp(player.classCode(), oldLevel);
+        return player.withExperience(nextExperience, hpIncrease);
     }
 
     private void persist(ConnectedPlayer player) {
@@ -303,12 +312,12 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                         Map.entry("y", player.state().y()),
                         Map.entry("sequence", player.state().lastSequence()),
                         Map.entry("hp", player.hp()),
-                        Map.entry("maxHp", classes.maxHp(player.classCode())),
+                        Map.entry("maxHp", classes.maxHp(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
                         Map.entry("dead", player.hp() <= 0),
                         Map.entry("experience", player.experience()),
                         Map.entry("level", ExperienceProgression.levelFor(player.experience())),
-                        Map.entry("mana", skills.manaFor(player.playerId(), player.classCode(), System.currentTimeMillis())),
-                        Map.entry("maxMana", skills.maxMana(player.classCode())),
+                        Map.entry("mana", skills.manaFor(player.playerId(), player.classCode(), ExperienceProgression.levelFor(player.experience()), System.currentTimeMillis())),
+                        Map.entry("maxMana", skills.maxMana(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
                         Map.entry("skills", skills.skillsFor(player.classCode())),
                         Map.entry("inventory", player.inventory()),
                         Map.entry("equipment", player.equipment()),
@@ -371,9 +380,10 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     nextHp, nextRespawnAt, experience, inventory, equipment);
         }
 
-        private ConnectedPlayer withExperience(int nextExperience) {
+        private ConnectedPlayer withExperience(int nextExperience, int levelHpIncrease) {
+            int nextHp = hp > 0 ? hp + Math.max(0, levelHpIncrease) : hp;
             return new ConnectedPlayer(playerId, accountId, characterName, classCode, session, state, lastAcceptedNanos,
-                    hp, respawnAt, nextExperience, inventory, equipment);
+                    nextHp, respawnAt, nextExperience, inventory, equipment);
         }
 
         private ConnectedPlayer withLoot(List<LootDropState> drops) {
