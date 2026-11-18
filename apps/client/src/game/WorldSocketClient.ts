@@ -31,7 +31,14 @@ export class WorldSocketClient {
 
   connect(): void {
     if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) return;
-    const socket = new WebSocket(this.url);
+    const url = new URL(this.url);
+    let characterId = localStorage.getItem("kpah.characterId");
+    if (!characterId) {
+      characterId = crypto.randomUUID();
+      localStorage.setItem("kpah.characterId", characterId);
+    }
+    url.searchParams.set("characterId", characterId);
+    const socket = new WebSocket(url.toString());
     this.socket = socket;
     socket.addEventListener("open", () => this.statusListeners.forEach((listener) => listener(true)));
     socket.addEventListener("close", () => this.statusListeners.forEach((listener) => listener(false)));

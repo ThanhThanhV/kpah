@@ -19,9 +19,10 @@ npm install
 npm run dev
 ```
 
-In another terminal:
+Start PostgreSQL first, then run the server:
 
 ```bash
+docker compose -f infra/docker-compose.yml up -d
 cd apps/server
 mvn spring-boot:run
 ```
@@ -40,7 +41,7 @@ docker compose -f infra/docker-compose.yml up -d
 - WASD or arrow keys: move freely in 8-way vector space.
 - Facing: four directions; dominant axis wins, exact diagonal ties preserve the last facing.
 - Space: temporary attack pose; Shift: cast pose.
-- Map bounds and collision rectangles are tested on the client for responsiveness. The Java MovementService is the authoritative movement calculation; realtime WebSocket wiring is the next step.
+- Map bounds and collision rectangles are tested on the client for responsiveness. The Java MovementService is authoritative. EXP, HP, map position and inventory are persisted in PostgreSQL; the browser retains a character ID in local storage. This prototype identity is not an authenticated account.
 
 ## Project status
 

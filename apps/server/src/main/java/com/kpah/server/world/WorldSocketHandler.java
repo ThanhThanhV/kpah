@@ -26,16 +26,18 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private final MonsterSimulationService monsters;
     private final WorldCombatService combat;
     private final SkillCombatService skills;
+    private final PlayerCharacterRepository characters;
     private final Map<String, ConnectedPlayer> players = new ConcurrentHashMap<>();
 
     public WorldSocketHandler(ObjectMapper mapper, MovementService movementService,
                               MonsterSimulationService monsters, WorldCombatService combat,
-                              SkillCombatService skills) {
+                              SkillCombatService skills, PlayerCharacterRepository characters) {
         this.mapper = mapper;
         this.movementService = movementService;
         this.monsters = monsters;
         this.combat = combat;
         this.skills = skills;
+        this.characters = characters;
     }
 
     @Override
@@ -43,11 +45,27 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         String mapId = UriComponentsBuilder.fromUri(session.getUri())
                 .build().getQueryParams().getFirst("mapId");
         if (mapId == null || mapId.isBlank()) mapId = DEFAULT_MAP;
-        PlayerMotionState initial = movementService.initialState(mapId);
+        String characterId = UriComponentsBuilder.fromUri(session.getUri())
+                .build().getQueryParams().getFirst("characterId");
+        if (characterId == null || characterId.isBlank()) characterId = UUID.randomUUID().toString();
+        try {
+            characterId = UUID.fromString(characterId).toString();
+        } catch (IllegalArgumentException invalidId) {
+            characterId = UUID.randomUUID().toString();
+        }
+
+        PlayerCharacter character = characters.findById(characterId).orElse(null);
+        if (character != null) mapId = character.getMapId();
+        PlayerMotionState initial = character == null
+                ? movementService.initialState(mapId)
+                : new PlayerMotionState(character.getMapId(), character.getX(), character.getY(), 0L);
         ConnectedPlayer player = new ConnectedPlayer(
-                UUID.randomUUID().toString(), session, initial, System.nanoTime(),
-                PLAYER_MAX_HP, 0L, 0, Map.of());
+                characterId, session, initial, System.nanoTime(),
+                character == null ? PLAYER_MAX_HP : character.getHp(), 0L,
+                character == null ? 0 : character.getExperience(),
+                character == null ? Map.of() : character.getInventory());
         players.put(session.getId(), player);
+        persist(player);
         send(session, Map.of("type", "welcome", "playerId", player.playerId(), "mapId", mapId));
         broadcast(mapId);
     }
@@ -69,7 +87,9 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 if (elapsed <= 0) elapsed = 0.001;
                 PlayerMotionState next = movementService.apply(
                         player.state(), new MovementInput(axisX, axisY, sequence), elapsed);
-                players.put(session.getId(), player.withState(next, now));
+                ConnectedPlayer moved = player.withState(next, now);
+                players.put(session.getId(), moved);
+                persist(moved);
                 broadcast(next.mapId());
             } else if ("attack".equals(type)) {
                 if (player.hp() <= 0) {
@@ -83,8 +103,11 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     send(session, Map.of("type", "error", "message", result.message()));
                 } else {
                     if (result.monster().hp() == 0) {
-                        players.computeIfPresent(session.getId(), (id, current) ->
-                                current.withExperience(current.experience() + 25));
+                        players.computeIfPresent(session.getId(), (id, current) -> {
+                            ConnectedPlayer rewarded = current.withExperience(current.experience() + 25);
+                            persist(rewarded);
+                            return rewarded;
+                        });
                     }
                     send(session, Map.of("type", "combat", "action", "basic-attack",
                             "targetMonsterId", targetId, "damage", result.damage(),
@@ -106,8 +129,11 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 } else {
                     MonsterAttackResult attack = result.attack();
                     if (attack.monster().hp() == 0) {
-                        players.computeIfPresent(session.getId(), (id, current) ->
-                                current.withExperience(current.experience() + 25));
+                        players.computeIfPresent(session.getId(), (id, current) -> {
+                            ConnectedPlayer rewarded = current.withExperience(current.experience() + 25);
+                            persist(rewarded);
+                            return rewarded;
+                        });
                     }
                     send(session, Map.of("type", "combat", "action", "skill-cast",
                             "skillId", result.skill().skillId(),
@@ -129,6 +155,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         ConnectedPlayer removed = players.remove(session.getId());
         if (removed != null) {
+            persist(removed);
             combat.removePlayer(removed.playerId());
             skills.removePlayer(removed.playerId());
             broadcast(removed.state().mapId());
@@ -149,7 +176,9 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 if (!player.playerId().equals(attack.playerId()) || player.hp() <= 0) return player;
                 int hp = Math.max(0, player.hp() - attack.damage());
                 long respawnAt = hp == 0 ? now + PLAYER_RESPAWN_MILLIS : 0L;
-                return player.withVitals(hp, respawnAt);
+                ConnectedPlayer damaged = player.withVitals(hp, respawnAt);
+                persist(damaged);
+                return damaged;
             });
         }
 
@@ -160,7 +189,11 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             List<LootDropState> collected = monsters.collectNearbyLoot(
                     current.state().mapId(), current.state().x(), current.state().y());
             if (!collected.isEmpty()) {
-                players.computeIfPresent(sessionId, (id, latest) -> latest.withLoot(collected));
+                players.computeIfPresent(sessionId, (id, latest) -> {
+                    ConnectedPlayer looted = latest.withLoot(collected);
+                    persist(looted);
+                    return looted;
+                });
             }
         }
 
@@ -169,11 +202,18 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             PlayerMotionState spawn = movementService.initialState(player.state().mapId());
             PlayerMotionState respawned = new PlayerMotionState(
                     spawn.mapId(), spawn.x(), spawn.y(), player.state().lastSequence());
-            return player.withRespawn(respawned, PLAYER_MAX_HP, 0L, System.nanoTime());
+            ConnectedPlayer revived = player.withRespawn(respawned, PLAYER_MAX_HP, 0L, System.nanoTime());
+            persist(revived);
+            return revived;
         });
 
         players.values().stream().map(player -> player.state().mapId())
                 .distinct().forEach(this::broadcast);
+    }
+
+    private void persist(ConnectedPlayer player) {
+        characters.save(PlayerCharacter.from(player.playerId(), player.state(), player.hp(),
+                player.experience(), player.inventory()));
     }
 
     private void broadcast(String mapId) {
