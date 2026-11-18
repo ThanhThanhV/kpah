@@ -11,6 +11,18 @@ public class StarterWorldRegistry {
         WorldMapGeometry starter = loader.load("maps/starter-meadow.json");
         WorldMapGeometry forest = loader.load("maps/forest-edge.json");
         this.maps = Map.of(starter.mapId(), starter, forest.mapId(), forest);
+        for (WorldMapGeometry map : this.maps.values()) {
+            for (PortalDefinition portal : map.portals()) {
+                WorldMapGeometry destination = this.maps.get(portal.targetMapId());
+                if (destination == null
+                        || portal.targetX() < 0 || portal.targetY() < 0
+                        || portal.targetX() >= destination.width()
+                        || portal.targetY() >= destination.height()) {
+                    throw new IllegalStateException("Invalid portal destination " + portal.id()
+                            + " from map " + map.mapId() + " to " + portal.targetMapId());
+                }
+            }
+        }
     }
 
     public WorldMapGeometry require(String mapId) {
