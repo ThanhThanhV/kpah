@@ -36,6 +36,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private final Map<String, ConnectedPlayer> players = new ConcurrentHashMap<>();
     private final Map<String, Long> lastMovementPersistAt = new ConcurrentHashMap<>();
     private static final long MOVEMENT_PERSIST_INTERVAL_MILLIS = 5_000L;
+    private static final double INTEREST_RADIUS = 900.0;
+    private static final double INTEREST_RADIUS_SQUARED = INTEREST_RADIUS * INTEREST_RADIUS;
 
     public WorldSocketHandler(ObjectMapper mapper, MovementService movementService,
                               MonsterSimulationService monsters, WorldCombatService combat,
@@ -396,6 +398,20 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         var lootSnapshot = monsters.snapshotLoot(mapId);
         for (ConnectedPlayer player : players.values()) {
             if (!mapId.equals(player.state().mapId()) || !player.session().isOpen()) continue;
+            double centerX = player.state().x();
+            double centerY = player.state().y();
+            List<Map<String, Object>> visiblePlayers = publicPlayers.stream()
+                    .filter(snapshot -> player.playerId().equals(snapshot.get("playerId"))
+                            || isWithinInterest(centerX, centerY,
+                            ((Number) snapshot.get("x")).doubleValue(),
+                            ((Number) snapshot.get("y")).doubleValue()))
+                    .toList();
+            List<MonsterState> visibleMonsters = monsterSnapshot.stream()
+                    .filter(monster -> isWithinInterest(centerX, centerY, monster.x(), monster.y()))
+                    .toList();
+            List<LootDropState> visibleLoot = lootSnapshot.stream()
+                    .filter(drop -> isWithinInterest(centerX, centerY, drop.x(), drop.y()))
+                    .toList();
             Map<String, Object> selfState = Map.of(
                     "inventory", player.inventory(),
                     "equipment", player.equipment(),
@@ -403,16 +419,22 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     "quest", quests.snapshot(player.playerId()));
             Map<String, Object> payload = Map.of(
                     "type", "snapshot",
-                    "players", publicPlayers,
+                    "players", visiblePlayers,
                     "selfState", selfState,
-                    "monsters", monsterSnapshot,
-                    "lootDrops", lootSnapshot);
+                    "monsters", visibleMonsters,
+                    "lootDrops", visibleLoot);
             try {
                 send(player.session(), payload);
             } catch (IOException ignored) {
                 // The websocket close lifecycle removes failed sessions.
             }
         }
+    }
+
+    private boolean isWithinInterest(double centerX, double centerY, double x, double y) {
+        double deltaX = x - centerX;
+        double deltaY = y - centerY;
+        return deltaX * deltaX + deltaY * deltaY <= INTEREST_RADIUS_SQUARED;
     }
 
     private void broadcastCombat(String mapId, Object payload) {
