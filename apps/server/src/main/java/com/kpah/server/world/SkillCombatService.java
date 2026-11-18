@@ -43,6 +43,7 @@ public class SkillCombatService {
                 skill.damage() + Math.max(0, attackBonus), skill.range(), nowMillis);
         if (!attack.accepted()) return SkillCastResult.rejected(attack.message(), mana);
 
+        monsters.provoke(targetMonsterId, playerId, nowMillis);
         int remaining = mana - skill.manaCost();
         resources.put(playerId, new ResourceState(remaining, nowMillis));
         nextCastAt.put(cooldownKey, nowMillis + skill.cooldownMillis());
