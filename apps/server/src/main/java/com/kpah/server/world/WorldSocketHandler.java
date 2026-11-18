@@ -183,7 +183,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 }
                 String skillId = input.path("skillId").asText("");
                 String targetId = input.path("targetMonsterId").asText("");
-                SkillCastResult result = skills.cast(player.playerId(), player.state(), skillId,
+                SkillCastResult result = skills.cast(player.playerId(), player.classCode(), player.state(), skillId,
                         targetId, items.attackBonus(player.equipment()) + classes.attackBonus(player.classCode()), System.currentTimeMillis());
                 if (!result.accepted()) {
                     send(session, Map.of("type", "error", "message", result.message()));
@@ -200,6 +200,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     send(session, Map.of("type", "combat", "action", "skill-cast",
                             "skillId", result.skill().skillId(),
                             "skillName", result.skill().displayName(),
+                            "mana", result.manaRemaining(), "maxMana", skills.maxMana(player.classCode()),
                             "targetMonsterId", targetId, "damage", attack.damage(),
                             "monsterHp", attack.monster().hp(),
                             "experienceReward", attack.monster().hp() == 0 ? 25 : 0));
@@ -306,6 +307,9 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                         Map.entry("dead", player.hp() <= 0),
                         Map.entry("experience", player.experience()),
                         Map.entry("level", ExperienceProgression.levelFor(player.experience())),
+                        Map.entry("mana", skills.manaFor(player.playerId(), player.classCode(), System.currentTimeMillis())),
+                        Map.entry("maxMana", skills.maxMana(player.classCode())),
+                        Map.entry("skills", skills.skillsFor(player.classCode())),
                         Map.entry("inventory", player.inventory()),
                         Map.entry("equipment", player.equipment()),
                         Map.entry("itemCatalog", items.all()),
