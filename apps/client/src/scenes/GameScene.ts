@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { CharacterEntity } from "../game/CharacterEntity";
 import { MonsterEntity } from "../game/MonsterEntity";
+import { LootEntity } from "../game/LootEntity";
 import { loadTiledWorldMap } from "../game/TiledMapLoader";
 import { MapRenderer } from "../game/MapRenderer";
 import { MovementController } from "../game/MovementController";
@@ -17,6 +18,7 @@ export class GameScene extends Phaser.Scene {
   private worldSocket!: WorldSocketClient;
   private readonly remotePlayers = new Map<string, RemotePlayerView>();
   private readonly monsters = new Map<string, MonsterEntity>();
+  private readonly loot = new Map<string, LootEntity>();
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   private playerX = 0;
@@ -138,6 +140,17 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
+    const visibleLootIds = new Set<string>();
+    for (const drop of snapshot.lootDrops ?? []) {
+      visibleLootIds.add(drop.dropId);
+      const existing = this.loot.get(drop.dropId);
+      if (existing) existing.setTarget(drop);
+      else this.loot.set(drop.dropId, new LootEntity(this, drop));
+    }
+    for (const [dropId, entity] of this.loot) {
+      if (!visibleLootIds.has(dropId)) { entity.destroy(); this.loot.delete(dropId); }
+    }
+
     const visibleMonsterIds = new Set<string>();
     for (const monster of snapshot.monsters ?? []) {
       visibleMonsterIds.add(monster.monsterId);
@@ -167,6 +180,8 @@ export class GameScene extends Phaser.Scene {
     this.remotePlayers.clear();
     for (const monster of this.monsters.values()) monster.destroy();
     this.monsters.clear();
+    for (const drop of this.loot.values()) drop.destroy();
+    this.loot.clear();
     this.player?.destroy(); this.mapRenderer?.destroy();
   }
 }

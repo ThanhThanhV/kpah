@@ -55,7 +55,7 @@ export class CharacterEntity {
     return this.graphics;
   }
 
-  constructor(private readonly scene: Phaser.Scene, x: number, y: number, definition = DEFAULT_DEFINITION) {
+  constructor(scene: Phaser.Scene, x: number, y: number, definition = DEFAULT_DEFINITION) {
     this.definition = definition;
     this.hp = definition.maxHp;
     this.graphics = scene.add.graphics();

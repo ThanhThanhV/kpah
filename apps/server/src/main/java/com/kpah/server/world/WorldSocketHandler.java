@@ -42,7 +42,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         if (mapId == null || mapId.isBlank()) mapId = DEFAULT_MAP;
         PlayerMotionState initial = movementService.initialState(mapId);
         ConnectedPlayer player = new ConnectedPlayer(
-                UUID.randomUUID().toString(), session, initial, System.nanoTime(), PLAYER_MAX_HP, 0L);
+                UUID.randomUUID().toString(), session, initial, System.nanoTime(),
+                PLAYER_MAX_HP, 0L, 0, Map.of());
         players.put(session.getId(), player);
         send(session, Map.of("type", "welcome", "playerId", player.playerId(), "mapId", mapId));
         broadcast(mapId);
@@ -78,9 +79,14 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 if (!result.accepted()) {
                     send(session, Map.of("type", "error", "message", result.message()));
                 } else {
+                    if (result.monster().hp() == 0) {
+                        players.computeIfPresent(session.getId(), (id, current) ->
+                                current.withExperience(current.experience() + 25));
+                    }
                     send(session, Map.of("type", "combat", "action", "basic-attack",
                             "targetMonsterId", targetId, "damage", result.damage(),
-                            "monsterHp", result.monster().hp()));
+                            "monsterHp", result.monster().hp(),
+                            "experienceReward", result.monster().hp() == 0 ? 25 : 0));
                     broadcast(player.state().mapId());
                 }
             } else {
@@ -118,6 +124,17 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             });
         }
 
+        for (Map.Entry<String, ConnectedPlayer> entry : players.entrySet()) {
+            String sessionId = entry.getKey();
+            ConnectedPlayer current = entry.getValue();
+            if (current.hp() <= 0) continue;
+            List<LootDropState> collected = monsters.collectNearbyLoot(
+                    current.state().mapId(), current.state().x(), current.state().y());
+            if (!collected.isEmpty()) {
+                players.computeIfPresent(sessionId, (id, latest) -> latest.withLoot(collected));
+            }
+        }
+
         players.replaceAll((sessionId, player) -> {
             if (player.hp() > 0 || player.respawnAt() == 0L || now < player.respawnAt()) return player;
             PlayerMotionState spawn = movementService.initialState(player.state().mapId());
@@ -141,10 +158,14 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                         "sequence", player.state().lastSequence(),
                         "hp", player.hp(),
                         "maxHp", PLAYER_MAX_HP,
-                        "dead", player.hp() <= 0))
+                        "dead", player.hp() <= 0,
+                        "experience", player.experience(),
+                        "level", ExperienceProgression.levelFor(player.experience()),
+                        "inventory", player.inventory()))
                 .toList();
         Map<String, Object> payload = Map.of(
-                "type", "snapshot", "players", snapshots, "monsters", monsters.snapshot(mapId));
+                "type", "snapshot", "players", snapshots, "monsters", monsters.snapshot(mapId),
+                "lootDrops", monsters.snapshotLoot(mapId));
         for (ConnectedPlayer player : players.values()) {
             if (mapId.equals(player.state().mapId()) && player.session().isOpen()) {
                 try {
@@ -169,20 +190,40 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             PlayerMotionState state,
             long lastAcceptedNanos,
             int hp,
-            long respawnAt
+            long respawnAt,
+            int experience,
+            Map<String, Integer> inventory
     ) {
+        private ConnectedPlayer {
+            inventory = Map.copyOf(inventory);
+        }
+
         private ConnectedPlayer withState(PlayerMotionState next, long acceptedAt) {
-            return new ConnectedPlayer(playerId, session, next, acceptedAt, hp, respawnAt);
+            return new ConnectedPlayer(playerId, session, next, acceptedAt,
+                    hp, respawnAt, experience, inventory);
         }
 
         private ConnectedPlayer withVitals(int nextHp, long nextRespawnAt) {
-            return new ConnectedPlayer(playerId, session, state, lastAcceptedNanos, nextHp, nextRespawnAt);
+            return new ConnectedPlayer(playerId, session, state, lastAcceptedNanos,
+                    nextHp, nextRespawnAt, experience, inventory);
         }
 
         private ConnectedPlayer withRespawn(PlayerMotionState nextState, int nextHp,
                                              long nextRespawnAt, long acceptedAt) {
             return new ConnectedPlayer(playerId, session, nextState, acceptedAt,
-                    nextHp, nextRespawnAt);
+                    nextHp, nextRespawnAt, experience, inventory);
+        }
+
+        private ConnectedPlayer withExperience(int nextExperience) {
+            return new ConnectedPlayer(playerId, session, state, lastAcceptedNanos,
+                    hp, respawnAt, nextExperience, inventory);
+        }
+
+        private ConnectedPlayer withLoot(List<LootDropState> drops) {
+            Map<String, Integer> updated = new ConcurrentHashMap<>(inventory);
+            drops.forEach(drop -> updated.merge(drop.itemCode(), drop.amount(), Integer::sum));
+            return new ConnectedPlayer(playerId, session, state, lastAcceptedNanos,
+                    hp, respawnAt, experience, updated);
         }
     }
 }

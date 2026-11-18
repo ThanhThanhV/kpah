@@ -22,6 +22,7 @@ public class MonsterSimulationService {
     private final Map<String, List<MonsterSpawnRegion>> regionsByMap = new ConcurrentHashMap<>();
     private final Map<String, MonsterRuntime> monsters = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Long>> nextSpawnAt = new ConcurrentHashMap<>();
+    private final Map<String, LootDropState> lootDrops = new ConcurrentHashMap<>();
 
     public MonsterSimulationService(StarterWorldRegistry worlds) {
         for (WorldMapGeometry map : worlds.all()) {
@@ -51,6 +52,7 @@ public class MonsterSimulationService {
             }
         }
 
+        lootDrops.values().removeIf(drop -> nowMillis - drop.createdAt() > 300_000L);
         for (MonsterRuntime monster : monsters.values()) {
             if (monster.hp <= 0) {
                 if (nowMillis >= monster.respawnAt) monsters.remove(monster.id);
@@ -79,6 +81,10 @@ public class MonsterSimulationService {
                 long respawnAt = nowMillis + monster.region.respawnMillis();
                 monster.respawnAt = respawnAt;
                 nextSpawnAt.get(mapId).put(monster.region.id(), respawnAt);
+                String itemCode = monster.region.monsterType().toLowerCase().replaceAll("[^a-z0-9-]", "") + "-material";
+                LootDropState drop = new LootDropState(UUID.randomUUID().toString(), itemCode, 1,
+                        mapId, monster.x, monster.y, nowMillis);
+                lootDrops.put(drop.dropId(), drop);
             }
             return new MonsterAttackResult(true, "Hit", monster.snapshot(), BASIC_ATTACK_DAMAGE);
         }
@@ -88,6 +94,19 @@ public class MonsterSimulationService {
         return monsters.values().stream()
                 .filter(monster -> monster.mapId.equals(mapId) && monster.hp > 0)
                 .map(MonsterRuntime::snapshot).toList();
+    }
+
+    public List<LootDropState> snapshotLoot(String mapId) {
+        return lootDrops.values().stream()
+                .filter(drop -> drop.mapId().equals(mapId)).toList();
+    }
+
+    public List<LootDropState> collectNearbyLoot(String mapId, double x, double y) {
+        return lootDrops.values().stream()
+                .filter(drop -> drop.mapId().equals(mapId))
+                .filter(drop -> Math.hypot(drop.x() - x, drop.y() - y) <= 38.0)
+                .filter(drop -> lootDrops.remove(drop.dropId(), drop))
+                .toList();
     }
 
     private void spawn(String mapId, MonsterSpawnRegion region, int ordinal) {

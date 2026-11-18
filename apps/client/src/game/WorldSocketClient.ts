@@ -3,12 +3,19 @@ export interface WorldAttackIntent { type: "attack"; targetMonsterId: string; }
 export interface WorldPlayerSnapshot {
   playerId: string; mapId: string; x: number; y: number; sequence: number;
   hp: number; maxHp: number; dead: boolean;
+  experience: number; level: number; inventory: Record<string, number>;
 }
 export interface WorldMonsterSnapshot {
   monsterId: string; monsterType: string; mapId: string; spawnRegionId: string;
   x: number; y: number; homeX: number; homeY: number; hp: number; maxHp: number; state: string;
 }
-export interface WorldSnapshot { type: "snapshot"; players: WorldPlayerSnapshot[]; monsters: WorldMonsterSnapshot[]; }
+export interface WorldLootSnapshot {
+  dropId: string; itemCode: string; amount: number; mapId: string; x: number; y: number;
+}
+export interface WorldSnapshot {
+  type: "snapshot"; players: WorldPlayerSnapshot[]; monsters: WorldMonsterSnapshot[];
+  lootDrops: WorldLootSnapshot[];
+}
 
 export class WorldSocketClient {
   private socket?: WebSocket;
@@ -32,7 +39,9 @@ export class WorldSocketClient {
         if (message.type === "welcome" && "playerId" in message) this.localPlayerId = message.playerId;
         else if (message.type === "snapshot" && "players" in message && Array.isArray(message.players)) {
           this.listeners.forEach((listener) => listener({
-            ...message, monsters: Array.isArray(message.monsters) ? message.monsters : []
+            ...message,
+            monsters: Array.isArray(message.monsters) ? message.monsters : [],
+            lootDrops: Array.isArray(message.lootDrops) ? message.lootDrops : []
           }));
         }
       } catch { /* Ignore malformed frames; the next valid snapshot restores the view. */ }
