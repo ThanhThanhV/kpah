@@ -442,3 +442,12 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Phaser now loads `maps/index.json` first, validates the registered map filenames and queues each Tiled map asset from the manifest.
 - The initial map remains required to be `starter-meadow`; subsequent map transitions can resolve any registered map asset without adding another hardcoded preload line.
 - Client and server now use matching map manifests, reducing the chance that a server portal points to a map the client has not loaded.
+
+## Latest implementation batch — per-map NPC registry and multi-quest journal
+- Added a server-side NPC registry that resolves NPC IDs only within the player's authoritative current map; unknown NPC IDs and NPCs on another map are rejected.
+- Added the Forest Warden to Forest Edge and registered a second quest, so the world now has separate Meadow and Forest quest-givers.
+- Reworked quest snapshots to expose the full quest list with available, active, ready-to-claim and claimed states while retaining the legacy default-quest field for compatibility.
+- Quest objective progress now respects each quest's configured kill count instead of always stopping at three.
+- Expanded the in-game quest journal to display up to three quest entries and their current objectives/progress.
+- Existing quest persistence remains keyed by character ID and quest ID; existing character quest records are preserved.
+- GitHub Actions and local runtime verification are pending for this batch.
