@@ -2,7 +2,6 @@ package com.kpah.server.auth;
 
 import java.util.Arrays;
 import java.util.Map;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
@@ -11,13 +10,13 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 
 @Component
 public class SessionHandshakeInterceptor implements HandshakeInterceptor {
-    static final String AUTH_TOKEN_ATTRIBUTE = "authToken";
+    public static final String AUTH_TOKEN_ATTRIBUTE = "authToken";
     private static final String TOKEN_PROTOCOL_PREFIX = "auth.";
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                    WebSocketHandler wsHandler, Map<String, Object> attributes) {
-        String protocols = request.getHeaders().getFirst(HttpHeaders.SEC_WEBSOCKET_PROTOCOL);
+        String protocols = request.getHeaders().getFirst("Sec-WebSocket-Protocol");
         if (protocols == null || protocols.isBlank()) return false;
         String token = Arrays.stream(protocols.split(","))
                 .map(String::trim)
