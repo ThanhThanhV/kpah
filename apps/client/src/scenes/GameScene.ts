@@ -43,6 +43,7 @@ export class GameScene extends Phaser.Scene {
   private areaNameLabel?: Phaser.GameObjects.Text;
   private miniMapGraphics?: Phaser.GameObjects.Graphics;
   private miniMapPlayer?: Phaser.GameObjects.Arc;
+  private miniMapTitle?: Phaser.GameObjects.Text;
   private miniMapTransform?: { x: number; y: number; scale: number };
   private worldMapPanel?: Phaser.GameObjects.Container;
   private registeredMaps: WorldMapDefinition[] = [];
@@ -105,7 +106,7 @@ export class GameScene extends Phaser.Scene {
     for (const sprite of CHARACTER_SPRITE_CATALOG) this.spriteRegistry.register(this, sprite);
     const manifest = this.cache.json.get("world-map-index") as { maps?: string[] };
     this.registeredMaps = (manifest.maps ?? []).map((filename) =>
-      loadTiledWorldMap(this.cache.json.get(filename.replace(/\\.json$/i, "")))
+      loadTiledWorldMap(this.cache.json.get(filename.replace(/\.json$/i, "")))
     );
     const map = this.registeredMaps.find((entry) => entry.id === "starter-meadow")
       ?? loadTiledWorldMap(this.cache.json.get("starter-meadow"));
@@ -503,6 +504,7 @@ export class GameScene extends Phaser.Scene {
   private drawMiniMap(map: WorldMapDefinition): void {
     this.miniMapGraphics?.destroy();
     this.miniMapPlayer?.destroy();
+    this.miniMapTitle?.destroy();
     const panelX = this.scale.width - 178;
     const panelY = 220;
     const panelWidth = 160;
@@ -530,7 +532,7 @@ export class GameScene extends Phaser.Scene {
         Math.max(3, object.width * scale), Math.max(3, object.height * scale)
       );
     }
-    this.add.text(panelX + 9, panelY + 7, map.name, {
+    this.miniMapTitle = this.add.text(panelX + 9, panelY + 7, map.name, {
       fontFamily: "Arial, sans-serif", fontSize: "10px", color: "#f5dfa0",
       fontStyle: "bold"
     }).setScrollFactor(0).setDepth(2051);
@@ -566,7 +568,7 @@ export class GameScene extends Phaser.Scene {
       const current = map.id === this.currentMapId ? "  ◀ YOU ARE HERE" : "";
       return `${index + 1}. ${map.name}${current}\n   ${routes.length ? `Routes: ${routes.join(" · ")}` : "No mapped exits"}`;
     });
-    const body = this.add.text(18, 52, rows.join("\\n\\n") || "No areas registered.", {
+    const body = this.add.text(18, 52, rows.join("\n\n") || "No areas registered.", {
       fontFamily: "Arial, sans-serif", fontSize: "13px", color: "#e6f1dc",
       lineSpacing: 7, wordWrap: { width: width - 36 }
     });
