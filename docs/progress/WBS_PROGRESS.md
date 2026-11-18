@@ -504,3 +504,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Alpha Wolf remains an aggressive elite and now performs a heavy strike on every third melee attack, dealing 1.8x its base attack damage.
 - Monster attack events now identify their source monster and attack type; the client presents a distinct warning message/color for the Alpha Wolf heavy strike.
 - Added distinct placeholder colors, body sizes and labels for Forest Sentinel and Alpha Wolf. Runtime playtesting remains pending.
+
+
+## Latest implementation batch — Alpha Wolf boss quest and trophies
+- Added the third sequential Forest Warden quest: defeat the Alpha Wolf once for 700 EXP.
+- Alpha Wolf guarantees one Alpha Wolf Pelt and 2–3 Wolf Fangs on defeat; the pelt is registered as a stackable material with a 20-item stack cap.
+- Added catalog and deterministic drop-table coverage for the elite boss reward.
+- The full Forest Warden quest chain is now: 5 Forest Green Slimes → 3 Forest Wolves → 1 Alpha Wolf.
+- GitHub Actions verification is pending for this batch; runtime playtesting remains pending.
