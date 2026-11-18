@@ -8,7 +8,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class MonsterDropTable {
     private final Map<String, List<DropEntry>> fallbackTables = Map.of(
-            "green-slime", List.of(new DropEntry("green-slime-material", 1.0, 1, 2))
+            "green-slime", List.of(new DropEntry("green-slime-material", 1.0, 1, 2)),
+            "forest-wolf", List.of(new DropEntry("wolf-fang", 0.6, 1, 1))
     );
 
     private final Map<String, Map<String, List<DropEntry>>> tablesByMap = Map.of(
@@ -19,7 +20,8 @@ public class MonsterDropTable {
                     "green-slime", List.of(
                             new DropEntry("green-slime-material", 1.0, 1, 2),
                             new DropEntry("forest-resin", 0.35, 1, 1)
-                    )
+                    ),
+                    "forest-wolf", List.of(new DropEntry("wolf-fang", 0.6, 1, 1))
             )
     );
 
