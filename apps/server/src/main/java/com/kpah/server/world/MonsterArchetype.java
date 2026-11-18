@@ -8,7 +8,8 @@ public record MonsterArchetype(
         double attackRange,
         double aggroRange,
         long attackCooldownMillis,
-        double moveSpeedMultiplier
+        double moveSpeedMultiplier,
+        MonsterBehavior behavior
 ) {
     public MonsterArchetype {
         if (monsterType == null || monsterType.isBlank()
@@ -17,7 +18,8 @@ public record MonsterArchetype(
                 || !Double.isFinite(attackRange) || attackRange <= 0
                 || !Double.isFinite(aggroRange) || aggroRange < attackRange
                 || attackCooldownMillis < 100
-                || !Double.isFinite(moveSpeedMultiplier) || moveSpeedMultiplier <= 0) {
+                || !Double.isFinite(moveSpeedMultiplier) || moveSpeedMultiplier <= 0
+                || behavior == null) {
             throw new IllegalArgumentException("Monster archetype configuration is invalid.");
         }
     }
