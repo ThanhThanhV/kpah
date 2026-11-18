@@ -10,20 +10,28 @@ export class MonsterEntity {
   private readonly hpFill: Phaser.GameObjects.Rectangle;
   private x: number;
   private y: number;
+  private readonly bodyWidth: number;
 
   get worldX(): number { return this.x; }
   get worldY(): number { return this.y; }
 
   constructor(private readonly scene: Phaser.Scene, snapshot: WorldMonsterSnapshot) {
     this.x = snapshot.x; this.y = snapshot.y;
-    this.body = scene.add.ellipse(this.x, this.y - 9, 28, 22, 0x65c86c).setStrokeStyle(2, 0x244f36).setDepth(this.y);
-    this.highlight = scene.add.ellipse(this.x - 6, this.y - 15, 7, 4, 0xc7f5a4).setDepth(this.y + 1);
+    const isWolf = snapshot.monsterType === "forest-wolf";
+    this.bodyWidth = isWolf ? 36 : 28;
+    const bodyColor = isWolf ? 0x98704a : 0x65c86c;
+    const outlineColor = isWolf ? 0x493323 : 0x244f36;
+    const highlightColor = isWolf ? 0xe0bd86 : 0xc7f5a4;
+    this.body = scene.add.ellipse(this.x, this.y - 9, this.bodyWidth, isWolf ? 24 : 22, bodyColor)
+      .setStrokeStyle(2, outlineColor).setDepth(this.y);
+    this.highlight = scene.add.ellipse(this.x - 6, this.y - 15, 7, 4, highlightColor).setDepth(this.y + 1);
     this.name = scene.add.text(this.x, this.y - 34, this.label(snapshot.monsterType), {
       fontFamily: "Arial, sans-serif", fontSize: "10px", color: "#e8f5d9",
       stroke: "#183321", strokeThickness: 3
     }).setOrigin(0.5, 1).setDepth(this.y + 2);
-    this.hpBack = scene.add.rectangle(this.x, this.y - 28, 30, 3, 0x172126).setOrigin(0.5, 0.5).setDepth(this.y + 2);
-    this.hpFill = scene.add.rectangle(this.x - 15, this.y - 28, 30, 3, 0xe45c58).setOrigin(0, 0.5).setDepth(this.y + 3);
+    this.hpBack = scene.add.rectangle(this.x, this.y - 28, this.bodyWidth + 2, 3, 0x172126).setOrigin(0.5, 0.5).setDepth(this.y + 2);
+    this.hpFill = scene.add.rectangle(this.x - (this.bodyWidth + 2) / 2, this.y - 28,
+      this.bodyWidth + 2, 3, 0xe45c58).setOrigin(0, 0.5).setDepth(this.y + 3);
     this.setHp(snapshot.hp, snapshot.maxHp);
   }
 
@@ -76,10 +84,14 @@ export class MonsterEntity {
   }
 
   private setHp(hp: number, maxHp: number): void {
-    this.hpFill.setDisplaySize(30 * Phaser.Math.Clamp(hp / Math.max(1, maxHp), 0, 1), 3);
+    this.hpFill.setDisplaySize((this.bodyWidth + 2) * Phaser.Math.Clamp(hp / Math.max(1, maxHp), 0, 1), 3);
   }
 
   private label(type: string): string {
-    return type.split("-").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
+    const labels: Record<string, string> = {
+      "green-slime": "Green Slime",
+      "forest-wolf": "Forest Wolf"
+    };
+    return labels[type] ?? type.split("-").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
   }
 }
