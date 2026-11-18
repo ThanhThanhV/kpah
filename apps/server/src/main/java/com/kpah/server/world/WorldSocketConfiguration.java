@@ -20,21 +20,21 @@ public class WorldSocketConfiguration implements WebSocketConfigurer {
 
     private final WorldSocketHandler handler;
     private final SessionHandshakeInterceptor authInterceptor;
-    private final List<String> allowedOrigins;
+    private final List<String> allowedOriginPatterns;
 
     public WorldSocketConfiguration(
             WorldSocketHandler handler,
             SessionHandshakeInterceptor authInterceptor,
-            @Value("${game.websocket.allowed-origins:http://localhost:5173,http://127.0.0.1:5173}")
-            String allowedOrigins) {
+            @Value("${game.websocket.allowed-origin-patterns:http://localhost:*,http://127.0.0.1:*}")
+            String allowedOriginPatterns) {
         this.handler = handler;
         this.authInterceptor = authInterceptor;
-        this.allowedOrigins = Arrays.stream(allowedOrigins.split(","))
+        this.allowedOriginPatterns = Arrays.stream(allowedOriginPatterns.split(","))
                 .map(String::trim)
                 .filter(origin -> !origin.isEmpty())
                 .toList();
-        if (this.allowedOrigins.isEmpty()) {
-            throw new IllegalArgumentException("At least one WebSocket allowed origin must be configured.");
+        if (this.allowedOriginPatterns.isEmpty()) {
+            throw new IllegalArgumentException("At least one WebSocket allowed-origin pattern must be configured.");
         }
     }
 
@@ -51,6 +51,6 @@ public class WorldSocketConfiguration implements WebSocketConfigurer {
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(handler, "/ws/world")
                 .addInterceptors(authInterceptor)
-                .setAllowedOrigins(allowedOrigins.toArray(String[]::new));
+                .setAllowedOriginPatterns(allowedOriginPatterns.toArray(String[]::new));
     }
 }
