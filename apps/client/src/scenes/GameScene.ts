@@ -145,6 +145,21 @@ export class GameScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.questJournalKey)) {
       this.questJournalPanel?.setVisible(!(this.questJournalPanel.visible));
     }
+    if (Phaser.Input.Keyboard.JustDown(this.inventoryKey)) {
+      this.inventoryPanel?.setVisible(!(this.inventoryPanel.visible));
+    }
+    if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.equipWeaponKey)) {
+      this.worldSocket.sendEquip("novice-sword");
+    }
+    if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.equipBodyKey)) {
+      this.worldSocket.sendEquip("cloth-tunic");
+    }
+    if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.unequipWeaponKey)) {
+      this.worldSocket.sendUnequip("weapon");
+    }
+    if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.unequipBodyKey)) {
+      this.worldSocket.sendUnequip("body");
+    }
     this.player.update(delta);
     this.updateRemotePlayers(delta);
   }
