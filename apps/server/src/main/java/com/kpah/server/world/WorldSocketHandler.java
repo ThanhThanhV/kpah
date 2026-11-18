@@ -133,8 +133,10 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 String previousMapId = player.state().mapId();
                 PlayerMotionState next = movementService.apply(
                         player.state(), new MovementInput(axisX, axisY, sequence), elapsed);
+                double portalCheckX = next.x();
+                double portalCheckY = next.y();
                 PortalDefinition portal = worlds.require(next.mapId()).portals().stream()
-                        .filter(candidate -> candidate.contains(next.x(), next.y()))
+                        .filter(candidate -> candidate.contains(portalCheckX, portalCheckY))
                         .findFirst().orElse(null);
                 if (portal != null) {
                     WorldMapGeometry destination = worlds.require(portal.targetMapId());
