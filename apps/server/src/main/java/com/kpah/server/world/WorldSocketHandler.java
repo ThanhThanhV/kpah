@@ -199,6 +199,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                             return rewarded;
                         });
                     }
+                    persist(player);
                     send(session, Map.of("type", "combat", "action", "skill-cast",
                             "skillId", result.skill().skillId(),
                             "skillName", result.skill().displayName(),
