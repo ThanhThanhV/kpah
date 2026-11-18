@@ -351,54 +351,41 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     }
 
     private void broadcast(String mapId) {
-        List<ConnectedPlayer> mapPlayers = players.values().stream()
+        var snapshots = players.values().stream()
                 .filter(player -> mapId.equals(player.state().mapId()))
+                .map(player -> Map.ofEntries(
+                        Map.entry("playerId", player.playerId()),
+                        Map.entry("name", player.characterName()),
+                        Map.entry("classCode", player.classCode()),
+                        Map.entry("mapId", player.state().mapId()),
+                        Map.entry("x", player.state().x()),
+                        Map.entry("y", player.state().y()),
+                        Map.entry("sequence", player.state().lastSequence()),
+                        Map.entry("hp", player.hp()),
+                        Map.entry("maxHp", classes.maxHp(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
+                        Map.entry("dead", player.hp() <= 0),
+                        Map.entry("experience", player.experience()),
+                        Map.entry("level", ExperienceProgression.levelFor(player.experience())),
+                        Map.entry("mana", skills.manaFor(player.playerId(), player.classCode(), ExperienceProgression.levelFor(player.experience()), System.currentTimeMillis())),
+                        Map.entry("maxMana", skills.maxMana(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
+                        Map.entry("skills", skills.skillsFor(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
+                        Map.entry("inventory", player.inventory()),
+                        Map.entry("equipment", player.equipment()),
+                        Map.entry("itemCatalog", items.all()),
+                        Map.entry("quest", quests.snapshot(player.playerId()))))
                 .toList();
-        List<MonsterState> monsterSnapshots = monsters.snapshot(mapId);
-        List<LootDropState> lootSnapshots = monsters.snapshotLoot(mapId);
-
-        for (ConnectedPlayer recipient : mapPlayers) {
-            if (!recipient.session().isOpen()) continue;
-            List<Map<String, Object>> visiblePlayers = mapPlayers.stream()
-                    .map(player -> playerSnapshot(player, recipient.playerId().equals(player.playerId())))
-                    .toList();
-            Map<String, Object> payload = Map.of(
-                    "type", "snapshot", "players", visiblePlayers,
-                    "monsters", monsterSnapshots, "lootDrops", lootSnapshots);
-            try {
-                send(recipient.session(), payload);
-            } catch (IOException ignored) {
-                // The websocket close lifecycle removes failed sessions.
+        Map<String, Object> payload = Map.of(
+                "type", "snapshot", "players", snapshots, "monsters", monsters.snapshot(mapId),
+                "lootDrops", monsters.snapshotLoot(mapId));
+        for (ConnectedPlayer player : players.values()) {
+            if (mapId.equals(player.state().mapId()) && player.session().isOpen()) {
+                try {
+                    send(player.session(), payload);
+                } catch (IOException ignored) {
+                    // The websocket close lifecycle removes failed sessions.
+                }
             }
         }
-    }
-
-    private Map<String, Object> playerSnapshot(ConnectedPlayer player, boolean includePrivateState) {
-        int level = ExperienceProgression.levelFor(player.experience());
-        Map<String, Object> snapshot = new java.util.LinkedHashMap<>();
-        snapshot.put("playerId", player.playerId());
-        snapshot.put("name", player.characterName());
-        snapshot.put("classCode", player.classCode());
-        snapshot.put("mapId", player.state().mapId());
-        snapshot.put("x", player.state().x());
-        snapshot.put("y", player.state().y());
-        snapshot.put("sequence", player.state().lastSequence());
-        snapshot.put("hp", player.hp());
-        snapshot.put("maxHp", classes.maxHp(player.classCode(), level));
-        snapshot.put("dead", player.hp() <= 0);
-        snapshot.put("experience", player.experience());
-        snapshot.put("level", level);
-        snapshot.put("mana", skills.manaFor(
-                player.playerId(), player.classCode(), level, System.currentTimeMillis()));
-        snapshot.put("maxMana", skills.maxMana(player.classCode(), level));
-        snapshot.put("skills", skills.skillsFor(player.classCode(), level));
-        if (includePrivateState) {
-            snapshot.put("inventory", player.inventory());
-            snapshot.put("equipment", player.equipment());
-            snapshot.put("itemCatalog", items.all());
-            snapshot.put("quest", quests.snapshot(player.playerId()));
-        }
-        return Map.copyOf(snapshot);
     }
 
     private void broadcastCombat(String mapId, Object payload) {

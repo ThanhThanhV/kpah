@@ -94,8 +94,3 @@ The world gateway applies per-connection fixed-window limits before gameplay dis
 | Unsupported message types (shared bucket) | 10 / second |
 
 All unsupported or missing message types share one rate-limit bucket per connection, preventing arbitrary type strings from creating unbounded counters. Excess frames are silently dropped before persistence, combat processing or map broadcast. Counters are scoped to a WebSocket connection and released when it closes. These in-memory limits protect a single server process; they are not a substitute for distributed quotas when horizontally scaling.
-
-
-## World snapshot privacy
-- Player snapshots expose only world-visible character state to other players on the same map: identity, class, position, HP/death, progression level/experience, mana and unlocked skills.
-- Inventory, equipment, the item catalog used by the inventory UI, and quest progress are included only in the snapshot entry belonging to the authenticated recipient's own character.
