@@ -17,7 +17,10 @@ public class MonsterArchetypeRegistry {
                     MonsterBehavior.PATROL),
             "alpha-wolf", new MonsterArchetype(
                     "alpha-wolf", "Alpha Wolf", 260, 22, 42.0, 240.0, 850L, 1.7,
-                    MonsterBehavior.ELITE)
+                    MonsterBehavior.ELITE),
+            "ancient-guardian", new MonsterArchetype(
+                    "ancient-guardian", "Ancient Guardian", 520, 28, 46.0, 260.0, 1_150L, 0.7,
+                    MonsterBehavior.ELITE, MonsterSpecialAttack.SWEEP)
     );
 
     public MonsterArchetype require(String monsterType) {
