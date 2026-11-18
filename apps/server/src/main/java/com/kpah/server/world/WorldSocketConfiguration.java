@@ -25,7 +25,7 @@ public class WorldSocketConfiguration implements WebSocketConfigurer {
     public WorldSocketConfiguration(
             WorldSocketHandler handler,
             SessionHandshakeInterceptor authInterceptor,
-            @Value("${game.websocket.allowed-origin-patterns:http://localhost:*,http://127.0.0.1:*}")
+            @Value("${game.websocket.allowed-origin-patterns:http://localhost:[*],http://127.0.0.1:[*]}")
             String allowedOriginPatterns) {
         this.handler = handler;
         this.authInterceptor = authInterceptor;
