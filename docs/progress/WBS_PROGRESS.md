@@ -415,3 +415,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Added the portal geometry model and two-way portal definitions between Starter Meadow and Forest Edge.
 - Portal destinations are map-space coordinates; the world handler now has the metadata needed to validate and apply transitions server-side.
 - Client-side map swapping and server movement-trigger integration are the next part of the multi-map slice.
+
+
+## Latest implementation batch — server-authoritative map transition
+- Movement now checks the active map's portal rectangles after server-side collision resolution.
+- Entering a portal validates its destination map and coordinates against the registered map geometry, then changes the player's authoritative map and position.
+- The character's new map and coordinates are persisted immediately; both source and destination map snapshots are scheduled for broadcast.
+- The server emits a `map-transition` message to the player. Client-side map replacement and camera/collision reset remain to be completed.
