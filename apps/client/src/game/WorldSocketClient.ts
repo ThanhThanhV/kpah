@@ -1,4 +1,4 @@
-export type WorldConnectionStatus = "connecting" | "connected" | "reconnecting" | "authentication-required";
+export type WorldConnectionStatus = "connecting" | "connected" | "reconnecting" | "authentication-required" | "protocol-error";
 
 export interface WorldMoveIntent { type: "move"; sequence: number; axisX: number; axisY: number; }
 export interface WorldAttackIntent { type: "attack"; targetMonsterId: string; }
@@ -68,6 +68,12 @@ export class WorldSocketClient {
       // A policy close indicates rejected credentials or a character that cannot be used by this session.
       if (event.code === 1008) {
         this.statusListeners.forEach((listener) => listener("authentication-required"));
+        return;
+      }
+      // These close codes indicate a non-retryable client/protocol problem. Reconnecting
+      // with the same payload would repeat the failure (notably 1009 for oversized frames).
+      if ([1002, 1003, 1007, 1009, 1010].includes(event.code)) {
+        this.statusListeners.forEach((listener) => listener("protocol-error"));
         return;
       }
       this.statusListeners.forEach((listener) => listener("reconnecting"));
