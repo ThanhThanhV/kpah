@@ -84,7 +84,6 @@ class QuestServiceTest {
     @Test
     void monsterKillOnAnotherMapDoesNotAdvanceMeadowQuest() {
         QuestProgress saved = new QuestProgress(CHARACTER_ID, "meadow-slime-hunt");
-        when(progress.findById(QUEST_KEY)).thenReturn(Optional.of(saved));
         lenient().when(progress.findById(CHARACTER_ID + ":forest-slime-hunt")).thenReturn(Optional.empty());
 
         quests.onMonsterDefeated(CHARACTER_ID, "forest-edge", "green-slime");
