@@ -19,6 +19,7 @@ export interface DirectionalClip {
 }
 
 export interface CharacterVisualAdapter {
+  readonly cameraTarget: Phaser.GameObjects.GameObject;
   play(action: CharacterAction, facing: Facing): void;
   setPosition(x: number, y: number): void;
   setDepth(depth: number): void;
@@ -41,7 +42,8 @@ const DEFAULT_DEFINITION: CharacterDefinition = {
 
 export class CharacterEntity {
   readonly definition: CharacterDefinition;
-  private readonly graphics: Phaser.GameObjects.Graphics;
+  private readonly graphics?: Phaser.GameObjects.Graphics;
+  private readonly visualAdapter?: CharacterVisualAdapter;
   private readonly nameText: Phaser.GameObjects.Text;
   private readonly hpBack: Phaser.GameObjects.Rectangle;
   private readonly hpFill: Phaser.GameObjects.Rectangle;
@@ -51,14 +53,16 @@ export class CharacterEntity {
   private elapsed = 0;
   private hp: number;
 
-  get cameraTarget(): Phaser.GameObjects.Graphics {
-    return this.graphics;
+  get cameraTarget(): Phaser.GameObjects.GameObject {
+    return this.visualAdapter?.cameraTarget ?? this.graphics!;
   }
 
-  constructor(scene: Phaser.Scene, x: number, y: number, definition = DEFAULT_DEFINITION) {
+  constructor(scene: Phaser.Scene, x: number, y: number, definition = DEFAULT_DEFINITION,
+              visualAdapter?: CharacterVisualAdapter) {
     this.definition = definition;
     this.hp = definition.maxHp;
-    this.graphics = scene.add.graphics();
+    this.visualAdapter = visualAdapter;
+    this.graphics = visualAdapter ? undefined : scene.add.graphics();
     this.nameText = scene.add.text(0, 0, definition.displayName, {
       fontFamily: "Arial, sans-serif", fontSize: "12px", color: "#f4f7e8",
       stroke: "#15252a", strokeThickness: 3
@@ -66,6 +70,7 @@ export class CharacterEntity {
     this.hpBack = scene.add.rectangle(0, 0, 42, 4, 0x172126).setOrigin(0.5, 0.5);
     this.hpFill = scene.add.rectangle(-20, 0, 40, 2, 0x71d68b).setOrigin(0, 0.5);
     this.setPosition(x, y);
+    this.visualAdapter?.play(this.action, this.facing);
     this.draw();
   }
 
@@ -86,6 +91,7 @@ export class CharacterEntity {
 
   setFacing(facing: Facing): void {
     this.facing = facing;
+    this.visualAdapter?.play(this.action, this.facing);
     this.draw();
   }
 
@@ -93,6 +99,7 @@ export class CharacterEntity {
     if (this.action === "death" && action !== "death") return;
     this.action = action;
     this.elapsed = 0;
+    this.visualAdapter?.play(this.action, this.facing);
     this.draw();
   }
 
@@ -112,6 +119,7 @@ export class CharacterEntity {
     if (duration !== undefined && this.elapsed >= duration) {
       this.action = this.moving ? "walk" : "idle";
       this.elapsed = 0;
+      this.visualAdapter?.play(this.action, this.facing);
     }
     this.draw();
   }
@@ -119,18 +127,22 @@ export class CharacterEntity {
   private setPosition(x: number, y: number): void {
     const px = Math.round(x);
     const py = Math.round(y);
-    this.graphics.setPosition(px, py);
+    this.graphics?.setPosition(px, py);
+    this.visualAdapter?.setPosition(px, py);
     this.nameText.setPosition(px, py - 75);
     this.hpBack.setPosition(px, py - 68);
     this.hpFill.setPosition(px - 20, py - 68);
-    this.graphics.setDepth(py);
+    this.graphics?.setDepth(py);
+    this.visualAdapter?.setDepth(py);
     this.nameText.setDepth(py + 2);
     this.hpBack.setDepth(py + 2);
     this.hpFill.setDepth(py + 3);
   }
 
   private draw(): void {
+    if (this.visualAdapter) return;
     const g = this.graphics;
+    if (!g) return;
     g.clear();
     const walkPhase = this.action === "walk" ? Math.sin(this.elapsed / 75) * 4 : 0;
     const hitTint = this.action === "hit" ? 0xff7777 : this.action === "death" ? 0x777777 : 0xe9bd78;
@@ -175,7 +187,8 @@ export class CharacterEntity {
   }
 
   destroy(): void {
-    this.graphics.destroy();
+    this.graphics?.destroy();
+    this.visualAdapter?.destroy();
     this.nameText.destroy();
     this.hpBack.destroy();
     this.hpFill.destroy();

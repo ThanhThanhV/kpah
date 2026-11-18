@@ -22,7 +22,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | WBS ID | Activity / deliverable | Status | Evidence / remaining work |
 |---|---|---|---|
 | 3.1–3.4 | Client/server foundation, world transport and CI | IN PROGRESS | Phaser, Spring Boot, PostgreSQL Compose, JPA persistence and GitHub Actions. |
-| 4.1–4.5 | Character renderer and animation | IN PROGRESS | Procedural player placeholder and SpriteSheet/Spine adapter contracts; concrete art adapters remain. |
+| 4.1–4.5 | Character renderer and animation | IN PROGRESS | CharacterEntity now supports interchangeable concrete Phaser SpriteSheet and Spine display adapters with procedural fallback; original sprite/Spine assets and runtime-specific animation registration remain. |
 | 5 | Map Engine | IN PROGRESS | Tiled map loading, rectangular collision and server-side grid pathfinding; map art and transitions remain. |
 | 6.1–6.3 | Input, movement and facing | IN PROGRESS | Client prediction and server-authoritative movement; touch controls and replicated facing remain. |
 | 7.1–7.3 | Monster definitions, AI and presentation | IN PROGRESS | Tiled spawn definitions, bounded roam, aggro, leash, attack cooldown, A* pursuit and snapshot-driven placeholder visuals. |
@@ -104,3 +104,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Basic attacks, skills, monster damage mitigation, max HP and max mana now use the character's current level.
 - On level-up, the character gains the corresponding increase to current HP as well as maximum HP.
 - Added unit coverage for all three class growth curves; skill combat tests now pass the authoritative character level.
+
+
+## Latest implementation batch — hybrid character renderer adapters
+- Refactored CharacterEntity to accept a visual adapter while retaining the procedural renderer as a fallback.
+- Added SpriteSheetCharacterAdapter for directional/action animation keys, feet-pivot alignment, logical display sizing, depth sorting and lifecycle.
+- Added SpineCharacterVisualAdapter as a plugin-version-neutral bridge over a Spine display object and animation map.
+- Both adapters expose a camera target and share CharacterEntity's nameplate/HP overlay behavior.
+- No character art or Spine runtime was fabricated: texture loading, animation registration and original character assets are still required before the game switches away from its procedural fallback.
