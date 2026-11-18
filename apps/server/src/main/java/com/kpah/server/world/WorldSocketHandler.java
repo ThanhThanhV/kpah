@@ -1,5 +1,6 @@
 package com.kpah.server.world;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.kpah.server.auth.AuthService;
 import com.kpah.server.auth.SessionHandshakeInterceptor;
@@ -104,6 +105,10 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         }
         try {
             JsonNode input = mapper.readTree(payload);
+            if (input == null || !input.isObject()) {
+                send(session, Map.of("type", "error", "message", "World message must be a JSON object."));
+                return;
+            }
             String type = input.path("type").asText();
             if (!messageRateLimiter.tryAcquire(session.getId(), type)) return;
             if ("ping".equals(type)) {
@@ -229,6 +234,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             } else {
                 send(session, Map.of("type", "error", "message", "Unsupported message type."));
             }
+        } catch (JsonProcessingException exception) {
+            send(session, Map.of("type", "error", "message", "World message contains invalid JSON."));
         } catch (IllegalArgumentException exception) {
             send(session, Map.of("type", "error", "message", exception.getMessage()));
         }

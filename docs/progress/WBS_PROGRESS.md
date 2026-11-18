@@ -294,3 +294,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Set a 10-second asynchronous send timeout to avoid indefinitely stalled outbound socket writes.
 - Replaced the wildcard WebSocket origin pattern with an exact-match allowlist configured through `WEBSOCKET_ALLOWED_ORIGINS`; local development defaults to the two Vite localhost origins.
 - Documented the deployment requirement to set the public frontend origin explicitly. The handler-level 8,192-character guard remains as defense in depth.
+
+
+## Latest implementation batch — validate inbound world message shape
+- The world gateway now rejects empty JSON payloads, JSON `null`, arrays and primitive JSON values with a controlled protocol error instead of dereferencing a null root node.
+- Malformed JSON is caught and answered with a bounded generic error message; parser exceptions no longer escape the message handler.
+- Valid object messages continue through the existing per-type limiter and authoritative command validation.
