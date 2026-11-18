@@ -47,7 +47,6 @@ export class GameScene extends Phaser.Scene {
   private miniMapTransform?: { x: number; y: number; scale: number };
   private worldMapPanel?: Phaser.GameObjects.Container;
   private registeredMaps: WorldMapDefinition[] = [];
-  private currentMapDefinition?: WorldMapDefinition;
   private unsubscribeSnapshot?: () => void;
   private unsubscribeStatus?: () => void;
   private unsubscribeCombat?: () => void;
@@ -110,7 +109,6 @@ export class GameScene extends Phaser.Scene {
     );
     const map = this.registeredMaps.find((entry) => entry.id === "starter-meadow")
       ?? loadTiledWorldMap(this.cache.json.get("starter-meadow"));
-    this.currentMapDefinition = map;
     this.currentMapId = map.id;
     this.mapRenderer = new MapRenderer(this, map);
     this.npcObjects = map.worldObjects.filter((object) => object.kind === "npc");
