@@ -351,7 +351,9 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     }
 
     private void broadcast(String mapId) {
-        var snapshots = players.values().stream()
+        // Build the public map view once. Private character data is attached only to
+        // the matching recipient, avoiding an O(playerCount^2) snapshot rebuild.
+        var publicPlayers = players.values().stream()
                 .filter(player -> mapId.equals(player.state().mapId()))
                 .map(player -> Map.ofEntries(
                         Map.entry("playerId", player.playerId()),
@@ -368,22 +370,27 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                         Map.entry("level", ExperienceProgression.levelFor(player.experience())),
                         Map.entry("mana", skills.manaFor(player.playerId(), player.classCode(), ExperienceProgression.levelFor(player.experience()), System.currentTimeMillis())),
                         Map.entry("maxMana", skills.maxMana(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
-                        Map.entry("skills", skills.skillsFor(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
-                        Map.entry("inventory", player.inventory()),
-                        Map.entry("equipment", player.equipment()),
-                        Map.entry("itemCatalog", items.all()),
-                        Map.entry("quest", quests.snapshot(player.playerId()))))
+                        Map.entry("skills", skills.skillsFor(player.classCode(), ExperienceProgression.levelFor(player.experience())))))
                 .toList();
-        Map<String, Object> payload = Map.of(
-                "type", "snapshot", "players", snapshots, "monsters", monsters.snapshot(mapId),
-                "lootDrops", monsters.snapshotLoot(mapId));
+        var monsterSnapshot = monsters.snapshot(mapId);
+        var lootSnapshot = monsters.snapshotLoot(mapId);
         for (ConnectedPlayer player : players.values()) {
-            if (mapId.equals(player.state().mapId()) && player.session().isOpen()) {
-                try {
-                    send(player.session(), payload);
-                } catch (IOException ignored) {
-                    // The websocket close lifecycle removes failed sessions.
-                }
+            if (!mapId.equals(player.state().mapId()) || !player.session().isOpen()) continue;
+            Map<String, Object> selfState = Map.of(
+                    "inventory", player.inventory(),
+                    "equipment", player.equipment(),
+                    "itemCatalog", items.all(),
+                    "quest", quests.snapshot(player.playerId()));
+            Map<String, Object> payload = Map.of(
+                    "type", "snapshot",
+                    "players", publicPlayers,
+                    "selfState", selfState,
+                    "monsters", monsterSnapshot,
+                    "lootDrops", lootSnapshot);
+            try {
+                send(player.session(), payload);
+            } catch (IOException ignored) {
+                // The websocket close lifecycle removes failed sessions.
             }
         }
     }
