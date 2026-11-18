@@ -415,10 +415,11 @@ export class GameScene extends Phaser.Scene {
   private applyWorldSnapshot(snapshot: WorldSnapshot): void {
     const ownPlayer = this.worldSocket.getOwnPlayer(snapshot);
     if (ownPlayer) {
-      this.ensureLocalCharacterVisual(ownPlayer.classCode ?? "warrior", ownPlayer.name ?? "Adventurer", ownPlayer.maxHp);
+      this.ensureLocalCharacterVisual(ownPlayer.classCode ?? "warrior", ownPlayer.name ?? "Adventurer", ownPlayer.maxHp, ownPlayer.hp);
       this.playerX = Phaser.Math.Linear(this.playerX, ownPlayer.x, 0.35);
       this.playerY = Phaser.Math.Linear(this.playerY, ownPlayer.y, 0.35);
       this.playerDead = ownPlayer.hp <= 0;
+      this.player.setHp(ownPlayer.hp);
       this.vitalsLabel?.setText(ownPlayer.hp > 0
         ? `HP: ${ownPlayer.hp}/${ownPlayer.maxHp} · MP: ${ownPlayer.mana}/${ownPlayer.maxMana}`
         : "DEFEATED · Respawning…");
@@ -489,7 +490,7 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private ensureLocalCharacterVisual(classCode: string, displayName: string, maxHp: number): void {
+  private ensureLocalCharacterVisual(classCode: string, displayName: string, maxHp: number, hp: number): void {
     if (this.playerVisualKey === classCode
         || !CHARACTER_SPRITE_CATALOG.some((sprite) => sprite.characterKey === classCode)) return;
     const previous = this.player;
@@ -502,7 +503,7 @@ export class GameScene extends Phaser.Scene {
       this.spriteRegistry.createAdapter(this, classCode, this.playerX, this.playerY,
         definition.logicalSize, definition.feetPivot)
     );
-    this.player.setHp(this.playerDead ? 0 : maxHp);
+    this.player.setHp(hp);
     this.playerVisualKey = classCode;
     this.cameras.main.startFollow(this.player.cameraTarget, true, 0.12, 0.12);
     previous.destroy();
