@@ -85,7 +85,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 ## Next implementation sequence
 1. Add refresh-token rotation and secure cookie strategy for browser sessions.
 2. Implement class-specific skill kits, resource costs and progression growth.
-3. Replace debug visuals with original art and concrete animation adapters.
+3. Produce original character spritesheets, add catalog entries and verify all directional/action clips in-game.
 4. Expand quest/NPC catalogs, gameplay integration coverage, observability and load testing.
 
 
@@ -126,3 +126,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - The server validates the required level before charging mana or applying damage.
 - World snapshots only advertise skills currently unlocked for that character's class and level.
 - Added coverage for locked-skill rejection and the level-3 unlock boundary.
+
+
+## Latest implementation batch — spritesheet animation pipeline
+- Added a typed character sprite catalog describing texture path, frame dimensions and per-action/per-facing frame ranges.
+- GameScene now preloads catalogued spritesheets, registers their Phaser animations and requests a sprite adapter for local and remote character entities.
+- Registry validates texture presence, frame ranges, duplicate character keys and duplicate Phaser animation keys before registering clips.
+- CharacterEntity retains its procedural fallback whenever no catalog entry exists; the catalog is intentionally empty until original character art is supplied.
+- No original character artwork is included in this batch, so the in-game appearance remains procedural for now.

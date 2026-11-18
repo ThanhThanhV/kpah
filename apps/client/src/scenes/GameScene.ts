@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { CharacterEntity } from "../game/CharacterEntity";
+import { CHARACTER_SPRITE_CATALOG, SpriteSheetAnimationRegistry } from "../game/SpriteSheetAnimationRegistry";
 import { MonsterEntity } from "../game/MonsterEntity";
 import { LootEntity } from "../game/LootEntity";
 import { loadTiledWorldMap } from "../game/TiledMapLoader";
@@ -13,6 +14,7 @@ interface RemotePlayerView {
 
 export class GameScene extends Phaser.Scene {
   private player!: CharacterEntity;
+  private spriteRegistry!: SpriteSheetAnimationRegistry;
   private mapRenderer!: MapRenderer;
   private movement!: MovementController;
   private worldSocket!: WorldSocketClient;
@@ -51,15 +53,32 @@ export class GameScene extends Phaser.Scene {
   private npcObjects: { id: string; name: string; x: number; y: number; width: number; height: number }[] = [];
 
   constructor() { super("GameScene"); }
-  preload(): void { this.load.json("starter-meadow", "maps/starter-meadow.json"); }
+  preload(): void {
+    this.load.json("starter-meadow", "maps/starter-meadow.json");
+    for (const sprite of CHARACTER_SPRITE_CATALOG) {
+      this.load.spritesheet(sprite.textureKey, sprite.path, {
+        frameWidth: sprite.frameWidth, frameHeight: sprite.frameHeight
+      });
+    }
+  }
 
   create(): void {
+    this.spriteRegistry = new SpriteSheetAnimationRegistry();
+    for (const sprite of CHARACTER_SPRITE_CATALOG) this.spriteRegistry.register(this, sprite);
     const map = loadTiledWorldMap(this.cache.json.get("starter-meadow"));
     this.mapRenderer = new MapRenderer(this, map);
     this.npcObjects = map.worldObjects.filter((object) => object.kind === "npc");
     this.playerX = map.spawn.x; this.playerY = map.spawn.y;
     this.movement = new MovementController(this.mapRenderer.worldWidth, this.mapRenderer.worldHeight, this.mapRenderer.collisionRects);
-    this.player = new CharacterEntity(this, this.playerX, this.playerY);
+    const playerDefinition = {
+      key: "starter-adventurer", displayName: "Wanderer", maxHp: 100,
+      feetPivot: { x: 0.5, y: 1 }, logicalSize: { width: 44, height: 64 }
+    };
+    this.player = new CharacterEntity(
+      this, this.playerX, this.playerY, playerDefinition,
+      this.spriteRegistry.createAdapter(this, playerDefinition.key, this.playerX, this.playerY,
+        playerDefinition.logicalSize, playerDefinition.feetPivot)
+    );
     this.cameras.main.setBounds(0, 0, this.mapRenderer.worldWidth, this.mapRenderer.worldHeight);
     this.cameras.main.startFollow(this.player.cameraTarget, true, 0.12, 0.12);
     this.cursors = this.input.keyboard!.createCursorKeys();
@@ -329,10 +348,15 @@ export class GameScene extends Phaser.Scene {
       visibleRemoteIds.add(remote.playerId);
       let view = this.remotePlayers.get(remote.playerId);
       if (!view) {
-        const entity = new CharacterEntity(this, remote.x, remote.y, {
+        const remoteDefinition = {
           key: "remote-player", displayName: remote.name ?? "Adventurer", maxHp: remote.maxHp ?? 100,
           feetPivot: { x: 0.5, y: 1 }, logicalSize: { width: 44, height: 64 }
-        });
+        };
+        const entity = new CharacterEntity(
+          this, remote.x, remote.y, remoteDefinition,
+          this.spriteRegistry.createAdapter(this, remoteDefinition.key, remote.x, remote.y,
+            remoteDefinition.logicalSize, remoteDefinition.feetPivot)
+        );
         view = { entity, x: remote.x, y: remote.y, targetX: remote.x, targetY: remote.y, lastSeenAt: now };
         this.remotePlayers.set(remote.playerId, view);
       } else { view.targetX = remote.x; view.targetY = remote.y; view.lastSeenAt = now; }
