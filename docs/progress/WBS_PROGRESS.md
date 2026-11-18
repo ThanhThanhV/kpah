@@ -233,3 +233,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Pending hits replay when that remote character is first created; events expire after 1.5 seconds and are capped at eight per player.
 - Expired entries are pruned during the scene update loop, and all pending player-hit state is cleared during scene shutdown.
 - Existing remote hit events still apply immediately when the target renderer exists; local-player handling and server-authoritative HP snapshots remain unchanged.
+
+
+## Latest implementation batch — stabilize character action lifecycle
+- Avoid replaying the same directional animation when a snapshot repeats the current facing; this prevents unnecessary restarts of one-shot clips.
+- Prevent repeated zero-HP snapshots from restarting the death animation every replication tick.
+- Preserve the existing authoritative respawn transition: a character whose HP rises from zero exits death into walk/idle based on movement state.

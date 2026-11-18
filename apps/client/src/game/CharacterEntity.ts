@@ -97,6 +97,7 @@ export class CharacterEntity {
   }
 
   setFacing(facing: Facing): void {
+    if (this.facing === facing) return;
     this.facing = facing;
     this.visualAdapter?.play(this.action, this.facing);
     this.draw();
@@ -131,8 +132,10 @@ export class CharacterEntity {
     this.maxHp = Math.max(1, maxHp);
     this.hp = Phaser.Math.Clamp(value, 0, this.maxHp);
     this.hpFill.width = 40 * (this.hp / this.maxHp);
-    if (this.hp === 0) this.setAction("death");
-    else if (wasDead && this.action === "death") this.setAction(this.moving ? "walk" : "idle");
+    if (this.hp === 0 && this.action !== "death") this.setAction("death");
+    else if (this.hp > 0 && wasDead && this.action === "death") {
+      this.setAction(this.moving ? "walk" : "idle");
+    }
   }
 
   update(deltaMs: number): void {
