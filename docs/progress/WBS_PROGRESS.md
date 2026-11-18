@@ -465,3 +465,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Added the M-key world map overlay, populated from the same client map manifest; it lists every registered area, highlights the current area and displays portal connections resolved from Tiled metadata.
 - Minimap and world-map content are rebuilt when the player changes maps; the server remains authoritative for all actual map transfers.
 - GitHub Actions verification is pending for this batch.
+
+## Quest objective correctness — map-scoped kill progress
+- Each quest now declares its target map as well as its target monster type.
+- The world gateway passes the server-authoritative current map into quest progression; meadow kills can no longer advance the Forest Edge objective, and vice versa.
+- Added regression coverage for kills on the wrong map.
+- GitHub Actions verification is pending for this correction.
