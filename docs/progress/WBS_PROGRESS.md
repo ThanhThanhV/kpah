@@ -73,6 +73,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Account authentication batch: [run 44240885387 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44240885387).
 - Auth hardening batch: [run 44241375845 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44241375845).
 - Multi-character selection batch: [run 44242288598 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44242288598).
+- Class-specific combat stats: [run 44242662962 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44242662962).
 
 ## Current risks
 1. Character, monster and drop visuals remain original procedural placeholders.
