@@ -9,6 +9,7 @@ export class MonsterEntity {
   private readonly hpBack: Phaser.GameObjects.Rectangle;
   private readonly hpFill: Phaser.GameObjects.Rectangle;
   private readonly heavyStrikeTelegraph: Phaser.GameObjects.Ellipse;
+  private readonly sweepTelegraph: Phaser.GameObjects.Rectangle;
   private x: number;
   private y: number;
   private readonly bodyWidth: number;
@@ -43,6 +44,9 @@ export class MonsterEntity {
     this.heavyStrikeTelegraph = scene.add.ellipse(snapshot.attackX ?? 0, snapshot.attackY ?? 0,
       184, 184, 0xff3f36, 0.12)
       .setStrokeStyle(3, 0xff554d, 0.95).setDepth(snapshot.attackY ?? snapshot.y).setVisible(false);
+    this.sweepTelegraph = scene.add.rectangle(snapshot.attackX ?? 0, snapshot.attackY ?? 0,
+      184, 64, 0xffb13b, 0.14).setStrokeStyle(3, 0xffc05c, 0.95)
+      .setDepth(snapshot.attackY ?? snapshot.y).setVisible(false);
     this.setHp(snapshot.hp, snapshot.maxHp);
     this.updateTelegraph(snapshot);
   }
@@ -63,7 +67,7 @@ export class MonsterEntity {
 
   destroy(): void {
     this.body.destroy(); this.highlight.destroy(); this.name.destroy();
-    this.hpBack.destroy(); this.hpFill.destroy(); this.heavyStrikeTelegraph.destroy();
+    this.hpBack.destroy(); this.hpFill.destroy(); this.heavyStrikeTelegraph.destroy(); this.sweepTelegraph.destroy();
   }
 
   showCombatHit(amount: number, isSkill: boolean): void {
@@ -99,10 +103,18 @@ export class MonsterEntity {
   }
 
   private updateTelegraph(snapshot: WorldMonsterSnapshot): void {
+    const windingUp = snapshot.state === "windup";
+    const isSweep = windingUp && snapshot.attackShape === "SWEEP"
+      && (snapshot.attackWidth ?? 0) > 0 && (snapshot.attackHeight ?? 0) > 0;
     const radius = snapshot.attackRadius ?? 0;
-    const active = snapshot.state === "windup" && radius > 0;
-    this.heavyStrikeTelegraph.setVisible(active);
-    if (active) {
+    this.heavyStrikeTelegraph.setVisible(windingUp && !isSweep && radius > 0);
+    this.sweepTelegraph.setVisible(isSweep);
+    if (isSweep) {
+      this.sweepTelegraph.setPosition(snapshot.attackX ?? snapshot.x, snapshot.attackY ?? snapshot.y)
+        .setSize(snapshot.attackWidth ?? 184, snapshot.attackHeight ?? 64)
+        .setRotation(snapshot.attackAngle ?? 0)
+        .setDepth((snapshot.attackY ?? snapshot.y) - 1);
+    } else if (windingUp && radius > 0) {
       this.heavyStrikeTelegraph.setPosition(snapshot.attackX ?? snapshot.x, snapshot.attackY ?? snapshot.y)
         .setDisplaySize(radius * 2, radius * 2)
         .setDepth((snapshot.attackY ?? snapshot.y) - 1);
@@ -118,7 +130,8 @@ export class MonsterEntity {
       "green-slime": "Green Slime",
       "forest-wolf": "Forest Wolf",
       "forest-sentinel": "Forest Sentinel",
-      "alpha-wolf": "Alpha Wolf"
+      "alpha-wolf": "Alpha Wolf",
+      "ancient-guardian": "Ancient Guardian"
     };
     return labels[type] ?? type.split("-").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
   }
