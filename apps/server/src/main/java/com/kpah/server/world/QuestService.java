@@ -1,5 +1,6 @@
 package com.kpah.server.world;
 
+import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,21 +10,19 @@ public class QuestService {
     private static final double INTERACTION_RANGE = 100.0;
 
     private final QuestProgressRepository progress;
-    private final StarterWorldRegistry worlds;
+    private final NpcRegistry npcs;
     private final QuestCatalog catalog;
 
     public QuestService(QuestProgressRepository progress, StarterWorldRegistry worlds, QuestCatalog catalog) {
         this.progress = progress;
-        this.worlds = worlds;
+        this.npcs = new NpcRegistry(worlds);
         this.catalog = catalog;
     }
 
     @Transactional
     public QuestInteractionResult interact(String characterId, String mapId, String npcId,
                                            double playerX, double playerY) {
-        NpcDefinition npc = worlds.require(mapId).npcs().stream()
-                .filter(candidate -> candidate.id().equals(npcId))
-                .findFirst().orElseThrow(() -> new IllegalArgumentException("NPC not found on this map."));
+        NpcDefinition npc = npcs.require(mapId, npcId);
         if (Math.hypot(npc.centerX() - playerX, npc.centerY() - playerY) > INTERACTION_RANGE) {
             throw new IllegalArgumentException("Move closer to the NPC to talk.");
         }
@@ -57,7 +56,7 @@ public class QuestService {
             if (!definition.targetMonsterType().equals(monsterType)) continue;
             progress.findById(key(characterId, definition.questId())).ifPresent(quest -> {
                 if (!quest.isClaimed() && quest.getProgress() < definition.requiredKills()) {
-                    quest.increment();
+                    quest.increment(definition.requiredKills());
                     progress.save(quest);
                 }
             });
@@ -65,18 +64,26 @@ public class QuestService {
     }
 
     @Transactional(readOnly = true)
+    public List<Map<String, Object>> snapshotAll(String characterId) {
+        return catalog.all().stream().map(definition -> snapshotOne(characterId, definition)).toList();
+    }
+
+    /** Legacy default-quest view retained for clients that have not migrated to the journal list. */
+    @Transactional(readOnly = true)
     public Map<String, Object> snapshot(String characterId) {
-        QuestCatalog.QuestDefinition definition = catalog.defaultQuest();
+        return snapshotOne(characterId, catalog.defaultQuest());
+    }
+
+    private Map<String, Object> snapshotOne(String characterId, QuestCatalog.QuestDefinition definition) {
         QuestProgress quest = progress.findById(key(characterId, definition.questId())).orElse(null);
-        if (quest == null) return Map.of("questId", definition.questId(), "status", "available",
-                "progress", 0, "required", definition.requiredKills(),
-                "npcName", definition.npcName(), "targetDisplayName", definition.targetDisplayName(),
-                "experienceReward", definition.experienceReward());
-        String status = quest.isClaimed() ? "claimed"
-                : quest.getProgress() >= definition.requiredKills() ? "ready" : "active";
+        int current = quest == null ? 0 : quest.getProgress();
+        String status = quest == null ? "available" : quest.isClaimed() ? "claimed"
+                : current >= definition.requiredKills() ? "ready" : "active";
         return Map.of("questId", definition.questId(), "status", status,
-                "progress", quest.getProgress(), "required", definition.requiredKills(),
-                "npcName", definition.npcName(), "targetDisplayName", definition.targetDisplayName(),
+                "progress", current, "required", definition.requiredKills(),
+                "npcId", definition.npcId(), "npcName", definition.npcName(),
+                "targetMonsterType", definition.targetMonsterType(),
+                "targetDisplayName", definition.targetDisplayName(),
                 "experienceReward", definition.experienceReward());
     }
 
