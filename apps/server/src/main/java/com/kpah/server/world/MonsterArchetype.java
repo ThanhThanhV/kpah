@@ -1,0 +1,24 @@
+package com.kpah.server.world;
+
+public record MonsterArchetype(
+        String monsterType,
+        String displayName,
+        int maxHp,
+        int attackDamage,
+        double attackRange,
+        double aggroRange,
+        long attackCooldownMillis,
+        double moveSpeedMultiplier
+) {
+    public MonsterArchetype {
+        if (monsterType == null || monsterType.isBlank()
+                || displayName == null || displayName.isBlank()
+                || maxHp < 1 || attackDamage < 0
+                || !Double.isFinite(attackRange) || attackRange <= 0
+                || !Double.isFinite(aggroRange) || aggroRange < attackRange
+                || attackCooldownMillis < 100
+                || !Double.isFinite(moveSpeedMultiplier) || moveSpeedMultiplier <= 0) {
+            throw new IllegalArgumentException("Monster archetype configuration is invalid.");
+        }
+    }
+}
