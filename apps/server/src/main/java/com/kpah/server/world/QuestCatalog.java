@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 public class QuestCatalog {
     private final List<QuestDefinition> definitions;
     private final Map<String, QuestDefinition> questsById;
-    private final Map<String, QuestDefinition> questsByNpcId;
+    private final Map<String, List<QuestDefinition>> questsByNpcId;
 
     public QuestCatalog() {
         List<QuestDefinition> definitions = List.of(
@@ -26,17 +26,23 @@ public class QuestCatalog {
                         "green-slime", "Forest Green Slimes", 5, 180,
                         "The forest edge is overrun. Defeat 5 Green Slimes and report back.",
                         "The forest is safer thanks to you.",
-                        "Forest secured! You received 180 EXP.")
+                        "Forest secured! You received 180 EXP."),
+                new QuestDefinition(
+                        "forest-wolf-hunt", "105", "forest-edge", "Forest Warden",
+                        "forest-wolf", "Forest Wolves", 3, 350,
+                        "The Alpha Wolf's pack threatens the forest road. Defeat 3 Forest Wolves and report back.",
+                        "The wolf threat has been dealt with.",
+                        "Wolf hunt complete! You received 350 EXP.")
         );
         this.definitions = List.copyOf(definitions);
         this.questsById = definitions.stream().collect(Collectors.toUnmodifiableMap(
                 QuestDefinition::questId, Function.identity()));
-        this.questsByNpcId = definitions.stream().collect(Collectors.toUnmodifiableMap(
-                QuestDefinition::npcId, Function.identity()));
+        this.questsByNpcId = definitions.stream().collect(Collectors.groupingBy(
+                QuestDefinition::npcId, Collectors.collectingAndThen(Collectors.toList(), List::copyOf)));
     }
 
     public QuestDefinition findById(String questId) { return questsById.get(questId); }
-    public QuestDefinition findByNpcId(String npcId) { return questsByNpcId.get(npcId); }
+    public List<QuestDefinition> findByNpcId(String npcId) { return questsByNpcId.getOrDefault(npcId, List.of()); }
     public Collection<QuestDefinition> all() { return definitions; }
     public QuestDefinition defaultQuest() { return questsById.get("meadow-slime-hunt"); }
 
