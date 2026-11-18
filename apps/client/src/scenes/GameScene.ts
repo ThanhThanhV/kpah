@@ -54,7 +54,6 @@ export class GameScene extends Phaser.Scene {
   private touchMovement = { x: 0, y: 0 };
   private joystickPointerId = -1;
   private joystickCenter = { x: 0, y: 0 };
-  private joystickBase?: Phaser.GameObjects.Arc;
   private joystickKnob?: Phaser.GameObjects.Arc;
 
   constructor() { super("GameScene"); }
@@ -193,7 +192,7 @@ export class GameScene extends Phaser.Scene {
     const width = this.scale.width;
     const height = this.scale.height;
     this.joystickCenter = { x: 88, y: height - 104 };
-    this.joystickBase = this.add.circle(this.joystickCenter.x, this.joystickCenter.y, 56, 0x14262c, 0.55)
+    this.add.circle(this.joystickCenter.x, this.joystickCenter.y, 56, 0x14262c, 0.55)
       .setStrokeStyle(2, 0xd8e4d0, 0.55).setScrollFactor(0).setDepth(2100);
     this.joystickKnob = this.add.circle(this.joystickCenter.x, this.joystickCenter.y, 23, 0xb9d5c5, 0.72)
       .setStrokeStyle(2, 0xffffff, 0.7).setScrollFactor(0).setDepth(2101);
@@ -437,7 +436,15 @@ export class GameScene extends Phaser.Scene {
         );
         view = { entity, x: remote.x, y: remote.y, targetX: remote.x, targetY: remote.y, lastSeenAt: now };
         this.remotePlayers.set(remote.playerId, view);
-      } else { view.targetX = remote.x; view.targetY = remote.y; view.lastSeenAt = now; }
+      } else {
+        const dx = remote.x - view.targetX;
+        const dy = remote.y - view.targetY;
+        if (Math.hypot(dx, dy) > 0.5) {
+          if (Math.abs(dx) > Math.abs(dy)) view.entity.setFacing(dx < 0 ? "left" : "right");
+          else view.entity.setFacing(dy < 0 ? "up" : "down");
+        }
+        view.targetX = remote.x; view.targetY = remote.y; view.lastSeenAt = now;
+      }
     }
     for (const [playerId, view] of this.remotePlayers) {
       if (!visibleRemoteIds.has(playerId) && now - view.lastSeenAt > 1500) {

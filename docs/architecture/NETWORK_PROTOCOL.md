@@ -62,3 +62,7 @@ Snapshots include all connected players in the same map. The client identifies i
 - The token is currently passed in the WebSocket query string; production reverse-proxy access logs must redact the token parameter and public deployments must use WSS.
 - The client currently renders its local character; remote snapshot entities are the next multiplayer presentation task.
 - Server map geometry is still a manually maintained registry and must be generated from the same versioned map source as the Tiled client map.
+
+
+## Remote character facing
+Facing is derived from consecutive authoritative position snapshots. When the displacement is non-zero, clients select the dominant cardinal axis (horizontal or vertical); exact diagonal ties resolve vertically. This keeps remote sprite orientation consistent without trusting a client-supplied facing value. The interpolated render position remains client-side and does not affect server movement authority.
