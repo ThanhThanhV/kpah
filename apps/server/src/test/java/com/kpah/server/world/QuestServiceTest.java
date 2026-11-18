@@ -3,6 +3,7 @@ package com.kpah.server.world;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,7 +30,7 @@ class QuestServiceTest {
         WorldMapGeometry map = new WorldMapGeometry("starter-meadow", 1280, 704,
                 640, 384, List.of(), List.of(),
                 List.of(new NpcDefinition("6", "Meadow Guide", 704, 352, 32, 48)));
-        when(worlds.require("starter-meadow")).thenReturn(map);
+        lenient().when(worlds.require("starter-meadow")).thenReturn(map);
     }
 
     @Test
@@ -76,8 +77,6 @@ class QuestServiceTest {
 
     @Test
     void unrelatedMonsterDoesNotAdvanceQuest() {
-        when(progress.findById(QUEST_KEY)).thenReturn(Optional.empty());
-
         quests.onMonsterDefeated(CHARACTER_ID, "wolf");
 
         verify(progress, org.mockito.Mockito.never()).save(any(QuestProgress.class));
