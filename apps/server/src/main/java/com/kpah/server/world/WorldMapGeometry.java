@@ -12,6 +12,11 @@ public record WorldMapGeometry(
         List<MonsterSpawnRegion> monsterSpawns,
         List<NpcDefinition> npcs
 ) {
+    public WorldMapGeometry(String mapId, double width, double height, double spawnX, double spawnY,
+                            List<CollisionBox> collisions, List<MonsterSpawnRegion> monsterSpawns) {
+        this(mapId, width, height, spawnX, spawnY, collisions, monsterSpawns, List.of());
+    }
+
     public WorldMapGeometry {
         if (mapId == null || mapId.isBlank()
                 || !Double.isFinite(width) || !Double.isFinite(height)
