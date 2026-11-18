@@ -34,7 +34,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | 13.1 | NPC interaction | IN PROGRESS | NPC name and opening dialogue are loaded from Tiled object metadata; server validates NPC identity and 100px interaction range. |
 | 14.1 | Quest lifecycle | IN PROGRESS | QuestCatalog defines NPC binding, target monster, required kills, dialogue and reward; progress persists and both basic/skill kills advance matching objectives. |
 | 14.2 | Quest Journal UI | IN PROGRESS | Client journal displays objective, kill progress, ready-to-claim and claimed states; toggle with J. |
-| 15–17 | Economy, QA and operations | NOT STARTED | Item catalog, equipment, trading, production observability and load testing remain. |
+| 15–17 | Economy, QA and operations | IN PROGRESS | Item catalog, equipment and inventory limits exist; vendors, crafting, trading, production observability and load testing remain. |
 
 ## Latest implementation batch
 - Added the Inventory & Equipment panel (I) with item counts, equipped weapon/body slots and displayed ATK/DEF bonuses.
@@ -60,7 +60,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Workflow: `.github/workflows/ci.yml`.
 - Equipment + HUD + combat stats: [run 44238329614 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44238329614).
 - Loot/drop-table and inventory limits: [run 44238861303 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44238861303).
-- Quest/NPC catalog batch: pending CI verification.
+- Quest/NPC catalog batch: [run 44239442720 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44239442720).
 
 ## Current risks
 1. Character, monster and drop visuals remain original procedural placeholders.
