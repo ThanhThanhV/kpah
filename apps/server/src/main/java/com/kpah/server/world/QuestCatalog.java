@@ -32,7 +32,13 @@ public class QuestCatalog {
                         "forest-wolf", "Forest Wolves", 3, 350,
                         "The Alpha Wolf's pack threatens the forest road. Defeat 3 Forest Wolves and report back.",
                         "The wolf threat has been dealt with.",
-                        "Wolf hunt complete! You received 350 EXP.")
+                        "Wolf hunt complete! You received 350 EXP."),
+                new QuestDefinition(
+                        "alpha-wolf-hunt", "105", "forest-edge", "Forest Warden",
+                        "alpha-wolf", "Alpha Wolf", 1, 700,
+                        "The Alpha Wolf has emerged from its lair. Defeat it and bring proof to the Warden.",
+                        "The Alpha Wolf's threat has ended.",
+                        "Alpha Wolf defeated! You received 700 EXP.")
         );
         this.definitions = List.copyOf(definitions);
         this.questsById = definitions.stream().collect(Collectors.toUnmodifiableMap(
