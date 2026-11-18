@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class QuestCatalog {
+    private final List<QuestDefinition> definitions;
     private final Map<String, QuestDefinition> questsById;
     private final Map<String, QuestDefinition> questsByNpcId;
 
@@ -27,6 +28,7 @@ public class QuestCatalog {
                         "The forest is safer thanks to you.",
                         "Forest secured! You received 180 EXP.")
         );
+        this.definitions = List.copyOf(definitions);
         this.questsById = definitions.stream().collect(Collectors.toUnmodifiableMap(
                 QuestDefinition::questId, Function.identity()));
         this.questsByNpcId = definitions.stream().collect(Collectors.toUnmodifiableMap(
@@ -35,7 +37,7 @@ public class QuestCatalog {
 
     public QuestDefinition findById(String questId) { return questsById.get(questId); }
     public QuestDefinition findByNpcId(String npcId) { return questsByNpcId.get(npcId); }
-    public Collection<QuestDefinition> all() { return questsById.values(); }
+    public Collection<QuestDefinition> all() { return definitions; }
     public QuestDefinition defaultQuest() { return questsById.get("meadow-slime-hunt"); }
 
     public record QuestDefinition(
