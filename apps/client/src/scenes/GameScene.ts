@@ -4,6 +4,7 @@ import { CHARACTER_SPRITE_CATALOG, SpriteSheetAnimationRegistry } from "../game/
 import { MonsterEntity } from "../game/MonsterEntity";
 import { LootEntity } from "../game/LootEntity";
 import { loadTiledWorldMap } from "../game/TiledMapLoader";
+import type { WorldMapDefinition } from "../game/MapDefinition";
 import { MapRenderer } from "../game/MapRenderer";
 import { MovementController } from "../game/MovementController";
 import { WorldSocketClient, type WorldCombatEvent, type WorldSnapshot } from "../game/WorldSocketClient";
@@ -39,6 +40,13 @@ export class GameScene extends Phaser.Scene {
   private progressionLabel?: Phaser.GameObjects.Text;
   private combatLabel?: Phaser.GameObjects.Text;
   private worldStateLabel?: Phaser.GameObjects.Text;
+  private areaNameLabel?: Phaser.GameObjects.Text;
+  private miniMapGraphics?: Phaser.GameObjects.Graphics;
+  private miniMapPlayer?: Phaser.GameObjects.Arc;
+  private miniMapTransform?: { x: number; y: number; scale: number };
+  private worldMapPanel?: Phaser.GameObjects.Container;
+  private registeredMaps: WorldMapDefinition[] = [];
+  private currentMapDefinition?: WorldMapDefinition;
   private unsubscribeSnapshot?: () => void;
   private unsubscribeStatus?: () => void;
   private unsubscribeCombat?: () => void;
@@ -46,6 +54,7 @@ export class GameScene extends Phaser.Scene {
   private unsubscribeMapTransition?: () => void;
   private interactionKey!: Phaser.Input.Keyboard.Key;
   private questJournalKey!: Phaser.Input.Keyboard.Key;
+  private worldMapKey!: Phaser.Input.Keyboard.Key;
   private inventoryKey!: Phaser.Input.Keyboard.Key;
   private equipWeaponKey!: Phaser.Input.Keyboard.Key;
   private equipBodyKey!: Phaser.Input.Keyboard.Key;
@@ -94,7 +103,13 @@ export class GameScene extends Phaser.Scene {
   create(): void {
     this.spriteRegistry = new SpriteSheetAnimationRegistry();
     for (const sprite of CHARACTER_SPRITE_CATALOG) this.spriteRegistry.register(this, sprite);
-    const map = loadTiledWorldMap(this.cache.json.get("starter-meadow"));
+    const manifest = this.cache.json.get("world-map-index") as { maps?: string[] };
+    this.registeredMaps = (manifest.maps ?? []).map((filename) =>
+      loadTiledWorldMap(this.cache.json.get(filename.replace(/\\.json$/i, "")))
+    );
+    const map = this.registeredMaps.find((entry) => entry.id === "starter-meadow")
+      ?? loadTiledWorldMap(this.cache.json.get("starter-meadow"));
+    this.currentMapDefinition = map;
     this.currentMapId = map.id;
     this.mapRenderer = new MapRenderer(this, map);
     this.npcObjects = map.worldObjects.filter((object) => object.kind === "npc");
@@ -118,6 +133,7 @@ export class GameScene extends Phaser.Scene {
     this.secondSkillKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
     this.interactionKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E);
     this.questJournalKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.J);
+    this.worldMapKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.M);
     this.inventoryKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.I);
     this.equipWeaponKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
     this.equipBodyKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
@@ -147,9 +163,15 @@ export class GameScene extends Phaser.Scene {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#b8d8c8",
       backgroundColor: "#14262acc", padding: { x: 7, y: 4 }
     }).setScrollFactor(0).setDepth(2000);
-    this.add.text(18, 154, "WASD / arrows · Space: attack · Shift: Power Strike · Q: Arcane Bolt · E: talk · J: quest · I: bag", {
+    this.areaNameLabel = this.add.text(18, 154, `Area: ${map.name}`, {
+      fontFamily: "Arial, sans-serif", fontSize: "12px", color: "#f5dfa0",
+      backgroundColor: "#14262acc", padding: { x: 7, y: 4 }
+    }).setScrollFactor(0).setDepth(2000);
+    this.add.text(18, 178, "WASD / arrows · Space: attack · Shift/Q: skills · E: talk · J: quests · M: map · I: bag", {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#c0d0c4"
     }).setScrollFactor(0).setDepth(2000);
+    this.drawMiniMap(map);
+    this.renderWorldMapPanel();
     this.createQuestJournal();
     this.createInventoryPanel();
     this.createTouchControls();
@@ -216,6 +238,7 @@ export class GameScene extends Phaser.Scene {
     const movement = this.movement.step({ x: this.playerX, y: this.playerY }, input, delta / 1000);
     this.playerX = movement.position.x; this.playerY = movement.position.y;
     this.player.setMotion(this.playerX, this.playerY, movement.delta.x, movement.delta.y);
+    this.updateMiniMap();
     this.networkAccumulator += delta;
     if (this.networkAccumulator >= 50) {
       this.networkAccumulator %= 50; this.worldSocket.sendMovement(input.x, input.y);
@@ -227,6 +250,7 @@ export class GameScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.questJournalKey)) {
       this.questJournalPanel?.setVisible(!(this.questJournalPanel.visible));
     }
+    if (Phaser.Input.Keyboard.JustDown(this.worldMapKey)) this.toggleWorldMap();
     if (Phaser.Input.Keyboard.JustDown(this.inventoryKey)) {
       this.inventoryPanel?.setVisible(!(this.inventoryPanel.visible));
     }
@@ -475,6 +499,92 @@ export class GameScene extends Phaser.Scene {
   }
 
 
+
+  private drawMiniMap(map: WorldMapDefinition): void {
+    this.miniMapGraphics?.destroy();
+    this.miniMapPlayer?.destroy();
+    const panelX = this.scale.width - 178;
+    const panelY = 220;
+    const panelWidth = 160;
+    const panelHeight = 108;
+    const innerX = panelX + 9;
+    const innerY = panelY + 25;
+    const innerWidth = 142;
+    const innerHeight = 74;
+    const scale = Math.min(innerWidth / (map.width * map.tileSize), innerHeight / (map.height * map.tileSize));
+    const mapWidth = map.width * map.tileSize * scale;
+    const mapHeight = map.height * map.tileSize * scale;
+    const x = innerX + (innerWidth - mapWidth) / 2;
+    const y = innerY + (innerHeight - mapHeight) / 2;
+
+    const graphics = this.add.graphics().setScrollFactor(0).setDepth(2050);
+    graphics.fillStyle(0x14262c, 0.92).fillRoundedRect(panelX, panelY, panelWidth, panelHeight, 7);
+    graphics.lineStyle(1, 0x78918a, 0.9).strokeRoundedRect(panelX, panelY, panelWidth, panelHeight, 7);
+    graphics.fillStyle(0x315b45, 1).fillRect(x, y, mapWidth, mapHeight);
+    graphics.lineStyle(1, 0xa4b99d, 0.8).strokeRect(x, y, mapWidth, mapHeight);
+    for (const object of map.worldObjects) {
+      const color = object.kind === "portal" ? 0xb99be8
+        : object.kind === "npc" ? 0x79c7e8 : 0xe17c68;
+      graphics.fillStyle(color, 0.95).fillRect(
+        x + object.x * scale, y + object.y * scale,
+        Math.max(3, object.width * scale), Math.max(3, object.height * scale)
+      );
+    }
+    this.add.text(panelX + 9, panelY + 7, map.name, {
+      fontFamily: "Arial, sans-serif", fontSize: "10px", color: "#f5dfa0",
+      fontStyle: "bold"
+    }).setScrollFactor(0).setDepth(2051);
+    this.miniMapGraphics = graphics;
+    this.miniMapTransform = { x, y, scale };
+    this.miniMapPlayer = this.add.circle(x, y, 3.5, 0xffe58a, 1)
+      .setStrokeStyle(1, 0x14262c, 1).setScrollFactor(0).setDepth(2052);
+    this.updateMiniMap();
+  }
+
+  private updateMiniMap(): void {
+    if (!this.miniMapPlayer || !this.miniMapTransform) return;
+    this.miniMapPlayer.setPosition(
+      this.miniMapTransform.x + this.playerX * this.miniMapTransform.scale,
+      this.miniMapTransform.y + this.playerY * this.miniMapTransform.scale
+    );
+  }
+
+  private renderWorldMapPanel(): void {
+    const wasVisible = this.worldMapPanel?.visible ?? false;
+    this.worldMapPanel?.destroy(true);
+    const width = Math.min(440, this.scale.width - 32);
+    const height = Math.min(360, this.scale.height - 80);
+    const background = this.add.rectangle(0, 0, width, height, 0x101e22, 0.97)
+      .setOrigin(0).setStrokeStyle(2, 0x9caf87, 0.95);
+    const title = this.add.text(18, 14, "WORLD MAP · M", {
+      fontFamily: "Arial, sans-serif", fontSize: "15px", color: "#f5dfa0", fontStyle: "bold"
+    });
+    const rows = this.registeredMaps.map((map, index) => {
+      const routes = map.worldObjects.filter((object) => object.kind === "portal" && object.targetMapId)
+        .map((object) => this.registeredMaps.find((destination) => destination.id === object.targetMapId)?.name
+          ?? object.targetMapId);
+      const current = map.id === this.currentMapId ? "  ◀ YOU ARE HERE" : "";
+      return `${index + 1}. ${map.name}${current}\n   ${routes.length ? `Routes: ${routes.join(" · ")}` : "No mapped exits"}`;
+    });
+    const body = this.add.text(18, 52, rows.join("\\n\\n") || "No areas registered.", {
+      fontFamily: "Arial, sans-serif", fontSize: "13px", color: "#e6f1dc",
+      lineSpacing: 7, wordWrap: { width: width - 36 }
+    });
+    const footer = this.add.text(18, height - 28, "Explore portals to travel between areas · Press M to close", {
+      fontFamily: "Arial, sans-serif", fontSize: "10px", color: "#a9c0b4"
+    });
+    this.worldMapPanel = this.add.container((this.scale.width - width) / 2, (this.scale.height - height) / 2,
+      [background, title, body, footer]).setScrollFactor(0).setDepth(3000).setVisible(wasVisible);
+  }
+
+  private toggleWorldMap(): void {
+    if (this.worldMapPanel?.visible) this.worldMapPanel.setVisible(false);
+    else {
+      this.renderWorldMapPanel();
+      this.worldMapPanel?.setVisible(true);
+    }
+  }
+
   private handleMapTransition(mapId: string, x: number, y: number): void {
     const cachedMap = this.cache.json.get(mapId);
     if (!cachedMap) {
@@ -486,6 +596,10 @@ export class GameScene extends Phaser.Scene {
     if (map.id !== mapId) return;
 
     this.currentMapId = map.id;
+    this.currentMapDefinition = map;
+    this.areaNameLabel?.setText(`Area: ${map.name}`);
+    this.drawMiniMap(map);
+    this.renderWorldMapPanel();
     this.playerX = x;
     this.playerY = y;
     this.player.setMotion(x, y, 0, 0);
