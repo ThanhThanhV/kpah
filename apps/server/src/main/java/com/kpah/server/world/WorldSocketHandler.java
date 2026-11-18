@@ -109,15 +109,15 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 send(session, Map.of("type", "error", "message", "World message must be a JSON object."));
                 return;
             }
-            String type = input.path("type").asText();
+            String type = input.path("type").isTextual() ? input.path("type").asText() : "";
             if (!messageRateLimiter.tryAcquire(session.getId(), type)) return;
             if ("ping".equals(type)) {
                 send(session, Map.of("type", "pong"));
             } else if ("move".equals(type)) {
                 if (player.hp() <= 0) return;
-                long sequence = input.path("sequence").asLong(-1);
-                double axisX = input.path("axisX").asDouble(Double.NaN);
-                double axisY = input.path("axisY").asDouble(Double.NaN);
+                long sequence = requireLong(input, "sequence");
+                double axisX = requireFiniteNumber(input, "axisX");
+                double axisY = requireFiniteNumber(input, "axisY");
                 long now = System.nanoTime();
                 double elapsed = Math.min((now - player.lastAcceptedNanos()) / 1_000_000_000.0, 0.05);
                 if (elapsed <= 0) elapsed = 0.001;
@@ -132,7 +132,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     send(session, Map.of("type", "error", "message", "You cannot attack while defeated."));
                     return;
                 }
-                String targetId = input.path("targetMonsterId").asText("");
+                String targetId = requireText(input, "targetMonsterId");
                 MonsterAttackResult result = combat.basicAttack(
                         player.playerId(), player.state(), targetId, items.attackBonus(player.equipment()) + classes.attackBonus(player.classCode(), ExperienceProgression.levelFor(player.experience())),
                         System.currentTimeMillis());
@@ -154,7 +154,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     broadcast(player.state().mapId());
                 }
             } else if ("equip".equals(type)) {
-                String itemCode = input.path("itemCode").asText("");
+                String itemCode = requireText(input, "itemCode");
                 ItemCatalog.ItemDefinition definition = items.requireEquipment(itemCode);
                 int quantity = player.inventory().getOrDefault(itemCode, 0);
                 if (quantity <= 0) throw new IllegalArgumentException("You do not own this item.");
@@ -169,7 +169,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 send(session, Map.of("type", "equipment", "message", definition.name() + " equipped."));
                 broadcast(player.state().mapId());
             } else if ("unequip".equals(type)) {
-                String slot = input.path("slot").asText("");
+                String slot = requireText(input, "slot");
                 Map<String, String> equipment = new ConcurrentHashMap<>(player.equipment());
                 String removed = equipment.remove(slot);
                 if (removed == null) throw new IllegalArgumentException("Nothing is equipped in that slot.");
@@ -181,7 +181,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 send(session, Map.of("type", "equipment", "message", "Item returned to inventory."));
                 broadcast(player.state().mapId());
             } else if ("interact".equals(type)) {
-                String npcId = input.path("npcId").asText("");
+                String npcId = requireText(input, "npcId");
                 QuestService.QuestInteractionResult result = quests.interact(
                         player.playerId(), player.state().mapId(), npcId,
                         player.state().x(), player.state().y());
@@ -199,7 +199,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     send(session, Map.of("type", "error", "message", "You cannot cast while defeated."));
                     return;
                 }
-                String skillId = input.path("skillId").asText("");
+                String skillId = requireText(input, "skillId");
                 String targetId = input.path("targetMonsterId").asText("");
                 SkillCastResult result = skills.cast(player.playerId(), player.classCode(), player.state(), skillId,
                         targetId, items.attackBonus(player.equipment()) + classes.attackBonus(player.classCode(), ExperienceProgression.levelFor(player.experience())),
@@ -388,6 +388,30 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 }
             }
         }
+    }
+
+    private String requireText(JsonNode input, String field) {
+        JsonNode value = input.get(field);
+        if (value == null || !value.isTextual() || value.asText().isBlank() || value.asText().length() > 128) {
+            throw new IllegalArgumentException(field + " must be a non-empty string of at most 128 characters.");
+        }
+        return value.asText();
+    }
+
+    private long requireLong(JsonNode input, String field) {
+        JsonNode value = input.get(field);
+        if (value == null || !value.isIntegralNumber() || !value.canConvertToLong()) {
+            throw new IllegalArgumentException(field + " must be an integer.");
+        }
+        return value.longValue();
+    }
+
+    private double requireFiniteNumber(JsonNode input, String field) {
+        JsonNode value = input.get(field);
+        if (value == null || !value.isNumber() || !Double.isFinite(value.doubleValue())) {
+            throw new IllegalArgumentException(field + " must be a finite number.");
+        }
+        return value.doubleValue();
     }
 
     private void send(WebSocketSession session, Object payload) throws IOException {
