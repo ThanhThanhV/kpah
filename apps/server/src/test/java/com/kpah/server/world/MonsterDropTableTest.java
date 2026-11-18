@@ -37,6 +37,18 @@ class MonsterDropTableTest {
     }
 
     @Test
+    void alphaWolfDropsItsPeltAndExtraFangs() {
+        var drops = table.roll("forest-edge", "alpha-wolf",
+                new Random(0) { @Override public double nextDouble() { return 0.0; } });
+
+        assertEquals(2, drops.size());
+        assertTrue(drops.stream().anyMatch(drop -> drop.itemCode().equals("alpha-wolf-pelt")
+                && drop.amount() == 1));
+        assertTrue(drops.stream().anyMatch(drop -> drop.itemCode().equals("wolf-fang")
+                && drop.amount() >= 2 && drop.amount() <= 3));
+    }
+
+    @Test
     void unknownMonsterHasNoConfiguredDrops() {
         assertTrue(table.roll("unknown-monster", new Random(7)).isEmpty());
     }
