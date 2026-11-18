@@ -480,3 +480,12 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Added Wolf Fang as a 60% monster drop and registered it as a stackable inventory material.
 - Added tests for archetype stat differences, invalid configuration, unknown types and Wolf Fang drops.
 - GitHub Actions passed: server Maven tests/package and client typecheck/build succeeded on commits db75adb8df264e328149d7d22bf11b1fa567563c and d012fc19e56c4357d7f3482cb863f65e63b6e978.
+
+
+## Latest implementation batch — monster AI behavior profiles
+- Added explicit AI behavior types: aggressive, defensive, patrol and elite.
+- Green Slimes use defensive behavior and retaliate only against the player who hit them; the provocation lasts up to 8 seconds and is cancelled when the player leaves aggro range.
+- Forest Wolves use aggressive behavior and proactively acquire the nearest player inside their aggro range.
+- Registered Forest Sentinel patrol and Alpha Wolf elite archetype profiles for the next spawn-configuration pass.
+- Basic attacks and skill hits both notify the simulation so defensive retaliation is consistent across combat paths.
+- Added registry tests for all four behavior profiles. Runtime playtesting remains pending.
