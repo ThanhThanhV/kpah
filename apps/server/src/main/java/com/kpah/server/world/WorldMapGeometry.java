@@ -10,11 +10,18 @@ public record WorldMapGeometry(
         double spawnY,
         List<CollisionBox> collisions,
         List<MonsterSpawnRegion> monsterSpawns,
-        List<NpcDefinition> npcs
+        List<NpcDefinition> npcs,
+        List<PortalDefinition> portals
 ) {
     public WorldMapGeometry(String mapId, double width, double height, double spawnX, double spawnY,
+                            List<CollisionBox> collisions, List<MonsterSpawnRegion> monsterSpawns,
+                            List<NpcDefinition> npcs) {
+        this(mapId, width, height, spawnX, spawnY, collisions, monsterSpawns, npcs, List.of());
+    }
+
+    public WorldMapGeometry(String mapId, double width, double height, double spawnX, double spawnY,
                             List<CollisionBox> collisions, List<MonsterSpawnRegion> monsterSpawns) {
-        this(mapId, width, height, spawnX, spawnY, collisions, monsterSpawns, List.of());
+        this(mapId, width, height, spawnX, spawnY, collisions, monsterSpawns, List.of(), List.of());
     }
 
     public WorldMapGeometry {
@@ -28,5 +35,6 @@ public record WorldMapGeometry(
         collisions = List.copyOf(collisions);
         monsterSpawns = List.copyOf(monsterSpawns);
         npcs = List.copyOf(npcs);
+        portals = List.copyOf(portals);
     }
 }
