@@ -62,8 +62,7 @@ public class MonsterSimulationService {
                 if (nowMillis >= monster.respawnAt) monsters.remove(monster.id);
                 continue;
             }
-            MonsterPlayerAttack attack = monster.advance(nowMillis, players);
-            if (attack != null) attacks.add(attack);
+            attacks.addAll(monster.advance(nowMillis, players));
         }
         return attacks;
     }
@@ -182,6 +181,11 @@ public class MonsterSimulationService {
         private volatile String provokedPlayerId;
         private volatile long provokedUntil;
         private volatile String state = "idle";
+        private long heavyStrikeUntil;
+        private double heavyStrikeX;
+        private double heavyStrikeY;
+        private static final long HEAVY_STRIKE_WINDUP_MILLIS = 1_000L;
+        private static final double HEAVY_STRIKE_RADIUS = 92.0;
 
         private MonsterRuntime(String id, String mapId, MonsterSpawnRegion region, MonsterArchetype archetype,
                                double homeX, double homeY, GridPathfinder pathfinder) {
@@ -190,7 +194,24 @@ public class MonsterSimulationService {
             this.homeX = homeX; this.homeY = homeY; this.x = homeX; this.y = homeY;
         }
 
-        private MonsterPlayerAttack advance(long nowMillis, Collection<MonsterTarget> players) {
+        private List<MonsterPlayerAttack> advance(long nowMillis, Collection<MonsterTarget> players) {
+            if (heavyStrikeUntil > 0) {
+                if (nowMillis < heavyStrikeUntil) {
+                    state = "windup";
+                    return List.of();
+                }
+                heavyStrikeUntil = 0;
+                state = "attack";
+                int damage = (int) Math.ceil(archetype.attackDamage() * 1.8);
+                return players.stream()
+                        .filter(player -> mapId.equals(player.mapId()))
+                        .filter(player -> distance(player.x(), player.y(), heavyStrikeX, heavyStrikeY)
+                                <= HEAVY_STRIKE_RADIUS)
+                        .map(player -> new MonsterPlayerAttack(player.playerId(), id,
+                                archetype.displayName(), damage, "monster-special"))
+                        .toList();
+            }
+
             MonsterTarget target = switch (archetype.behavior()) {
                 case PATROL -> null;
                 case DEFENSIVE -> {
@@ -221,18 +242,22 @@ public class MonsterSimulationService {
                         attacksPerformed++;
                         boolean specialAttack = archetype.behavior() == MonsterBehavior.ELITE
                                 && attacksPerformed % 3 == 0;
-                        int damage = specialAttack
-                                ? (int) Math.ceil(archetype.attackDamage() * 1.8)
-                                : archetype.attackDamage();
-                        return new MonsterPlayerAttack(target.playerId(), id, archetype.displayName(),
-                                damage, specialAttack ? "monster-special" : "monster-attack");
+                        if (specialAttack) {
+                            heavyStrikeX = target.x();
+                            heavyStrikeY = target.y();
+                            heavyStrikeUntil = nowMillis + HEAVY_STRIKE_WINDUP_MILLIS;
+                            state = "windup";
+                            return List.of();
+                        }
+                        return List.of(new MonsterPlayerAttack(target.playerId(), id,
+                                archetype.displayName(), archetype.attackDamage(), "monster-attack"));
                     }
-                    return null;
+                    return List.of();
                 }
                 state = "aggro";
                 moveAlongPath(target.x(), target.y(), nowMillis,
                         region.moveSpeed() * archetype.moveSpeedMultiplier() * 0.1);
-                return null;
+                return List.of();
             }
 
             targetPlayerId = null;
@@ -244,7 +269,7 @@ public class MonsterSimulationService {
             double targetY = homeY + Math.sin(angle) * radiusY;
             moveAlongPath(targetX, targetY, nowMillis,
                     region.moveSpeed() * archetype.moveSpeedMultiplier() * 0.1);
-            return null;
+            return List.of();
         }
 
         private void moveAlongPath(double targetX, double targetY, long nowMillis, double maxStep) {
@@ -300,7 +325,10 @@ public class MonsterSimulationService {
 
         private MonsterState snapshot() {
             return new MonsterState(id, region.monsterType(), mapId, region.id(),
-                    x, y, homeX, homeY, hp, archetype.maxHp(), state);
+                    x, y, homeX, homeY, hp, archetype.maxHp(), state,
+                    heavyStrikeUntil > 0 ? heavyStrikeX : 0,
+                    heavyStrikeUntil > 0 ? heavyStrikeY : 0,
+                    heavyStrikeUntil > 0 ? HEAVY_STRIKE_RADIUS : 0);
         }
     }
 
