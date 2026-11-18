@@ -51,6 +51,11 @@ export class GameScene extends Phaser.Scene {
   private questJournalBody?: Phaser.GameObjects.Text;
   private questJournalProgress?: Phaser.GameObjects.Graphics;
   private npcObjects: { id: string; name: string; x: number; y: number; width: number; height: number }[] = [];
+  private touchMovement = { x: 0, y: 0 };
+  private joystickPointerId = -1;
+  private joystickCenter = { x: 0, y: 0 };
+  private joystickBase?: Phaser.GameObjects.Arc;
+  private joystickKnob?: Phaser.GameObjects.Arc;
 
   constructor() { super("GameScene"); }
   preload(): void {
@@ -118,6 +123,7 @@ export class GameScene extends Phaser.Scene {
     }).setScrollFactor(0).setDepth(2000);
     this.createQuestJournal();
     this.createInventoryPanel();
+    this.createTouchControls();
 
     const socketUrl = import.meta.env.VITE_WORLD_WS_URL || "ws://localhost:8080/ws/world";
     this.worldSocket = new WorldSocketClient(socketUrl);
@@ -144,7 +150,8 @@ export class GameScene extends Phaser.Scene {
     const up = this.cursors.up.isDown || this.keys["W"].isDown;
     const down = this.cursors.down.isDown || this.keys["S"].isDown;
     const input = this.playerDead ? { x: 0, y: 0 } : {
-      x: Number(right) - Number(left), y: Number(down) - Number(up)
+      x: Phaser.Math.Clamp(Number(right) - Number(left) + this.touchMovement.x, -1, 1),
+      y: Phaser.Math.Clamp(Number(down) - Number(up) + this.touchMovement.y, -1, 1)
     };
     const movement = this.movement.step({ x: this.playerX, y: this.playerY }, input, delta / 1000);
     this.playerX = movement.position.x; this.playerY = movement.position.y;
@@ -153,11 +160,7 @@ export class GameScene extends Phaser.Scene {
     if (this.networkAccumulator >= 50) {
       this.networkAccumulator %= 50; this.worldSocket.sendMovement(input.x, input.y);
     }
-    if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.attackKey)) {
-      this.player.attack();
-      const target = this.findNearestMonster();
-      if (target) this.worldSocket.sendAttack(target.monsterId);
-    }
+    if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.attackKey)) this.performBasicAttack();
     if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.castKey)) this.castClassSkill(0);
     if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.secondSkillKey)) this.castClassSkill(1);
     if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.interactionKey)) this.interactWithNearestNpc();
@@ -184,6 +187,81 @@ export class GameScene extends Phaser.Scene {
   }
 
 
+
+  private createTouchControls(): void {
+    if (!this.sys.game.device.input.touch) return;
+    const width = this.scale.width;
+    const height = this.scale.height;
+    this.joystickCenter = { x: 88, y: height - 104 };
+    this.joystickBase = this.add.circle(this.joystickCenter.x, this.joystickCenter.y, 56, 0x14262c, 0.55)
+      .setStrokeStyle(2, 0xd8e4d0, 0.55).setScrollFactor(0).setDepth(2100);
+    this.joystickKnob = this.add.circle(this.joystickCenter.x, this.joystickCenter.y, 23, 0xb9d5c5, 0.72)
+      .setStrokeStyle(2, 0xffffff, 0.7).setScrollFactor(0).setDepth(2101);
+
+    const addActionButton = (x: number, y: number, label: string, color: number, action: () => void) => {
+      const button = this.add.circle(x, y, 31, color, 0.82)
+        .setStrokeStyle(2, 0xe7f0e4, 0.85).setScrollFactor(0).setDepth(2100)
+        .setInteractive({ useHandCursor: true });
+      const text = this.add.text(x, y, label, {
+        fontFamily: "Arial, sans-serif", fontSize: "12px", color: "#ffffff", fontStyle: "bold"
+      }).setOrigin(0.5).setScrollFactor(0).setDepth(2101);
+      button.on("pointerdown", action);
+      button.on("pointerover", () => button.setAlpha(1));
+      button.on("pointerout", () => button.setAlpha(0.82));
+      return { button, text };
+    };
+    addActionButton(width - 76, height - 100, "ATK", 0x9a5549, () => this.performBasicAttack());
+    addActionButton(width - 154, height - 166, "SK1", 0x476c91, () => {
+      if (!this.playerDead) this.castClassSkill(0);
+    });
+    addActionButton(width - 76, height - 238, "SK2", 0x586b8d, () => {
+      if (!this.playerDead) this.castClassSkill(1);
+    });
+
+    this.input.on("pointerdown", this.handleTouchPointerDown, this);
+    this.input.on("pointermove", this.handleTouchPointerMove, this);
+    this.input.on("pointerup", this.handleTouchPointerUp, this);
+    this.input.on("pointerupoutside", this.handleTouchPointerUp, this);
+  }
+
+  private handleTouchPointerDown(pointer: Phaser.Input.Pointer): void {
+    if (this.joystickPointerId !== -1 || pointer.x > this.scale.width * 0.45
+        || pointer.y < this.scale.height * 0.48) return;
+    this.joystickPointerId = pointer.id;
+    this.updateTouchJoystick(pointer);
+  }
+
+  private handleTouchPointerMove(pointer: Phaser.Input.Pointer): void {
+    if (pointer.id === this.joystickPointerId) this.updateTouchJoystick(pointer);
+  }
+
+  private handleTouchPointerUp(pointer: Phaser.Input.Pointer): void {
+    if (pointer.id !== this.joystickPointerId) return;
+    this.joystickPointerId = -1;
+    this.touchMovement = { x: 0, y: 0 };
+    this.joystickKnob?.setPosition(this.joystickCenter.x, this.joystickCenter.y);
+  }
+
+  private updateTouchJoystick(pointer: Phaser.Input.Pointer): void {
+    const dx = pointer.x - this.joystickCenter.x;
+    const dy = pointer.y - this.joystickCenter.y;
+    const distance = Math.hypot(dx, dy);
+    const radius = 42;
+    const scale = distance > radius ? radius / distance : 1;
+    const knobX = dx * scale;
+    const knobY = dy * scale;
+    this.touchMovement = distance > 7
+      ? { x: knobX / radius, y: knobY / radius }
+      : { x: 0, y: 0 };
+    this.joystickKnob?.setPosition(this.joystickCenter.x + knobX, this.joystickCenter.y + knobY);
+  }
+
+  private performBasicAttack(): void {
+    if (this.playerDead) return;
+    this.player.attack();
+    const target = this.findNearestMonster();
+    if (target) this.worldSocket.sendAttack(target.monsterId);
+  }
 
   private createInventoryPanel(): void {
     const background = this.add.rectangle(0, 0, 292, 174, 0x14262c, 0.94)
@@ -402,6 +480,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handleShutdown(): void {
+    this.input.off("pointerdown", this.handleTouchPointerDown, this);
+    this.input.off("pointermove", this.handleTouchPointerMove, this);
+    this.input.off("pointerup", this.handleTouchPointerUp, this);
+    this.input.off("pointerupoutside", this.handleTouchPointerUp, this);
     this.unsubscribeSnapshot?.(); this.unsubscribeStatus?.(); this.unsubscribeCombat?.(); this.unsubscribeQuest?.(); this.worldSocket?.destroy();
     for (const view of this.remotePlayers.values()) view.entity.destroy();
     this.remotePlayers.clear();

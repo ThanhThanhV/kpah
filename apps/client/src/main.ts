@@ -22,7 +22,7 @@ function createGame(): void {
     type: Phaser.AUTO, parent: "game-root", width: 1280, height: 720,
     backgroundColor: "#203b3d", pixelArt: true, roundPixels: true,
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-    render: { antialias: false, pixelArt: true }, scene: [GameScene]
+    render: { antialias: false, pixelArt: true }, input: { activePointers: 3 }, scene: [GameScene]
   });
 }
 

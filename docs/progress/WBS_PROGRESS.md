@@ -24,7 +24,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | 3.1–3.4 | Client/server foundation, world transport and CI | IN PROGRESS | Phaser, Spring Boot, PostgreSQL Compose, JPA persistence and GitHub Actions. |
 | 4.1–4.5 | Character renderer and animation | IN PROGRESS | CharacterEntity now supports interchangeable concrete Phaser SpriteSheet and Spine display adapters with procedural fallback; original sprite/Spine assets and runtime-specific animation registration remain. |
 | 5 | Map Engine | IN PROGRESS | Tiled map loading, rectangular collision and server-side grid pathfinding; map art and transitions remain. |
-| 6.1–6.3 | Input, movement and facing | IN PROGRESS | Client prediction and server-authoritative movement; touch controls and replicated facing remain. |
+| 6.1–6.3 | Input, movement and facing | IN PROGRESS | Keyboard + mobile virtual joystick, touch attack and two class-skill buttons; client prediction and server-authoritative movement remain. Replicated facing and responsive HUD layout remain. |
 | 7.1–7.3 | Monster definitions, AI and presentation | IN PROGRESS | Tiled spawn definitions, bounded roam, aggro, leash, attack cooldown, A* pursuit and snapshot-driven placeholder visuals. |
 | 8.1–8.3 | Combat, damage, death and respawn | IN PROGRESS | Server validates basic/skill attacks; class and equipment ATK bonuses affect damage, class/equipment DEF mitigates monster hits (minimum 1), class-specific HP controls health and respawn. |
 | 9 | Skills and visual effects | IN PROGRESS | Six class-bound skills with second skill unlocked at level 3, server-authoritative range/damage/cooldown/mana cost, class mana regeneration and PostgreSQL-persisted mana; area targeting and authored VFX remain. |
@@ -134,3 +134,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Registry validates texture presence, frame ranges, duplicate character keys and duplicate Phaser animation keys before registering clips.
 - CharacterEntity retains its procedural fallback whenever no catalog entry exists; the catalog is intentionally empty until original character art is supplied.
 - No original character artwork is included in this batch, so the in-game appearance remains procedural for now.
+
+
+## Latest implementation batch — mobile touch controls
+- Added a mobile-only virtual joystick anchored to the lower-left viewport; it supports continuous analog movement, a dead zone and a capped radius.
+- Added touch action buttons for basic attack and both class skill slots, reusing the same server-authoritative combat requests as keyboard controls.
+- Enabled three active Phaser pointers so joystick movement and action taps can be used together on multi-touch devices.
+- Touch pointer listeners are detached during scene shutdown; desktop keyboard controls remain unchanged.
+- Responsive positioning for the rest of the HUD and device/browser playtesting remain outstanding.
