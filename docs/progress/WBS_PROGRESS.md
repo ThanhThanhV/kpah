@@ -61,6 +61,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Added per-IP login and registration throttles (8 login attempts / 15 minutes; 4 registrations / hour) with bounded in-memory tracking.
 - Moved the WebSocket credential out of the URL into a custom `Sec-WebSocket-Protocol` handshake value.
 - Added logout-all to revoke every active session belonging to the authenticated account.
+- Added account-owned character metadata, a maximum of three characters per account, character list/create/select endpoints and a selection screen. Current class choices (Warrior/Mage/Archer) are metadata only; class-specific skill trees and stat growth remain.
 
 ## CI results
 - Workflow: `.github/workflows/ci.yml`.
@@ -69,6 +70,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Quest/NPC catalog batch: [run 44239442720 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44239442720).
 - Account authentication batch: [run 44240885387 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44240885387).
 - Auth hardening batch: [run 44241375845 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44241375845).
+- Multi-character selection batch: CI pending.
 
 ## Current risks
 1. Character, monster and drop visuals remain original procedural placeholders.
@@ -78,7 +80,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 5. Heartbeat, reconnect, rate limiting, multi-character selection, consumables, vendors, crafting and trading remain.
 
 ## Next implementation sequence
-1. Add refresh-token rotation, secure cookie strategy for browser sessions and multi-character selection.
-2. Replace debug visuals with original art and concrete animation adapters.
-3. Expand quest/NPC catalogs and build gameplay integration coverage.
-4. Add production observability and load testing; keep GitHub Actions green.
+1. Add refresh-token rotation and secure cookie strategy for browser sessions.
+2. Implement class-specific stats, skills and progression.
+3. Replace debug visuals with original art and concrete animation adapters.
+4. Expand quest/NPC catalogs, gameplay integration coverage, observability and load testing.

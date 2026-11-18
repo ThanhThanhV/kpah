@@ -41,6 +41,26 @@ public class AuthController {
         return auth.login(request.email(), request.password());
     }
 
+    @GetMapping("/characters")
+    public java.util.List<AuthService.CharacterSummary> characters(
+            @RequestHeader(name = "Authorization", required = false) String authorization) {
+        return auth.listCharacters(bearerToken(authorization));
+    }
+
+    @PostMapping("/characters")
+    public AuthService.CharacterSummary createCharacter(
+            @RequestHeader(name = "Authorization", required = false) String authorization,
+            @Valid @RequestBody CharacterRequest request) {
+        return auth.createCharacter(bearerToken(authorization), request.name(), request.classCode());
+    }
+
+    @PostMapping("/select-character")
+    public AuthService.AuthPrincipal selectCharacter(
+            @RequestHeader(name = "Authorization", required = false) String authorization,
+            @Valid @RequestBody SelectCharacterRequest request) {
+        return auth.selectCharacter(bearerToken(authorization), request.characterId());
+    }
+
     @GetMapping("/me")
     public AuthService.AuthPrincipal me(@RequestHeader(name = "Authorization", required = false) String authorization) {
         AuthService.AuthPrincipal principal = auth.authenticate(bearerToken(authorization));
@@ -71,4 +91,11 @@ public class AuthController {
             @NotBlank @Email @Size(max = 254) String email,
             @NotBlank @Size(min = 10, max = 128) String password
     ) {}
+
+    public record CharacterRequest(
+            @NotBlank @Size(min = 3, max = 20) String name,
+            @NotBlank String classCode
+    ) {}
+
+    public record SelectCharacterRequest(@NotBlank String characterId) {}
 }

@@ -6,6 +6,7 @@ export interface AuthSession {
   expiresAt: string;
 }
 interface AuthPrincipal { accountId: string; email: string; characterId: string; }
+export interface CharacterSummary { characterId: string; name: string; classCode: string; mapId: string; hp: number; experience: number; }
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 async function errorMessage(response: Response): Promise<string> {
@@ -116,5 +117,123 @@ export function renderAuthScreen(
       submit.disabled = false;
       submit.textContent = mode === "login" ? "Sign in" : "Create account";
     }
+  });
+}
+
+async function authenticatedRequest<T>(path: string, session: AuthSession, method = "GET", body?: unknown): Promise<T> {
+  const response = await fetch(API_BASE + path, {
+    method,
+    headers: {
+      Authorization: "Bearer " + session.token,
+      ...(body === undefined ? {} : { "Content-Type": "application/json" })
+    },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) })
+  });
+  if (!response.ok) throw new Error(await errorMessage(response));
+  return await response.json() as T;
+}
+
+export async function listCharacters(session: AuthSession): Promise<CharacterSummary[]> {
+  return authenticatedRequest<CharacterSummary[]>("/api/auth/characters", session);
+}
+
+export async function createCharacter(
+  session: AuthSession, name: string, classCode: string
+): Promise<CharacterSummary> {
+  return authenticatedRequest<CharacterSummary>("/api/auth/characters", session, "POST", { name, classCode });
+}
+
+export async function selectCharacter(
+  session: AuthSession, characterId: string
+): Promise<AuthSession> {
+  const principal = await authenticatedRequest<AuthPrincipal>(
+    "/api/auth/select-character", session, "POST", { characterId }
+  );
+  const selected = { ...session, characterId: principal.characterId };
+  localStorage.setItem("kpah.characterId", selected.characterId);
+  return selected;
+}
+
+export function renderCharacterSelection(
+  root: HTMLElement, session: AuthSession, onSelected: (session: AuthSession) => void
+): void {
+  root.hidden = false;
+  root.innerHTML = `
+    <section class="auth-card character-select-card">
+      <div class="auth-kicker">ACCOUNT · ${session.email}</div>
+      <h1>Choose your character</h1>
+      <p>Each account can keep up to three characters. Your progress is saved separately.</p>
+      <div id="character-list" class="character-list">Loading characters…</div>
+      <form id="character-create-form" class="character-create-form">
+        <h2>Create a character</h2>
+        <label for="character-name">Character name</label>
+        <input id="character-name" name="name" minlength="3" maxlength="20"
+          placeholder="3–20 characters" required />
+        <label for="character-class">Class</label>
+        <select id="character-class" name="classCode">
+          <option value="warrior">Warrior</option>
+          <option value="mage">Mage</option>
+          <option value="archer">Archer</option>
+        </select>
+        <p id="character-error" role="alert" aria-live="polite"></p>
+        <button type="submit">Create character</button>
+      </form>
+    </section>`;
+  const list = root.querySelector<HTMLElement>("#character-list")!;
+  const form = root.querySelector<HTMLFormElement>("#character-create-form")!;
+  const error = root.querySelector<HTMLElement>("#character-error")!;
+
+  const enter = async (characterId: string, button: HTMLButtonElement) => {
+    button.disabled = true;
+    button.textContent = "Entering…";
+    try { onSelected(await selectCharacter(session, characterId)); }
+    catch (failure) {
+      error.textContent = failure instanceof Error ? failure.message : "Unable to select character.";
+      button.disabled = false;
+      button.textContent = "Enter world";
+    }
+  };
+
+  const refresh = async () => {
+    const characters = await listCharacters(session);
+    list.innerHTML = "";
+    characters.forEach((character) => {
+      const card = document.createElement("article");
+      card.className = "character-card";
+      const details = document.createElement("div");
+      const name = document.createElement("strong");
+      name.textContent = character.name;
+      const meta = document.createElement("span");
+      meta.textContent = character.classCode.toUpperCase() + " · Lv " + (Math.floor(character.experience / 100) + 1);
+      details.append(name, meta);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = "Enter world";
+      button.addEventListener("click", () => void enter(character.characterId, button));
+      card.append(details, button);
+      list.append(card);
+    });
+    form.hidden = characters.length >= 3;
+  };
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const data = new FormData(form);
+    const name = String(data.get("name") || "").trim();
+    const classCode = String(data.get("classCode") || "warrior");
+    const button = form.querySelector<HTMLButtonElement>("button[type=submit]")!;
+    button.disabled = true;
+    error.textContent = "";
+    try {
+      const created = await createCharacter(session, name, classCode);
+      await enter(created.characterId, button);
+    } catch (failure) {
+      error.textContent = failure instanceof Error ? failure.message : "Unable to create character.";
+      button.disabled = false;
+    }
+  });
+
+  void refresh().catch((failure) => {
+    list.textContent = failure instanceof Error ? failure.message : "Unable to load characters.";
   });
 }

@@ -74,7 +74,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         PlayerMotionState initial = new PlayerMotionState(
                 character.getMapId(), character.getX(), character.getY(), 0L);
         ConnectedPlayer player = new ConnectedPlayer(
-                character.getId(), principal.accountId(), session, initial, System.nanoTime(),
+                character.getId(), principal.accountId(), character.getName(), character.getClassCode(),
+                session, initial, System.nanoTime(),
                 character.getHp(),
                 character.getHp() > 0 ? 0L : System.currentTimeMillis() + PLAYER_RESPAWN_MILLIS,
                 character.getExperience(), character.getInventory(), character.getEquipment());
@@ -283,7 +284,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     }
 
     private void persist(ConnectedPlayer player) {
-        characters.save(PlayerCharacter.from(player.accountId(), player.playerId(), player.state(), player.hp(),
+        characters.save(PlayerCharacter.from(player.accountId(), player.playerId(), player.characterName(), player.classCode(),
+                player.state(), player.hp(),
                 player.experience(), player.inventory(), player.equipment()));
     }
 
@@ -330,6 +332,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private record ConnectedPlayer(
             String playerId,
             String accountId,
+            String characterName,
+            String classCode,
             WebSocketSession session,
             PlayerMotionState state,
             long lastAcceptedNanos,
@@ -345,41 +349,41 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         }
 
         private ConnectedPlayer withState(PlayerMotionState next, long acceptedAt) {
-            return new ConnectedPlayer(playerId, accountId, session, next, acceptedAt,
+            return new ConnectedPlayer(playerId, accountId, characterName, classCode, session, next, acceptedAt,
                     hp, respawnAt, experience, inventory, equipment);
         }
 
         private ConnectedPlayer withVitals(int nextHp, long nextRespawnAt) {
-            return new ConnectedPlayer(playerId, accountId, session, state, lastAcceptedNanos,
+            return new ConnectedPlayer(playerId, accountId, characterName, classCode, session, state, lastAcceptedNanos,
                     nextHp, nextRespawnAt, experience, inventory, equipment);
         }
 
         private ConnectedPlayer withRespawn(PlayerMotionState nextState, int nextHp,
                                              long nextRespawnAt, long acceptedAt) {
-            return new ConnectedPlayer(playerId, accountId, session, nextState, acceptedAt,
+            return new ConnectedPlayer(playerId, accountId, characterName, classCode, session, nextState, acceptedAt,
                     nextHp, nextRespawnAt, experience, inventory, equipment);
         }
 
         private ConnectedPlayer withExperience(int nextExperience) {
-            return new ConnectedPlayer(playerId, accountId, session, state, lastAcceptedNanos,
+            return new ConnectedPlayer(playerId, accountId, characterName, classCode, session, state, lastAcceptedNanos,
                     hp, respawnAt, nextExperience, inventory, equipment);
         }
 
         private ConnectedPlayer withLoot(List<LootDropState> drops) {
             Map<String, Integer> updated = new ConcurrentHashMap<>(inventory);
             drops.forEach(drop -> updated.merge(drop.itemCode(), drop.amount(), Integer::sum));
-            return new ConnectedPlayer(playerId, accountId, session, state, lastAcceptedNanos,
+            return new ConnectedPlayer(playerId, accountId, characterName, classCode, session, state, lastAcceptedNanos,
                     hp, respawnAt, experience, updated, equipment);
         }
 
         private ConnectedPlayer withInventory(Map<String, Integer> nextInventory) {
-            return new ConnectedPlayer(playerId, accountId, session, state, lastAcceptedNanos,
+            return new ConnectedPlayer(playerId, accountId, characterName, classCode, session, state, lastAcceptedNanos,
                     hp, respawnAt, experience, nextInventory, equipment);
         }
 
         private ConnectedPlayer withInventoryAndEquipment(Map<String, Integer> nextInventory,
                                                            Map<String, String> nextEquipment) {
-            return new ConnectedPlayer(playerId, accountId, session, state, lastAcceptedNanos,
+            return new ConnectedPlayer(playerId, accountId, characterName, classCode, session, state, lastAcceptedNanos,
                     hp, respawnAt, experience, nextInventory, nextEquipment);
         }
     }}

@@ -25,7 +25,7 @@ class AuthServiceTest {
 
         when(accounts.existsByEmailIgnoreCase("player@example.com")).thenReturn(false);
         when(accounts.save(any(Account.class))).thenAnswer(call -> call.getArgument(0));
-        when(characters.findFirstByAccountId(any())).thenReturn(java.util.Optional.empty());
+        when(characters.findAllByAccountIdOrderById(any())).thenReturn(java.util.List.of());
         when(movement.initialState("starter-meadow"))
                 .thenReturn(new PlayerMotionState("starter-meadow", 640, 384, 0));
         when(characters.save(any(PlayerCharacter.class))).thenAnswer(call -> call.getArgument(0));

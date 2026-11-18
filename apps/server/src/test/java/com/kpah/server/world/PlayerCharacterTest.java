@@ -33,6 +33,16 @@ class PlayerCharacterTest {
     }
 
     @Test
+    void storesCharacterNameAndClassMetadata() {
+        PlayerCharacter character = PlayerCharacter.from("account-2", "character-2",
+                "Mira", "mage", new PlayerMotionState("starter-meadow", 12, 34, 0),
+                100, 0, Map.of(), Map.of());
+
+        assertEquals("Mira", character.getName());
+        assertEquals("mage", character.getClassCode());
+    }
+
+    @Test
     void clampsPersistedVitalsAndExperienceToNonNegativeValues() {
         PlayerCharacter character = PlayerCharacter.from("character-2",
                 new PlayerMotionState("starter-meadow", 10, 20, 0),

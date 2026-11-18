@@ -1,6 +1,9 @@
 import Phaser from "phaser";
 import { GameScene } from "./scenes/GameScene";
-import { renderAuthScreen, restoreAuthSession, revokeAuthSession, type AuthSession } from "./auth";
+import {
+  renderAuthScreen, renderCharacterSelection, restoreAuthSession, revokeAuthSession,
+  type AuthSession
+} from "./auth";
 import "./style.css";
 
 const gameRoot = document.querySelector<HTMLElement>("#game-root")!;
@@ -23,11 +26,7 @@ function createGame(): void {
   });
 }
 
-function showGame(session: AuthSession): void {
-  localStorage.setItem("kpah.sessionToken", session.token);
-  localStorage.setItem("kpah.characterId", session.characterId);
-  authRoot.hidden = true;
-  gameRoot.hidden = false;
+function setAccountStatus(session: AuthSession): void {
   status.innerHTML = '<i></i><span></span><button id="logout-button" type="button">Sign out</button>';
   status.querySelector("span")!.textContent = session.email;
   status.querySelector<HTMLButtonElement>("#logout-button")!.addEventListener("click", async () => {
@@ -37,18 +36,35 @@ function showGame(session: AuthSession): void {
     gameRoot.innerHTML = "";
     showLogin();
   });
+}
+
+function startGame(session: AuthSession): void {
+  localStorage.setItem("kpah.sessionToken", session.token);
+  localStorage.setItem("kpah.characterId", session.characterId);
+  authRoot.hidden = true;
+  gameRoot.hidden = false;
+  setAccountStatus(session);
   createGame();
+}
+
+function showCharacterSelection(session: AuthSession): void {
+  localStorage.setItem("kpah.sessionToken", session.token);
+  localStorage.setItem("kpah.characterId", session.characterId);
+  gameRoot.hidden = true;
+  authRoot.hidden = false;
+  setAccountStatus(session);
+  renderCharacterSelection(authRoot, session, startGame);
 }
 
 function showLogin(): void {
   gameRoot.hidden = true;
   authRoot.hidden = false;
   status.innerHTML = "<i></i><span>ACCOUNT SIGN IN REQUIRED</span>";
-  renderAuthScreen(authRoot, showGame);
+  renderAuthScreen(authRoot, showCharacterSelection);
 }
 
 window.addEventListener("beforeunload", () => game?.destroy(true));
 restoreAuthSession().then((session) => {
-  if (session) showGame(session);
+  if (session) showCharacterSelection(session);
   else showLogin();
 }).catch(() => showLogin());
