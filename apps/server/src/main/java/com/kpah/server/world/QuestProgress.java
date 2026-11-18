@@ -35,7 +35,11 @@ public class QuestProgress {
         this.claimed = false;
     }
 
-    public void increment() { if (!claimed) progress = Math.min(3, progress + 1); }
+    public void increment() { increment(3); }
+    public void increment(int required) {
+        if (required < 1) throw new IllegalArgumentException("Required quest progress must be positive.");
+        if (!claimed) progress = Math.min(required, progress + 1);
+    }
     public void claim() { claimed = true; }
     public String getCharacterId() { return characterId; }
     public String getQuestId() { return questId; }
