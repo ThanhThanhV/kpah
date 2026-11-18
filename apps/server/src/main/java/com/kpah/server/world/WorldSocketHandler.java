@@ -2,6 +2,7 @@ package com.kpah.server.world;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.kpah.server.auth.AuthService;
+import com.kpah.server.auth.SessionHandshakeInterceptor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
@@ -48,8 +49,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws IOException {
-        String token = UriComponentsBuilder.fromUri(session.getUri())
-                .build().getQueryParams().getFirst("token");
+        String token = (String) session.getAttributes()
+                .get(SessionHandshakeInterceptor.AUTH_TOKEN_ATTRIBUTE);
         AuthService.AuthPrincipal principal = auth.authenticate(token);
         if (principal == null) {
             session.close(CloseStatus.POLICY_VIOLATION.withReason("Authentication required."));

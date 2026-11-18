@@ -76,6 +76,11 @@ public class AuthService {
         if (rawToken != null && !rawToken.isBlank()) sessions.deleteById(hashToken(rawToken));
     }
 
+    @Transactional
+    public void logoutAllForAccount(String accountId) {
+        sessions.deleteAllByAccountId(accountId);
+    }
+
     private AuthResponse issueSession(Account account) {
         PlayerCharacter character = characters.findFirstByAccountId(account.getId()).orElseGet(() -> {
             var spawn = movement.initialState("starter-meadow");

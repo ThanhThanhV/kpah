@@ -41,8 +41,7 @@ export class WorldSocketClient {
     const token = localStorage.getItem("kpah.sessionToken");
     if (!characterId || !token) return;
     url.searchParams.set("characterId", characterId);
-    url.searchParams.set("token", token);
-    const socket = new WebSocket(url.toString());
+    const socket = new WebSocket(url.toString(), "auth." + token);
     this.socket = socket;
     socket.addEventListener("open", () => this.statusListeners.forEach((listener) => listener(true)));
     socket.addEventListener("close", () => this.statusListeners.forEach((listener) => listener(false)));

@@ -29,7 +29,7 @@ mvn spring-boot:run
 
 Client: http://localhost:5173  
 Server health: http://localhost:8080/api/health  
-Account API: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`
+Account API: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`, `POST /api/auth/logout-all`
 
 Start local PostgreSQL when needed:
 
@@ -44,7 +44,7 @@ docker compose -f infra/docker-compose.yml up -d
 - Space: temporary attack pose; Shift: cast pose.
 - Map bounds and collision rectangles are tested on the client for responsiveness. The Java MovementService is authoritative. EXP, HP, map position, inventory and equipment are persisted in PostgreSQL.
 - Register or sign in with an email and a password of at least 10 characters. Passwords are stored as PBKDF2-HMAC-SHA256 hashes with per-password random salts. Sessions use random opaque tokens; only SHA-256 token hashes are stored in PostgreSQL and sessions expire after 30 days.
-- Each account receives one starter character. WebSocket connections require a valid session token and the server verifies the character belongs to the authenticated account. The browser stores the opaque session token and character ID in local storage; protect the client against XSS and deploy only behind HTTPS/WSS. The WebSocket currently passes the token as a query parameter, so production access logs must redact it.
+- Each account receives one starter character. WebSocket connections require a valid session token and the server verifies the character belongs to the authenticated account. The browser stores the opaque session token and character ID in local storage; protect the client against XSS and deploy only behind HTTPS/WSS. The WebSocket sends the token in a custom `Sec-WebSocket-Protocol` value rather than the URL. Public deployments must use WSS and avoid logging handshake credentials.
 
 ## Project status
 

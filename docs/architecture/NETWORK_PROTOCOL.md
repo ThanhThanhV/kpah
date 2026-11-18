@@ -4,7 +4,7 @@
 
 - WebSocket endpoint: `/ws/world`
 - Development default client URL: `ws://localhost:8080/ws/world`
-- The client supplies `token` and `characterId` query parameters. The token is an opaque 256-bit random session credential; the server stores only its SHA-256 hash.
+- The client supplies `characterId` as a query parameter and sends the opaque 256-bit session credential in a custom `Sec-WebSocket-Protocol` value (`auth.<token>`). The server stores only the token's SHA-256 hash.
 - The server validates the session and confirms the requested character is the account's owned character before adding the socket to the world. Invalid or expired sessions are closed with policy violation.
 - Each account currently has one starter character; multi-character selection and session refresh are not implemented.
 - Optional query parameter `mapId` is retained for compatibility but the persisted character's map is authoritative.

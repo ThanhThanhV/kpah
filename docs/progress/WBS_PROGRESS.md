@@ -58,6 +58,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Added account registration/login/logout and session restoration endpoints. Passwords use PBKDF2-HMAC-SHA256 with random salts; raw tokens are never stored in the database.
 - Each account is provisioned one starter character. Character rows now carry account_id, and WebSocket connect rejects invalid sessions or non-owned character IDs.
 - Added browser sign-in/register screen, persisted session restore and sign-out; the world only starts after authentication succeeds.
+- Added per-IP login and registration throttles (8 login attempts / 15 minutes; 4 registrations / hour) with bounded in-memory tracking.
+- Moved the WebSocket credential out of the URL into a custom `Sec-WebSocket-Protocol` handshake value.
+- Added logout-all to revoke every active session belonging to the authenticated account.
 
 ## CI results
 - Workflow: `.github/workflows/ci.yml`.
@@ -65,16 +68,17 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Loot/drop-table and inventory limits: [run 44238861303 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44238861303).
 - Quest/NPC catalog batch: [run 44239442720 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44239442720).
 - Account authentication batch: [run 44240885387 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44240885387).
+- Auth hardening batch: CI pending.
 
 ## Current risks
 1. Character, monster and drop visuals remain original procedural placeholders.
 2. Monster navigation uses a 24px grid; hitbox-aware movement and path smoothing remain.
-3. WebSocket session token is currently passed as a query parameter; reverse-proxy logs must redact it, and public deployments must use WSS.
+3. Session token is sent as a custom WebSocket subprotocol; production handshake/header logging must redact credentials, and public deployments must use WSS.
 4. Browser stores the opaque session token in localStorage; XSS hardening and CSRF/rate-limit policies need production review.
 5. Heartbeat, reconnect, rate limiting, multi-character selection, consumables, vendors, crafting and trading remain.
 
 ## Next implementation sequence
-1. Add auth rate limiting, refresh/revocation policy, secure WebSocket handshake credentials and multi-character selection.
+1. Add refresh-token rotation, secure cookie strategy for browser sessions and multi-character selection.
 2. Replace debug visuals with original art and concrete animation adapters.
 3. Expand quest/NPC catalogs and build gameplay integration coverage.
 4. Add production observability and load testing; keep GitHub Actions green.
