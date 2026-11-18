@@ -7,20 +7,24 @@ import org.springframework.stereotype.Component;
 public class MonsterArchetypeRegistry {
     private final Map<String, MonsterArchetype> archetypes = Map.of(
             "green-slime", new MonsterArchetype(
-                    "green-slime", "Green Slime", 60, 8, 30.0, 150.0, 1_100L, 1.0),
+                    "green-slime", "Green Slime", 60, 8, 30.0, 150.0, 1_100L, 1.0,
+                    MonsterBehavior.DEFENSIVE),
             "forest-wolf", new MonsterArchetype(
-                    "forest-wolf", "Forest Wolf", 110, 14, 34.0, 190.0, 900L, 1.55)
+                    "forest-wolf", "Forest Wolf", 110, 14, 34.0, 190.0, 900L, 1.55,
+                    MonsterBehavior.AGGRESSIVE),
+            "forest-sentinel", new MonsterArchetype(
+                    "forest-sentinel", "Forest Sentinel", 180, 12, 30.0, 0.0, 1_300L, 0.75,
+                    MonsterBehavior.PATROL),
+            "alpha-wolf", new MonsterArchetype(
+                    "alpha-wolf", "Alpha Wolf", 260, 22, 42.0, 240.0, 850L, 1.7,
+                    MonsterBehavior.ELITE)
     );
 
     public MonsterArchetype require(String monsterType) {
         MonsterArchetype archetype = archetypes.get(monsterType);
-        if (archetype == null) {
-            throw new IllegalArgumentException("Unknown monster archetype: " + monsterType);
-        }
+        if (archetype == null) throw new IllegalArgumentException("Unknown monster archetype: " + monsterType);
         return archetype;
     }
 
-    public Map<String, MonsterArchetype> all() {
-        return archetypes;
-    }
+    public Map<String, MonsterArchetype> all() { return archetypes; }
 }
