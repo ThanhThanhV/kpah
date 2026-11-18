@@ -37,6 +37,10 @@ export class GameScene extends Phaser.Scene {
   private unsubscribeCombat?: () => void;
   private unsubscribeQuest?: () => void;
   private interactionKey!: Phaser.Input.Keyboard.Key;
+  private questJournalKey!: Phaser.Input.Keyboard.Key;
+  private questJournalPanel?: Phaser.GameObjects.Container;
+  private questJournalBody?: Phaser.GameObjects.Text;
+  private questJournalProgress?: Phaser.GameObjects.Graphics;
   private npcObjects: { id: string; name: string; x: number; y: number; width: number; height: number }[] = [];
 
   constructor() { super("GameScene"); }
@@ -57,6 +61,7 @@ export class GameScene extends Phaser.Scene {
     this.castKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
     this.secondSkillKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
     this.interactionKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E);
+    this.questJournalKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.J);
 
     this.add.text(18, 18, "P1 · TILED MAP + MULTIPLAYER", {
       fontFamily: "Arial, sans-serif", fontSize: "13px", color: "#e6f1dc",
@@ -77,9 +82,10 @@ export class GameScene extends Phaser.Scene {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#b9dcff",
       backgroundColor: "#14262acc", padding: { x: 7, y: 4 }
     }).setScrollFactor(0).setDepth(2000);
-    this.add.text(18, 132, "WASD / arrows · Space: attack · Shift: Power Strike · Q: Arcane Bolt · E: talk", {
+    this.add.text(18, 132, "WASD / arrows · Space: attack · Shift: Power Strike · Q: Arcane Bolt · E: talk · J: quest", {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#c0d0c4"
     }).setScrollFactor(0).setDepth(2000);
+    this.createQuestJournal();
 
     const socketUrl = import.meta.env.VITE_WORLD_WS_URL || "ws://localhost:8080/ws/world";
     this.worldSocket = new WorldSocketClient(socketUrl);
@@ -123,8 +129,48 @@ export class GameScene extends Phaser.Scene {
     if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.castKey)) this.castSkill("power-strike");
     if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.secondSkillKey)) this.castSkill("arcane-bolt");
     if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.interactionKey)) this.interactWithNearestNpc();
+    if (Phaser.Input.Keyboard.JustDown(this.questJournalKey)) {
+      this.questJournalPanel?.setVisible(!(this.questJournalPanel.visible));
+    }
     this.player.update(delta);
     this.updateRemotePlayers(delta);
+  }
+
+
+  private createQuestJournal(): void {
+    const background = this.add.rectangle(0, 0, 270, 132, 0x14262c, 0.92)
+      .setOrigin(0).setStrokeStyle(1, 0x78918a, 0.9);
+    const title = this.add.text(12, 9, "QUEST JOURNAL · J", {
+      fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#f5dfa0",
+      fontStyle: "bold", letterSpacing: 1
+    });
+    this.questJournalBody = this.add.text(12, 32, "Waiting for world state…", {
+      fontFamily: "Arial, sans-serif", fontSize: "12px", color: "#e6f1dc",
+      lineSpacing: 4, wordWrap: { width: 244 }
+    });
+    this.questJournalProgress = this.add.graphics();
+    this.questJournalPanel = this.add.container(this.scale.width - 288, 18, [
+      background, title, this.questJournalBody, this.questJournalProgress
+    ]).setScrollFactor(0).setDepth(2000);
+  }
+
+  private updateQuestJournal(quest?: WorldSnapshot["players"][number]["quest"]): void {
+    if (!this.questJournalBody || !this.questJournalProgress) return;
+    const status = quest?.status ?? "available";
+    const progress = quest?.progress ?? 0;
+    const required = quest?.required ?? 3;
+    const messages: Record<string, string> = {
+      available: "Talk to Meadow Guide (E) to begin the hunt.",
+      active: `Defeat Green Slimes\\nProgress: ${progress}/${required}\\nReturn to Meadow Guide when complete.`,
+      ready: "Objective complete!\\nReturn to Meadow Guide (E) to claim 100 EXP.",
+      claimed: "Quest complete.\\nThe meadow is safe. Reward claimed."
+    };
+    this.questJournalBody.setText(messages[status] ?? "Quest status unavailable.");
+    const ratio = required > 0 ? Phaser.Math.Clamp(progress / required, 0, 1) : 0;
+    this.questJournalProgress.clear();
+    this.questJournalProgress.fillStyle(0x30443e, 1).fillRoundedRect(12, 112, 246, 7, 3);
+    this.questJournalProgress.fillStyle(status === "claimed" ? 0x8bd69a : 0xd8b86c, 1)
+      .fillRoundedRect(12, 112, 246 * (status === "claimed" ? 1 : ratio), 7, 3);
   }
 
   private interactWithNearestNpc(): void {
@@ -176,6 +222,7 @@ export class GameScene extends Phaser.Scene {
       this.progressionLabel?.setText(
         `Lv ${ownPlayer.level} · EXP ${ownPlayer.experience % 100}/100 · Bag ${itemCount}`
       );
+      this.updateQuestJournal(ownPlayer.quest);
     }
     const visibleRemoteIds = new Set<string>();
     const now = this.time.now;

@@ -21,38 +21,44 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 ## WBS activity tracking
 | WBS ID | Activity / deliverable | Status | Evidence / remaining work |
 |---|---|---|---|
-| 3.1–3.4 | Client/server foundation, world transport and CI | IN PROGRESS | Phaser, Spring Boot, PostgreSQL Compose, JPA persistence and GitHub Actions; latest client/server CI result is tracked below. |
+| 3.1–3.4 | Client/server foundation, world transport and CI | IN PROGRESS | Phaser, Spring Boot, PostgreSQL Compose, JPA persistence and GitHub Actions. |
 | 4.1–4.5 | Character renderer and animation | IN PROGRESS | Procedural player placeholder and SpriteSheet/Spine adapter contracts; concrete art adapters remain. |
-| 5 | Map Engine | IN PROGRESS | Tiled map loading, rectangular collision and server-side grid pathfinding for monster navigation; map art remains. |
+| 5 | Map Engine | IN PROGRESS | Tiled map loading, rectangular collision and server-side grid pathfinding; map art and transitions remain. |
 | 6.1–6.3 | Input, movement and facing | IN PROGRESS | Client prediction and server-authoritative movement; touch controls and replicated facing remain. |
-| 7.1 | Monster definitions and spawn regions | IN PROGRESS | Tiled spawn properties define type, alive cap, respawn, roam radius and speed. |
-| 7.2 | Monster simulation and AI | IN PROGRESS | Initial spawn, bounded roam, aggro, leash, attack range/cooldown and bounded A* pursuit using Tiled collision; pathfinding tests added. |
-| 7.3 | Monster presentation | IN PROGRESS | Snapshot-driven slime and ground-drop placeholders; final sprite/Spine animations remain. |
-| 8.1 | Target selection and basic attack | IN PROGRESS | Nearest monster selection; server validates target, map, 58px range and 600ms cooldown. |
-| 8.2 | Damage and monster defeat | IN PROGRESS | Server applies damage and configured respawn delay; kill creates a material drop and grants 25 EXP. |
-| 8.3 | Player damage, death and respawn | IN PROGRESS | Monster attacks reduce player HP; server respawns at map spawn after 3 seconds. |
-| 9 | Skills and visual effects | IN PROGRESS | Two server-defined monster-target skills with authoritative range, damage and per-player cooldown; client hotkeys and cast feedback. Skill trees, mana, area targeting and authored VFX remain. |
-| 10 | Multiplayer replication | IN PROGRESS | Players, monsters, HP, EXP, level, inventory and ground loot snapshots; auth/reconnect/interest management remain. |
-| 11 | Character progression | IN PROGRESS | Level advances every 100 EXP; character ID, map position, HP and EXP now persist in PostgreSQL; stat growth and authenticated accounts remain. |
-| 12 | Loot and inventory | IN PROGRESS | One material drop per defeated monster, proximity auto-pickup and inventory counts persisted through JPA; item catalog and equipment remain. |
-| 13 | NPC interactions | IN PROGRESS | Server validates Tiled NPC identity and interaction distance; Meadow Guide dialogue is wired to E key. More NPCs/dialogue branches remain. |\n| 14 | Quest progression | IN PROGRESS | Persistent Meadow Slime Hunt quest: start, 3 Green Slime kills, turn-in and 100 EXP reward; additional quest definitions/objectives/rewards remain. |\n| 15–17 | Economy, QA and operations | NOT STARTED | Item catalog, trading, production observability and load testing remain. |
+| 7.1–7.3 | Monster definitions, AI and presentation | IN PROGRESS | Tiled spawn definitions, bounded roam, aggro, leash, attack cooldown, A* pursuit and snapshot-driven placeholder visuals. |
+| 8.1–8.3 | Combat, damage, death and respawn | IN PROGRESS | Server validates basic/skill attacks; monster drops, EXP, player damage and respawn implemented. |
+| 9 | Skills and visual effects | IN PROGRESS | Two server-defined monster-target skills with authoritative range, damage and cooldown; skill resources, area targeting and authored VFX remain. |
+| 10 | Multiplayer replication | IN PROGRESS | Player, monster, HP, EXP, inventory, loot and quest snapshots; authentication, heartbeat, reconnect and interest management remain. |
+| 11 | Character progression | IN PROGRESS | Level every 100 EXP; character ID, map position, HP and EXP persist in PostgreSQL; stat growth and authenticated ownership remain. |
+| 12 | Loot and inventory | IN PROGRESS | Guaranteed material drop, proximity pickup and persisted inventory counts; item catalog and equipment remain. |
+| 13.1 | NPC interaction | IN PROGRESS | Server validates Tiled NPC identity and interaction distance; Meadow Guide dialogue uses E key. |
+| 14.1 | Quest lifecycle | IN PROGRESS | Persistent Meadow Slime Hunt: start, 3 Green Slime kills, turn-in and 100 EXP reward. |
+| 14.2 | Quest Journal UI | IN PROGRESS | Client journal displays objective, kill progress, ready-to-claim and claimed states; toggle with J. |
+| 15–17 | Economy, QA and operations | NOT STARTED | Item catalog, equipment, trading, production observability and load testing remain. |
+
+## Latest implementation batch
+- Added an in-game Quest Journal panel anchored to the HUD.
+- The panel is driven by the server's persisted quest snapshot, not client-side quest state.
+- Displays the correct guidance for available, active, ready-to-claim and claimed states.
+- Shows kill progress and a progress bar; press J to show/hide the panel.
+- Existing E interaction remains the authoritative NPC start/turn-in action.
 
 ## CI results
 - Workflow: `.github/workflows/ci.yml`.
-- **PASS** — commit `1844235a49aa07718d976d561984a1104dde404b`: client typecheck + production build; server Maven test + package.
-- Earlier CI runs identified and led to fixes for strict TypeScript unused-property errors and Java's 10-entry `Map.of` limit.
-- Commit `8a4764ca9fc0cf5fa3bbf5aee081d59a46c2fda3` adds the EXP/level/inventory HUD; its CI run is queued at the time of this report.
+- Latest previously verified PASS: [run 44231850025](https://github.com/ThanhThanhV/kpah/actions/runs/44231850025).
+- The current Quest Journal commit's CI result must be checked before marking this batch verified.
 
 ## Current risks
-1. Character and monster visuals remain original procedural placeholders.
-2. Monster navigation uses a 24px grid and collision-cell centers; finer hitbox-aware movement and path smoothing remain.
-3. Character state and inventory are persisted in PostgreSQL; identity is browser-local and not protected by authentication. Reconnecting while dead schedules a fresh respawn timer.
+1. Character, monster and drop visuals remain original procedural placeholders.
+2. Monster navigation uses a 24px grid; hitbox-aware movement and path smoothing remain.
+3. Identity is browser-local and not protected by authentication.
 4. WebSocket authentication, heartbeat, reconnect, rate limiting and interest management remain.
 5. Item catalog, equipment, trading and account authentication remain.
 
 ## Next implementation sequence
-1. Expand skill system with resource costs, area targeting and original skill effects.
-2. Add character authentication, server-issued sessions and account-to-character ownership.
-3. Expand NPC dialogue and quest catalog; add objective types, rewards and quest journal UI.
-4. Replace debug character/monster/drop visuals with original art and concrete animation adapters.
-5. Keep GitHub Actions green for every implementation batch.
+1. Add item definitions and server-validated equipment slots/stats.
+2. Build inventory/equipment UI and persist equipment state.
+3. Expand quest definitions and NPC dialogue into data-driven catalogs.
+4. Add authenticated accounts and server-issued sessions before production deployment.
+5. Replace debug visuals with original art and concrete animation adapters.
+6. Keep GitHub Actions green for every implementation batch.
