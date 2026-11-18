@@ -26,7 +26,10 @@ public class WorldCombatService {
         }
         MonsterAttackResult result = monsters.applyBasicAttack(
                 attacker.mapId(), attacker.x(), attacker.y(), targetMonsterId, attackBonus, nowMillis);
-        if (result.accepted()) lastAttackAt.put(playerId, nowMillis);
+        if (result.accepted()) {
+            lastAttackAt.put(playerId, nowMillis);
+            monsters.provoke(targetMonsterId, playerId, nowMillis);
+        }
         return result;
     }
 
