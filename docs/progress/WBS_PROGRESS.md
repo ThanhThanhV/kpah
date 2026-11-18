@@ -175,3 +175,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Local and remote player renderers now request spritesheet catalog entries by the server-replicated class code (Warrior/Mage/Archer) instead of using one generic remote-player key.
 - When the first authoritative snapshot identifies the local character class, GameScene can switch the local renderer to that class's catalogued visual while preserving the current position and HP state.
 - The catalog remains empty until original project-owned character art is added; procedural rendering remains the expected fallback and no artwork is claimed as integrated.
+
+
+## Latest implementation batch — character renderer snapshot and catalog safeguards
+- Local character HP is now applied from each authoritative world snapshot, so the local HP bar/death presentation follows server state just like remote players.
+- Local and remote class-keyed renderer selection is now prepared for the future Warrior/Mage/Archer sprite catalog.
+- Sprite registration rejects invalid sheet dimensions/paths, non-positive frame rates, invalid repeat counts and duplicate directional clips before Phaser animation registration.
+- No original art is present yet; the procedural renderer remains the active fallback.

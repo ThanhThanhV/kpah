@@ -33,6 +33,11 @@ export class SpriteSheetAnimationRegistry {
     if (this.clips.has(definition.characterKey)) {
       throw new Error("Duplicate character sprite key \"" + definition.characterKey + "\".");
     }
+    if (!definition.characterKey.trim() || !definition.path.trim()
+        || !Number.isInteger(definition.frameWidth) || definition.frameWidth <= 0
+        || !Number.isInteger(definition.frameHeight) || definition.frameHeight <= 0) {
+      throw new Error("Invalid spritesheet definition for character \\"" + definition.characterKey + "\\".");
+    }
     if (definition.animations.length === 0) {
       throw new Error("Character \"" + definition.characterKey + "\" has no animation clips.");
     }
@@ -46,6 +51,16 @@ export class SpriteSheetAnimationRegistry {
       }
       if (!texture.has(String(start)) || !texture.has(String(end))) {
         throw new Error("Frame range " + start + "-" + end + " exceeds spritesheet \"" + definition.textureKey + "\".");
+      }
+      if (animation.frameRate !== undefined && (!Number.isFinite(animation.frameRate) || animation.frameRate <= 0)) {
+        throw new Error("Invalid frame rate for " + definition.characterKey + ":" + animation.action + ":" + animation.facing + ".");
+      }
+      if (animation.repeat !== undefined && (!Number.isInteger(animation.repeat) || animation.repeat < -1)) {
+        throw new Error("Invalid repeat count for " + definition.characterKey + ":" + animation.action + ":" + animation.facing + ".");
+      }
+      const clipKey = animation.action + ":" + animation.facing;
+      if (clips[clipKey]) {
+        throw new Error("Duplicate directional clip for " + definition.characterKey + ":" + clipKey + ".");
       }
       const animationKey = definition.characterKey + ":" + animation.action + ":" + animation.facing;
       if (scene.anims.exists(animationKey)) {
