@@ -60,6 +60,6 @@ class SkillCombatServiceTest {
     void regeneratesManaOverTime() {
         combat.cast("player-1", "warrior", caster,
                 "warrior-power-strike", "slime-1", 5, 1, 1_000L);
-        assertEquals(78, combat.manaFor("player-1", "warrior", 2_000L));
+        assertEquals(78, combat.manaFor("player-1", "warrior", 1, 2_000L));
     }
 }
