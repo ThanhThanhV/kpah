@@ -335,3 +335,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - The inventory panel displays those server values and uses a syncing placeholder if the stats are not present, avoiding stale duplicated balance data in the client.
 - Equipment bonuses continue to be calculated from the server-provided item catalog and equipped slots.
 - CI is the verification gate for this batch.
+
+
+## Latest implementation batch — throttle movement database writes
+- Kept authoritative movement validation and real-time snapshot broadcast unchanged.
+- Added a per-connection 5-second position persistence gate; accepted movement packets no longer trigger a database save on every packet.
+- Initial character state and the latest state on WebSocket disconnect are still persisted. Other gameplay state changes continue using immediate persistence.
+- This trades a maximum 5-second movement-position rollback on abrupt process failure for substantially fewer database writes under active movement.
+- CI is the verification gate for this batch.
