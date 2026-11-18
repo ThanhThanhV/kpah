@@ -37,7 +37,7 @@ export class GameScene extends Phaser.Scene {
   private unsubscribeCombat?: () => void;
   private unsubscribeQuest?: () => void;
   private interactionKey!: Phaser.Input.Keyboard.Key;
-  private questJournalKey!: Phaser.Input.Keyboard.Key;
+  private questJournalKey!: Phaser.Input.Keyboard.Key;\n  private inventoryKey!: Phaser.Input.Keyboard.Key;\n  private equipWeaponKey!: Phaser.Input.Keyboard.Key;\n  private equipBodyKey!: Phaser.Input.Keyboard.Key;\n  private unequipWeaponKey!: Phaser.Input.Keyboard.Key;\n  private unequipBodyKey!: Phaser.Input.Keyboard.Key;\n  private inventoryPanel?: Phaser.GameObjects.Container;\n  private inventoryBody?: Phaser.GameObjects.Text;
   private questJournalPanel?: Phaser.GameObjects.Container;
   private questJournalBody?: Phaser.GameObjects.Text;
   private questJournalProgress?: Phaser.GameObjects.Graphics;
@@ -62,6 +62,11 @@ export class GameScene extends Phaser.Scene {
     this.secondSkillKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
     this.interactionKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E);
     this.questJournalKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.J);
+    this.inventoryKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.I);
+    this.equipWeaponKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ONE);
+    this.equipBodyKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.TWO);
+    this.unequipWeaponKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.THREE);
+    this.unequipBodyKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.FOUR);
 
     this.add.text(18, 18, "P1 · TILED MAP + MULTIPLAYER", {
       fontFamily: "Arial, sans-serif", fontSize: "13px", color: "#e6f1dc",
@@ -82,10 +87,10 @@ export class GameScene extends Phaser.Scene {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#b9dcff",
       backgroundColor: "#14262acc", padding: { x: 7, y: 4 }
     }).setScrollFactor(0).setDepth(2000);
-    this.add.text(18, 132, "WASD / arrows · Space: attack · Shift: Power Strike · Q: Arcane Bolt · E: talk · J: quest", {
+    this.add.text(18, 132, "WASD / arrows · Space: attack · Shift: Power Strike · Q: Arcane Bolt · E: talk · J: quest · I: bag", {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#c0d0c4"
     }).setScrollFactor(0).setDepth(2000);
-    this.createQuestJournal();
+    this.createQuestJournal();\n    this.createInventoryPanel();
 
     const socketUrl = import.meta.env.VITE_WORLD_WS_URL || "ws://localhost:8080/ws/world";
     this.worldSocket = new WorldSocketClient(socketUrl);
@@ -136,6 +141,52 @@ export class GameScene extends Phaser.Scene {
     this.updateRemotePlayers(delta);
   }
 
+
+
+  private createInventoryPanel(): void {
+    const background = this.add.rectangle(0, 0, 292, 174, 0x14262c, 0.94)
+      .setOrigin(0).setStrokeStyle(1, 0x78918a, 0.9);
+    const title = this.add.text(12, 9, "INVENTORY & EQUIPMENT · I", {
+      fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#f5dfa0",
+      fontStyle: "bold", letterSpacing: 1
+    });
+    this.inventoryBody = this.add.text(12, 31, "Waiting for inventory…", {
+      fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#e6f1dc",
+      lineSpacing: 3, wordWrap: { width: 268 }
+    });
+    this.inventoryPanel = this.add.container(18, this.scale.height - 194, [
+      background, title, this.inventoryBody
+    ]).setScrollFactor(0).setDepth(2000).setVisible(false);
+  }
+
+  private updateInventoryPanel(player: WorldSnapshot["players"][number]): void {
+    if (!this.inventoryBody) return;
+    const inventory = player.inventory ?? {};
+    const catalog = player.itemCatalog ?? {};
+    const equipment = player.equipment ?? {};
+    const lines = Object.entries(inventory)
+      .filter(([, quantity]) => quantity > 0)
+      .map(([code, quantity]) => {
+        const item = catalog[code];
+        return `• ${item?.name ?? code} ×${quantity}`;
+      });
+    const equipped = ["weapon", "body"].map((slot) => {
+      const code = equipment[slot];
+      const item = code ? catalog[code] : undefined;
+      return `${slot.toUpperCase()}: ${item?.name ?? "Empty"}`;
+    });
+    const bonuses = Object.values(equipment).reduce((total, code) => {
+      const item = catalog[code];
+      return { attack: total.attack + (item?.attackBonus ?? 0), defense: total.defense + (item?.defenseBonus ?? 0) };
+    }, { attack: 0, defense: 0 });
+    this.inventoryBody.setText([
+      "BAG", ...(lines.length ? lines : ["(empty)"]), "",
+      "EQUIPPED", ...equipped,
+      `Bonuses: ATK +${bonuses.attack} · DEF +${bonuses.defense}`,
+      "1 Equip sword · 2 Equip tunic",
+      "3 Unequip weapon · 4 Unequip body"
+    ]);
+  }
 
   private createQuestJournal(): void {
     const background = this.add.rectangle(0, 0, 270, 132, 0x14262c, 0.92)
@@ -222,7 +273,7 @@ export class GameScene extends Phaser.Scene {
       this.progressionLabel?.setText(
         `Lv ${ownPlayer.level} · EXP ${ownPlayer.experience % 100}/100 · Bag ${itemCount}`
       );
-      this.updateQuestJournal(ownPlayer.quest);
+      this.updateQuestJournal(ownPlayer.quest);\n      this.updateInventoryPanel(ownPlayer);
     }
     const visibleRemoteIds = new Set<string>();
     const now = this.time.now;
