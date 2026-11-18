@@ -1009,6 +1009,32 @@
           "y": 192,
           "width": 96,
           "height": 128
+        },
+        {
+          "id": 102,
+          "name": "Return to Meadow",
+          "class": "portal",
+          "x": 32,
+          "y": 320,
+          "width": 32,
+          "height": 64,
+          "properties": [
+            {
+              "name": "targetMapId",
+              "type": "string",
+              "value": "starter-meadow"
+            },
+            {
+              "name": "targetX",
+              "type": "float",
+              "value": 1184
+            },
+            {
+              "name": "targetY",
+              "type": "float",
+              "value": 368
+            }
+          ]
         }
       ]
     }
