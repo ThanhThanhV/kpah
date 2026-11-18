@@ -70,7 +70,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Quest/NPC catalog batch: [run 44239442720 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44239442720).
 - Account authentication batch: [run 44240885387 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44240885387).
 - Auth hardening batch: [run 44241375845 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44241375845).
-- Multi-character selection batch: CI pending.
+- Multi-character selection batch: [run 44242288598 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44242288598).
 
 ## Current risks
 1. Character, monster and drop visuals remain original procedural placeholders.
