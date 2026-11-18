@@ -46,6 +46,10 @@ docker compose -f infra/docker-compose.yml up -d
 - Register or sign in with an email and a password of at least 10 characters. Passwords are stored as PBKDF2-HMAC-SHA256 hashes with per-password random salts. Sessions use random opaque tokens; only SHA-256 token hashes are stored in PostgreSQL and sessions expire after 30 days.
 - Each account receives one starter character and can create up to two additional characters (maximum three). Character selection is saved in the authenticated session; classes are Warrior, Mage and Archer with server-authoritative base HP, attack and defense bonuses. WebSocket connections require a valid session token and the server verifies the character belongs to the authenticated account. The browser stores the opaque session token and character ID in local storage; protect the client against XSS and deploy only behind HTTPS/WSS. The WebSocket sends the token in a custom `Sec-WebSocket-Protocol` value rather than the URL. Public deployments must use WSS and avoid logging handshake credentials.
 
+## Character art pipeline
+
+See [character asset integration contract](docs/art/CHARACTER_ASSET_PIPELINE.md) for the exact spritesheet/Spine hand-off format and acceptance checklist.
+
 ## Project status
 
 See [WBS progress](docs/progress/WBS_PROGRESS.md). The progress report distinguishes code committed from builds/tests actually executed. No local build is claimed by a GitHub-only commit.

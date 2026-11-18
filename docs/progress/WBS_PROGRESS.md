@@ -182,3 +182,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Local and remote class-keyed renderer selection is now prepared for the future Warrior/Mage/Archer sprite catalog.
 - Sprite registration rejects invalid sheet dimensions/paths, non-positive frame rates, invalid repeat counts and duplicate directional clips before Phaser animation registration.
 - No original art is present yet; the procedural renderer remains the active fallback.
+
+
+## Character art hand-off specification
+- Added a project-owned asset contract covering directory layout, transparent row-major spritesheets, frame indexing, feet pivot, logical display sizing, action/facing coverage, looping rules and class-keyed catalog registration.
+- Documented the Spine integration boundary: the adapter is runtime-neutral, and a concrete plugin/runtime must not be selected until a real skeleton export is available.
+- Added an acceptance checklist for repeated combat animation, death/respawn, overlays, depth sorting and desktop/mobile review.
+- No PNG or Spine export is committed; art integration remains blocked on original project-owned character assets.
