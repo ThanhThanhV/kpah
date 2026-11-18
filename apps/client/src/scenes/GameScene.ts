@@ -118,7 +118,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   private castSkill(skillId: string): void {
-    const target = this.findNearestMonster();
+    const maxRange = skillId === "power-strike" ? 110 : 180;
+    const target = this.findNearestMonster(maxRange);
     if (!target) {
       this.combatLabel?.setText("No monster in skill range");
       return;
@@ -127,13 +128,13 @@ export class GameScene extends Phaser.Scene {
     this.worldSocket.sendSkill(skillId, target.monsterId);
   }
 
-  private findNearestMonster(): { monsterId: string; distance: number } | undefined {
+  private findNearestMonster(maxRange = 58): { monsterId: string; distance: number } | undefined {
     let nearest: { monsterId: string; distance: number } | undefined;
     for (const [monsterId, entity] of this.monsters) {
       const distance = Phaser.Math.Distance.Between(this.playerX, this.playerY, entity.worldX, entity.worldY);
       if (!nearest || distance < nearest.distance) nearest = { monsterId, distance };
     }
-    return nearest && nearest.distance <= 58 ? nearest : undefined;
+    return nearest && nearest.distance <= maxRange ? nearest : undefined;
   }
 
   private applyWorldSnapshot(snapshot: WorldSnapshot): void {

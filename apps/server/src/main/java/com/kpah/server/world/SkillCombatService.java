@@ -15,7 +15,7 @@ public class SkillCombatService {
         this.monsters = monsters;
     }
 
-    public SkillCastResult cast(String playerId, PlayerMotionState caster, String skillId,
+    public synchronized SkillCastResult cast(String playerId, PlayerMotionState caster, String skillId,
                                 String targetMonsterId, long nowMillis) {
         if (playerId == null || playerId.isBlank() || caster == null
                 || targetMonsterId == null || targetMonsterId.isBlank()) {
