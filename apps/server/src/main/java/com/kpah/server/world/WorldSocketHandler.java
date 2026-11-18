@@ -162,7 +162,13 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 inventory.compute(itemCode, (code, count) -> count == null || count <= 1 ? null : count - 1);
                 Map<String, String> equipment = new ConcurrentHashMap<>(player.equipment());
                 String replaced = equipment.put(definition.slot(), itemCode);
-                if (replaced != null) inventory.merge(replaced, 1, Integer::sum);
+                if (replaced != null) {
+                    ItemCatalog.InventoryUpdate returned = items.addToInventory(inventory, replaced, 1);
+                    if (returned.acceptedAmount() != 1) {
+                        throw new IllegalArgumentException("Inventory is full; cannot return the replaced equipment.");
+                    }
+                    inventory = new ConcurrentHashMap<>(returned.inventory());
+                }
                 ConnectedPlayer equipped = player.withInventoryAndEquipment(inventory, equipment);
                 players.put(session.getId(), equipped);
                 persist(equipped);
@@ -171,10 +177,14 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             } else if ("unequip".equals(type)) {
                 String slot = requireText(input, "slot");
                 Map<String, String> equipment = new ConcurrentHashMap<>(player.equipment());
-                String removed = equipment.remove(slot);
+                String removed = equipment.get(slot);
                 if (removed == null) throw new IllegalArgumentException("Nothing is equipped in that slot.");
-                Map<String, Integer> inventory = new ConcurrentHashMap<>(player.inventory());
-                inventory.merge(removed, 1, Integer::sum);
+                ItemCatalog.InventoryUpdate returned = items.addToInventory(player.inventory(), removed, 1);
+                if (returned.acceptedAmount() != 1) {
+                    throw new IllegalArgumentException("Inventory is full; cannot unequip this item.");
+                }
+                equipment.remove(slot);
+                Map<String, Integer> inventory = new ConcurrentHashMap<>(returned.inventory());
                 ConnectedPlayer unequipped = player.withInventoryAndEquipment(inventory, equipment);
                 players.put(session.getId(), unequipped);
                 persist(unequipped);

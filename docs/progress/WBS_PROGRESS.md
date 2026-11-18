@@ -312,3 +312,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Movement commands require an integral sequence number and finite JSON numeric axes; string-encoded numbers, missing fields and non-finite values are rejected.
 - Attack and skill targets, skill IDs, NPC IDs, equipment codes and equipment slots must be non-empty strings no longer than 128 characters.
 - Validation remains server-side and uses the existing controlled error response path; movement authority, rate limits and combat rules are unchanged.
+
+
+## Latest implementation batch — enforce inventory capacity during equipment swaps
+- Equipment replacement now returns the displaced item through the same catalog-backed inventory capacity and stack-limit rules used by loot pickup.
+- Unequip now checks that the item can be returned to inventory before changing the player's equipment state.
+- A full 20-slot inventory can still accept a returned item when its existing stack has room; otherwise the equipment operation is rejected without mutating player state.
+- Added coverage for returning an item into an existing stack while all 20 inventory slots are occupied.

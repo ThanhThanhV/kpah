@@ -49,4 +49,18 @@ class ItemCatalogTest {
         assertEquals(20, update.inventory().size());
     }
 
+    @Test
+    void inventoryCanReturnEquipmentIntoAnExistingStackAtCapacity() {
+        Map<String, Integer> fullBag = new java.util.HashMap<>();
+        fullBag.put("green-slime-material", 1);
+        for (int i = 0; i < 19; i++) fullBag.put("other-item-" + i, 1);
+
+        ItemCatalog.InventoryUpdate update = catalog.addToInventory(
+                fullBag, "green-slime-material", 1);
+
+        assertEquals(1, update.acceptedAmount());
+        assertEquals(20, update.inventory().size());
+        assertEquals(2, update.inventory().get("green-slime-material"));
+    }
+
 }
