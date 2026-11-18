@@ -5,6 +5,7 @@ export interface WorldAttackIntent { type: "attack"; targetMonsterId: string; }
 export interface WorldSkillIntent { type: "cast"; skillId: string; targetMonsterId: string; }
 export interface WorldMapTransition { type: "map-transition"; mapId: string; x: number; y: number; }
 export interface WorldQuestEvent { type: "quest"; npcName: string; message: string; questId: string; status: string; progress: number; required: number; experienceReward: number; }
+export interface WorldQuestSnapshot { questId: string; npcId?: string; npcName: string; status: string; progress: number; required: number; targetMonsterType?: string; targetDisplayName: string; experienceReward: number; }
 export interface WorldCombatEvent { type: "combat"; action: string; sourcePlayerId?: string; targetPlayerId?: string; skillId?: string; skillName?: string; targetMonsterId?: string; damage?: number; monsterHp?: number; experienceReward?: number; }
 export interface WorldItemDefinition { itemCode: string; name: string; type: string; slot: string; attackBonus: number; defenseBonus: number; maxStack: number; }
 export interface WorldPlayerSnapshot {
@@ -14,7 +15,8 @@ export interface WorldPlayerSnapshot {
   skills?: Record<string, { skillId: string; displayName: string; classCode: string; damage: number; range: number; cooldownMillis: number; manaCost: number; requiredLevel: number }>;
   experience: number; level: number; inventory?: Record<string, number>;
   equipment?: Record<string, string>; itemCatalog?: Record<string, WorldItemDefinition>;
-  quest?: { questId: string; status: string; progress: number; required: number; npcName?: string; targetDisplayName?: string; experienceReward?: number };
+  quest?: WorldQuestSnapshot;
+  quests?: WorldQuestSnapshot[];
 }
 export interface WorldMonsterSnapshot {
   monsterId: string; monsterType: string; mapId: string; spawnRegionId: string;
@@ -26,7 +28,7 @@ export interface WorldLootSnapshot {
 export interface WorldSnapshot {
   type: "snapshot"; players: WorldPlayerSnapshot[]; monsters: WorldMonsterSnapshot[];
   lootDrops: WorldLootSnapshot[];
-  selfState?: Pick<WorldPlayerSnapshot, "inventory" | "equipment" | "itemCatalog" | "quest">;
+  selfState?: Pick<WorldPlayerSnapshot, "inventory" | "equipment" | "itemCatalog" | "quest" | "quests">;
 }
 
 export class WorldSocketClient {
