@@ -4,7 +4,7 @@
 
 - WebSocket endpoint: `/ws/world`
 - Development default client URL: `ws://localhost:8080/ws/world`
-- The client supplies `characterId` as a query parameter and sends the opaque 256-bit session credential in a custom `Sec-WebSocket-Protocol` value (`auth.<token>`). The server stores only the token's SHA-256 hash.
+- The client supplies `characterId` as a query parameter and sends the opaque 256-bit session credential in a custom `Sec-WebSocket-Protocol` value (`auth.<token>`); the token is not placed in the URL. The server stores only the token's SHA-256 hash.
 - The server validates the session and confirms the requested character is the account's owned character before adding the socket to the world. Invalid or expired sessions are closed with policy violation.
 - Each account receives one starter character and may create up to two more (maximum three). The selected character ID is stored on the authenticated session. Class base HP, attack and defense are applied server-side; class-specific skill trees remain.
 - Account endpoints: `GET /api/auth/characters`, `POST /api/auth/characters`, and `POST /api/auth/select-character`.
@@ -58,9 +58,9 @@ Snapshots include all connected players in the same map. The client identifies i
 
 - The gateway is a development transport, not a production-ready zone simulation.
 - Live positions are held in memory and are persisted to PostgreSQL as movement updates; multi-zone coordination is not implemented.
-- Rate limiting, heartbeat, reconnect/resume, interest management and delta compression remain.
-- The token is currently passed in the WebSocket query string; production reverse-proxy access logs must redact the token parameter and public deployments must use WSS.
-- The client currently renders its local character; remote snapshot entities are the next multiplayer presentation task.
+- Per-IP throttles currently protect login and registration. World-message rate limiting, interest management and delta compression remain outstanding.
+- The browser stores the opaque session token in localStorage and sends it as a custom WebSocket subprotocol. Production handshake/header logging must redact credentials, public deployments must use HTTPS/WSS, and browser XSS exposure still needs production hardening.
+- The client renders local and remote player entities from authoritative snapshots; original spritesheet/Spine assets are not integrated yet.
 - Server map geometry is still a manually maintained registry and must be generated from the same versioned map source as the Tiled client map.
 
 
@@ -70,3 +70,9 @@ Facing is derived from consecutive authoritative position snapshots. When the di
 
 ## Remote combat animation events
 The server broadcasts accepted combat actions to every connected player on the same map. Events identify the authoritative source player for basic attacks and skill casts, or the target player for monster-hit reactions. Clients use these events only for presentation: remote characters play attack/cast/hit animations while damage, target validation and world state remain server-authoritative.
+
+## Heartbeat and reconnect lifecycle
+- The client sends an application-level `ping` every 20 seconds while connected; the server replies with `pong`.
+- If a pong is not received within 10 seconds, the client closes the stale socket and enters the retryable reconnect path.
+- Unexpected network disconnects reconnect with bounded exponential backoff from 1 to 30 seconds. Destroying the scene cancels heartbeat and reconnect timers.
+- A policy-violation close (1008) is terminal for the current credentials/character selection: the client does not retry the same WebSocket credentials. It revalidates `/api/auth/me` and returns a valid account to character selection, or returns an expired account to sign-in.

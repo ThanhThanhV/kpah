@@ -265,3 +265,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Policy-violation close code 1008 now surfaces a terminal authentication/character-selection state instead of leaving the player in an offline-prediction world with no reconnect path.
 - The application tears down the rejected game session, revalidates the stored account session, then returns a valid account to character selection; expired/invalid account sessions return to sign-in.
 - Transient disconnects continue bounded exponential reconnect, and the existing heartbeat and scene shutdown lifecycle remain intact.
+
+
+## Documentation correction — current world transport contract
+- Corrected the network protocol to state that the session token is sent via the `auth.<token>` WebSocket subprotocol, not in the URL query string.
+- Updated current limitations to distinguish existing per-IP authentication throttles from the still-pending world-message limiter.
+- Documented the implemented 20-second ping, 10-second pong timeout, bounded reconnect and terminal close-1008 recovery flow.
+- Clarified that remote player rendering exists while original character art integration remains pending.
