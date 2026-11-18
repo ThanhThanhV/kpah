@@ -25,6 +25,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
 
     private final ObjectMapper mapper;
     private final MovementService movementService;
+    private final StarterWorldRegistry worlds;
     private final MonsterSimulationService monsters;
     private final WorldCombatService combat;
     private final SkillCombatService skills;
@@ -42,12 +43,13 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private static final double INTEREST_RADIUS_SQUARED = INTEREST_RADIUS * INTEREST_RADIUS;
 
     public WorldSocketHandler(ObjectMapper mapper, MovementService movementService,
-                              MonsterSimulationService monsters, WorldCombatService combat,
+                              StarterWorldRegistry worlds, MonsterSimulationService monsters, WorldCombatService combat,
                               SkillCombatService skills, PlayerCharacterRepository characters, QuestService quests,
                               ItemCatalog items, ClassCatalog classes, AuthService auth,
                               WorldMessageRateLimiter messageRateLimiter) {
         this.mapper = mapper;
         this.movementService = movementService;
+        this.worlds = worlds;
         this.monsters = monsters;
         this.combat = combat;
         this.skills = skills;
@@ -128,11 +130,31 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 long now = System.nanoTime();
                 double elapsed = Math.min((now - player.lastAcceptedNanos()) / 1_000_000_000.0, 0.05);
                 if (elapsed <= 0) elapsed = 0.001;
+                String previousMapId = player.state().mapId();
                 PlayerMotionState next = movementService.apply(
                         player.state(), new MovementInput(axisX, axisY, sequence), elapsed);
+                PortalDefinition portal = worlds.require(next.mapId()).portals().stream()
+                        .filter(candidate -> candidate.contains(next.x(), next.y()))
+                        .findFirst().orElse(null);
+                if (portal != null) {
+                    WorldMapGeometry destination = worlds.require(portal.targetMapId());
+                    if (portal.targetX() >= destination.width() || portal.targetY() >= destination.height()) {
+                        throw new IllegalStateException("Portal destination is outside map " + destination.mapId());
+                    }
+                    next = new PlayerMotionState(destination.mapId(), portal.targetX(), portal.targetY(),
+                            next.lastSequence());
+                }
                 ConnectedPlayer moved = player.withState(next, now);
                 players.put(session.getId(), moved);
-                persistMovementIfDue(session.getId(), moved);
+                if (!previousMapId.equals(next.mapId())) {
+                    persist(moved);
+                    lastMovementPersistAt.put(session.getId(), System.currentTimeMillis());
+                    send(session, Map.of("type", "map-transition", "mapId", next.mapId(),
+                            "x", next.x(), "y", next.y()));
+                    broadcast(previousMapId);
+                } else {
+                    persistMovementIfDue(session.getId(), moved);
+                }
                 broadcast(next.mapId());
             } else if ("attack".equals(type)) {
                 if (player.hp() <= 0) {
