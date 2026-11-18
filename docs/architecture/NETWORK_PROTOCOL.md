@@ -103,6 +103,14 @@ All unsupported or missing message types share one rate-limit bucket per connect
 - This removes the prior O(N²) public-player serialization work per map broadcast while preserving the public/private state boundary.
 
 
+## Per-player world interest area (AOI)
+
+- Each world snapshot is filtered around its recipient using a server-side circular interest radius of 900 world pixels.
+- The recipient's own player entry is always included; nearby players, living monsters and loot drops are included only when their positions fall inside that radius.
+- Inventory, equipment, item catalog and quest state remain isolated in the recipient-only `selfState` field.
+- The client removes monster and loot renderers that leave the current AOI and retains unseen remote players for the existing 1.5-second grace period to avoid flicker during brief snapshot gaps.
+- This first AOI increment reduces irrelevant snapshot payloads and client rendering outside nearby play space. It still scans the map's current entity lists per recipient; spatial-cell indexing, AOI-aware combat event routing and load testing remain follow-up work.
+
 ## Movement persistence policy
 - Client movement remains server-authoritative and is broadcast immediately after validation.
 - Position persistence is throttled to at most once per player connection every 5 seconds instead of writing the character row on every accepted movement packet.
