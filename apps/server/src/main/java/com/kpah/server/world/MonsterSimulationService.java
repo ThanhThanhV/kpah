@@ -100,7 +100,7 @@ public class MonsterSimulationService {
                 monster.respawnAt = respawnAt;
                 nextSpawnAt.get(mapId).put(monster.region.id(), respawnAt);
                 for (MonsterDropTable.RolledDrop rolled : dropTable.roll(
-                        monster.region.monsterType(), ThreadLocalRandom.current())) {
+                        mapId, monster.region.monsterType(), ThreadLocalRandom.current())) {
                     LootDropState drop = new LootDropState(UUID.randomUUID().toString(),
                             rolled.itemCode(), rolled.amount(), mapId, monster.x, monster.y, nowMillis);
                     lootDrops.put(drop.dropId(), drop);
