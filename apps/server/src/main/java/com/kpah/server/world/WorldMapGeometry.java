@@ -9,7 +9,8 @@ public record WorldMapGeometry(
         double spawnX,
         double spawnY,
         List<CollisionBox> collisions,
-        List<MonsterSpawnRegion> monsterSpawns
+        List<MonsterSpawnRegion> monsterSpawns,
+        List<NpcDefinition> npcs
 ) {
     public WorldMapGeometry {
         if (mapId == null || mapId.isBlank()
@@ -21,5 +22,6 @@ public record WorldMapGeometry(
         }
         collisions = List.copyOf(collisions);
         monsterSpawns = List.copyOf(monsterSpawns);
+        npcs = List.copyOf(npcs);
     }
 }

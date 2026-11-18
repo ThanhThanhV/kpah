@@ -36,6 +36,7 @@ public class TiledWorldMapLoader {
             double spawnY = tileHeight;
             List<CollisionBox> collisions = new ArrayList<>();
             List<MonsterSpawnRegion> monsterSpawns = new ArrayList<>();
+            List<NpcDefinition> npcs = new ArrayList<>();
             for (JsonNode layer : root.path("layers")) {
                 if (!"objectgroup".equals(layer.path("type").asText())
                         || !layer.path("visible").asBoolean(true)) continue;
@@ -51,6 +52,10 @@ public class TiledWorldMapLoader {
                         spawnY = y;
                     } else if ("collision".equals(objectClass)) {
                         collisions.add(new CollisionBox(x, y, objectWidth, objectHeight));
+                    } else if ("npc".equals(objectClass)) {
+                        String npcId = object.path("id").asText();
+                        String npcName = object.path("name").asText("Villager");
+                        npcs.add(new NpcDefinition(npcId, npcName, x, y, objectWidth, objectHeight));
                     } else if ("monster-spawn".equals(objectClass)) {
                         String regionId = object.path("id").asText();
                         String monsterType = property(object.path("properties"), "monsterType");
@@ -64,7 +69,7 @@ public class TiledWorldMapLoader {
                     }
                 }
             }
-            return new WorldMapGeometry(mapId, width, height, spawnX, spawnY, collisions, monsterSpawns);
+            return new WorldMapGeometry(mapId, width, height, spawnX, spawnY, collisions, monsterSpawns, npcs);
         } catch (IOException exception) {
             throw new IllegalStateException("Unable to load Tiled world map: " + resourcePath, exception);
         }

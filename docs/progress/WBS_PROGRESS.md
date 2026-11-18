@@ -35,7 +35,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | 10 | Multiplayer replication | IN PROGRESS | Players, monsters, HP, EXP, level, inventory and ground loot snapshots; auth/reconnect/interest management remain. |
 | 11 | Character progression | IN PROGRESS | Level advances every 100 EXP; character ID, map position, HP and EXP now persist in PostgreSQL; stat growth and authenticated accounts remain. |
 | 12 | Loot and inventory | IN PROGRESS | One material drop per defeated monster, proximity auto-pickup and inventory counts persisted through JPA; item catalog and equipment remain. |
-| 13–17 | Economy, quests, QA and operations | NOT STARTED | No committed implementation evidence yet. |
+| 13 | NPC interactions | IN PROGRESS | Server validates Tiled NPC identity and interaction distance; Meadow Guide dialogue is wired to E key. More NPCs/dialogue branches remain. |\n| 14 | Quest progression | IN PROGRESS | Persistent Meadow Slime Hunt quest: start, 3 Green Slime kills, turn-in and 100 EXP reward; additional quest definitions/objectives/rewards remain. |\n| 15–17 | Economy, QA and operations | NOT STARTED | Item catalog, trading, production observability and load testing remain. |
 
 ## CI results
 - Workflow: `.github/workflows/ci.yml`.
@@ -48,11 +48,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 2. Monster navigation uses a 24px grid and collision-cell centers; finer hitbox-aware movement and path smoothing remain.
 3. Character state and inventory are persisted in PostgreSQL; identity is browser-local and not protected by authentication. Reconnecting while dead schedules a fresh respawn timer.
 4. WebSocket authentication, heartbeat, reconnect, rate limiting and interest management remain.
-5. No persistent character database, item catalog or equipment implementation yet.
+5. Item catalog, equipment, trading and account authentication remain.
 
 ## Next implementation sequence
 1. Expand skill system with resource costs, area targeting and original skill effects.
 2. Add character authentication, server-issued sessions and account-to-character ownership.
-3. Add NPC interactions and quest progression.
+3. Expand NPC dialogue and quest catalog; add objective types, rewards and quest journal UI.
 4. Replace debug character/monster/drop visuals with original art and concrete animation adapters.
 5. Keep GitHub Actions green for every implementation batch.

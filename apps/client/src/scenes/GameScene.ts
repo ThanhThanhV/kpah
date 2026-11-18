@@ -35,6 +35,9 @@ export class GameScene extends Phaser.Scene {
   private unsubscribeSnapshot?: () => void;
   private unsubscribeStatus?: () => void;
   private unsubscribeCombat?: () => void;
+  private unsubscribeQuest?: () => void;
+  private interactionKey!: Phaser.Input.Keyboard.Key;
+  private npcObjects: { id: string; name: string; x: number; y: number; width: number; height: number }[] = [];
 
   constructor() { super("GameScene"); }
   preload(): void { this.load.json("starter-meadow", "maps/starter-meadow.json"); }
@@ -42,6 +45,7 @@ export class GameScene extends Phaser.Scene {
   create(): void {
     const map = loadTiledWorldMap(this.cache.json.get("starter-meadow"));
     this.mapRenderer = new MapRenderer(this, map);
+    this.npcObjects = map.worldObjects.filter((object) => object.kind === "npc");
     this.playerX = map.spawn.x; this.playerY = map.spawn.y;
     this.movement = new MovementController(this.mapRenderer.worldWidth, this.mapRenderer.worldHeight, this.mapRenderer.collisionRects);
     this.player = new CharacterEntity(this, this.playerX, this.playerY);
@@ -52,6 +56,7 @@ export class GameScene extends Phaser.Scene {
     this.attackKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.castKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
     this.secondSkillKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
+    this.interactionKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.E);
 
     this.add.text(18, 18, "P1 · TILED MAP + MULTIPLAYER", {
       fontFamily: "Arial, sans-serif", fontSize: "13px", color: "#e6f1dc",
@@ -72,7 +77,7 @@ export class GameScene extends Phaser.Scene {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#b9dcff",
       backgroundColor: "#14262acc", padding: { x: 7, y: 4 }
     }).setScrollFactor(0).setDepth(2000);
-    this.add.text(18, 132, "WASD / arrows · Space: attack · Shift: Power Strike · Q: Arcane Bolt", {
+    this.add.text(18, 132, "WASD / arrows · Space: attack · Shift: Power Strike · Q: Arcane Bolt · E: talk", {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#c0d0c4"
     }).setScrollFactor(0).setDepth(2000);
 
@@ -83,6 +88,10 @@ export class GameScene extends Phaser.Scene {
       this.connectionLabel?.setColor(connected ? "#9ee0a4" : "#f0d18b");
     });
     this.unsubscribeSnapshot = this.worldSocket.onSnapshot((snapshot) => this.applyWorldSnapshot(snapshot));
+    this.unsubscribeQuest = this.worldSocket.onQuest((event) => {
+      this.combatLabel?.setText(`${event.npcName}: ${event.message}`);
+      this.combatLabel?.setColor("#f5dfa0");
+    });
     this.unsubscribeCombat = this.worldSocket.onCombat((event) => {
       this.combatLabel?.setText(`${event.skillName ?? "Combat"} · ${event.damage ?? 0} damage`);
       this.combatLabel?.setColor("#a9e7ff");
@@ -113,8 +122,24 @@ export class GameScene extends Phaser.Scene {
     }
     if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.castKey)) this.castSkill("power-strike");
     if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.secondSkillKey)) this.castSkill("arcane-bolt");
+    if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.interactionKey)) this.interactWithNearestNpc();
     this.player.update(delta);
     this.updateRemotePlayers(delta);
+  }
+
+  private interactWithNearestNpc(): void {
+    let nearest: { id: string; distance: number } | undefined;
+    for (const npc of this.npcObjects) {
+      const distance = Phaser.Math.Distance.Between(
+        this.playerX, this.playerY, npc.x + npc.width / 2, npc.y + npc.height / 2
+      );
+      if (!nearest || distance < nearest.distance) nearest = { id: npc.id, distance };
+    }
+    if (!nearest || nearest.distance > 100) {
+      this.combatLabel?.setText("No NPC nearby");
+      return;
+    }
+    this.worldSocket.interact(nearest.id);
   }
 
   private castSkill(skillId: string): void {
@@ -208,7 +233,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handleShutdown(): void {
-    this.unsubscribeSnapshot?.(); this.unsubscribeStatus?.(); this.unsubscribeCombat?.(); this.worldSocket?.destroy();
+    this.unsubscribeSnapshot?.(); this.unsubscribeStatus?.(); this.unsubscribeCombat?.(); this.unsubscribeQuest?.(); this.worldSocket?.destroy();
     for (const view of this.remotePlayers.values()) view.entity.destroy();
     this.remotePlayers.clear();
     for (const monster of this.monsters.values()) monster.destroy();

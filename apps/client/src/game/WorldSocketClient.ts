@@ -1,11 +1,13 @@
 export interface WorldMoveIntent { type: "move"; sequence: number; axisX: number; axisY: number; }
 export interface WorldAttackIntent { type: "attack"; targetMonsterId: string; }
 export interface WorldSkillIntent { type: "cast"; skillId: string; targetMonsterId: string; }
+export interface WorldQuestEvent { type: "quest"; npcName: string; message: string; questId: string; status: string; progress: number; required: number; experienceReward: number; }
 export interface WorldCombatEvent { type: "combat"; action: string; skillId?: string; skillName?: string; targetMonsterId?: string; damage?: number; monsterHp?: number; experienceReward?: number; }
 export interface WorldPlayerSnapshot {
   playerId: string; mapId: string; x: number; y: number; sequence: number;
   hp: number; maxHp: number; dead: boolean;
   experience: number; level: number; inventory: Record<string, number>;
+  quest?: { questId: string; status: string; progress: number; required: number };
 }
 export interface WorldMonsterSnapshot {
   monsterId: string; monsterType: string; mapId: string; spawnRegionId: string;
@@ -26,6 +28,7 @@ export class WorldSocketClient {
   private readonly listeners = new Set<(snapshot: WorldSnapshot) => void>();
   private readonly statusListeners = new Set<(connected: boolean) => void>();
   private readonly combatListeners = new Set<(event: WorldCombatEvent) => void>();
+  private readonly questListeners = new Set<(event: WorldQuestEvent) => void>();
 
   constructor(private readonly url: string) {}
 
@@ -48,6 +51,7 @@ export class WorldSocketClient {
         const message = JSON.parse(String(event.data)) as { type?: string; playerId?: string } | WorldSnapshot;
         if (message.type === "welcome" && "playerId" in message) this.localPlayerId = message.playerId;
         else if (message.type === "combat") this.combatListeners.forEach((listener) => listener(message as WorldCombatEvent));
+        else if (message.type === "quest") this.questListeners.forEach((listener) => listener(message as WorldQuestEvent));
         else if (message.type === "snapshot" && "players" in message && Array.isArray(message.players)) {
           this.listeners.forEach((listener) => listener({
             ...message,
@@ -75,12 +79,20 @@ export class WorldSocketClient {
     this.socket.send(JSON.stringify(message));
   }
 
+  interact(npcId: string): void {
+    if (this.socket?.readyState !== WebSocket.OPEN || !npcId) return;
+    this.socket.send(JSON.stringify({ type: "interact", npcId }));
+  }
+
   sendSkill(skillId: string, targetMonsterId: string): void {
     if (this.socket?.readyState !== WebSocket.OPEN || !skillId || !targetMonsterId) return;
     const message: WorldSkillIntent = { type: "cast", skillId, targetMonsterId };
     this.socket.send(JSON.stringify(message));
   }
 
+  onQuest(listener: (event: WorldQuestEvent) => void): () => void {
+    this.questListeners.add(listener); return () => this.questListeners.delete(listener);
+  }
   onCombat(listener: (event: WorldCombatEvent) => void): () => void {
     this.combatListeners.add(listener); return () => this.combatListeners.delete(listener);
   }
@@ -95,6 +107,6 @@ export class WorldSocketClient {
   }
   destroy(): void {
     this.socket?.close(1000, "scene shutdown");
-    this.socket = undefined; this.listeners.clear(); this.statusListeners.clear(); this.combatListeners.clear();
+    this.socket = undefined; this.listeners.clear(); this.statusListeners.clear(); this.combatListeners.clear(); this.questListeners.clear();
   }
 }

@@ -27,17 +27,19 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private final WorldCombatService combat;
     private final SkillCombatService skills;
     private final PlayerCharacterRepository characters;
+    private final QuestService quests;
     private final Map<String, ConnectedPlayer> players = new ConcurrentHashMap<>();
 
     public WorldSocketHandler(ObjectMapper mapper, MovementService movementService,
                               MonsterSimulationService monsters, WorldCombatService combat,
-                              SkillCombatService skills, PlayerCharacterRepository characters) {
+                              SkillCombatService skills, PlayerCharacterRepository characters, QuestService quests) {
         this.mapper = mapper;
         this.movementService = movementService;
         this.monsters = monsters;
         this.combat = combat;
         this.skills = skills;
         this.characters = characters;
+        this.quests = quests;
     }
 
     @Override
@@ -105,6 +107,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 } else {
                     if (result.monster().hp() == 0) {
                         players.computeIfPresent(session.getId(), (id, current) -> {
+                            quests.onGreenSlimeDefeated(current.playerId());
                             ConnectedPlayer rewarded = current.withExperience(current.experience() + 25);
                             persist(rewarded);
                             return rewarded;
@@ -116,6 +119,21 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                             "experienceReward", result.monster().hp() == 0 ? 25 : 0));
                     broadcast(player.state().mapId());
                 }
+            } else if ("interact".equals(type)) {
+                String npcId = input.path("npcId").asText("");
+                QuestService.QuestInteractionResult result = quests.interact(
+                        player.playerId(), player.state().mapId(), npcId,
+                        player.state().x(), player.state().y());
+                if (result.experienceReward() > 0) {
+                    players.computeIfPresent(session.getId(), (id, current) -> {
+                        ConnectedPlayer rewarded = current.withExperience(
+                                current.experience() + result.experienceReward());
+                        persist(rewarded);
+                        return rewarded;
+                    });
+                }
+                send(session, result.toPayload());
+                broadcast(player.state().mapId());
             } else if ("cast".equals(type)) {
                 if (player.hp() <= 0) {
                     send(session, Map.of("type", "error", "message", "You cannot cast while defeated."));
@@ -231,7 +249,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                         Map.entry("dead", player.hp() <= 0),
                         Map.entry("experience", player.experience()),
                         Map.entry("level", ExperienceProgression.levelFor(player.experience())),
-                        Map.entry("inventory", player.inventory())))
+                        Map.entry("inventory", player.inventory()),
+                        Map.entry("quest", quests.snapshot(player.playerId()))))
                 .toList();
         Map<String, Object> payload = Map.of(
                 "type", "snapshot", "players", snapshots, "monsters", monsters.snapshot(mapId),
