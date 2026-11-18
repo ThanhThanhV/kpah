@@ -353,3 +353,13 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Snapshot delivery now uses a uniform spatial grid (300 world pixels per cell), built once per map broadcast for players, monsters and loot. Each recipient queries intersecting cells and receives only exact in-radius results, rather than scanning all entities independently. The recipient is explicitly retained even if its snapshot position is malformed/outside the query.
 - Combat events now route around the source player (or hit player for monster attacks): source/target participants always receive them, while other players receive them only inside the 900-pixel interest radius. Events without a resolvable participant retain map-wide delivery as a safe fallback.
 - CI for spatial indexing passed: server Maven test/package and client typecheck/build succeeded.
+
+
+## Latest implementation batch — coalesce world snapshot broadcasts
+
+- Replaced synchronous snapshot serialization on every movement/state-change callback with a pending-map queue.
+- A 50 ms scheduled flush sends one latest-state snapshot per pending map, coalescing multiple movement and simulation changes within the same interval and bounding snapshot flushes to 20 Hz per map.
+- Combat events remain on their immediate routing path, so combat presentation is not delayed by snapshot batching.
+- The existing 100 ms world simulation tick continues to mark connected maps pending, preserving periodic authoritative snapshots when players are idle.
+- Delta snapshots, payload compression and runtime load measurements remain outstanding.
+- CI is the verification gate for this batch.

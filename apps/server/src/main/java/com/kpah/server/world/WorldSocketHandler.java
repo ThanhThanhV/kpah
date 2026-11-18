@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private final AuthService auth;
     private final WorldMessageRateLimiter messageRateLimiter;
     private final Map<String, ConnectedPlayer> players = new ConcurrentHashMap<>();
+    private final Set<String> pendingBroadcastMaps = ConcurrentHashMap.newKeySet();
     private final Map<String, Long> lastMovementPersistAt = new ConcurrentHashMap<>();
     private static final long MOVEMENT_PERSIST_INTERVAL_MILLIS = 5_000L;
     private static final double INTEREST_RADIUS = 900.0;
@@ -370,6 +372,21 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     }
 
     private void broadcast(String mapId) {
+        if (mapId != null && !mapId.isBlank()) {
+            pendingBroadcastMaps.add(mapId);
+        }
+    }
+
+    @Scheduled(fixedRate = 50)
+    public void flushPendingBroadcasts() {
+        for (String mapId : pendingBroadcastMaps) {
+            if (pendingBroadcastMaps.remove(mapId)) {
+                broadcastNow(mapId);
+            }
+        }
+    }
+
+    private void broadcastNow(String mapId) {
         // Build the public map view once. Private character data is attached only to
         // the matching recipient, avoiding an O(playerCount^2) snapshot rebuild.
         var publicPlayers = players.values().stream()
