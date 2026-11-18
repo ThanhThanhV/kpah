@@ -972,15 +972,6 @@
           "point": true
         },
         {
-          "id": 102,
-          "name": "West Return",
-          "class": "portal",
-          "x": 32,
-          "y": 320,
-          "width": 32,
-          "height": 64
-        },
-        {
           "id": 103,
           "name": "Forest Slime Field",
           "class": "monster-spawn",
