@@ -457,17 +457,17 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Starter Meadow Green Slimes retain the existing Green Slime Gel drop.
 - Forest Edge Green Slimes can additionally drop Forest Resin at a configured 35% chance; the new material is registered in the server item catalog and can enter player inventory through the existing loot pickup flow.
 - Added coverage for the Forest Edge-specific drop path using a deterministic random source.
-- GitHub Actions verification is pending for this batch.
+- GitHub Actions passed on commit af02557a8e99174513837b771c0fb6e9155bc091 (Maven test/package and client typecheck/build); local runtime playtest remains pending.
 
 ## Latest implementation batch — minimap, area name and world map overlay
 - Added an area-name HUD label that updates on authoritative map transitions.
 - Added a screen-fixed minimap showing the current map bounds, NPCs, monster spawn areas, portals and the player's live position.
 - Added the M-key world map overlay, populated from the same client map manifest; it lists every registered area, highlights the current area and displays portal connections resolved from Tiled metadata.
 - Minimap and world-map content are rebuilt when the player changes maps; the server remains authoritative for all actual map transfers.
-- GitHub Actions verification is pending for this batch.
+- GitHub Actions passed on commit af02557a8e99174513837b771c0fb6e9155bc091 (Maven test/package and client typecheck/build); local runtime playtest remains pending.
 
 ## Quest objective correctness — map-scoped kill progress
 - Each quest now declares its target map as well as its target monster type.
 - The world gateway passes the server-authoritative current map into quest progression; meadow kills can no longer advance the Forest Edge objective, and vice versa.
 - Added regression coverage for kills on the wrong map.
-- GitHub Actions verification is pending for this correction.
+- GitHub Actions passed on commit af02557a8e99174513837b771c0fb6e9155bc091 (Maven test/package and client typecheck/build); local runtime playtest remains pending.
