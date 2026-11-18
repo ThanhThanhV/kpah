@@ -400,3 +400,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - The monster count changes color when the server is returning visible monsters, making AOI/spawn/snapshot problems distinguishable from a rendering or connection problem during local playtesting.
 - Moved the keyboard-help line down to preserve spacing; gameplay behavior and server authority are unchanged.
 - World snapshot receipt is now observable in the running client; multi-map registry and portal transitions remain the next implementation milestone.
+
+
+## Latest implementation batch — multi-map world data foundation
+- Added the authoritative server-side Tiled resource for Starter Meadow, matching the client map data.
+- Added a second original prototype map, Forest Edge, to both client public assets and server classpath resources.
+- Registered both maps in the server world registry, so movement geometry and monster simulation initialize independently per map.
+- Forest Edge includes its own spawn point, collision object and Green Slime spawn region; portal interaction and client map swapping are the next step.
+- This batch establishes map data and server registration only; players cannot transition between maps until the portal protocol is implemented.
