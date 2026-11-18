@@ -306,3 +306,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - The world HUD displays a protocol-error state with a reload instruction; authentication close 1008 retains its existing account revalidation and character-selection recovery flow.
 - Transient disconnects and heartbeat timeouts remain retryable with the existing bounded exponential backoff.
 - Updated the network protocol document to distinguish terminal protocol/data errors from retryable transport failures.
+
+## Latest implementation batch — validate typed world command fields
+- The world gateway now requires a textual message type instead of coercing arbitrary JSON values into command names.
+- Movement commands require an integral sequence number and finite JSON numeric axes; string-encoded numbers, missing fields and non-finite values are rejected.
+- Attack and skill targets, skill IDs, NPC IDs, equipment codes and equipment slots must be non-empty strings no longer than 128 characters.
+- Validation remains server-side and uses the existing controlled error response path; movement authority, rate limits and combat rules are unchanged.
