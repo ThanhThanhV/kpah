@@ -24,9 +24,51 @@ public class ClassCatalog {
         return definition;
     }
 
-    public int maxHp(String classCode) { return require(classCode).maxHp(); }
-    public int attackBonus(String classCode) { return require(classCode).attackBonus(); }
-    public int defenseBonus(String classCode) { return require(classCode).defenseBonus(); }
+    public int maxHp(String classCode) { return maxHp(classCode, 1); }
+    public int attackBonus(String classCode) { return attackBonus(classCode, 1); }
+    public int defenseBonus(String classCode) { return defenseBonus(classCode, 1); }
+
+    public int maxHp(String classCode, int level) {
+        ClassDefinition base = require(classCode);
+        return base.maxHp() + Math.max(0, level - 1) * hpGrowth(classCode);
+    }
+
+    public int attackBonus(String classCode, int level) {
+        return require(classCode).attackBonus()
+                + Math.max(0, level - 1) * attackGrowth(classCode);
+    }
+
+    public int defenseBonus(String classCode, int level) {
+        return require(classCode).defenseBonus()
+                + Math.max(0, level - 1) * defenseGrowth(classCode);
+    }
+
+    private int hpGrowth(String classCode) {
+        return switch (classCode.toLowerCase(java.util.Locale.ROOT)) {
+            case "warrior" -> 12;
+            case "mage" -> 7;
+            case "archer" -> 9;
+            default -> throw new IllegalArgumentException("Unknown character class.");
+        };
+    }
+
+    private int attackGrowth(String classCode) {
+        return switch (classCode.toLowerCase(java.util.Locale.ROOT)) {
+            case "warrior" -> 2;
+            case "mage" -> 3;
+            case "archer" -> 2;
+            default -> throw new IllegalArgumentException("Unknown character class.");
+        };
+    }
+
+    private int defenseGrowth(String classCode) {
+        return switch (classCode.toLowerCase(java.util.Locale.ROOT)) {
+            case "warrior", "archer" -> 1;
+            case "mage" -> 0;
+            default -> throw new IllegalArgumentException("Unknown character class.");
+        };
+    }
+
     public Map<String, ClassDefinition> all() { return classes; }
 
     public record ClassDefinition(String classCode, String displayName, int maxHp,
