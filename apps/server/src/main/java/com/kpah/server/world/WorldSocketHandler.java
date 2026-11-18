@@ -200,13 +200,18 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                         });
                     }
                     persist(player);
-                    broadcastCombat(player.state().mapId(), Map.of("type", "combat", "action", "skill-cast",
-                            "sourcePlayerId", player.playerId(), "skillId", result.skill().skillId(),
-                            "skillName", result.skill().displayName(),
-                            "mana", result.manaRemaining(), "maxMana", skills.maxMana(player.classCode(), ExperienceProgression.levelFor(player.experience())),
-                            "targetMonsterId", targetId, "damage", attack.damage(),
-                            "monsterHp", attack.monster().hp(),
-                            "experienceReward", attack.monster().hp() == 0 ? 25 : 0));
+                    broadcastCombat(player.state().mapId(), Map.ofEntries(
+                            Map.entry("type", "combat"),
+                            Map.entry("action", "skill-cast"),
+                            Map.entry("sourcePlayerId", player.playerId()),
+                            Map.entry("skillId", result.skill().skillId()),
+                            Map.entry("skillName", result.skill().displayName()),
+                            Map.entry("mana", result.manaRemaining()),
+                            Map.entry("maxMana", skills.maxMana(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
+                            Map.entry("targetMonsterId", targetId),
+                            Map.entry("damage", attack.damage()),
+                            Map.entry("monsterHp", attack.monster().hp()),
+                            Map.entry("experienceReward", attack.monster().hp() == 0 ? 25 : 0)));
                     broadcast(player.state().mapId());
                 }
             } else {

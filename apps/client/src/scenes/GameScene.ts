@@ -445,8 +445,10 @@ export class GameScene extends Phaser.Scene {
             remoteDefinition.logicalSize, remoteDefinition.feetPivot)
         );
         view = { entity, x: remote.x, y: remote.y, targetX: remote.x, targetY: remote.y, lastSeenAt: now };
+        entity.setHp(remote.hp);
         this.remotePlayers.set(remote.playerId, view);
       } else {
+        view.entity.setHp(remote.hp);
         const dx = remote.x - view.targetX;
         const dy = remote.y - view.targetY;
         if (Math.hypot(dx, dy) > 0.5) {

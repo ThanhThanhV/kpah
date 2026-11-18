@@ -109,9 +109,11 @@ export class CharacterEntity {
   receiveHit(): void { this.setAction("hit"); }
 
   setHp(value: number): void {
+    const wasDead = this.hp <= 0;
     this.hp = Phaser.Math.Clamp(value, 0, this.definition.maxHp);
     this.hpFill.width = 40 * (this.hp / this.definition.maxHp);
     if (this.hp === 0) this.setAction("death");
+    else if (wasDead && this.action === "death") this.setAction(this.moving ? "walk" : "idle");
   }
 
   update(deltaMs: number): void {

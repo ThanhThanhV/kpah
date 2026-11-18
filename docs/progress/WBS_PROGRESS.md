@@ -157,3 +157,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Remote characters continue to derive idle/walk and cardinal facing from interpolated authoritative snapshot movement; combat events temporarily switch them to attack, cast or hit and CharacterEntity returns to movement/idle after the configured action duration.
 - Combat events are presentation-only and do not change client authority over damage, movement, targets or cooldowns.
 - CI verification for this batch is pending.
+
+
+## CI correction and remote vitals replication
+- Fixed the server compilation failure found by CI: the skill-cast event has 11 fields and now uses `Map.ofEntries`, avoiding the Java `Map.of` 10-pair overload limit.
+- Remote player snapshots now update the remote character HP bar and death state. A later positive-HP snapshot restores the idle/walk state after respawn.
+- Previous CI result: client typecheck/build passed; server compilation failed only at the oversized skill-cast `Map.of` call. New CI run is pending.
