@@ -322,7 +322,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                         Map.entry("level", ExperienceProgression.levelFor(player.experience())),
                         Map.entry("mana", skills.manaFor(player.playerId(), player.classCode(), ExperienceProgression.levelFor(player.experience()), System.currentTimeMillis())),
                         Map.entry("maxMana", skills.maxMana(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
-                        Map.entry("skills", skills.skillsFor(player.classCode())),
+                        Map.entry("skills", skills.skillsFor(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
                         Map.entry("inventory", player.inventory()),
                         Map.entry("equipment", player.equipment()),
                         Map.entry("itemCatalog", items.all()),

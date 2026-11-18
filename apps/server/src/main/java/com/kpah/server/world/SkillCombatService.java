@@ -30,6 +30,9 @@ public class SkillCombatService {
         if (!skill.classCode().equalsIgnoreCase(classCode)) {
             return SkillCastResult.rejected("This skill is not available to your class.", mana);
         }
+        if (level < skill.requiredLevel()) {
+            return SkillCastResult.rejected("Requires level " + skill.requiredLevel() + " to unlock this skill.", mana);
+        }
         if (mana < skill.manaCost()) return SkillCastResult.rejected("Not enough mana.", mana);
         String cooldownKey = playerId + ":" + skillId;
         long readyAt = nextCastAt.getOrDefault(cooldownKey, 0L);
@@ -66,6 +69,9 @@ public class SkillCombatService {
     public int maxMana(String classCode) { return catalog.maxMana(classCode); }
     public int maxMana(String classCode, int level) { return catalog.maxMana(classCode, level); }
     public Map<String, SkillDefinition> skillsFor(String classCode) { return catalog.forClass(classCode); }
+    public Map<String, SkillDefinition> skillsFor(String classCode, int level) {
+        return catalog.forClass(classCode, level);
+    }
 
     public void removePlayer(String playerId) {
         if (playerId == null) return;

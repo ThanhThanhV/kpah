@@ -49,6 +49,16 @@ class SkillCombatServiceTest {
     }
 
     @Test
+    void unlocksSecondClassSkillAtLevelThree() {
+        assertEquals(1, combat.skillsFor("warrior", 1).size());
+        assertEquals(2, combat.skillsFor("warrior", 3).size());
+        SkillCastResult locked = combat.cast("player-1", "warrior", caster,
+                "warrior-shield-break", "slime-1", 5, 1, 1_000L);
+        assertFalse(locked.accepted());
+        assertTrue(locked.message().contains("Requires level 3"));
+    }
+
+    @Test
     void rejectsSkillsFromAnotherClass() {
         SkillCastResult result = combat.cast("player-1", "warrior", caster,
                 "mage-arcane-bolt", "slime-1", 5, 1, 1_000L);

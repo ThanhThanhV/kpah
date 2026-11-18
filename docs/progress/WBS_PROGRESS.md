@@ -27,9 +27,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | 6.1–6.3 | Input, movement and facing | IN PROGRESS | Client prediction and server-authoritative movement; touch controls and replicated facing remain. |
 | 7.1–7.3 | Monster definitions, AI and presentation | IN PROGRESS | Tiled spawn definitions, bounded roam, aggro, leash, attack cooldown, A* pursuit and snapshot-driven placeholder visuals. |
 | 8.1–8.3 | Combat, damage, death and respawn | IN PROGRESS | Server validates basic/skill attacks; class and equipment ATK bonuses affect damage, class/equipment DEF mitigates monster hits (minimum 1), class-specific HP controls health and respawn. |
-| 9 | Skills and visual effects | IN PROGRESS | Six class-bound skills (two per class), server-authoritative range/damage/cooldown/mana cost, class mana regeneration and PostgreSQL-persisted mana; area targeting and authored VFX remain. |
+| 9 | Skills and visual effects | IN PROGRESS | Six class-bound skills with second skill unlocked at level 3, server-authoritative range/damage/cooldown/mana cost, class mana regeneration and PostgreSQL-persisted mana; area targeting and authored VFX remain. |
 | 10 | Multiplayer replication | IN PROGRESS | Player, monster, HP, EXP, inventory, loot and quest snapshots; account session is required at WebSocket connect; heartbeat, reconnect and interest management remain. |
-| 11 | Character progression | IN PROGRESS | Level every 100 EXP; Warrior gains +12 HP/+2 ATK/+1 DEF per level, Mage +7 HP/+3 ATK, Archer +9 HP/+2 ATK/+1 DEF; mana capacity also grows by class. Level-based skill unlock milestones remain. |
+| 11 | Character progression | IN PROGRESS | Level every 100 EXP; Warrior gains +12 HP/+2 ATK/+1 DEF per level, Mage +7 HP/+3 ATK, Archer +9 HP/+2 ATK/+1 DEF; mana capacity also grows by class. Second class skill unlocks at level 3; further skill progression and unlock milestones remain. |
 | 12 | Loot, item catalog and equipment | IN PROGRESS | Catalog-driven green-slime drop table, 99-stack material limit, 1-stack equipment limit, 20-slot inventory, partial pickup with overflow left on ground, persistent inventory/equipment and HUD. |
 | 13.1 | NPC interaction | IN PROGRESS | NPC name and opening dialogue are loaded from Tiled object metadata; server validates NPC identity and 100px interaction range. |
 | 14.1 | Quest lifecycle | IN PROGRESS | QuestCatalog defines NPC binding, target monster, required kills, dialogue and reward; progress persists and both basic/skill kills advance matching objectives. |
@@ -119,3 +119,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Character login restores saved mana and clamps it to the current class/level maximum; cooldowns intentionally reset on a fresh world session.
 - Character saves now persist mana after casts and during the existing movement/combat/loot/respawn persistence lifecycle, while applying server-side regeneration.
 - Added a SkillCombatService restore entry point so client input cannot choose or overwrite the resource value.
+
+
+## Latest implementation batch — level-gated class skills
+- Each class's primary skill is available at level 1; its secondary skill unlocks at level 3.
+- The server validates the required level before charging mana or applying damage.
+- World snapshots only advertise skills currently unlocked for that character's class and level.
+- Added coverage for locked-skill rejection and the level-3 unlock boundary.
