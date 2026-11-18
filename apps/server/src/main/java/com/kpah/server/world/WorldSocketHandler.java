@@ -356,9 +356,15 @@ public class WorldSocketHandler extends TextWebSocketHandler {
 
     private void persistMovementIfDue(String sessionId, ConnectedPlayer player) {
         long now = System.currentTimeMillis();
-        boolean due = lastMovementPersistAt.compute(sessionId, (id, lastPersistAt) ->
-                lastPersistAt == null || now - lastPersistAt >= MOVEMENT_PERSIST_INTERVAL_MILLIS) == now;
-        if (due) persist(player);
+        boolean[] due = {false};
+        lastMovementPersistAt.compute(sessionId, (id, lastPersistAt) -> {
+            if (lastPersistAt == null || now - lastPersistAt >= MOVEMENT_PERSIST_INTERVAL_MILLIS) {
+                due[0] = true;
+                return now;
+            }
+            return lastPersistAt;
+        });
+        if (due[0]) persist(player);
     }
 
     private void broadcast(String mapId) {
