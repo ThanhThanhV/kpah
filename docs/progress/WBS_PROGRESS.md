@@ -458,3 +458,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Forest Edge Green Slimes can additionally drop Forest Resin at a configured 35% chance; the new material is registered in the server item catalog and can enter player inventory through the existing loot pickup flow.
 - Added coverage for the Forest Edge-specific drop path using a deterministic random source.
 - GitHub Actions verification is pending for this batch.
+
+## Latest implementation batch — minimap, area name and world map overlay
+- Added an area-name HUD label that updates on authoritative map transitions.
+- Added a screen-fixed minimap showing the current map bounds, NPCs, monster spawn areas, portals and the player's live position.
+- Added the M-key world map overlay, populated from the same client map manifest; it lists every registered area, highlights the current area and displays portal connections resolved from Tiled metadata.
+- Minimap and world-map content are rebuilt when the player changes maps; the server remains authoritative for all actual map transfers.
+- GitHub Actions verification is pending for this batch.
