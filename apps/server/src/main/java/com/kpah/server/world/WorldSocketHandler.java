@@ -322,7 +322,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                         .filter(player -> player.playerId().equals(attack.playerId())).findFirst().orElse(null);
                 if (hitTarget != null) {
                     broadcastCombat(hitTarget.state().mapId(), Map.of("type", "combat",
-                            "action", "player-hit", "targetPlayerId", attack.playerId(),
+                            "action", attack.action(), "sourceMonsterId", attack.monsterId(),
+                            "monsterName", attack.monsterName(), "targetPlayerId", attack.playerId(),
                             "damage", appliedDamage[0]));
                 }
             }
