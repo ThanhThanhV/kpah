@@ -200,7 +200,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     return;
                 }
                 String skillId = requireText(input, "skillId");
-                String targetId = input.path("targetMonsterId").asText("");
+                String targetId = requireText(input, "targetMonsterId");
                 SkillCastResult result = skills.cast(player.playerId(), player.classCode(), player.state(), skillId,
                         targetId, items.attackBonus(player.equipment()) + classes.attackBonus(player.classCode(), ExperienceProgression.levelFor(player.experience())),
                         ExperienceProgression.levelFor(player.experience()), System.currentTimeMillis());
