@@ -189,3 +189,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Documented the Spine integration boundary: the adapter is runtime-neutral, and a concrete plugin/runtime must not be selected until a real skeleton export is available.
 - Added an acceptance checklist for repeated combat animation, death/respawn, overlays, depth sorting and desktop/mobile review.
 - No PNG or Spine export is committed; art integration remains blocked on original project-owned character assets.
+
+
+## Latest implementation batch — class-distinct procedural fallback
+- The local renderer now switches to the server-replicated class key even when no art catalog entry exists, instead of staying on the generic starter key.
+- Procedural fallback characters now have distinct Warrior, Mage and Archer palettes and recognizable weapon silhouettes (sword, staff/orb, bow).
+- This is a temporary gameplay/debug representation; it does not replace original character sprites or Spine art.

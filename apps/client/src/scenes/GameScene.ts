@@ -491,8 +491,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private ensureLocalCharacterVisual(classCode: string, displayName: string, maxHp: number, hp: number): void {
-    if (this.playerVisualKey === classCode
-        || !CHARACTER_SPRITE_CATALOG.some((sprite) => sprite.characterKey === classCode)) return;
+    if (this.playerVisualKey === classCode) return;
     const previous = this.player;
     const definition = {
       key: classCode, displayName, maxHp,

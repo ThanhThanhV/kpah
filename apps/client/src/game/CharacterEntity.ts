@@ -148,7 +148,14 @@ export class CharacterEntity {
     if (!g) return;
     g.clear();
     const walkPhase = this.action === "walk" ? Math.sin(this.elapsed / 75) * 4 : 0;
-    const hitTint = this.action === "hit" ? 0xff7777 : this.action === "death" ? 0x777777 : 0xe9bd78;
+    const classPalette = {
+      warrior: { armor: 0x45627d, trim: 0xb7c9d8, hair: 0x493b35, weapon: 0xc8d6df },
+      mage: { armor: 0x65528c, trim: 0xb8a8e8, hair: 0x342b4d, weapon: 0x8bd8ff },
+      archer: { armor: 0x416b51, trim: 0xa9cf91, hair: 0x4a3a2c, weapon: 0xb98a55 }
+    }[this.definition.key as "warrior" | "mage" | "archer"] ?? {
+      armor: 0x385b69, trim: 0x78918a, hair: 0x493b35, weapon: 0xf3e6b8
+    };
+    const hitTint = this.action === "hit" ? 0xff7777 : this.action === "death" ? 0x777777 : classPalette.armor;
     const castGlow = this.action === "cast";
     const deathScale = this.action === "death" ? 0.72 : 1;
 
@@ -158,7 +165,7 @@ export class CharacterEntity {
       g.lineStyle(2, 0x8bd8ff, 0.8).strokeCircle(0, -31, 26 + Math.sin(this.elapsed / 55) * 4);
     }
 
-    g.fillStyle(0x263b51, 1);
+    g.fillStyle(classPalette.armor, 1);
     g.fillRoundedRect(-10 - walkPhase / 2, -19, 8, 17, 2);
     g.fillRoundedRect(2 + walkPhase / 2, -19, 8, 17, 2);
     g.fillStyle(0x9c7048, 1);
@@ -166,9 +173,24 @@ export class CharacterEntity {
     g.fillRoundedRect(1 + walkPhase / 2, -5, 10, 5, 2);
 
     g.fillStyle(hitTint, 1).fillRoundedRect(-13, -43, 26, 28, 7);
-    g.fillStyle(0x385b69, 1).fillRoundedRect(-16, -42, 32, 9, 4);
+    g.lineStyle(2, classPalette.trim, 0.9).strokeRoundedRect(-13, -43, 26, 28, 7);
+    g.fillStyle(classPalette.trim, 1).fillRoundedRect(-16, -42, 32, 9, 4);
     g.fillStyle(0xe6bd91, 1).fillCircle(0, -53, 10);
-    g.fillStyle(0x493b35, 1).fillEllipse(0, -60, 19, 8);
+    g.fillStyle(classPalette.hair, 1).fillEllipse(0, -60, 19, 8);
+    if (this.definition.key === "warrior") {
+      g.fillStyle(0xc8d6df, 1).fillRoundedRect(15, -42, 4, 25, 2);
+      g.fillStyle(0x9b754c, 1).fillRoundedRect(12, -31, 10, 4, 2);
+    } else if (this.definition.key === "mage") {
+      g.lineStyle(3, 0x9b754c, 1).beginPath();
+      g.moveTo(17, -15); g.lineTo(17, -60); g.strokePath();
+      g.fillStyle(0x8bd8ff, 1).fillCircle(17, -62, 5);
+      g.lineStyle(1, 0xd9f5ff, 0.9).strokeCircle(17, -62, 8);
+    } else if (this.definition.key === "archer") {
+      g.lineStyle(2, 0xb98a55, 1).beginPath();
+      g.arc(17, -39, 13, -1.15, 1.15, false); g.strokePath();
+      g.lineStyle(1, 0xe7d5b5, 0.9).beginPath();
+      g.moveTo(5, -51); g.lineTo(5, -27); g.strokePath();
+    }
 
     const vectors: Record<Facing, { x: number; y: number }> = {
       up: { x: 0, y: -1 }, down: { x: 0, y: 1 },
