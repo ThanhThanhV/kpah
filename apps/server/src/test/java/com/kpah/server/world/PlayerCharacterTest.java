@@ -10,7 +10,7 @@ class PlayerCharacterTest {
     void createsPersistentSnapshotWithProgressAndInventory() {
         PlayerCharacter character = PlayerCharacter.from("character-1",
                 new PlayerMotionState("starter-meadow", 120.5, 88.25, 4),
-                73, 235, Map.of("green-slime-material", 3));
+                73, 235, Map.of("green-slime-material", 3), Map.of("weapon", "novice-sword"));
 
         assertEquals("character-1", character.getId());
         assertEquals("starter-meadow", character.getMapId());
@@ -19,6 +19,7 @@ class PlayerCharacterTest {
         assertEquals(73, character.getHp());
         assertEquals(235, character.getExperience());
         assertEquals(3, character.getInventory().get("green-slime-material"));
+        assertEquals("novice-sword", character.getEquipment().get("weapon"));
     }
 
     @Test
@@ -29,5 +30,6 @@ class PlayerCharacterTest {
 
         assertEquals(0, character.getHp());
         assertEquals(0, character.getExperience());
+        assertEquals(Map.of(), character.getEquipment());
     }
 }

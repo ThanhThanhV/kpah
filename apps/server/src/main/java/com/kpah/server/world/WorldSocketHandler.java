@@ -28,11 +28,13 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private final SkillCombatService skills;
     private final PlayerCharacterRepository characters;
     private final QuestService quests;
+    private final ItemCatalog items;
     private final Map<String, ConnectedPlayer> players = new ConcurrentHashMap<>();
 
     public WorldSocketHandler(ObjectMapper mapper, MovementService movementService,
                               MonsterSimulationService monsters, WorldCombatService combat,
-                              SkillCombatService skills, PlayerCharacterRepository characters, QuestService quests) {
+                              SkillCombatService skills, PlayerCharacterRepository characters, QuestService quests,
+                              ItemCatalog items) {
         this.mapper = mapper;
         this.movementService = movementService;
         this.monsters = monsters;
@@ -40,6 +42,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         this.skills = skills;
         this.characters = characters;
         this.quests = quests;
+        this.items = items;
     }
 
     @Override
@@ -66,7 +69,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 character == null ? PLAYER_MAX_HP : character.getHp(),
                 character == null || character.getHp() > 0 ? 0L : System.currentTimeMillis() + PLAYER_RESPAWN_MILLIS,
                 character == null ? 0 : character.getExperience(),
-                character == null ? Map.of() : character.getInventory());
+                character == null ? Map.of("novice-sword", 1, "cloth-tunic", 1) : character.getInventory(),
+                character == null ? Map.of() : character.getEquipment());
         players.put(session.getId(), player);
         persist(player);
         send(session, Map.of("type", "welcome", "playerId", player.playerId(), "mapId", mapId));
@@ -119,6 +123,33 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                             "experienceReward", result.monster().hp() == 0 ? 25 : 0));
                     broadcast(player.state().mapId());
                 }
+            } else if ("equip".equals(type)) {
+                String itemCode = input.path("itemCode").asText("");
+                ItemCatalog.ItemDefinition definition = items.requireEquipment(itemCode);
+                int quantity = player.inventory().getOrDefault(itemCode, 0);
+                if (quantity <= 0) throw new IllegalArgumentException("You do not own this item.");
+                Map<String, Integer> inventory = new ConcurrentHashMap<>(player.inventory());
+                inventory.compute(itemCode, (code, count) -> count == null || count <= 1 ? null : count - 1);
+                Map<String, String> equipment = new ConcurrentHashMap<>(player.equipment());
+                String replaced = equipment.put(definition.slot(), itemCode);
+                if (replaced != null) inventory.merge(replaced, 1, Integer::sum);
+                ConnectedPlayer equipped = player.withInventoryAndEquipment(inventory, equipment);
+                players.put(session.getId(), equipped);
+                persist(equipped);
+                send(session, Map.of("type", "equipment", "message", definition.name() + " equipped."));
+                broadcast(player.state().mapId());
+            } else if ("unequip".equals(type)) {
+                String slot = input.path("slot").asText("");
+                Map<String, String> equipment = new ConcurrentHashMap<>(player.equipment());
+                String removed = equipment.remove(slot);
+                if (removed == null) throw new IllegalArgumentException("Nothing is equipped in that slot.");
+                Map<String, Integer> inventory = new ConcurrentHashMap<>(player.inventory());
+                inventory.merge(removed, 1, Integer::sum);
+                ConnectedPlayer unequipped = player.withInventoryAndEquipment(inventory, equipment);
+                players.put(session.getId(), unequipped);
+                persist(unequipped);
+                send(session, Map.of("type", "equipment", "message", "Item returned to inventory."));
+                broadcast(player.state().mapId());
             } else if ("interact".equals(type)) {
                 String npcId = input.path("npcId").asText("");
                 QuestService.QuestInteractionResult result = quests.interact(
@@ -232,7 +263,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
 
     private void persist(ConnectedPlayer player) {
         characters.save(PlayerCharacter.from(player.playerId(), player.state(), player.hp(),
-                player.experience(), player.inventory()));
+                player.experience(), player.inventory(), player.equipment()));
     }
 
     private void broadcast(String mapId) {
@@ -250,6 +281,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                         Map.entry("experience", player.experience()),
                         Map.entry("level", ExperienceProgression.levelFor(player.experience())),
                         Map.entry("inventory", player.inventory()),
+                        Map.entry("equipment", player.equipment()),
+                        Map.entry("itemCatalog", items.all()),
                         Map.entry("quest", quests.snapshot(player.playerId()))))
                 .toList();
         Map<String, Object> payload = Map.of(
@@ -281,38 +314,45 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             int hp,
             long respawnAt,
             int experience,
-            Map<String, Integer> inventory
+            Map<String, Integer> inventory,
+            Map<String, String> equipment
     ) {
         private ConnectedPlayer {
             inventory = Map.copyOf(inventory);
+            equipment = Map.copyOf(equipment);
         }
 
         private ConnectedPlayer withState(PlayerMotionState next, long acceptedAt) {
             return new ConnectedPlayer(playerId, session, next, acceptedAt,
-                    hp, respawnAt, experience, inventory);
+                    hp, respawnAt, experience, inventory, equipment);
         }
 
         private ConnectedPlayer withVitals(int nextHp, long nextRespawnAt) {
             return new ConnectedPlayer(playerId, session, state, lastAcceptedNanos,
-                    nextHp, nextRespawnAt, experience, inventory);
+                    nextHp, nextRespawnAt, experience, inventory, equipment);
         }
 
         private ConnectedPlayer withRespawn(PlayerMotionState nextState, int nextHp,
                                              long nextRespawnAt, long acceptedAt) {
             return new ConnectedPlayer(playerId, session, nextState, acceptedAt,
-                    nextHp, nextRespawnAt, experience, inventory);
+                    nextHp, nextRespawnAt, experience, inventory, equipment);
         }
 
         private ConnectedPlayer withExperience(int nextExperience) {
             return new ConnectedPlayer(playerId, session, state, lastAcceptedNanos,
-                    hp, respawnAt, nextExperience, inventory);
+                    hp, respawnAt, nextExperience, inventory, equipment);
         }
 
         private ConnectedPlayer withLoot(List<LootDropState> drops) {
             Map<String, Integer> updated = new ConcurrentHashMap<>(inventory);
             drops.forEach(drop -> updated.merge(drop.itemCode(), drop.amount(), Integer::sum));
             return new ConnectedPlayer(playerId, session, state, lastAcceptedNanos,
-                    hp, respawnAt, experience, updated);
+                    hp, respawnAt, experience, updated, equipment);
         }
-    }
-}
+
+        private ConnectedPlayer withInventoryAndEquipment(Map<String, Integer> nextInventory,
+                                                           Map<String, String> nextEquipment) {
+            return new ConnectedPlayer(playerId, session, state, lastAcceptedNanos,
+                    hp, respawnAt, experience, nextInventory, nextEquipment);
+        }
+    }}

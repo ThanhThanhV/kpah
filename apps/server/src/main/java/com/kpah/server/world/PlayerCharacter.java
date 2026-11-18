@@ -40,11 +40,23 @@ public class PlayerCharacter {
     @Column(name = "quantity", nullable = false)
     private Map<String, Integer> inventory = new HashMap<>();
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "character_equipment", joinColumns = @JoinColumn(name = "character_id"))
+    @MapKeyColumn(name = "equipment_slot", length = 40)
+    @Column(name = "item_code", length = 120)
+    private Map<String, String> equipment = new HashMap<>();
+
     protected PlayerCharacter() {
     }
 
     public static PlayerCharacter from(String id, PlayerMotionState state, int hp,
                                        int experience, Map<String, Integer> inventory) {
+        return from(id, state, hp, experience, inventory, Map.of());
+    }
+
+    public static PlayerCharacter from(String id, PlayerMotionState state, int hp,
+                                       int experience, Map<String, Integer> inventory,
+                                       Map<String, String> equipment) {
         PlayerCharacter character = new PlayerCharacter();
         character.id = id;
         character.mapId = state.mapId();
@@ -53,6 +65,7 @@ public class PlayerCharacter {
         character.hp = Math.max(0, hp);
         character.experience = Math.max(0, experience);
         character.inventory.putAll(inventory);
+        character.equipment.putAll(equipment);
         return character;
     }
 
@@ -63,4 +76,5 @@ public class PlayerCharacter {
     public int getHp() { return hp; }
     public int getExperience() { return experience; }
     public Map<String, Integer> getInventory() { return Map.copyOf(inventory); }
+    public Map<String, String> getEquipment() { return Map.copyOf(equipment); }
 }

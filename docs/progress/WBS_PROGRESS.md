@@ -30,14 +30,14 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | 9 | Skills and visual effects | IN PROGRESS | Two server-defined monster-target skills with authoritative range, damage and cooldown; skill resources, area targeting and authored VFX remain. |
 | 10 | Multiplayer replication | IN PROGRESS | Player, monster, HP, EXP, inventory, loot and quest snapshots; authentication, heartbeat, reconnect and interest management remain. |
 | 11 | Character progression | IN PROGRESS | Level every 100 EXP; character ID, map position, HP and EXP persist in PostgreSQL; stat growth and authenticated ownership remain. |
-| 12 | Loot and inventory | IN PROGRESS | Guaranteed material drop, proximity pickup and persisted inventory counts; item catalog and equipment remain. |
+| 12 | Loot, item catalog and equipment | IN PROGRESS | Persistent item catalog, starter weapon/body gear, server-validated equip/unequip, and persisted equipment slots; stat application and inventory UI remain. |
 | 13.1 | NPC interaction | IN PROGRESS | Server validates Tiled NPC identity and interaction distance; Meadow Guide dialogue uses E key. |
 | 14.1 | Quest lifecycle | IN PROGRESS | Persistent Meadow Slime Hunt: start, 3 Green Slime kills, turn-in and 100 EXP reward. |
 | 14.2 | Quest Journal UI | IN PROGRESS | Client journal displays objective, kill progress, ready-to-claim and claimed states; toggle with J. |
 | 15–17 | Economy, QA and operations | NOT STARTED | Item catalog, equipment, trading, production observability and load testing remain. |
 
 ## Latest implementation batch
-- Added an in-game Quest Journal panel anchored to the HUD.
+- Added a server-side item catalog for slime gel, novice sword and cloth tunic.\n- New characters receive one novice sword and cloth tunic in their inventory.\n- Equip/unequip requests validate item ownership and equipment slot on the server; replaced gear returns to inventory.\n- Equipment slots are persisted in PostgreSQL and replicated in world snapshots.\n- Added an in-game Quest Journal panel anchored to the HUD.
 - The panel is driven by the server's persisted quest snapshot, not client-side quest state.
 - Displays the correct guidance for available, active, ready-to-claim and claimed states.
 - Shows kill progress and a progress bar; press J to show/hide the panel.
@@ -60,5 +60,5 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 2. Build inventory/equipment UI and persist equipment state.
 3. Expand quest definitions and NPC dialogue into data-driven catalogs.
 4. Add authenticated accounts and server-issued sessions before production deployment.
-5. Replace debug visuals with original art and concrete animation adapters.
-6. Keep GitHub Actions green for every implementation batch.
+5. Build the inventory/equipment panel and apply equipment bonuses to combat stats.\n6. Replace debug visuals with original art and concrete animation adapters.
+7. Keep GitHub Actions green for every implementation batch.
