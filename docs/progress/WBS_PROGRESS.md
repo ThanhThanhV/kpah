@@ -27,9 +27,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | 6.1–6.3 | Input, movement and facing | IN PROGRESS | Client prediction and server-authoritative movement; touch controls and replicated facing remain. |
 | 7.1–7.3 | Monster definitions, AI and presentation | IN PROGRESS | Tiled spawn definitions, bounded roam, aggro, leash, attack cooldown, A* pursuit and snapshot-driven placeholder visuals. |
 | 8.1–8.3 | Combat, damage, death and respawn | IN PROGRESS | Server validates basic/skill attacks; class and equipment ATK bonuses affect damage, class/equipment DEF mitigates monster hits (minimum 1), class-specific HP controls health and respawn. |
-| 9 | Skills and visual effects | IN PROGRESS | Two server-defined monster-target skills with authoritative range, damage and cooldown; skill resources, area targeting and authored VFX remain. |
+| 9 | Skills and visual effects | IN PROGRESS | Six class-bound skills (two per class), server-authoritative class validation, target range, damage, cooldown and mana cost; area targeting and authored VFX remain. |
 | 10 | Multiplayer replication | IN PROGRESS | Player, monster, HP, EXP, inventory, loot and quest snapshots; account session is required at WebSocket connect; heartbeat, reconnect and interest management remain. |
-| 11 | Character progression | IN PROGRESS | Level every 100 EXP; character/account ownership and up to 3 characters per account; Warrior/Mage/Archer base HP, ATK and DEF are server-authoritative. Class growth and skill unlocks remain. |
+| 11 | Character progression | IN PROGRESS | Level every 100 EXP; character/account ownership and up to 3 characters per account; Warrior/Mage/Archer base HP, ATK, DEF and class-bound skill kits are server-authoritative. Level-based stat growth and unlock milestones remain. |
 | 12 | Loot, item catalog and equipment | IN PROGRESS | Catalog-driven green-slime drop table, 99-stack material limit, 1-stack equipment limit, 20-slot inventory, partial pickup with overflow left on ground, persistent inventory/equipment and HUD. |
 | 13.1 | NPC interaction | IN PROGRESS | NPC name and opening dialogue are loaded from Tiled object metadata; server validates NPC identity and 100px interaction range. |
 | 14.1 | Quest lifecycle | IN PROGRESS | QuestCatalog defines NPC binding, target monster, required kills, dialogue and reward; progress persists and both basic/skill kills advance matching objectives. |
@@ -87,3 +87,12 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 2. Implement class-specific skill kits, resource costs and progression growth.
 3. Replace debug visuals with original art and concrete animation adapters.
 4. Expand quest/NPC catalogs, gameplay integration coverage, observability and load testing.
+
+
+## Latest implementation batch — class skill kits
+- Replaced the two generic skills with six class-specific skills: Warrior (Power Strike, Shield Break), Mage (Arcane Bolt, Frost Shard), Archer (Quick Shot, Piercing Arrow).
+- Skill ownership is validated on the server; attempting to cast another class's skill is rejected.
+- Added class-specific maximum mana (Warrior 100, Mage 140, Archer 110), per-skill mana costs and passive regeneration at 8 mana/second.
+- Server snapshots publish current/max mana and the active character's skill catalog; the HUD shows HP and MP.
+- Shift and Q map to the selected character's first and second class skills. Damage, range, cooldown and resource spending remain server-authoritative.
+- Mana currently lives in the active world session and starts full after reconnect; persistent mana and level-based skill unlocks remain follow-up work.

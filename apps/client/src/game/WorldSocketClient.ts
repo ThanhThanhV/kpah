@@ -6,7 +6,8 @@ export interface WorldCombatEvent { type: "combat"; action: string; skillId?: st
 export interface WorldItemDefinition { itemCode: string; name: string; type: string; slot: string; attackBonus: number; defenseBonus: number; maxStack: number; }
 export interface WorldPlayerSnapshot {
   playerId: string; name?: string; classCode?: string; mapId: string; x: number; y: number; sequence: number;
-  hp: number; maxHp: number; dead: boolean;
+  hp: number; maxHp: number; dead: boolean; mana: number; maxMana: number;
+  skills?: Record<string, { skillId: string; displayName: string; classCode: string; damage: number; range: number; cooldownMillis: number; manaCost: number }>;
   experience: number; level: number; inventory: Record<string, number>;
   equipment?: Record<string, string>; itemCatalog?: Record<string, WorldItemDefinition>;
   quest?: { questId: string; status: string; progress: number; required: number; npcName?: string; targetDisplayName?: string; experienceReward?: number };
@@ -27,6 +28,7 @@ export class WorldSocketClient {
   private socket?: WebSocket;
   private sequence = 0;
   private localPlayerId?: string;
+  private cachedClassCode = "warrior";
   private readonly listeners = new Set<(snapshot: WorldSnapshot) => void>();
   private readonly statusListeners = new Set<(connected: boolean) => void>();
   private readonly combatListeners = new Set<(event: WorldCombatEvent) => void>();
@@ -53,6 +55,8 @@ export class WorldSocketClient {
         else if (message.type === "combat") this.combatListeners.forEach((listener) => listener(message as WorldCombatEvent));
         else if (message.type === "quest") this.questListeners.forEach((listener) => listener(message as WorldQuestEvent));
         else if (message.type === "snapshot" && "players" in message && Array.isArray(message.players)) {
+          const ownPlayer = message.players.find((player) => player.playerId === this.localPlayerId);
+          if (ownPlayer?.classCode) this.cachedClassCode = ownPlayer.classCode;
           this.listeners.forEach((listener) => listener({
             ...message,
             monsters: Array.isArray(message.monsters) ? message.monsters : [],
@@ -112,6 +116,8 @@ export class WorldSocketClient {
   onStatus(listener: (connected: boolean) => void): () => void {
     this.statusListeners.add(listener); return () => this.statusListeners.delete(listener);
   }
+  getCachedClassCode(): string { return this.cachedClassCode; }
+
   getOwnPlayer(snapshot: WorldSnapshot): WorldPlayerSnapshot | undefined {
     return snapshot.players.find((player) => player.playerId === this.localPlayerId);
   }

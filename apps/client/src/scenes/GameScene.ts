@@ -139,8 +139,8 @@ export class GameScene extends Phaser.Scene {
       const target = this.findNearestMonster();
       if (target) this.worldSocket.sendAttack(target.monsterId);
     }
-    if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.castKey)) this.castSkill("power-strike");
-    if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.secondSkillKey)) this.castSkill("arcane-bolt");
+    if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.castKey)) this.castClassSkill(0);
+    if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.secondSkillKey)) this.castClassSkill(1);
     if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.interactionKey)) this.interactWithNearestNpc();
     if (Phaser.Input.Keyboard.JustDown(this.questJournalKey)) {
       this.questJournalPanel?.setVisible(!(this.questJournalPanel.visible));
@@ -272,8 +272,21 @@ export class GameScene extends Phaser.Scene {
     this.worldSocket.interact(nearest.id);
   }
 
+  private castClassSkill(slot: 0 | 1): void {
+    const classCode = this.worldSocket.getCachedClassCode();
+    const kits: Record<string, [string, string]> = {
+      warrior: ["warrior-power-strike", "warrior-shield-break"],
+      mage: ["mage-arcane-bolt", "mage-frost-shard"],
+      archer: ["archer-quick-shot", "archer-piercing-arrow"]
+    };
+    this.castSkill((kits[classCode] ?? kits.warrior)[slot]);
+  }
+
   private castSkill(skillId: string): void {
-    const maxRange = skillId === "power-strike" ? 110 : 180;
+    const maxRange = skillId === "archer-piercing-arrow" ? 210
+      : skillId === "mage-arcane-bolt" ? 180
+      : skillId === "archer-quick-shot" || skillId === "mage-frost-shard" ? 165
+      : skillId === "warrior-shield-break" ? 90 : 110;
     const target = this.findNearestMonster(maxRange);
     if (!target) {
       this.combatLabel?.setText("No monster in skill range");
@@ -299,7 +312,7 @@ export class GameScene extends Phaser.Scene {
       this.playerY = Phaser.Math.Linear(this.playerY, ownPlayer.y, 0.35);
       this.playerDead = ownPlayer.hp <= 0;
       this.vitalsLabel?.setText(ownPlayer.hp > 0
-        ? `HP: ${ownPlayer.hp} / ${ownPlayer.maxHp}`
+        ? `HP: ${ownPlayer.hp}/${ownPlayer.maxHp} · MP: ${ownPlayer.mana}/${ownPlayer.maxMana}`
         : "DEFEATED · Respawning…");
       this.vitalsLabel?.setColor(ownPlayer.hp > 0 ? "#ffaaa0" : "#ff6b62");
       const itemCount = Object.values(ownPlayer.inventory ?? {}).reduce((sum, count) => sum + count, 0);
