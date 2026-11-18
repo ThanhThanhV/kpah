@@ -78,6 +78,7 @@ The server broadcasts accepted combat actions to every connected player on the s
 - If a pong is not received within 10 seconds, the client closes the stale socket and enters the retryable reconnect path.
 - Unexpected network disconnects reconnect with bounded exponential backoff from 1 to 30 seconds. Destroying the scene cancels heartbeat and reconnect timers.
 - A policy-violation close (1008) is terminal for the current credentials/character selection: the client does not retry the same WebSocket credentials. It revalidates `/api/auth/me` and returns a valid account to character selection, or returns an expired account to sign-in.
+- Protocol/data closes (1002, 1003, 1007), message-too-large (1009) and unsupported-extension (1010) are terminal for the current socket attempt. The client stops automatic reconnect and shows a protocol-error state; retrying the same frame would otherwise repeat the failure. Transient network closes and heartbeat timeouts remain retryable.
 
 ## World message rate limits
 
