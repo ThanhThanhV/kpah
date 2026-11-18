@@ -408,3 +408,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Registered both maps in the server world registry, so movement geometry and monster simulation initialize independently per map.
 - Forest Edge includes its own spawn point, collision object and Green Slime spawn region; portal interaction and client map swapping are the next step.
 - This batch establishes map data and server registration only; players cannot transition between maps until the portal protocol is implemented.
+
+
+## Latest implementation batch — authoritative portal definitions
+- Extended server Tiled map loading with validated portal metadata: destination map ID and destination coordinates.
+- Added the portal geometry model and two-way portal definitions between Starter Meadow and Forest Edge.
+- Portal destinations are map-space coordinates; the world handler now has the metadata needed to validate and apply transitions server-side.
+- Client-side map swapping and server movement-trigger integration are the next part of the multi-map slice.
