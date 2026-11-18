@@ -19,6 +19,14 @@ class MonsterDropTableTest {
     }
 
     @Test
+    void forestSlimeCanDropRegionSpecificResin() {
+        var drops = table.roll("forest-edge", "green-slime", new Random(0));
+
+        assertTrue(drops.stream().anyMatch(drop -> drop.itemCode().equals("green-slime-material")));
+        assertTrue(drops.stream().anyMatch(drop -> drop.itemCode().equals("forest-resin")));
+    }
+
+    @Test
     void unknownMonsterHasNoConfiguredDrops() {
         assertTrue(table.roll("unknown-monster", new Random(7)).isEmpty());
     }
