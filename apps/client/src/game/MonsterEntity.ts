@@ -42,7 +42,7 @@ export class MonsterEntity {
     this.highlight.setPosition(this.x - 6, this.y - 15).setDepth(this.y + 1);
     this.name.setPosition(this.x, this.y - 34).setDepth(this.y + 2);
     this.hpBack.setPosition(this.x, this.y - 28).setDepth(this.y + 2);
-    this.hpFill.setPosition(this.x - 15, this.y - 28).setDepth(this.y + 3);
+    this.hpFill.setPosition(this.x - (this.bodyWidth + 2) / 2, this.y - 28).setDepth(this.y + 3);
     this.setHp(snapshot.hp, snapshot.maxHp);
   }
 
