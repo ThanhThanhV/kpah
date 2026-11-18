@@ -161,9 +161,9 @@ export class GameScene extends Phaser.Scene {
     const required = quest?.required ?? 3;
     const messages: Record<string, string> = {
       available: "Talk to Meadow Guide (E) to begin the hunt.",
-      active: `Defeat Green Slimes\\nProgress: ${progress}/${required}\\nReturn to Meadow Guide when complete.`,
-      ready: "Objective complete!\\nReturn to Meadow Guide (E) to claim 100 EXP.",
-      claimed: "Quest complete.\\nThe meadow is safe. Reward claimed."
+      active: `Defeat Green Slimes\nProgress: ${progress}/${required}\nReturn to Meadow Guide when complete.`,
+      ready: "Objective complete!\nReturn to Meadow Guide (E) to claim 100 EXP.",
+      claimed: "Quest complete.\nThe meadow is safe. Reward claimed."
     };
     this.questJournalBody.setText(messages[status] ?? "Quest status unavailable.");
     const ratio = required > 0 ? Phaser.Math.Clamp(progress / required, 0, 1) : 0;
