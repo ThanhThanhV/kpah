@@ -512,3 +512,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Added catalog and deterministic drop-table coverage for the elite boss reward.
 - The full Forest Warden quest chain is now: 5 Forest Green Slimes → 3 Forest Wolves → 1 Alpha Wolf.
 - GitHub Actions verification is pending for this batch; runtime playtesting remains pending.
+
+
+## Latest implementation batch — Alpha Wolf telegraphed heavy strike and dodge window
+- Reworked the Alpha Wolf's every-third heavy strike into a two-phase server-authoritative attack.
+- The boss locks the target's world position, enters a visible windup state for 1 second, and publishes the circular danger radius through regular monster snapshots.
+- The client renders a red ground telegraph at the locked impact point; the warning remains fixed even if the player moves.
+- At resolution, the server damages every living player still inside the 92-pixel radius, so moving outside the circle during the windup avoids the hit and multiple players can be hit by the same area attack.
+- Normal monster attacks retain their immediate single-target behavior. CI verification and local gameplay feel-test remain pending.
