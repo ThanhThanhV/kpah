@@ -1133,6 +1133,22 @@
               "value": 34
             }
           ]
+        ,
+        {
+          "id": 109,
+          "name": "Ancient Guardian Grove",
+          "class": "monster-spawn",
+          "x": 800,
+          "y": 304,
+          "width": 128,
+          "height": 128,
+          "properties": [
+            { "name": "monsterType", "type": "string", "value": "ancient-guardian" },
+            { "name": "maxAlive", "type": "int", "value": 1 },
+            { "name": "respawnMillis", "type": "int", "value": 45000 },
+            { "name": "roamRadius", "type": "float", "value": 24 },
+            { "name": "moveSpeed", "type": "float", "value": 20 }
+          ]
         }
       ]
     }
