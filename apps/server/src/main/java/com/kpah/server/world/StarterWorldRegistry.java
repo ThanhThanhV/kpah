@@ -9,7 +9,8 @@ public class StarterWorldRegistry {
 
     public StarterWorldRegistry(TiledWorldMapLoader loader) {
         WorldMapGeometry starter = loader.load("maps/starter-meadow.json");
-        this.maps = Map.of(starter.mapId(), starter);
+        WorldMapGeometry forest = loader.load("maps/forest-edge.json");
+        this.maps = Map.of(starter.mapId(), starter, forest.mapId(), forest);
     }
 
     public WorldMapGeometry require(String mapId) {
