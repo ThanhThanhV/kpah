@@ -195,3 +195,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - The local renderer now switches to the server-replicated class key even when no art catalog entry exists, instead of staying on the generic starter key.
 - Procedural fallback characters now have distinct Warrior, Mage and Archer palettes and recognizable weapon silhouettes (sword, staff/orb, bow).
 - This is a temporary gameplay/debug representation; it does not replace original character sprites or Spine art.
+
+
+## Latest implementation batch — live vitals and directional combat animation
+- CharacterEntity now tracks the authoritative maximum HP separately from its initial visual definition; level-up max-HP growth updates the local and remote HP bars without requiring entity recreation.
+- Local and remote snapshots now pass both current HP and maximum HP into the renderer.
+- If a replicated movement snapshot changes a character's facing while it is in attack/cast/hit, the visual adapter replays the active action in the new direction rather than leaving the effect facing the previous direction.
+- HP remains clamped to the latest server-provided maximum; zero HP/death and positive-HP respawn transitions remain unchanged.

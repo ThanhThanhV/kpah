@@ -52,6 +52,7 @@ export class CharacterEntity {
   private moving = false;
   private elapsed = 0;
   private hp: number;
+  private maxHp: number;
 
   get cameraTarget(): Phaser.GameObjects.GameObject {
     return this.visualAdapter?.cameraTarget ?? this.graphics!;
@@ -61,6 +62,7 @@ export class CharacterEntity {
               visualAdapter?: CharacterVisualAdapter) {
     this.definition = definition;
     this.hp = definition.maxHp;
+    this.maxHp = definition.maxHp;
     this.visualAdapter = visualAdapter;
     this.graphics = visualAdapter ? undefined : scene.add.graphics();
     this.nameText = scene.add.text(0, 0, definition.displayName, {
@@ -77,12 +79,16 @@ export class CharacterEntity {
   setMotion(x: number, y: number, vx: number, vy: number): void {
     this.setPosition(x, y);
     this.moving = Math.hypot(vx, vy) > 0.001;
+    const previousFacing = this.facing;
     if (this.moving) {
       const ax = Math.abs(vx);
       const ay = Math.abs(vy);
       if (ax > ay) this.facing = vx < 0 ? "left" : "right";
       else if (ay > ax) this.facing = vy < 0 ? "up" : "down";
       // Exact diagonal ties keep the previous cardinal facing.
+    }
+    if (previousFacing !== this.facing && this.action !== "idle" && this.action !== "walk") {
+      this.visualAdapter?.play(this.action, this.facing);
     }
     if (this.action === "idle" || this.action === "walk") {
       this.action = this.moving ? "walk" : "idle";
@@ -108,10 +114,11 @@ export class CharacterEntity {
   cast(): void { this.setAction("cast"); }
   receiveHit(): void { this.setAction("hit"); }
 
-  setHp(value: number): void {
+  setHp(value: number, maxHp = this.maxHp): void {
     const wasDead = this.hp <= 0;
-    this.hp = Phaser.Math.Clamp(value, 0, this.definition.maxHp);
-    this.hpFill.width = 40 * (this.hp / this.definition.maxHp);
+    this.maxHp = Math.max(1, maxHp);
+    this.hp = Phaser.Math.Clamp(value, 0, this.maxHp);
+    this.hpFill.width = 40 * (this.hp / this.maxHp);
     if (this.hp === 0) this.setAction("death");
     else if (wasDead && this.action === "death") this.setAction(this.moving ? "walk" : "idle");
   }

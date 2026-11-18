@@ -419,7 +419,7 @@ export class GameScene extends Phaser.Scene {
       this.playerX = Phaser.Math.Linear(this.playerX, ownPlayer.x, 0.35);
       this.playerY = Phaser.Math.Linear(this.playerY, ownPlayer.y, 0.35);
       this.playerDead = ownPlayer.hp <= 0;
-      this.player.setHp(ownPlayer.hp);
+      this.player.setHp(ownPlayer.hp, ownPlayer.maxHp);
       this.vitalsLabel?.setText(ownPlayer.hp > 0
         ? `HP: ${ownPlayer.hp}/${ownPlayer.maxHp} · MP: ${ownPlayer.mana}/${ownPlayer.maxMana}`
         : "DEFEATED · Respawning…");
@@ -448,10 +448,10 @@ export class GameScene extends Phaser.Scene {
             remoteDefinition.logicalSize, remoteDefinition.feetPivot)
         );
         view = { entity, x: remote.x, y: remote.y, targetX: remote.x, targetY: remote.y, lastSeenAt: now };
-        entity.setHp(remote.hp);
+        entity.setHp(remote.hp, remote.maxHp);
         this.remotePlayers.set(remote.playerId, view);
       } else {
-        view.entity.setHp(remote.hp);
+        view.entity.setHp(remote.hp, remote.maxHp);
         const dx = remote.x - view.targetX;
         const dy = remote.y - view.targetY;
         if (Math.hypot(dx, dy) > 0.5) {
