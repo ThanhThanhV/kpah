@@ -300,3 +300,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - The world gateway now rejects empty JSON payloads, JSON `null`, arrays and primitive JSON values with a controlled protocol error instead of dereferencing a null root node.
 - Malformed JSON is caught and answered with a bounded generic error message; parser exceptions no longer escape the message handler.
 - Valid object messages continue through the existing per-type limiter and authoritative command validation.
+
+## Latest implementation batch — stop retrying terminal WebSocket protocol closes
+- The client now treats WebSocket close codes 1002, 1003, 1007, 1009 and 1010 as terminal for the current connection attempt instead of entering the automatic reconnect loop.
+- The world HUD displays a protocol-error state with a reload instruction; authentication close 1008 retains its existing account revalidation and character-selection recovery flow.
+- Transient disconnects and heartbeat timeouts remain retryable with the existing bounded exponential backoff.
+- Updated the network protocol document to distinguish terminal protocol/data errors from retryable transport failures.
