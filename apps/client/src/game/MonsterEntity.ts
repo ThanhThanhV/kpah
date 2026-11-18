@@ -36,7 +36,6 @@ export class MonsterEntity {
     this.name.setPosition(this.x, this.y - 34).setDepth(this.y + 2);
     this.hpBack.setPosition(this.x, this.y - 28).setDepth(this.y + 2);
     this.hpFill.setPosition(this.x - 15, this.y - 28).setDepth(this.y + 3);
-    if (snapshot.hp < this.hp) this.showDamage(this.hp - snapshot.hp);
     this.hp = snapshot.hp;
     this.setHp(snapshot.hp, snapshot.maxHp);
   }
@@ -46,14 +45,25 @@ export class MonsterEntity {
     this.hpBack.destroy(); this.hpFill.destroy();
   }
 
-  private showDamage(amount: number): void {
+  showCombatHit(amount: number, isSkill: boolean): void {
+    if (amount <= 0) return;
+    const color = isSkill ? "#9fe7ff" : "#ffffff";
     const label = this.scene.add.text(this.x, this.y - 42, String(amount), {
-      fontFamily: "Arial, sans-serif", fontSize: "14px", color: "#fff2a8",
-      stroke: "#542c25", strokeThickness: 3
+      fontFamily: "Arial, sans-serif", fontSize: isSkill ? "16px" : "14px",
+      fontStyle: "bold", color, stroke: "#172126", strokeThickness: 3
     }).setOrigin(0.5).setDepth(this.y + 10);
+    const impactRing = this.scene.add.ellipse(this.x, this.y - 9, 30, 24, 0xffffff, 0)
+      .setStrokeStyle(2, isSkill ? 0x8bd8ff : 0xffffff, 0.95).setDepth(this.y + 4);
     this.scene.tweens.add({
-      targets: label, y: label.y - 24, alpha: 0, duration: 550,
-      onComplete: () => label.destroy()
+      targets: label, y: label.y - 28, alpha: 0, duration: 620,
+      ease: "Cubic.Out", onComplete: () => label.destroy()
+    });
+    this.scene.tweens.add({
+      targets: impactRing, scaleX: 1.8, scaleY: 1.8, alpha: 0, duration: 260,
+      ease: "Cubic.Out", onComplete: () => impactRing.destroy()
+    });
+    this.scene.tweens.add({
+      targets: this.body, alpha: 0.45, duration: 65, yoyo: true, repeat: 1
     });
   }
 

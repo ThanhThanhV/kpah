@@ -202,3 +202,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Local and remote snapshots now pass both current HP and maximum HP into the renderer.
 - If a replicated movement snapshot changes a character's facing while it is in attack/cast/hit, the visual adapter replays the active action in the new direction rather than leaving the effect facing the previous direction.
 - HP remains clamped to the latest server-provided maximum; zero HP/death and positive-HP respawn transitions remain unchanged.
+
+
+## Latest implementation batch — event-driven monster hit feedback
+- Monster damage numbers and impact visuals are now driven by accepted server combat events, not inferred from HP snapshot deltas.
+- Basic attacks display a white floating damage number; skill hits use a larger cyan number.
+- Added a short expanding impact ring and brief monster hit flash for confirmed hits.
+- Removed snapshot-based floating numbers to prevent duplicate damage popups when both combat events and HP snapshots arrive.
+- Critical-hit styling is intentionally not shown because the current authoritative combat event does not expose a critical-hit flag.

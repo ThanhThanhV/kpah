@@ -137,6 +137,9 @@ export class GameScene extends Phaser.Scene {
       this.combatLabel?.setColor("#f5dfa0");
     });
     this.unsubscribeCombat = this.worldSocket.onCombat((event) => {
+      if (event.targetMonsterId && event.damage !== undefined) {
+        this.monsters.get(event.targetMonsterId)?.showCombatHit(event.damage, event.action === "skill-cast");
+      }
       if (event.targetPlayerId) {
         const target = this.remotePlayers.get(event.targetPlayerId);
         if (target) target.entity.receiveHit();
