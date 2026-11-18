@@ -471,3 +471,12 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - The world gateway passes the server-authoritative current map into quest progression; meadow kills can no longer advance the Forest Edge objective, and vice versa.
 - Added regression coverage for kills on the wrong map.
 - GitHub Actions passed on commit af02557a8e99174513837b771c0fb6e9155bc091 (Maven test/package and client typecheck/build); local runtime playtest remains pending.
+
+## Latest implementation batch — monster archetype registry and Forest Wolf
+- Added a validated server-side MonsterArchetype model and registry. Unknown monster types now fail fast during world simulation startup instead of silently inheriting slime statistics.
+- Green Slime and Forest Wolf now have separate HP, attack damage, attack range, aggro range, attack cooldown and movement multipliers.
+- Added a Forest Wolf Den spawn region to both server and client Forest Edge Tiled maps (3 alive, 9-second respawn).
+- Added Forest Wolf's distinct brown body/nameplate/health-bar size on the Phaser client.
+- Added Wolf Fang as a 60% monster drop and registered it as a stackable inventory material.
+- Added tests for archetype stat differences, invalid configuration, unknown types and Wolf Fang drops.
+- GitHub Actions verification is pending for this batch.
