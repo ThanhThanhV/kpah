@@ -319,3 +319,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Unequip now checks that the item can be returned to inventory before changing the player's equipment state.
 - A full 20-slot inventory can still accept a returned item when its existing stack has room; otherwise the equipment operation is rejected without mutating player state.
 - Added coverage for returning an item into an existing stack while all 20 inventory slots are occupied.
+
+
+## Latest implementation batch — keep player inventory and quest state private
+- World snapshots continue to replicate public character state to all players on the same map.
+- Inventory, equipment, item catalog and quest progress are now included only in the recipient's own character snapshot entry; other players no longer receive another character's private progression/inventory data.
+- Snapshot generation is now recipient-specific while reusing the same map monster and loot snapshot for the broadcast cycle.
+- Updated the network protocol documentation with the public/private snapshot boundary.
