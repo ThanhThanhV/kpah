@@ -76,3 +76,18 @@ The server broadcasts accepted combat actions to every connected player on the s
 - If a pong is not received within 10 seconds, the client closes the stale socket and enters the retryable reconnect path.
 - Unexpected network disconnects reconnect with bounded exponential backoff from 1 to 30 seconds. Destroying the scene cancels heartbeat and reconnect timers.
 - A policy-violation close (1008) is terminal for the current credentials/character selection: the client does not retry the same WebSocket credentials. It revalidates `/api/auth/me` and returns a valid account to character selection, or returns an expired account to sign-in.
+
+
+## World message rate limits
+The world gateway applies per-connection fixed-window limits before gameplay dispatch:
+
+| Message type | Maximum |
+|---|---:|
+| `move` | 30 / second |
+| `attack`, `cast` | 5 / second each |
+| `interact` | 3 / second |
+| `equip`, `unequip` | 5 / second each |
+| `ping` | 2 / second |
+| Unsupported message types | 10 / second |
+
+Excess frames are silently dropped before persistence, combat processing or map broadcast. Counters are scoped to a WebSocket connection and released when it closes. These in-memory limits protect a single server process; they are not a substitute for distributed quotas when horizontally scaling.

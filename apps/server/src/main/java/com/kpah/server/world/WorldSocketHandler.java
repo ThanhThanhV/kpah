@@ -30,12 +30,14 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private final ItemCatalog items;
     private final ClassCatalog classes;
     private final AuthService auth;
+    private final WorldMessageRateLimiter messageRateLimiter;
     private final Map<String, ConnectedPlayer> players = new ConcurrentHashMap<>();
 
     public WorldSocketHandler(ObjectMapper mapper, MovementService movementService,
                               MonsterSimulationService monsters, WorldCombatService combat,
                               SkillCombatService skills, PlayerCharacterRepository characters, QuestService quests,
-                              ItemCatalog items, ClassCatalog classes, AuthService auth) {
+                              ItemCatalog items, ClassCatalog classes, AuthService auth,
+                              WorldMessageRateLimiter messageRateLimiter) {
         this.mapper = mapper;
         this.movementService = movementService;
         this.monsters = monsters;
@@ -46,6 +48,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         this.items = items;
         this.classes = classes;
         this.auth = auth;
+        this.messageRateLimiter = messageRateLimiter;
     }
 
     @Override
@@ -96,6 +99,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         try {
             JsonNode input = mapper.readTree(message.getPayload());
             String type = input.path("type").asText();
+            if (!messageRateLimiter.tryAcquire(session.getId(), type)) return;
             if ("ping".equals(type)) {
                 send(session, Map.of("type", "pong"));
             } else if ("move".equals(type)) {
@@ -226,6 +230,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        messageRateLimiter.remove(session.getId());
         ConnectedPlayer removed = players.remove(session.getId());
         if (removed != null) {
             persist(removed);

@@ -272,3 +272,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Updated current limitations to distinguish existing per-IP authentication throttles from the still-pending world-message limiter.
 - Documented the implemented 20-second ping, 10-second pong timeout, bounded reconnect and terminal close-1008 recovery flow.
 - Clarified that remote player rendering exists while original character art integration remains pending.
+
+
+## Latest implementation batch — world WebSocket message rate limits
+- Added per-connection, per-message-type fixed-window limits before gameplay dispatch, so excess client frames are discarded before database persistence, simulation calls or map broadcasts.
+- Movement accepts up to 30 frames/second, preserving headroom over the current 20 Hz client input cadence; basic attacks and skill casts accept up to 5 requests/second and continue to rely on their authoritative combat cooldowns.
+- NPC interaction and inventory/equipment commands accept up to 3 and 5 requests/second respectively; heartbeat is capped at 2/second and unsupported message types at 10/second.
+- Rate-limit state is synchronized per connection and removed on WebSocket close. Rejected frames are dropped without sending an error for every excess frame, preventing response amplification.
+- This is an in-process per-connection safeguard; cross-instance/global quotas and distributed abuse controls remain production work.
