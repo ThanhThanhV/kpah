@@ -9,8 +9,15 @@ public record MonsterArchetype(
         double aggroRange,
         long attackCooldownMillis,
         double moveSpeedMultiplier,
-        MonsterBehavior behavior
+        MonsterBehavior behavior,
+        MonsterSpecialAttack specialAttack
 ) {
+    public MonsterArchetype(String monsterType, String displayName, int maxHp, int attackDamage,
+                            double attackRange, double aggroRange, long attackCooldownMillis,
+                            double moveSpeedMultiplier, MonsterBehavior behavior) {
+        this(monsterType, displayName, maxHp, attackDamage, attackRange, aggroRange,
+                attackCooldownMillis, moveSpeedMultiplier, behavior, MonsterSpecialAttack.CIRCLE);
+    }
     public MonsterArchetype {
         if (monsterType == null || monsterType.isBlank()
                 || displayName == null || displayName.isBlank()
@@ -19,7 +26,7 @@ public record MonsterArchetype(
                 || !Double.isFinite(aggroRange) || aggroRange < attackRange
                 || attackCooldownMillis < 100
                 || !Double.isFinite(moveSpeedMultiplier) || moveSpeedMultiplier <= 0
-                || behavior == null) {
+                || behavior == null || specialAttack == null) {
             throw new IllegalArgumentException("Monster archetype configuration is invalid.");
         }
     }
