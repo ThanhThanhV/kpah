@@ -21,10 +21,10 @@ class SkillCombatServiceTest {
         MonsterState target = new MonsterState("slime-1", "green-slime", "starter-meadow",
                 "spawn-1", 80, 50, 80, 50, 20, 60, "idle");
         when(monsters.applySkillAttack("starter-meadow", 40, 50, "slime-1",
-                40, 110.0, 1_000L))
+                45, 110.0, 1_000L))
                 .thenReturn(new MonsterAttackResult(true, "Hit", target, 40));
         when(monsters.applySkillAttack("starter-meadow", 40, 50, "slime-1",
-                25, 180.0, 1_000L))
+                30, 180.0, 1_000L))
                 .thenReturn(new MonsterAttackResult(true, "Hit", target, 25));
     }
 
@@ -36,7 +36,7 @@ class SkillCombatServiceTest {
 
     @Test
     void allowsDifferentSkillCooldownsIndependently() {
-        assertTrue(combat.cast("player-1", caster, "power-strike", "slime-1", 1_000L).accepted());
+        assertTrue(combat.cast("player-1", caster, "power-strike", "slime-1", 5, 1_000L).accepted());
         assertTrue(combat.cast("player-1", caster, "arcane-bolt", "slime-1", 5, 1_000L).accepted());
     }
 
