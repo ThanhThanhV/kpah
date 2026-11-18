@@ -21,6 +21,8 @@ class MonsterArchetypeRegistryTest {
         assertEquals(MonsterBehavior.AGGRESSIVE, wolf.behavior());
         assertEquals(MonsterBehavior.PATROL, registry.require("forest-sentinel").behavior());
         assertEquals(MonsterBehavior.ELITE, registry.require("alpha-wolf").behavior());
+        assertEquals(MonsterSpecialAttack.SWEEP, registry.require("ancient-guardian").specialAttack());
+        assertEquals(520, registry.require("ancient-guardian").maxHp());
         org.junit.jupiter.api.Assertions.assertTrue(wolf.moveSpeedMultiplier() > slime.moveSpeedMultiplier());
         org.junit.jupiter.api.Assertions.assertTrue(wolf.aggroRange() > slime.aggroRange());
     }
