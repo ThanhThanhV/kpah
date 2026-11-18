@@ -68,9 +68,7 @@ class QuestServiceTest {
     void matchingMonsterKillAdvancesActiveQuest() {
         QuestProgress saved = new QuestProgress(CHARACTER_ID, "meadow-slime-hunt");
         when(progress.findById(QUEST_KEY)).thenReturn(Optional.of(saved));
-        lenient().when(progress.findById(CHARACTER_ID + ":forest-slime-hunt")).thenReturn(Optional.empty());
-
-        quests.onMonsterDefeated(CHARACTER_ID, "green-slime");
+        quests.onMonsterDefeated(CHARACTER_ID, "starter-meadow", "green-slime");
 
         assertEquals(1, saved.getProgress());
         verify(progress).save(saved);
@@ -78,8 +76,20 @@ class QuestServiceTest {
 
     @Test
     void unrelatedMonsterDoesNotAdvanceQuest() {
-        quests.onMonsterDefeated(CHARACTER_ID, "wolf");
+        quests.onMonsterDefeated(CHARACTER_ID, "starter-meadow", "wolf");
 
+        verify(progress, org.mockito.Mockito.never()).save(any(QuestProgress.class));
+    }
+
+    @Test
+    void monsterKillOnAnotherMapDoesNotAdvanceMeadowQuest() {
+        QuestProgress saved = new QuestProgress(CHARACTER_ID, "meadow-slime-hunt");
+        when(progress.findById(QUEST_KEY)).thenReturn(Optional.of(saved));
+        lenient().when(progress.findById(CHARACTER_ID + ":forest-slime-hunt")).thenReturn(Optional.empty());
+
+        quests.onMonsterDefeated(CHARACTER_ID, "forest-edge", "green-slime");
+
+        assertEquals(0, saved.getProgress());
         verify(progress, org.mockito.Mockito.never()).save(any(QuestProgress.class));
     }
 
