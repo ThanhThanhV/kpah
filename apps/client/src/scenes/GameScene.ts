@@ -26,6 +26,7 @@ export class GameScene extends Phaser.Scene {
   private playerX = 0;
   private playerY = 0;
   private playerDead = false;
+  private playerVisualKey = "starter-adventurer";
   private attackKey!: Phaser.Input.Keyboard.Key;
   private castKey!: Phaser.Input.Keyboard.Key;
   private secondSkillKey!: Phaser.Input.Keyboard.Key;
@@ -414,6 +415,7 @@ export class GameScene extends Phaser.Scene {
   private applyWorldSnapshot(snapshot: WorldSnapshot): void {
     const ownPlayer = this.worldSocket.getOwnPlayer(snapshot);
     if (ownPlayer) {
+      this.ensureLocalCharacterVisual(ownPlayer.classCode ?? "warrior", ownPlayer.name ?? "Adventurer", ownPlayer.maxHp);
       this.playerX = Phaser.Math.Linear(this.playerX, ownPlayer.x, 0.35);
       this.playerY = Phaser.Math.Linear(this.playerY, ownPlayer.y, 0.35);
       this.playerDead = ownPlayer.hp <= 0;
@@ -436,7 +438,7 @@ export class GameScene extends Phaser.Scene {
       let view = this.remotePlayers.get(remote.playerId);
       if (!view) {
         const remoteDefinition = {
-          key: "remote-player", displayName: remote.name ?? "Adventurer", maxHp: remote.maxHp ?? 100,
+          key: remote.classCode ?? "remote-player", displayName: remote.name ?? "Adventurer", maxHp: remote.maxHp ?? 100,
           feetPivot: { x: 0.5, y: 1 }, logicalSize: { width: 44, height: 64 }
         };
         const entity = new CharacterEntity(
@@ -485,6 +487,25 @@ export class GameScene extends Phaser.Scene {
     for (const [monsterId, entity] of this.monsters) {
       if (!visibleMonsterIds.has(monsterId)) { entity.destroy(); this.monsters.delete(monsterId); }
     }
+  }
+
+  private ensureLocalCharacterVisual(classCode: string, displayName: string, maxHp: number): void {
+    if (this.playerVisualKey === classCode
+        || !CHARACTER_SPRITE_CATALOG.some((sprite) => sprite.characterKey === classCode)) return;
+    const previous = this.player;
+    const definition = {
+      key: classCode, displayName, maxHp,
+      feetPivot: { x: 0.5, y: 1 }, logicalSize: { width: 44, height: 64 }
+    };
+    this.player = new CharacterEntity(
+      this, this.playerX, this.playerY, definition,
+      this.spriteRegistry.createAdapter(this, classCode, this.playerX, this.playerY,
+        definition.logicalSize, definition.feetPivot)
+    );
+    this.player.setHp(this.playerDead ? 0 : maxHp);
+    this.playerVisualKey = classCode;
+    this.cameras.main.startFollow(this.player.cameraTarget, true, 0.12, 0.12);
+    previous.destroy();
   }
 
   private updateRemotePlayers(delta: number): void {
