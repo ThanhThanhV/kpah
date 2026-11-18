@@ -287,3 +287,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Normalized all unsupported and missing message types into one shared per-connection rate-limit bucket. Arbitrary client-supplied type strings can no longer grow the per-connection window map without bound.
 - Kept the existing per-command budgets and server-authoritative gameplay flow unchanged.
 - Documented an important boundary: the handler guard limits JSON parsing and dispatch, but the WebSocket container may already have buffered the frame; configure container-level frame limits at deployment for protection against oversized transport allocation.
+
+
+## Latest implementation batch — WebSocket transport hardening
+- Configured the servlet WebSocket container to cap inbound text and binary message buffers at 8,192 bytes, so oversized frames are rejected at the transport/container boundary before the application handler parses them.
+- Set a 10-second asynchronous send timeout to avoid indefinitely stalled outbound socket writes.
+- Replaced the wildcard WebSocket origin pattern with an exact-match allowlist configured through `WEBSOCKET_ALLOWED_ORIGINS`; local development defaults to the two Vite localhost origins.
+- Documented the deployment requirement to set the public frontend origin explicitly. The handler-level 8,192-character guard remains as defense in depth.

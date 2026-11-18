@@ -59,8 +59,8 @@ Snapshots include all connected players in the same map. The client identifies i
 - The gateway is a development transport, not a production-ready zone simulation.
 - Live positions are held in memory and are persisted to PostgreSQL as movement updates; multi-zone coordination is not implemented.
 - Per-IP throttles currently protect login and registration. World-message rate limiting is implemented per connection; interest management and delta compression remain outstanding.
-- Browser inbound world messages are capped at 8,192 Java characters before JSON parsing and oversized frames are closed with code 1009. This early handler guard bounds parsing/dispatch work; the WebSocket container may already have buffered the incoming frame.
-- The browser stores the opaque session token in localStorage and sends it as a custom WebSocket subprotocol. Production handshake/header logging must redact credentials, public deployments must use HTTPS/WSS, and browser XSS exposure still needs production hardening.
+- The WebSocket container caps text and binary message buffers at 8,192 bytes; asynchronous sends time out after 10 seconds. The handler also caps text payloads at 8,192 Java characters before JSON parsing and closes oversized messages with code 1009. The container limit protects transport buffering before the handler guard.
+- WebSocket handshake origins are exact-match allowlisted through `WEBSOCKET_ALLOWED_ORIGINS` (comma-separated); the development default permits only `http://localhost:5173` and `http://127.0.0.1:5173`. Set the deployed frontend origin explicitly. The browser stores the opaque session token in localStorage and sends it as a custom WebSocket subprotocol. Production handshake/header logging must redact credentials, public deployments must use HTTPS/WSS, and browser XSS exposure still needs production hardening.
 - The client renders local and remote player entities from authoritative snapshots; original spritesheet/Spine assets are not integrated yet.
 - Server map geometry is still a manually maintained registry and must be generated from the same versioned map source as the Tiled client map.
 

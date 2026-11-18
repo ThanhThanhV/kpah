@@ -21,3 +21,8 @@ management:
     web:
       exposure:
         include: health,info
+
+game:
+  websocket:
+    # Override with a comma-separated exact-origin allowlist in deployed environments.
+    allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
