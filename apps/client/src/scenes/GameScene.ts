@@ -141,8 +141,13 @@ export class GameScene extends Phaser.Scene {
         this.monsters.get(event.targetMonsterId)?.showCombatHit(event.damage, event.action === "skill-cast");
       }
       if (event.targetPlayerId) {
-        const target = this.remotePlayers.get(event.targetPlayerId);
-        if (target) target.entity.receiveHit();
+        const ownPlayerId = this.worldSocket.getOwnPlayerId();
+        if (event.targetPlayerId === ownPlayerId) {
+          this.player.receiveHit(event.damage);
+        } else {
+          const target = this.remotePlayers.get(event.targetPlayerId);
+          if (target) target.entity.receiveHit(event.damage);
+        }
       } else if (event.sourcePlayerId && event.sourcePlayerId !== this.worldSocket.getOwnPlayerId()) {
         const source = this.remotePlayers.get(event.sourcePlayerId);
         if (source) {

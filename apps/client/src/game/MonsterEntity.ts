@@ -10,13 +10,12 @@ export class MonsterEntity {
   private readonly hpFill: Phaser.GameObjects.Rectangle;
   private x: number;
   private y: number;
-  private hp: number;
 
   get worldX(): number { return this.x; }
   get worldY(): number { return this.y; }
 
   constructor(private readonly scene: Phaser.Scene, snapshot: WorldMonsterSnapshot) {
-    this.x = snapshot.x; this.y = snapshot.y; this.hp = snapshot.hp;
+    this.x = snapshot.x; this.y = snapshot.y;
     this.body = scene.add.ellipse(this.x, this.y - 9, 28, 22, 0x65c86c).setStrokeStyle(2, 0x244f36).setDepth(this.y);
     this.highlight = scene.add.ellipse(this.x - 6, this.y - 15, 7, 4, 0xc7f5a4).setDepth(this.y + 1);
     this.name = scene.add.text(this.x, this.y - 34, this.label(snapshot.monsterType), {
@@ -36,7 +35,6 @@ export class MonsterEntity {
     this.name.setPosition(this.x, this.y - 34).setDepth(this.y + 2);
     this.hpBack.setPosition(this.x, this.y - 28).setDepth(this.y + 2);
     this.hpFill.setPosition(this.x - 15, this.y - 28).setDepth(this.y + 3);
-    this.hp = snapshot.hp;
     this.setHp(snapshot.hp, snapshot.maxHp);
   }
 

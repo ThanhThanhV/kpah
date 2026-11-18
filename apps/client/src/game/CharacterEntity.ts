@@ -112,7 +112,19 @@ export class CharacterEntity {
 
   attack(): void { this.setAction("attack"); }
   cast(): void { this.setAction("cast"); }
-  receiveHit(): void { this.setAction("hit"); }
+  receiveHit(amount?: number): void {
+    this.setAction("hit");
+    if (amount === undefined || amount <= 0) return;
+    const label = this.nameText.scene.add.text(
+      this.nameText.x, this.nameText.y - 10, `-${amount}`,
+      { fontFamily: "Arial, sans-serif", fontSize: "15px", fontStyle: "bold",
+        color: "#ff8d82", stroke: "#241719", strokeThickness: 3 }
+    ).setOrigin(0.5, 1).setDepth(this.nameText.depth + 8);
+    this.nameText.scene.tweens.add({
+      targets: label, y: label.y - 30, alpha: 0, duration: 650,
+      ease: "Cubic.Out", onComplete: () => label.destroy()
+    });
+  }
 
   setHp(value: number, maxHp = this.maxHp): void {
     const wasDead = this.hp <= 0;

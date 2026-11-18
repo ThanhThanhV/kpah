@@ -243,23 +243,27 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 .toList();
 
         for (MonsterPlayerAttack attack : monsters.advance(now, targets)) {
-            ConnectedPlayer hitTarget = players.values().stream()
-                    .filter(player -> player.playerId().equals(attack.playerId())).findFirst().orElse(null);
-            if (hitTarget != null) {
-                broadcastCombat(hitTarget.state().mapId(), Map.of("type", "combat",
-                        "action", "player-hit", "targetPlayerId", attack.playerId(),
-                        "damage", attack.damage()));
-            }
+            int[] appliedDamage = {0};
             players.replaceAll((sessionId, player) -> {
                 if (!player.playerId().equals(attack.playerId()) || player.hp() <= 0) return player;
                 int mitigatedDamage = ItemCatalog.mitigateDamage(
                         attack.damage(), items.defenseBonus(player.equipment()) + classes.defenseBonus(player.classCode(), ExperienceProgression.levelFor(player.experience())));
+                appliedDamage[0] = mitigatedDamage;
                 int hp = Math.max(0, player.hp() - mitigatedDamage);
                 long respawnAt = hp == 0 ? now + PLAYER_RESPAWN_MILLIS : 0L;
                 ConnectedPlayer damaged = player.withVitals(hp, respawnAt);
                 persist(damaged);
                 return damaged;
             });
+            if (appliedDamage[0] > 0) {
+                ConnectedPlayer hitTarget = players.values().stream()
+                        .filter(player -> player.playerId().equals(attack.playerId())).findFirst().orElse(null);
+                if (hitTarget != null) {
+                    broadcastCombat(hitTarget.state().mapId(), Map.of("type", "combat",
+                            "action", "player-hit", "targetPlayerId", attack.playerId(),
+                            "damage", appliedDamage[0]));
+                }
+            }
         }
 
         for (Map.Entry<String, ConnectedPlayer> entry : players.entrySet()) {

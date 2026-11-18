@@ -210,3 +210,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Added a short expanding impact ring and brief monster hit flash for confirmed hits.
 - Removed snapshot-based floating numbers to prevent duplicate damage popups when both combat events and HP snapshots arrive.
 - Critical-hit styling is intentionally not shown because the current authoritative combat event does not expose a critical-hit flag.
+
+
+## Latest implementation batch — authoritative player hit feedback
+- Removed the stale monster HP cache that was no longer read after damage popups moved to authoritative combat events; this restores strict TypeScript typecheck.
+- Local and remote player characters now show a red floating damage number and enter the hit-reaction animation when the server reports a player-hit event.
+- Local-player hits are matched by the authenticated player ID, while remote-player hits continue to target the corresponding replicated character.
+- Monster hit damage remains event-driven; snapshot HP updates do not create duplicate damage numbers.
+- Monster attack events now report the post-defense damage actually applied to player HP, rather than the raw pre-mitigation attack value.
