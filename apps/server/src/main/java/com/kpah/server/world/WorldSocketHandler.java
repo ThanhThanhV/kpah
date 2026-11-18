@@ -117,7 +117,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                             "experienceReward", attack.monster().hp() == 0 ? 25 : 0));
                     broadcast(player.state().mapId());
                 }
- else {
+            } else {
                 send(session, Map.of("type", "error", "message", "Unsupported message type."));
             }
         } catch (IllegalArgumentException exception) {
