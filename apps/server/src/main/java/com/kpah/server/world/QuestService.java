@@ -56,10 +56,11 @@ public class QuestService {
     }
 
     @Transactional
-    public void onMonsterDefeated(String characterId, String monsterType) {
-        if (monsterType == null) return;
+    public void onMonsterDefeated(String characterId, String mapId, String monsterType) {
+        if (mapId == null || monsterType == null) return;
         for (QuestCatalog.QuestDefinition definition : catalog.all()) {
-            if (!definition.targetMonsterType().equals(monsterType)) continue;
+            if (!definition.targetMapId().equals(mapId)
+                    || !definition.targetMonsterType().equals(monsterType)) continue;
             progress.findById(key(characterId, definition.questId())).ifPresent(quest -> {
                 if (!quest.isClaimed() && quest.getProgress() < definition.requiredKills()) {
                     quest.increment(definition.requiredKills());
@@ -88,6 +89,7 @@ public class QuestService {
         return Map.of("questId", definition.questId(), "status", status,
                 "progress", current, "required", definition.requiredKills(),
                 "npcId", definition.npcId(), "npcName", definition.npcName(),
+                "targetMapId", definition.targetMapId(),
                 "targetMonsterType", definition.targetMonsterType(),
                 "targetDisplayName", definition.targetDisplayName(),
                 "experienceReward", definition.experienceReward());
