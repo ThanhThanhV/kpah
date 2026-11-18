@@ -1,11 +1,11 @@
 package com.kpah.server.world;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.kpah.server.auth.AuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -17,7 +17,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 public class WorldSocketHandler extends TextWebSocketHandler {
-    private static final String DEFAULT_MAP = "starter-meadow";
     private static final int PLAYER_MAX_HP = 100;
     private static final long PLAYER_RESPAWN_MILLIS = 3_000L;
 
@@ -29,12 +28,13 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private final PlayerCharacterRepository characters;
     private final QuestService quests;
     private final ItemCatalog items;
+    private final AuthService auth;
     private final Map<String, ConnectedPlayer> players = new ConcurrentHashMap<>();
 
     public WorldSocketHandler(ObjectMapper mapper, MovementService movementService,
                               MonsterSimulationService monsters, WorldCombatService combat,
                               SkillCombatService skills, PlayerCharacterRepository characters, QuestService quests,
-                              ItemCatalog items) {
+                              ItemCatalog items, AuthService auth) {
         this.mapper = mapper;
         this.movementService = movementService;
         this.monsters = monsters;
@@ -43,37 +43,44 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         this.characters = characters;
         this.quests = quests;
         this.items = items;
+        this.auth = auth;
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws IOException {
-        String mapId = UriComponentsBuilder.fromUri(session.getUri())
-                .build().getQueryParams().getFirst("mapId");
-        if (mapId == null || mapId.isBlank()) mapId = DEFAULT_MAP;
-        String characterId = UriComponentsBuilder.fromUri(session.getUri())
-                .build().getQueryParams().getFirst("characterId");
-        if (characterId == null || characterId.isBlank()) characterId = UUID.randomUUID().toString();
-        try {
-            characterId = UUID.fromString(characterId).toString();
-        } catch (IllegalArgumentException invalidId) {
-            characterId = UUID.randomUUID().toString();
+        String token = UriComponentsBuilder.fromUri(session.getUri())
+                .build().getQueryParams().getFirst("token");
+        AuthService.AuthPrincipal principal = auth.authenticate(token);
+        if (principal == null) {
+            session.close(CloseStatus.POLICY_VIOLATION.withReason("Authentication required."));
+            return;
         }
 
-        PlayerCharacter character = characters.findById(characterId).orElse(null);
-        if (character != null) mapId = character.getMapId();
-        PlayerMotionState initial = character == null
-                ? movementService.initialState(mapId)
-                : new PlayerMotionState(character.getMapId(), character.getX(), character.getY(), 0L);
+        String requestedCharacterId = UriComponentsBuilder.fromUri(session.getUri())
+                .build().getQueryParams().getFirst("characterId");
+        if (requestedCharacterId != null && !requestedCharacterId.isBlank()
+                && !requestedCharacterId.equals(principal.characterId())) {
+            session.close(CloseStatus.POLICY_VIOLATION.withReason("Character does not belong to this account."));
+            return;
+        }
+
+        PlayerCharacter character = characters.findById(principal.characterId()).orElse(null);
+        if (character == null || !principal.accountId().equals(character.getAccountId())) {
+            session.close(CloseStatus.POLICY_VIOLATION.withReason("Character ownership could not be verified."));
+            return;
+        }
+        String mapId = character.getMapId();
+        PlayerMotionState initial = new PlayerMotionState(
+                character.getMapId(), character.getX(), character.getY(), 0L);
         ConnectedPlayer player = new ConnectedPlayer(
-                characterId, session, initial, System.nanoTime(),
-                character == null ? PLAYER_MAX_HP : character.getHp(),
-                character == null || character.getHp() > 0 ? 0L : System.currentTimeMillis() + PLAYER_RESPAWN_MILLIS,
-                character == null ? 0 : character.getExperience(),
-                character == null ? Map.of("novice-sword", 1, "cloth-tunic", 1) : character.getInventory(),
-                character == null ? Map.of() : character.getEquipment());
+                character.getId(), principal.accountId(), session, initial, System.nanoTime(),
+                character.getHp(),
+                character.getHp() > 0 ? 0L : System.currentTimeMillis() + PLAYER_RESPAWN_MILLIS,
+                character.getExperience(), character.getInventory(), character.getEquipment());
         players.put(session.getId(), player);
         persist(player);
-        send(session, Map.of("type", "welcome", "playerId", player.playerId(), "mapId", mapId));
+        send(session, Map.of("type", "welcome", "playerId", player.playerId(),
+                "accountId", principal.accountId(), "mapId", mapId));
         broadcast(mapId);
     }
 
@@ -275,7 +282,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     }
 
     private void persist(ConnectedPlayer player) {
-        characters.save(PlayerCharacter.from(player.playerId(), player.state(), player.hp(),
+        characters.save(PlayerCharacter.from(player.accountId(), player.playerId(), player.state(), player.hp(),
                 player.experience(), player.inventory(), player.equipment()));
     }
 
@@ -321,6 +328,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
 
     private record ConnectedPlayer(
             String playerId,
+            String accountId,
             WebSocketSession session,
             PlayerMotionState state,
             long lastAcceptedNanos,
@@ -336,41 +344,41 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         }
 
         private ConnectedPlayer withState(PlayerMotionState next, long acceptedAt) {
-            return new ConnectedPlayer(playerId, session, next, acceptedAt,
+            return new ConnectedPlayer(playerId, accountId, session, next, acceptedAt,
                     hp, respawnAt, experience, inventory, equipment);
         }
 
         private ConnectedPlayer withVitals(int nextHp, long nextRespawnAt) {
-            return new ConnectedPlayer(playerId, session, state, lastAcceptedNanos,
+            return new ConnectedPlayer(playerId, accountId, session, state, lastAcceptedNanos,
                     nextHp, nextRespawnAt, experience, inventory, equipment);
         }
 
         private ConnectedPlayer withRespawn(PlayerMotionState nextState, int nextHp,
                                              long nextRespawnAt, long acceptedAt) {
-            return new ConnectedPlayer(playerId, session, nextState, acceptedAt,
+            return new ConnectedPlayer(playerId, accountId, session, nextState, acceptedAt,
                     nextHp, nextRespawnAt, experience, inventory, equipment);
         }
 
         private ConnectedPlayer withExperience(int nextExperience) {
-            return new ConnectedPlayer(playerId, session, state, lastAcceptedNanos,
+            return new ConnectedPlayer(playerId, accountId, session, state, lastAcceptedNanos,
                     hp, respawnAt, nextExperience, inventory, equipment);
         }
 
         private ConnectedPlayer withLoot(List<LootDropState> drops) {
             Map<String, Integer> updated = new ConcurrentHashMap<>(inventory);
             drops.forEach(drop -> updated.merge(drop.itemCode(), drop.amount(), Integer::sum));
-            return new ConnectedPlayer(playerId, session, state, lastAcceptedNanos,
+            return new ConnectedPlayer(playerId, accountId, session, state, lastAcceptedNanos,
                     hp, respawnAt, experience, updated, equipment);
         }
 
         private ConnectedPlayer withInventory(Map<String, Integer> nextInventory) {
-            return new ConnectedPlayer(playerId, session, state, lastAcceptedNanos,
+            return new ConnectedPlayer(playerId, accountId, session, state, lastAcceptedNanos,
                     hp, respawnAt, experience, nextInventory, equipment);
         }
 
         private ConnectedPlayer withInventoryAndEquipment(Map<String, Integer> nextInventory,
                                                            Map<String, String> nextEquipment) {
-            return new ConnectedPlayer(playerId, session, state, lastAcceptedNanos,
+            return new ConnectedPlayer(playerId, accountId, session, state, lastAcceptedNanos,
                     hp, respawnAt, experience, nextInventory, nextEquipment);
         }
     }}

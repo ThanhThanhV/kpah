@@ -19,6 +19,9 @@ public class PlayerCharacter {
     @Column(length = 36, nullable = false, updatable = false)
     private String id;
 
+    @Column(name = "account_id", length = 36)
+    private String accountId;
+
     @Column(name = "map_id", nullable = false, length = 80)
     private String mapId;
 
@@ -51,13 +54,20 @@ public class PlayerCharacter {
 
     public static PlayerCharacter from(String id, PlayerMotionState state, int hp,
                                        int experience, Map<String, Integer> inventory) {
-        return from(id, state, hp, experience, inventory, Map.of());
+        return from(null, id, state, hp, experience, inventory, Map.of());
     }
 
     public static PlayerCharacter from(String id, PlayerMotionState state, int hp,
                                        int experience, Map<String, Integer> inventory,
                                        Map<String, String> equipment) {
+        return from(null, id, state, hp, experience, inventory, equipment);
+    }
+
+    public static PlayerCharacter from(String accountId, String id, PlayerMotionState state, int hp,
+                                       int experience, Map<String, Integer> inventory,
+                                       Map<String, String> equipment) {
         PlayerCharacter character = new PlayerCharacter();
+        character.accountId = accountId;
         character.id = id;
         character.mapId = state.mapId();
         character.x = state.x();
@@ -70,6 +80,7 @@ public class PlayerCharacter {
     }
 
     public String getId() { return id; }
+    public String getAccountId() { return accountId; }
     public String getMapId() { return mapId; }
     public double getX() { return x; }
     public double getY() { return y; }

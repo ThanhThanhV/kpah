@@ -4,14 +4,15 @@
 
 - WebSocket endpoint: `/ws/world`
 - Development default client URL: `ws://localhost:8080/ws/world`
-- Optional query parameter: `mapId`; defaults to `starter-meadow`.
-- On connect, the server sends a `welcome` frame containing the socket's ephemeral `playerId` and selected `mapId`.
-- The gateway currently creates an ephemeral player identity per socket. Authentication, account-to-character binding and reconnect tokens are not implemented.
+- The client supplies `token` and `characterId` query parameters. The token is an opaque 256-bit random session credential; the server stores only its SHA-256 hash.
+- The server validates the session and confirms the requested character is the account's owned character before adding the socket to the world. Invalid or expired sessions are closed with policy violation.
+- Each account currently has one starter character; multi-character selection and session refresh are not implemented.
+- Optional query parameter `mapId` is retained for compatibility but the persisted character's map is authoritative.
 
 ## Server to client: welcome
 
 ```json
-{ "type": "welcome", "playerId": "ephemeral-session-player-id", "mapId": "starter-meadow" }
+{ "type": "welcome", "playerId": "persistent-character-id", "mapId": "starter-meadow" }
 ```
 
 ## Client to server: movement intent
@@ -55,7 +56,8 @@ Snapshots include all connected players in the same map. The client identifies i
 ## Current limitations
 
 - The gateway is a development transport, not a production-ready zone simulation.
-- Player IDs and positions are in memory and disappear on server restart.
-- No authentication, rate limiting, heartbeat, reconnect/resume, interest management or delta compression yet.
+- Live positions are held in memory and are persisted to PostgreSQL as movement updates; multi-zone coordination is not implemented.
+- Rate limiting, heartbeat, reconnect/resume, interest management and delta compression remain.
+- The token is currently passed in the WebSocket query string; production reverse-proxy access logs must redact the token parameter and public deployments must use WSS.
 - The client currently renders its local character; remote snapshot entities are the next multiplayer presentation task.
 - Server map geometry is still a manually maintained registry and must be generated from the same versioned map source as the Tiled client map.

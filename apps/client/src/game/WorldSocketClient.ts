@@ -37,12 +37,11 @@ export class WorldSocketClient {
   connect(): void {
     if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) return;
     const url = new URL(this.url);
-    let characterId = localStorage.getItem("kpah.characterId");
-    if (!characterId) {
-      characterId = crypto.randomUUID();
-      localStorage.setItem("kpah.characterId", characterId);
-    }
+    const characterId = localStorage.getItem("kpah.characterId");
+    const token = localStorage.getItem("kpah.sessionToken");
+    if (!characterId || !token) return;
     url.searchParams.set("characterId", characterId);
+    url.searchParams.set("token", token);
     const socket = new WebSocket(url.toString());
     this.socket = socket;
     socket.addEventListener("open", () => this.statusListeners.forEach((listener) => listener(true)));

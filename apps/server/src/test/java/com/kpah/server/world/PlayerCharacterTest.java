@@ -1,6 +1,7 @@
 package com.kpah.server.world;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,15 @@ class PlayerCharacterTest {
         assertEquals(235, character.getExperience());
         assertEquals(3, character.getInventory().get("green-slime-material"));
         assertEquals("novice-sword", character.getEquipment().get("weapon"));
+    }
+
+    @Test
+    void bindsCharacterToOwningAccount() {
+        PlayerCharacter character = PlayerCharacter.from("account-1", "character-1",
+                new PlayerMotionState("starter-meadow", 10, 20, 0),
+                100, 0, Map.of(), Map.of());
+
+        assertEquals("account-1", character.getAccountId());
     }
 
     @Test
