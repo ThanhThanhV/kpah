@@ -1039,7 +1039,24 @@
           "x": 1216,
           "y": 336,
           "width": 32,
-          "height": 64
+          "height": 64,
+          "properties": [
+            {
+              "name": "targetMapId",
+              "type": "string",
+              "value": "forest-edge"
+            },
+            {
+              "name": "targetX",
+              "type": "float",
+              "value": 96
+            },
+            {
+              "name": "targetY",
+              "type": "float",
+              "value": 352
+            }
+          ]
         }
       ]
     }
