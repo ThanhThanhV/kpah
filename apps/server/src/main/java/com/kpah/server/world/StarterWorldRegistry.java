@@ -8,9 +8,11 @@ public class StarterWorldRegistry {
     private final Map<String, WorldMapGeometry> maps;
 
     public StarterWorldRegistry(TiledWorldMapLoader loader) {
-        WorldMapGeometry starter = loader.load("maps/starter-meadow.json");
-        WorldMapGeometry forest = loader.load("maps/forest-edge.json");
-        this.maps = Map.of(starter.mapId(), starter, forest.mapId(), forest);
+        java.util.Map<String, WorldMapGeometry> registered = new java.util.LinkedHashMap<>();
+        for (WorldMapGeometry map : loader.loadAll("maps/index.json")) {
+            registered.put(map.mapId(), map);
+        }
+        this.maps = Map.copyOf(registered);
         for (WorldMapGeometry map : this.maps.values()) {
             for (PortalDefinition portal : map.portals()) {
                 WorldMapGeometry destination = this.maps.get(portal.targetMapId());
