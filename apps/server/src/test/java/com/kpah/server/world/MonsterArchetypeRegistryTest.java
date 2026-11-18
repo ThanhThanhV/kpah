@@ -17,6 +17,10 @@ class MonsterArchetypeRegistryTest {
         assertEquals(8, slime.attackDamage());
         assertEquals(110, wolf.maxHp());
         assertEquals(14, wolf.attackDamage());
+        assertEquals(MonsterBehavior.DEFENSIVE, slime.behavior());
+        assertEquals(MonsterBehavior.AGGRESSIVE, wolf.behavior());
+        assertEquals(MonsterBehavior.PATROL, registry.require("forest-sentinel").behavior());
+        assertEquals(MonsterBehavior.ELITE, registry.require("alpha-wolf").behavior());
         org.junit.jupiter.api.Assertions.assertTrue(wolf.moveSpeedMultiplier() > slime.moveSpeedMultiplier());
         org.junit.jupiter.api.Assertions.assertTrue(wolf.aggroRange() > slime.aggroRange());
     }
@@ -29,6 +33,6 @@ class MonsterArchetypeRegistryTest {
     @Test
     void rejectsInvalidArchetypeStats() {
         assertThrows(IllegalArgumentException.class, () -> new MonsterArchetype(
-                "broken", "Broken", 0, 1, 20, 10, 500, 1));
+                "broken", "Broken", 0, 1, 20, 20, 500, 1, MonsterBehavior.DEFENSIVE));
     }
 }
