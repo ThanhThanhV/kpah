@@ -363,3 +363,13 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - The existing 100 ms world simulation tick continues to mark connected maps pending, preserving periodic authoritative snapshots when players are idle.
 - Delta snapshots, payload compression and runtime load measurements remain outstanding.
 - CI is the verification gate for this batch.
+
+
+## Database configuration correction — use existing local MySQL
+
+- Replaced the PostgreSQL JDBC runtime driver with MySQL Connector/J.
+- Spring datasource now defaults to local MySQL at `localhost:3306/mmorpg`, driver `com.mysql.cj.jdbc.Driver`, username from `DB_USERNAME` (default `root`) and password from `DB_PASSWORD` (default `123456`).
+- The complete JDBC URL remains overridable through `DATABASE_URL`.
+- Updated local setup instructions to use an existing MySQL 8.x service; no PostgreSQL container is required.
+- Removed the obsolete PostgreSQL-only Docker Compose file to avoid accidentally starting a second database.
+- CI is the verification gate for this batch; local database connectivity has not been tested from this environment.

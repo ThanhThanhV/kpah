@@ -5,13 +5,13 @@ A greenfield, top-down 2D MMORPG prototype. The project uses original code and o
 ## Current vertical slice
 
 - `apps/client`: TypeScript + Phaser browser client with a procedural debug character, typed starter-map definition, row-major ground renderer, collision geometry, four-direction facing, free movement and normalized diagonals.
-- `apps/server`: Java 21 + Spring Boot API skeleton, health endpoint and server-side movement rules for the starter map.
+- `apps/server`: Java 21 + Spring Boot game server backed by MySQL.
 - `infra`: local PostgreSQL service for the persistence phase.
 - `docs`: architecture decisions and WBS progress evidence.
 
 ## Run locally
 
-Requirements: Node.js 22+, npm 10+, JDK 21+, Maven 3.9+ and Docker (optional, for PostgreSQL).
+Requirements: Node.js 22+, npm 10+, JDK 21+, Maven 3.9+ and a local MySQL 8.x server listening on port 3306.
 
 ```bash
 cd apps/client
@@ -19,10 +19,19 @@ npm install
 npm run dev
 ```
 
-Start PostgreSQL first, then run the server:
+Create the local MySQL database once (the application user must have privileges to create/update tables):
+
+```sql
+CREATE DATABASE mmorpg
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+```
+
+The default local connection is `jdbc:mysql://localhost:3306/mmorpg`, user `root`, password `123456`. Override credentials with `DB_USERNAME` and `DB_PASSWORD`, or override the full JDBC URL with `DATABASE_URL`.
+
+Start the server:
 
 ```bash
-docker compose -f infra/docker-compose.yml up -d
 cd apps/server
 mvn spring-boot:run
 ```
@@ -30,12 +39,6 @@ mvn spring-boot:run
 Client: http://localhost:5173  
 Server health: http://localhost:8080/api/health  
 Account API: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`, `POST /api/auth/logout-all`
-
-Start local PostgreSQL when needed:
-
-```bash
-docker compose -f infra/docker-compose.yml up -d
-```
 
 ## Controls
 
