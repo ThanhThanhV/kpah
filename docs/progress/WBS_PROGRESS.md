@@ -327,3 +327,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - The client merges `selfState` into its own player record before dispatching the snapshot, keeping the existing game scene and HUD contract intact.
 - Snapshot construction is now O(N) per map broadcast for public state instead of rebuilding the N-player list N times; recipient-specific payload envelopes remain O(N).
 - CI is the verification gate for this batch.
+
+
+## Latest implementation batch — authoritative class stats in inventory HUD
+- Removed the client-side Warrior/Mage/Archer base-stat lookup from the inventory panel.
+- The server now includes level-adjusted class ATK and DEF in each public player snapshot using ClassCatalog, alongside authoritative max HP.
+- The inventory panel displays those server values and uses a syncing placeholder if the stats are not present, avoiding stale duplicated balance data in the client.
+- Equipment bonuses continue to be calculated from the server-provided item catalog and equipped slots.
+- CI is the verification gate for this batch.
