@@ -350,5 +350,5 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - The recipient's own player entry is always retained; only nearby players, living monsters and loot drops are included in that recipient's snapshot.
 - Recipient-private inventory, equipment, item catalog and quest state remain in the existing `selfState` boundary.
 - The client already destroys monster and loot renderers absent from the latest snapshot and applies a 1.5-second grace period to remote players, so entities naturally leave and re-enter rendering as they cross the AOI boundary.
-- This first increment filters delivery and client rendering but still scans map entity lists per recipient. Spatial partitioning, AOI-aware combat event routing and load testing remain follow-up work.
+- Snapshot delivery now uses a uniform spatial grid (300 world pixels per cell), built once per map broadcast for players, monsters and loot. Each recipient queries intersecting cells and receives only exact in-radius results, rather than scanning all entities independently. The recipient is explicitly retained even if its snapshot position is malformed/outside the query.
 - CI verification is pending.

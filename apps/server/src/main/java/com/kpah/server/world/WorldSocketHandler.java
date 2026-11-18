@@ -396,22 +396,27 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 .toList();
         var monsterSnapshot = monsters.snapshot(mapId);
         var lootSnapshot = monsters.snapshotLoot(mapId);
+        WorldSpatialIndex<Map<String, Object>> playerIndex = WorldSpatialIndex.build(
+                publicPlayers,
+                snapshot -> ((Number) snapshot.get("x")).doubleValue(),
+                snapshot -> ((Number) snapshot.get("y")).doubleValue());
+        WorldSpatialIndex<MonsterState> monsterIndex = WorldSpatialIndex.build(
+                monsterSnapshot, MonsterState::x, MonsterState::y);
+        WorldSpatialIndex<LootDropState> lootIndex = WorldSpatialIndex.build(
+                lootSnapshot, LootDropState::x, LootDropState::y);
         for (ConnectedPlayer player : players.values()) {
             if (!mapId.equals(player.state().mapId()) || !player.session().isOpen()) continue;
             double centerX = player.state().x();
             double centerY = player.state().y();
-            List<Map<String, Object>> visiblePlayers = publicPlayers.stream()
-                    .filter(snapshot -> player.playerId().equals(snapshot.get("playerId"))
-                            || isWithinInterest(centerX, centerY,
-                            ((Number) snapshot.get("x")).doubleValue(),
-                            ((Number) snapshot.get("y")).doubleValue()))
-                    .toList();
-            List<MonsterState> visibleMonsters = monsterSnapshot.stream()
-                    .filter(monster -> isWithinInterest(centerX, centerY, monster.x(), monster.y()))
-                    .toList();
-            List<LootDropState> visibleLoot = lootSnapshot.stream()
-                    .filter(drop -> isWithinInterest(centerX, centerY, drop.x(), drop.y()))
-                    .toList();
+            List<Map<String, Object>> visiblePlayers = playerIndex.query(centerX, centerY, INTEREST_RADIUS);
+            if (visiblePlayers.stream().noneMatch(snapshot -> player.playerId().equals(snapshot.get("playerId")))) {
+                publicPlayers.stream()
+                        .filter(snapshot -> player.playerId().equals(snapshot.get("playerId")))
+                        .findFirst()
+                        .ifPresent(visiblePlayers::add);
+            }
+            List<MonsterState> visibleMonsters = monsterIndex.query(centerX, centerY, INTEREST_RADIUS);
+            List<LootDropState> visibleLoot = lootIndex.query(centerX, centerY, INTEREST_RADIUS);
             Map<String, Object> selfState = Map.of(
                     "inventory", player.inventory(),
                     "equipment", player.equipment(),

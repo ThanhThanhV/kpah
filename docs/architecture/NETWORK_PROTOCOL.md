@@ -109,7 +109,7 @@ All unsupported or missing message types share one rate-limit bucket per connect
 - The recipient's own player entry is always included; nearby players, living monsters and loot drops are included only when their positions fall inside that radius.
 - Inventory, equipment, item catalog and quest state remain isolated in the recipient-only `selfState` field.
 - The client removes monster and loot renderers that leave the current AOI and retains unseen remote players for the existing 1.5-second grace period to avoid flicker during brief snapshot gaps.
-- This first AOI increment reduces irrelevant snapshot payloads and client rendering outside nearby play space. It still scans the map's current entity lists per recipient; spatial-cell indexing, AOI-aware combat event routing and load testing remain follow-up work.
+- World snapshot construction builds one immutable uniform-grid index per entity category and map broadcast (300 world pixels per cell). Each recipient queries only cells intersecting its 900-pixel AOI, then applies an exact circular-distance check. This avoids scanning every map entity separately for every recipient; the index is rebuilt once per broadcast, not maintained incrementally.
 
 ## Movement persistence policy
 - Client movement remains server-authoritative and is broadcast immediately after validation.
