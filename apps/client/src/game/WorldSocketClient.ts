@@ -117,6 +117,7 @@ export class WorldSocketClient {
     this.statusListeners.add(listener); return () => this.statusListeners.delete(listener);
   }
   getCachedClassCode(): string { return this.cachedClassCode; }
+  getOwnPlayerId(): string | undefined { return this.localPlayerId; }
 
   getOwnPlayer(snapshot: WorldSnapshot): WorldPlayerSnapshot | undefined {
     return snapshot.players.find((player) => player.playerId === this.localPlayerId);
