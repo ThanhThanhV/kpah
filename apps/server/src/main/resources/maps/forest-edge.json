@@ -1042,6 +1042,42 @@
               "value": "The forest edge is overrun. Can you help protect it?"
             }
           ]
+        },
+        {
+          "id": 106,
+          "name": "Forest Wolf Den",
+          "class": "monster-spawn",
+          "x": 960,
+          "y": 400,
+          "width": 160,
+          "height": 128,
+          "properties": [
+            {
+              "name": "monsterType",
+              "type": "string",
+              "value": "forest-wolf"
+            },
+            {
+              "name": "maxAlive",
+              "type": "int",
+              "value": 3
+            },
+            {
+              "name": "respawnMillis",
+              "type": "int",
+              "value": 9000
+            },
+            {
+              "name": "roamRadius",
+              "type": "float",
+              "value": 56
+            },
+            {
+              "name": "moveSpeed",
+              "type": "float",
+              "value": 30
+            }
+          ]
         }
       ]
     }
