@@ -218,8 +218,11 @@ export class GameScene extends Phaser.Scene {
           else if (event.action === "skill-cast") source.entity.cast();
         }
       }
-      this.combatLabel?.setText(`${event.skillName ?? "Combat"} · ${event.damage ?? 0} damage`);
-      this.combatLabel?.setColor("#a9e7ff");
+      const monsterSpecial = event.action === "monster-special";
+      this.combatLabel?.setText(monsterSpecial
+        ? `${event.monsterName ?? "Elite monster"} uses a heavy strike · ${event.damage ?? 0} damage`
+        : `${event.skillName ?? event.monsterName ?? "Combat"} · ${event.damage ?? 0} damage`);
+      this.combatLabel?.setColor(monsterSpecial ? "#ff9b78" : "#a9e7ff");
     });
     this.worldSocket.connect();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
