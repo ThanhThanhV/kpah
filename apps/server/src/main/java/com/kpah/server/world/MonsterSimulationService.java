@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,8 +25,10 @@ public class MonsterSimulationService {
     private final Map<String, MonsterRuntime> monsters = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Long>> nextSpawnAt = new ConcurrentHashMap<>();
     private final Map<String, LootDropState> lootDrops = new ConcurrentHashMap<>();
+    private final MonsterDropTable dropTable;
 
-    public MonsterSimulationService(StarterWorldRegistry worlds) {
+    public MonsterSimulationService(StarterWorldRegistry worlds, MonsterDropTable dropTable) {
+        this.dropTable = dropTable;
         for (WorldMapGeometry map : worlds.all()) {
             regionsByMap.put(map.mapId(), map.monsterSpawns());
             pathfindersByMap.put(map.mapId(), new GridPathfinder(map));
@@ -96,11 +99,12 @@ public class MonsterSimulationService {
                 long respawnAt = nowMillis + monster.region.respawnMillis();
                 monster.respawnAt = respawnAt;
                 nextSpawnAt.get(mapId).put(monster.region.id(), respawnAt);
-                String itemCode = monster.region.monsterType().toLowerCase()
-                        .replaceAll("[^a-z0-9-]", "") + "-material";
-                LootDropState drop = new LootDropState(UUID.randomUUID().toString(), itemCode, 1,
-                        mapId, monster.x, monster.y, nowMillis);
-                lootDrops.put(drop.dropId(), drop);
+                for (MonsterDropTable.RolledDrop rolled : dropTable.roll(
+                        monster.region.monsterType(), ThreadLocalRandom.current())) {
+                    LootDropState drop = new LootDropState(UUID.randomUUID().toString(),
+                            rolled.itemCode(), rolled.amount(), mapId, monster.x, monster.y, nowMillis);
+                    lootDrops.put(drop.dropId(), drop);
+                }
             }
             return new MonsterAttackResult(true, "Hit", monster.snapshot(), appliedDamage);
         }
@@ -115,6 +119,10 @@ public class MonsterSimulationService {
     public List<LootDropState> snapshotLoot(String mapId) {
         return lootDrops.values().stream()
                 .filter(drop -> drop.mapId().equals(mapId)).toList();
+    }
+
+    public void restoreLoot(LootDropState drop) {
+        if (drop != null && drop.amount() > 0) lootDrops.putIfAbsent(drop.dropId(), drop);
     }
 
     public List<LootDropState> collectNearbyLoot(String mapId, double x, double y) {

@@ -243,7 +243,16 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     current.state().mapId(), current.state().x(), current.state().y());
             if (!collected.isEmpty()) {
                 players.computeIfPresent(sessionId, (id, latest) -> {
-                    ConnectedPlayer looted = latest.withLoot(collected);
+                    Map<String, Integer> updatedInventory = new ConcurrentHashMap<>(latest.inventory());
+                    for (LootDropState drop : collected) {
+                        ItemCatalog.InventoryUpdate update = items.addToInventory(
+                                updatedInventory, drop.itemCode(), drop.amount());
+                        updatedInventory.clear();
+                        updatedInventory.putAll(update.inventory());
+                        int remainder = drop.amount() - update.acceptedAmount();
+                        if (remainder > 0) monsters.restoreLoot(drop.withAmount(remainder));
+                    }
+                    ConnectedPlayer looted = latest.withInventory(updatedInventory);
                     persist(looted);
                     return looted;
                 });
@@ -351,6 +360,11 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             drops.forEach(drop -> updated.merge(drop.itemCode(), drop.amount(), Integer::sum));
             return new ConnectedPlayer(playerId, session, state, lastAcceptedNanos,
                     hp, respawnAt, experience, updated, equipment);
+        }
+
+        private ConnectedPlayer withInventory(Map<String, Integer> nextInventory) {
+            return new ConnectedPlayer(playerId, session, state, lastAcceptedNanos,
+                    hp, respawnAt, experience, nextInventory, equipment);
         }
 
         private ConnectedPlayer withInventoryAndEquipment(Map<String, Integer> nextInventory,

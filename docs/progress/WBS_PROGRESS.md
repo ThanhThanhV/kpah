@@ -30,7 +30,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | 9 | Skills and visual effects | IN PROGRESS | Two server-defined monster-target skills with authoritative range, damage and cooldown; skill resources, area targeting and authored VFX remain. |
 | 10 | Multiplayer replication | IN PROGRESS | Player, monster, HP, EXP, inventory, loot and quest snapshots; authentication, heartbeat, reconnect and interest management remain. |
 | 11 | Character progression | IN PROGRESS | Level every 100 EXP; character ID, map position, HP and EXP persist in PostgreSQL; stat growth and authenticated ownership remain. |
-| 12 | Loot, item catalog and equipment | IN PROGRESS | Persistent item catalog, starter weapon/body gear, server-validated equip/unequip, persisted equipment slots, and inventory/equipment HUD; drop tables, stack limits and item use remain. |
+| 12 | Loot, item catalog and equipment | IN PROGRESS | Catalog-driven green-slime drop table, 99-stack material limit, 1-stack equipment limit, 20-slot inventory, partial pickup with overflow left on ground, persistent inventory/equipment and HUD. |
 | 13.1 | NPC interaction | IN PROGRESS | Server validates Tiled NPC identity and interaction distance; Meadow Guide dialogue uses E key. |
 | 14.1 | Quest lifecycle | IN PROGRESS | Persistent Meadow Slime Hunt: start, 3 Green Slime kills, turn-in and 100 EXP reward. |
 | 14.2 | Quest Journal UI | IN PROGRESS | Client journal displays objective, kill progress, ready-to-claim and claimed states; toggle with J. |
@@ -43,21 +43,25 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Shows kill progress and a progress bar; press J to show/hide the panel.
 - Existing E interaction remains the authoritative NPC start/turn-in action.
 
+- Equipment bonuses are calculated server-side: +5 ATK from novice sword and +3 DEF from cloth tunic; damage reduction never lowers a hit below 1.
+- Fixed invalid literal newline markers in the inventory HUD TypeScript and connected I / 1–4 keyboard controls.
+- Green Slime loot is now driven by a drop table; gel quantity rolls from 1 to 2.
+- Inventory accepts at most 20 distinct item stacks; gel stacks to 99 and equipment stacks to 1. Overflow remains on the ground.
+
 ## CI results
 - Workflow: `.github/workflows/ci.yml`.
-- Latest previously verified PASS: [run 44231850025](https://github.com/ThanhThanhV/kpah/actions/runs/44231850025).
-- The current Quest Journal commit's CI result must be checked before marking this batch verified.
+- Equipment + HUD + combat stats: [run 44238329614 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44238329614).
+- Loot/drop-table batch: pending CI verification.
 
 ## Current risks
 1. Character, monster and drop visuals remain original procedural placeholders.
 2. Monster navigation uses a 24px grid; hitbox-aware movement and path smoothing remain.
 3. Identity is browser-local and not protected by authentication.
 4. WebSocket authentication, heartbeat, reconnect, rate limiting and interest management remain.
-5. Item drop tables, stack limits, consumables, trading and account authentication remain.
+5. Consumables, vendors, crafting, trading and account authentication remain.
 
 ## Next implementation sequence
-1. Add item drop tables, stack limits and inventory capacity.
-2. Expand quest definitions and NPC dialogue into data-driven catalogs.
-3. Add authenticated accounts and server-issued sessions before production deployment.
-4. Replace debug visuals with original art and concrete animation adapters.
-5. Add automated gameplay/integration coverage and keep GitHub Actions green.
+1. Expand quest definitions and NPC dialogue into data-driven catalogs.
+2. Add authenticated accounts and server-issued sessions before production deployment.
+3. Replace debug visuals with original art and concrete animation adapters.
+4. Add automated gameplay/integration coverage and keep GitHub Actions green.
