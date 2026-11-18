@@ -37,7 +37,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | 15–17 | Economy, QA and operations | NOT STARTED | Item catalog, equipment, trading, production observability and load testing remain. |
 
 ## Latest implementation batch
-- Added a server-side item catalog for slime gel, novice sword and cloth tunic.\n- New characters receive one novice sword and cloth tunic in their inventory.\n- Equip/unequip requests validate item ownership and equipment slot on the server; replaced gear returns to inventory.\n- Equipment slots are persisted in PostgreSQL and replicated in world snapshots.\n- Added an in-game Quest Journal panel anchored to the HUD.
+- Added the Inventory & Equipment panel (I) with item counts, equipped weapon/body slots and displayed ATK/DEF bonuses.\n- Keyboard controls: 1 equip novice sword, 2 equip cloth tunic, 3 unequip weapon, 4 unequip body. Server validates ownership and slot, then returns displaced gear to inventory.\n- Added a server-side item catalog for slime gel, novice sword and cloth tunic.\n- New characters receive one novice sword and cloth tunic in their inventory.\n- Equip/unequip requests validate item ownership and equipment slot on the server; replaced gear returns to inventory.\n- Equipment slots are persisted in PostgreSQL and replicated in world snapshots.\n- Added an in-game Quest Journal panel anchored to the HUD.
 - The panel is driven by the server's persisted quest snapshot, not client-side quest state.
 - Displays the correct guidance for available, active, ready-to-claim and claimed states.
 - Shows kill progress and a progress bar; press J to show/hide the panel.
