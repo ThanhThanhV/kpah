@@ -105,7 +105,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 }
                 String targetId = input.path("targetMonsterId").asText("");
                 MonsterAttackResult result = combat.basicAttack(
-                        player.playerId(), player.state(), targetId, System.currentTimeMillis());
+                        player.playerId(), player.state(), targetId, items.attackBonus(player.equipment()),
+                        System.currentTimeMillis());
                 if (!result.accepted()) {
                     send(session, Map.of("type", "error", "message", result.message()));
                 } else {
@@ -173,7 +174,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 String skillId = input.path("skillId").asText("");
                 String targetId = input.path("targetMonsterId").asText("");
                 SkillCastResult result = skills.cast(player.playerId(), player.state(), skillId,
-                        targetId, System.currentTimeMillis());
+                        targetId, items.attackBonus(player.equipment()), System.currentTimeMillis());
                 if (!result.accepted()) {
                     send(session, Map.of("type", "error", "message", result.message()));
                 } else {
@@ -224,7 +225,9 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         for (MonsterPlayerAttack attack : monsters.advance(now, targets)) {
             players.replaceAll((sessionId, player) -> {
                 if (!player.playerId().equals(attack.playerId()) || player.hp() <= 0) return player;
-                int hp = Math.max(0, player.hp() - attack.damage());
+                int mitigatedDamage = ItemCatalog.mitigateDamage(
+                        attack.damage(), items.defenseBonus(player.equipment()));
+                int hp = Math.max(0, player.hp() - mitigatedDamage);
                 long respawnAt = hp == 0 ? now + PLAYER_RESPAWN_MILLIS : 0L;
                 ConnectedPlayer damaged = player.withVitals(hp, respawnAt);
                 persist(damaged);

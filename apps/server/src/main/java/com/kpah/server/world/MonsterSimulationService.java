@@ -67,9 +67,9 @@ public class MonsterSimulationService {
     }
 
     public MonsterAttackResult applyBasicAttack(String mapId, double attackerX, double attackerY,
-                                                String monsterId, long nowMillis) {
+                                                String monsterId, int attackBonus, long nowMillis) {
         return applyDamage(mapId, attackerX, attackerY, monsterId,
-                BASIC_ATTACK_DAMAGE, BASIC_ATTACK_RANGE, nowMillis);
+                BASIC_ATTACK_DAMAGE + Math.max(0, attackBonus), BASIC_ATTACK_RANGE, nowMillis);
     }
 
     public MonsterAttackResult applySkillAttack(String mapId, double attackerX, double attackerY,

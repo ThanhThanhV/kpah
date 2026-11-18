@@ -26,11 +26,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | 5 | Map Engine | IN PROGRESS | Tiled map loading, rectangular collision and server-side grid pathfinding; map art and transitions remain. |
 | 6.1–6.3 | Input, movement and facing | IN PROGRESS | Client prediction and server-authoritative movement; touch controls and replicated facing remain. |
 | 7.1–7.3 | Monster definitions, AI and presentation | IN PROGRESS | Tiled spawn definitions, bounded roam, aggro, leash, attack cooldown, A* pursuit and snapshot-driven placeholder visuals. |
-| 8.1–8.3 | Combat, damage, death and respawn | IN PROGRESS | Server validates basic/skill attacks; monster drops, EXP, player damage and respawn implemented. |
+| 8.1–8.3 | Combat, damage, death and respawn | IN PROGRESS | Server validates basic/skill attacks; equipment ATK is added to basic/skill damage and equipment DEF mitigates monster hits (minimum 1); drops, EXP and respawn implemented. |
 | 9 | Skills and visual effects | IN PROGRESS | Two server-defined monster-target skills with authoritative range, damage and cooldown; skill resources, area targeting and authored VFX remain. |
 | 10 | Multiplayer replication | IN PROGRESS | Player, monster, HP, EXP, inventory, loot and quest snapshots; authentication, heartbeat, reconnect and interest management remain. |
 | 11 | Character progression | IN PROGRESS | Level every 100 EXP; character ID, map position, HP and EXP persist in PostgreSQL; stat growth and authenticated ownership remain. |
-| 12 | Loot, item catalog and equipment | IN PROGRESS | Persistent item catalog, starter weapon/body gear, server-validated equip/unequip, and persisted equipment slots; stat application and inventory UI remain. |
+| 12 | Loot, item catalog and equipment | IN PROGRESS | Persistent item catalog, starter weapon/body gear, server-validated equip/unequip, persisted equipment slots, and inventory/equipment HUD; drop tables, stack limits and item use remain. |
 | 13.1 | NPC interaction | IN PROGRESS | Server validates Tiled NPC identity and interaction distance; Meadow Guide dialogue uses E key. |
 | 14.1 | Quest lifecycle | IN PROGRESS | Persistent Meadow Slime Hunt: start, 3 Green Slime kills, turn-in and 100 EXP reward. |
 | 14.2 | Quest Journal UI | IN PROGRESS | Client journal displays objective, kill progress, ready-to-claim and claimed states; toggle with J. |
@@ -53,12 +53,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 2. Monster navigation uses a 24px grid; hitbox-aware movement and path smoothing remain.
 3. Identity is browser-local and not protected by authentication.
 4. WebSocket authentication, heartbeat, reconnect, rate limiting and interest management remain.
-5. Item catalog, equipment, trading and account authentication remain.
+5. Item drop tables, stack limits, consumables, trading and account authentication remain.
 
 ## Next implementation sequence
-1. Add item definitions and server-validated equipment slots/stats.
-2. Build inventory/equipment UI and persist equipment state.
-3. Expand quest definitions and NPC dialogue into data-driven catalogs.
-4. Add authenticated accounts and server-issued sessions before production deployment.
-5. Build the inventory/equipment panel and apply equipment bonuses to combat stats.\n6. Replace debug visuals with original art and concrete animation adapters.
-7. Keep GitHub Actions green for every implementation batch.
+1. Add item drop tables, stack limits and inventory capacity.
+2. Expand quest definitions and NPC dialogue into data-driven catalogs.
+3. Add authenticated accounts and server-issued sessions before production deployment.
+4. Replace debug visuals with original art and concrete animation adapters.
+5. Add automated gameplay/integration coverage and keep GitHub Actions green.

@@ -37,7 +37,14 @@ export class GameScene extends Phaser.Scene {
   private unsubscribeCombat?: () => void;
   private unsubscribeQuest?: () => void;
   private interactionKey!: Phaser.Input.Keyboard.Key;
-  private questJournalKey!: Phaser.Input.Keyboard.Key;\n  private inventoryKey!: Phaser.Input.Keyboard.Key;\n  private equipWeaponKey!: Phaser.Input.Keyboard.Key;\n  private equipBodyKey!: Phaser.Input.Keyboard.Key;\n  private unequipWeaponKey!: Phaser.Input.Keyboard.Key;\n  private unequipBodyKey!: Phaser.Input.Keyboard.Key;\n  private inventoryPanel?: Phaser.GameObjects.Container;\n  private inventoryBody?: Phaser.GameObjects.Text;
+  private questJournalKey!: Phaser.Input.Keyboard.Key;
+  private inventoryKey!: Phaser.Input.Keyboard.Key;
+  private equipWeaponKey!: Phaser.Input.Keyboard.Key;
+  private equipBodyKey!: Phaser.Input.Keyboard.Key;
+  private unequipWeaponKey!: Phaser.Input.Keyboard.Key;
+  private unequipBodyKey!: Phaser.Input.Keyboard.Key;
+  private inventoryPanel?: Phaser.GameObjects.Container;
+  private inventoryBody?: Phaser.GameObjects.Text;
   private questJournalPanel?: Phaser.GameObjects.Container;
   private questJournalBody?: Phaser.GameObjects.Text;
   private questJournalProgress?: Phaser.GameObjects.Graphics;
@@ -90,7 +97,8 @@ export class GameScene extends Phaser.Scene {
     this.add.text(18, 132, "WASD / arrows · Space: attack · Shift: Power Strike · Q: Arcane Bolt · E: talk · J: quest · I: bag", {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#c0d0c4"
     }).setScrollFactor(0).setDepth(2000);
-    this.createQuestJournal();\n    this.createInventoryPanel();
+    this.createQuestJournal();
+    this.createInventoryPanel();
 
     const socketUrl = import.meta.env.VITE_WORLD_WS_URL || "ws://localhost:8080/ws/world";
     this.worldSocket = new WorldSocketClient(socketUrl);
@@ -273,7 +281,8 @@ export class GameScene extends Phaser.Scene {
       this.progressionLabel?.setText(
         `Lv ${ownPlayer.level} · EXP ${ownPlayer.experience % 100}/100 · Bag ${itemCount}`
       );
-      this.updateQuestJournal(ownPlayer.quest);\n      this.updateInventoryPanel(ownPlayer);
+      this.updateQuestJournal(ownPlayer.quest);
+      this.updateInventoryPanel(ownPlayer);
     }
     const visibleRemoteIds = new Set<string>();
     const now = this.time.now;

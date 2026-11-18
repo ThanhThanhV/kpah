@@ -30,18 +30,18 @@ class SkillCombatServiceTest {
 
     @Test
     void acceptsKnownSkillAndStartsItsCooldown() {
-        assertTrue(combat.cast("player-1", caster, "power-strike", "slime-1", 1_000L).accepted());
-        assertFalse(combat.cast("player-1", caster, "power-strike", "slime-1", 1_500L).accepted());
+        assertTrue(combat.cast("player-1", caster, "power-strike", "slime-1", 5, 1_000L).accepted());
+        assertFalse(combat.cast("player-1", caster, "power-strike", "slime-1", 5, 1_500L).accepted());
     }
 
     @Test
     void allowsDifferentSkillCooldownsIndependently() {
         assertTrue(combat.cast("player-1", caster, "power-strike", "slime-1", 1_000L).accepted());
-        assertTrue(combat.cast("player-1", caster, "arcane-bolt", "slime-1", 1_000L).accepted());
+        assertTrue(combat.cast("player-1", caster, "arcane-bolt", "slime-1", 5, 1_000L).accepted());
     }
 
     @Test
     void rejectsUnknownSkillWithoutTouchingMonster() {
-        assertFalse(combat.cast("player-1", caster, "unknown", "slime-1", 1_000L).accepted());
+        assertFalse(combat.cast("player-1", caster, "unknown", "slime-1", 5, 1_000L).accepted());
     }
 }

@@ -15,7 +15,7 @@ public class WorldCombatService {
     }
 
     public MonsterAttackResult basicAttack(String playerId, PlayerMotionState attacker,
-                                           String targetMonsterId, long nowMillis) {
+                                           String targetMonsterId, int attackBonus, long nowMillis) {
         if (playerId == null || playerId.isBlank() || attacker == null
                 || targetMonsterId == null || targetMonsterId.isBlank()) {
             return MonsterAttackResult.rejected("Invalid attack request.");
@@ -25,7 +25,7 @@ public class WorldCombatService {
             return MonsterAttackResult.rejected("Attack is on cooldown.");
         }
         MonsterAttackResult result = monsters.applyBasicAttack(
-                attacker.mapId(), attacker.x(), attacker.y(), targetMonsterId, nowMillis);
+                attacker.mapId(), attacker.x(), attacker.y(), targetMonsterId, attackBonus, nowMillis);
         if (result.accepted()) lastAttackAt.put(playerId, nowMillis);
         return result;
     }

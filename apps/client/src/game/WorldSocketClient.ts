@@ -3,10 +3,12 @@ export interface WorldAttackIntent { type: "attack"; targetMonsterId: string; }
 export interface WorldSkillIntent { type: "cast"; skillId: string; targetMonsterId: string; }
 export interface WorldQuestEvent { type: "quest"; npcName: string; message: string; questId: string; status: string; progress: number; required: number; experienceReward: number; }
 export interface WorldCombatEvent { type: "combat"; action: string; skillId?: string; skillName?: string; targetMonsterId?: string; damage?: number; monsterHp?: number; experienceReward?: number; }
-export interface WorldItemDefinition { itemCode: string; name: string; type: string; slot: string; attackBonus: number; defenseBonus: number; }\nexport interface WorldPlayerSnapshot {
+export interface WorldItemDefinition { itemCode: string; name: string; type: string; slot: string; attackBonus: number; defenseBonus: number; }
+export interface WorldPlayerSnapshot {
   playerId: string; mapId: string; x: number; y: number; sequence: number;
   hp: number; maxHp: number; dead: boolean;
-  experience: number; level: number; inventory: Record<string, number>;\n  equipment?: Record<string, string>; itemCatalog?: Record<string, WorldItemDefinition>;
+  experience: number; level: number; inventory: Record<string, number>;
+  equipment?: Record<string, string>; itemCatalog?: Record<string, WorldItemDefinition>;
   quest?: { questId: string; status: string; progress: number; required: number };
 }
 export interface WorldMonsterSnapshot {

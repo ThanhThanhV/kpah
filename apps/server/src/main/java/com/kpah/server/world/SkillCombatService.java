@@ -16,7 +16,7 @@ public class SkillCombatService {
     }
 
     public synchronized SkillCastResult cast(String playerId, PlayerMotionState caster, String skillId,
-                                String targetMonsterId, long nowMillis) {
+                                String targetMonsterId, int attackBonus, long nowMillis) {
         if (playerId == null || playerId.isBlank() || caster == null
                 || targetMonsterId == null || targetMonsterId.isBlank()) {
             return SkillCastResult.rejected("Invalid skill request.");
@@ -29,7 +29,7 @@ public class SkillCombatService {
 
         MonsterAttackResult attack = monsters.applySkillAttack(
                 caster.mapId(), caster.x(), caster.y(), targetMonsterId,
-                skill.damage(), skill.range(), nowMillis);
+                skill.damage() + Math.max(0, attackBonus), skill.range(), nowMillis);
         if (!attack.accepted()) return SkillCastResult.rejected(attack.message());
 
         nextCastAt.put(cooldownKey, nowMillis + skill.cooldownMillis());
