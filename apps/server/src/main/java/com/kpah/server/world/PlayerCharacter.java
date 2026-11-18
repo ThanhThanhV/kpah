@@ -81,7 +81,7 @@ public class PlayerCharacter {
     public static PlayerCharacter from(String accountId, String id, String name, String classCode,
                                        PlayerMotionState state, int hp, int experience,
                                        Map<String, Integer> inventory, Map<String, String> equipment) {
-        return from(accountId, id, name, classCode, state, hp, experience, 100, inventory, equipment);
+        return from(accountId, id, name, classCode, state, hp, experience, defaultMana(classCode), inventory, equipment);
     }
 
     public static PlayerCharacter from(String accountId, String id, String name, String classCode,
@@ -101,6 +101,15 @@ public class PlayerCharacter {
         character.inventory.putAll(inventory);
         character.equipment.putAll(equipment);
         return character;
+    }
+
+    private static int defaultMana(String classCode) {
+        if (classCode == null) return 100;
+        return switch (classCode.toLowerCase(java.util.Locale.ROOT)) {
+            case "mage" -> 140;
+            case "archer" -> 110;
+            default -> 100;
+        };
     }
 
     public String getId() { return id; }

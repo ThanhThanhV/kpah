@@ -57,6 +57,16 @@ class SkillCombatServiceTest {
     }
 
     @Test
+    void restoresPersistedManaAndClampsItToLevelMaximum() {
+        combat.restore("player-1", "warrior", 1, 47, 1_000L);
+        assertEquals(47, combat.manaFor("player-1", "warrior", 1, 1_000L));
+        assertEquals(55, combat.manaFor("player-1", "warrior", 1, 2_000L));
+
+        combat.restore("mage-1", "mage", 1, 999, 1_000L);
+        assertEquals(140, combat.manaFor("mage-1", "mage", 1, 1_000L));
+    }
+
+    @Test
     void regeneratesManaOverTime() {
         combat.cast("player-1", "warrior", caster,
                 "warrior-power-strike", "slime-1", 5, 1, 1_000L);
