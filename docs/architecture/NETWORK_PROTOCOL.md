@@ -94,3 +94,10 @@ The world gateway applies per-connection fixed-window limits before gameplay dis
 | Unsupported message types (shared bucket) | 10 / second |
 
 All unsupported or missing message types share one rate-limit bucket per connection, preventing arbitrary type strings from creating unbounded counters. Excess frames are silently dropped before persistence, combat processing or map broadcast. Counters are scoped to a WebSocket connection and released when it closes. These in-memory limits protect a single server process; they are not a substitute for distributed quotas when horizontally scaling.
+
+
+## Recipient-private state without per-recipient map rebuilds
+- World snapshots now build the public player list, monster list and loot list once per map broadcast.
+- Inventory, equipment, item catalog and quest progress are sent in a separate `selfState` object only to the matching authenticated WebSocket recipient.
+- The client merges `selfState` into its own player snapshot before notifying the scene, so existing HUD and rendering code remains unchanged.
+- This removes the prior O(N²) public-player serialization work per map broadcast while preserving the public/private state boundary.
