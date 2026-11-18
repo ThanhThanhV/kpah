@@ -24,13 +24,22 @@ public class SkillCatalog {
                 .collect(Collectors.toUnmodifiableMap(SkillDefinition::skillId, skill -> skill));
     }
 
-    public int maxMana(String classCode) {
-        return switch (classCode.toLowerCase(java.util.Locale.ROOT)) {
+    public int maxMana(String classCode) { return maxMana(classCode, 1); }
+
+    public int maxMana(String classCode, int level) {
+        int base = switch (classCode.toLowerCase(java.util.Locale.ROOT)) {
             case "warrior" -> 100;
             case "mage" -> 140;
             case "archer" -> 110;
             default -> throw new IllegalArgumentException("Unknown character class.");
         };
+        int growth = switch (classCode.toLowerCase(java.util.Locale.ROOT)) {
+            case "warrior" -> 5;
+            case "mage" -> 8;
+            case "archer" -> 6;
+            default -> throw new IllegalArgumentException("Unknown character class.");
+        };
+        return base + Math.max(0, level - 1) * growth;
     }
 
     public int manaRegenerationPerSecond() { return 8; }

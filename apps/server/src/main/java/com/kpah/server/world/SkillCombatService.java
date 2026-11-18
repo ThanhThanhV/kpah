@@ -19,12 +19,12 @@ public class SkillCombatService {
 
     public synchronized SkillCastResult cast(String playerId, String classCode, PlayerMotionState caster,
                                                String skillId, String targetMonsterId, int attackBonus,
-                                               long nowMillis) {
+                                               int level, long nowMillis) {
         if (playerId == null || playerId.isBlank() || classCode == null || caster == null
                 || targetMonsterId == null || targetMonsterId.isBlank()) {
             return SkillCastResult.rejected("Invalid skill request.", 0);
         }
-        int mana = manaFor(playerId, classCode, nowMillis);
+        int mana = manaFor(playerId, classCode, level, nowMillis);
         SkillDefinition skill = catalog.find(skillId);
         if (skill == null) return SkillCastResult.rejected("Unknown skill.", mana);
         if (!skill.classCode().equalsIgnoreCase(classCode)) {
@@ -46,8 +46,8 @@ public class SkillCombatService {
         return new SkillCastResult(true, "Skill cast", skill, attack, remaining);
     }
 
-    public synchronized int manaFor(String playerId, String classCode, long nowMillis) {
-        int maxMana = catalog.maxMana(classCode);
+    public synchronized int manaFor(String playerId, String classCode, int level, long nowMillis) {
+        int maxMana = catalog.maxMana(classCode, level);
         ResourceState state = resources.computeIfAbsent(playerId, ignored -> new ResourceState(maxMana, nowMillis));
         long elapsed = Math.max(0L, nowMillis - state.lastUpdatedAt());
         int regenerated = (int) (elapsed * catalog.manaRegenerationPerSecond() / REGEN_INTERVAL_MILLIS);
@@ -57,6 +57,7 @@ public class SkillCombatService {
     }
 
     public int maxMana(String classCode) { return catalog.maxMana(classCode); }
+    public int maxMana(String classCode, int level) { return catalog.maxMana(classCode, level); }
     public Map<String, SkillDefinition> skillsFor(String classCode) { return catalog.forClass(classCode); }
 
     public void removePlayer(String playerId) {
