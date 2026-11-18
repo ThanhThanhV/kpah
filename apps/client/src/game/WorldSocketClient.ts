@@ -3,6 +3,7 @@ export type WorldConnectionStatus = "connecting" | "connected" | "reconnecting" 
 export interface WorldMoveIntent { type: "move"; sequence: number; axisX: number; axisY: number; }
 export interface WorldAttackIntent { type: "attack"; targetMonsterId: string; }
 export interface WorldSkillIntent { type: "cast"; skillId: string; targetMonsterId: string; }
+export interface WorldMapTransition { type: "map-transition"; mapId: string; x: number; y: number; }
 export interface WorldQuestEvent { type: "quest"; npcName: string; message: string; questId: string; status: string; progress: number; required: number; experienceReward: number; }
 export interface WorldCombatEvent { type: "combat"; action: string; sourcePlayerId?: string; targetPlayerId?: string; skillId?: string; skillName?: string; targetMonsterId?: string; damage?: number; monsterHp?: number; experienceReward?: number; }
 export interface WorldItemDefinition { itemCode: string; name: string; type: string; slot: string; attackBonus: number; defenseBonus: number; maxStack: number; }
@@ -37,6 +38,7 @@ export class WorldSocketClient {
   private readonly statusListeners = new Set<(status: WorldConnectionStatus) => void>();
   private readonly combatListeners = new Set<(event: WorldCombatEvent) => void>();
   private readonly questListeners = new Set<(event: WorldQuestEvent) => void>();
+  private readonly mapTransitionListeners = new Set<(event: WorldMapTransition) => void>();
   private reconnectTimer?: number;
   private heartbeatTimer?: number;
   private pongTimeoutTimer?: number;
@@ -91,6 +93,7 @@ export class WorldSocketClient {
         } else if (message.type === "welcome" && "playerId" in message) this.localPlayerId = message.playerId;
         else if (message.type === "combat") this.combatListeners.forEach((listener) => listener(message as WorldCombatEvent));
         else if (message.type === "quest") this.questListeners.forEach((listener) => listener(message as WorldQuestEvent));
+        else if (message.type === "map-transition") this.mapTransitionListeners.forEach((listener) => listener(message as WorldMapTransition));
         else if (message.type === "snapshot" && "players" in message && Array.isArray(message.players)) {
           const ownPlayer = message.players.find((player) => player.playerId === this.localPlayerId);
           if (ownPlayer?.classCode) this.cachedClassCode = ownPlayer.classCode;
@@ -147,6 +150,9 @@ export class WorldSocketClient {
     this.socket.send(JSON.stringify(message));
   }
 
+  onMapTransition(listener: (event: WorldMapTransition) => void): () => void {
+    this.mapTransitionListeners.add(listener); return () => this.mapTransitionListeners.delete(listener);
+  }
   onQuest(listener: (event: WorldQuestEvent) => void): () => void {
     this.questListeners.add(listener); return () => this.questListeners.delete(listener);
   }
@@ -207,6 +213,6 @@ export class WorldSocketClient {
     this.stopHeartbeat();
     this.socket?.close(1000, "scene shutdown");
     this.socket = undefined;
-    this.listeners.clear(); this.statusListeners.clear(); this.combatListeners.clear(); this.questListeners.clear();
+    this.listeners.clear(); this.statusListeners.clear(); this.combatListeners.clear(); this.questListeners.clear(); this.mapTransitionListeners.clear();
   }
 }
