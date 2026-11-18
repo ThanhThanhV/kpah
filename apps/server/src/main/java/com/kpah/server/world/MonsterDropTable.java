@@ -21,7 +21,11 @@ public class MonsterDropTable {
                             new DropEntry("green-slime-material", 1.0, 1, 2),
                             new DropEntry("forest-resin", 0.35, 1, 1)
                     ),
-                    "forest-wolf", List.of(new DropEntry("wolf-fang", 0.6, 1, 1))
+                    "forest-wolf", List.of(new DropEntry("wolf-fang", 0.6, 1, 1)),
+                    "alpha-wolf", List.of(
+                            new DropEntry("alpha-wolf-pelt", 1.0, 1, 1),
+                            new DropEntry("wolf-fang", 1.0, 2, 3)
+                    )
             )
     );
 
