@@ -20,7 +20,7 @@ class MonsterDropTableTest {
 
     @Test
     void forestSlimeCanDropRegionSpecificResin() {
-        var drops = table.roll("forest-edge", "green-slime", new Random(0));
+        var drops = table.roll("forest-edge", "green-slime", new Random(0) { @Override public double nextDouble() { return 0.0; } });
 
         assertTrue(drops.stream().anyMatch(drop -> drop.itemCode().equals("green-slime-material")));
         assertTrue(drops.stream().anyMatch(drop -> drop.itemCode().equals("forest-resin")));
