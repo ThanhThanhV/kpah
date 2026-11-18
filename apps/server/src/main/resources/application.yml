@@ -24,5 +24,6 @@ management:
 
 game:
   websocket:
-    # Override with a comma-separated exact-origin allowlist in deployed environments.
-    allowed-origins: ${WEBSOCKET_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+    # Local Vite may increment its port when 5173 is occupied. Keep wildcard ports
+    # restricted to loopback; deployments should provide explicit trusted patterns.
+    allowed-origin-patterns: ${WEBSOCKET_ALLOWED_ORIGIN_PATTERNS:http://localhost:*,http://127.0.0.1:*}
