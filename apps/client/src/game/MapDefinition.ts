@@ -16,6 +16,9 @@ export interface WorldObject {
   y: number;
   width: number;
   height: number;
+  targetMapId?: string;
+  targetX?: number;
+  targetY?: number;
 }
 
 export interface WorldMapDefinition {
