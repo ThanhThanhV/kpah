@@ -80,6 +80,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 character.getHp(),
                 character.getHp() > 0 ? 0L : System.currentTimeMillis() + PLAYER_RESPAWN_MILLIS,
                 character.getExperience(), character.getInventory(), character.getEquipment());
+        skills.restore(player.playerId(), player.classCode(),
+                ExperienceProgression.levelFor(player.experience()), character.getMana(), System.currentTimeMillis());
         players.put(session.getId(), player);
         persist(player);
         send(session, Map.of("type", "welcome", "playerId", player.playerId(),
@@ -295,9 +297,10 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     }
 
     private void persist(ConnectedPlayer player) {
+        int level = ExperienceProgression.levelFor(player.experience());
+        int mana = skills.manaFor(player.playerId(), player.classCode(), level, System.currentTimeMillis());
         characters.save(PlayerCharacter.from(player.accountId(), player.playerId(), player.characterName(), player.classCode(),
-                player.state(), player.hp(),
-                player.experience(), player.inventory(), player.equipment()));
+                player.state(), player.hp(), player.experience(), mana, player.inventory(), player.equipment()));
     }
 
     private void broadcast(String mapId) {

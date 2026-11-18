@@ -46,6 +46,13 @@ public class SkillCombatService {
         return new SkillCastResult(true, "Skill cast", skill, attack, remaining);
     }
 
+    public synchronized void restore(String playerId, String classCode, int level, int persistedMana, long nowMillis) {
+        if (playerId == null || playerId.isBlank()) return;
+        int maximum = catalog.maxMana(classCode, level);
+        resources.put(playerId, new ResourceState(Math.max(0, Math.min(maximum, persistedMana)), nowMillis));
+        nextCastAt.keySet().removeIf(key -> key.startsWith(playerId + ":"));
+    }
+
     public synchronized int manaFor(String playerId, String classCode, int level, long nowMillis) {
         int maxMana = catalog.maxMana(classCode, level);
         ResourceState state = resources.computeIfAbsent(playerId, ignored -> new ResourceState(maxMana, nowMillis));
