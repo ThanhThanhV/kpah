@@ -22,8 +22,9 @@ public class WorldMessageRateLimiter {
 
     public boolean tryAcquire(String connectionId, String messageType) {
         if (connectionId == null || connectionId.isBlank()) return false;
-        int limit = LIMITS_PER_SECOND.getOrDefault(messageType, UNKNOWN_MESSAGE_LIMIT);
-        String budgetKey = LIMITS_PER_SECOND.containsKey(messageType) ? messageType : UNKNOWN_MESSAGE_TYPE;
+        Integer configuredLimit = messageType == null ? null : LIMITS_PER_SECOND.get(messageType);
+        int limit = configuredLimit == null ? UNKNOWN_MESSAGE_LIMIT : configuredLimit;
+        String budgetKey = configuredLimit == null ? UNKNOWN_MESSAGE_TYPE : messageType;
         ConnectionBudget budget = connections.computeIfAbsent(connectionId, ignored -> new ConnectionBudget());
         return budget.tryAcquire(budgetKey, limit, System.nanoTime());
     }
