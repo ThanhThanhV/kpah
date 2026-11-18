@@ -37,6 +37,7 @@ export class GameScene extends Phaser.Scene {
   private vitalsLabel?: Phaser.GameObjects.Text;
   private progressionLabel?: Phaser.GameObjects.Text;
   private combatLabel?: Phaser.GameObjects.Text;
+  private worldStateLabel?: Phaser.GameObjects.Text;
   private unsubscribeSnapshot?: () => void;
   private unsubscribeStatus?: () => void;
   private unsubscribeCombat?: () => void;
@@ -120,7 +121,11 @@ export class GameScene extends Phaser.Scene {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#b9dcff",
       backgroundColor: "#14262acc", padding: { x: 7, y: 4 }
     }).setScrollFactor(0).setDepth(2000);
-    this.add.text(18, 132, "WASD / arrows · Space: attack · Shift: Power Strike · Q: Arcane Bolt · E: talk · J: quest · I: bag", {
+    this.worldStateLabel = this.add.text(18, 132, "World state: waiting for snapshot…", {
+      fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#b8d8c8",
+      backgroundColor: "#14262acc", padding: { x: 7, y: 4 }
+    }).setScrollFactor(0).setDepth(2000);
+    this.add.text(18, 154, "WASD / arrows · Space: attack · Shift: Power Strike · Q: Arcane Bolt · E: talk · J: quest · I: bag", {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#c0d0c4"
     }).setScrollFactor(0).setDepth(2000);
     this.createQuestJournal();
@@ -436,6 +441,11 @@ export class GameScene extends Phaser.Scene {
 
   private applyWorldSnapshot(snapshot: WorldSnapshot): void {
     const ownPlayer = this.worldSocket.getOwnPlayer(snapshot);
+    const mapId = ownPlayer?.mapId ?? snapshot.players[0]?.mapId ?? "unknown";
+    this.worldStateLabel?.setText(
+      `Map: ${mapId} · Players: ${snapshot.players.length} · Monsters: ${snapshot.monsters.length} · Loot: ${snapshot.lootDrops.length}`
+    );
+    this.worldStateLabel?.setColor(snapshot.monsters.length > 0 ? "#9ee0a4" : "#f0d18b");
     if (ownPlayer) {
       this.ensureLocalCharacterVisual(ownPlayer.classCode ?? "warrior", ownPlayer.name ?? "Adventurer", ownPlayer.maxHp, ownPlayer.hp);
       this.playerX = Phaser.Math.Linear(this.playerX, ownPlayer.x, 0.35);
