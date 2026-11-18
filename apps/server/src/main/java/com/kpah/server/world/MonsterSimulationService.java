@@ -184,8 +184,14 @@ public class MonsterSimulationService {
         private long heavyStrikeUntil;
         private double heavyStrikeX;
         private double heavyStrikeY;
+        private double heavyStrikeWidth;
+        private double heavyStrikeHeight;
+        private double heavyStrikeAngle;
+        private String heavyStrikeShape = "";
         private static final long HEAVY_STRIKE_WINDUP_MILLIS = 1_000L;
         private static final double HEAVY_STRIKE_RADIUS = 92.0;
+        private static final double HEAVY_STRIKE_SWEEP_WIDTH = 184.0;
+        private static final double HEAVY_STRIKE_SWEEP_HEIGHT = 64.0;
 
         private MonsterRuntime(String id, String mapId, MonsterSpawnRegion region, MonsterArchetype archetype,
                                double homeX, double homeY, GridPathfinder pathfinder) {
@@ -205,8 +211,7 @@ public class MonsterSimulationService {
                 int damage = (int) Math.ceil(archetype.attackDamage() * 1.8);
                 return players.stream()
                         .filter(player -> mapId.equals(player.mapId()))
-                        .filter(player -> distance(player.x(), player.y(), heavyStrikeX, heavyStrikeY)
-                                <= HEAVY_STRIKE_RADIUS)
+                        .filter(this::insideHeavyStrike)
                         .map(player -> new MonsterPlayerAttack(player.playerId(), id,
                                 archetype.displayName(), damage, "monster-special"))
                         .toList();
@@ -243,8 +248,21 @@ public class MonsterSimulationService {
                         boolean specialAttack = archetype.behavior() == MonsterBehavior.ELITE
                                 && attacksPerformed % 3 == 0;
                         if (specialAttack) {
-                            heavyStrikeX = target.x();
-                            heavyStrikeY = target.y();
+                            if (archetype.specialAttack() == MonsterSpecialAttack.SWEEP) {
+                                heavyStrikeAngle = Math.atan2(target.y() - y, target.x() - x);
+                                heavyStrikeWidth = HEAVY_STRIKE_SWEEP_WIDTH;
+                                heavyStrikeHeight = HEAVY_STRIKE_SWEEP_HEIGHT;
+                                heavyStrikeX = x + Math.cos(heavyStrikeAngle) * (heavyStrikeWidth / 2.0 + 8.0);
+                                heavyStrikeY = y + Math.sin(heavyStrikeAngle) * (heavyStrikeWidth / 2.0 + 8.0);
+                                heavyStrikeShape = "SWEEP";
+                            } else {
+                                heavyStrikeX = target.x();
+                                heavyStrikeY = target.y();
+                                heavyStrikeWidth = 0;
+                                heavyStrikeHeight = 0;
+                                heavyStrikeAngle = 0;
+                                heavyStrikeShape = "CIRCLE";
+                            }
                             heavyStrikeUntil = nowMillis + HEAVY_STRIKE_WINDUP_MILLIS;
                             state = "windup";
                             return List.of();
@@ -270,6 +288,15 @@ public class MonsterSimulationService {
             moveAlongPath(targetX, targetY, nowMillis,
                     region.moveSpeed() * archetype.moveSpeedMultiplier() * 0.1);
             return List.of();
+        }
+
+        private boolean insideHeavyStrike(MonsterTarget player) {
+            if ("SWEEP".equals(heavyStrikeShape)) {
+                return MonsterAttackArea.containsSweep(heavyStrikeX, heavyStrikeY,
+                        heavyStrikeWidth, heavyStrikeHeight, heavyStrikeAngle, player.x(), player.y());
+            }
+            return MonsterAttackArea.containsCircle(heavyStrikeX, heavyStrikeY,
+                    HEAVY_STRIKE_RADIUS, player.x(), player.y());
         }
 
         private void moveAlongPath(double targetX, double targetY, long nowMillis, double maxStep) {
@@ -328,7 +355,11 @@ public class MonsterSimulationService {
                     x, y, homeX, homeY, hp, archetype.maxHp(), state,
                     heavyStrikeUntil > 0 ? heavyStrikeX : 0,
                     heavyStrikeUntil > 0 ? heavyStrikeY : 0,
-                    heavyStrikeUntil > 0 ? HEAVY_STRIKE_RADIUS : 0);
+                    heavyStrikeUntil > 0 && "CIRCLE".equals(heavyStrikeShape) ? HEAVY_STRIKE_RADIUS : 0,
+                    heavyStrikeUntil > 0 ? heavyStrikeWidth : 0,
+                    heavyStrikeUntil > 0 ? heavyStrikeHeight : 0,
+                    heavyStrikeUntil > 0 ? heavyStrikeAngle : 0,
+                    heavyStrikeUntil > 0 ? heavyStrikeShape : "");
         }
     }
 
