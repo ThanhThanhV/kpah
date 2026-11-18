@@ -36,7 +36,7 @@ export class SpriteSheetAnimationRegistry {
     if (!definition.characterKey.trim() || !definition.path.trim()
         || !Number.isInteger(definition.frameWidth) || definition.frameWidth <= 0
         || !Number.isInteger(definition.frameHeight) || definition.frameHeight <= 0) {
-      throw new Error("Invalid spritesheet definition for character \\"" + definition.characterKey + "\\".");
+      throw new Error(`Invalid spritesheet definition for character "${definition.characterKey}".`);
     }
     if (definition.animations.length === 0) {
       throw new Error("Character \"" + definition.characterKey + "\" has no animation clips.");
