@@ -252,3 +252,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - The server answers heartbeat messages with a pong frame without routing them through gameplay command handling.
 - Unexpected disconnects trigger bounded exponential reconnect delays (1–30 seconds); scene shutdown cancels reconnect and heartbeat timers.
 - Authentication continues to use the existing session token and selected character when reconnecting; gameplay authority and snapshot handling are unchanged.
+
+
+## Latest implementation batch — stop reconnecting after authentication rejection
+- The WebSocket client now distinguishes retryable disconnects from server policy-violation closes (1008).
+- Invalid/expired session credentials and character ownership rejections no longer trigger an endless reconnect loop with the same credentials.
+- Transient network failures and heartbeat timeouts continue to use bounded exponential reconnect; scene shutdown behavior is unchanged.

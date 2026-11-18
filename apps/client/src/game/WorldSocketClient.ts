@@ -56,11 +56,13 @@ export class WorldSocketClient {
       this.statusListeners.forEach((listener) => listener(true));
       this.startHeartbeat(socket);
     });
-    socket.addEventListener("close", () => {
+    socket.addEventListener("close", (event) => {
       this.stopHeartbeat();
       if (this.socket === socket) this.socket = undefined;
       this.statusListeners.forEach((listener) => listener(false));
-      this.scheduleReconnect();
+      // Policy violations include expired/invalid sessions and character ownership failures.
+      // Reconnecting with the same credentials cannot recover; let the login flow refresh them.
+      if (event.code !== 1008) this.scheduleReconnect();
     });
     socket.addEventListener("error", () => {
       this.statusListeners.forEach((listener) => listener(false));
