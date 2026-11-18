@@ -49,6 +49,18 @@ class MonsterDropTableTest {
     }
 
     @Test
+    void ancientGuardianGuaranteesItsCoreAndForestResin() {
+        var drops = table.roll("forest-edge", "ancient-guardian",
+                new Random(0) { @Override public double nextDouble() { return 0.0; } });
+
+        assertEquals(2, drops.size());
+        assertTrue(drops.stream().anyMatch(drop -> drop.itemCode().equals("ancient-guardian-core")
+                && drop.amount() == 1));
+        assertTrue(drops.stream().anyMatch(drop -> drop.itemCode().equals("forest-resin")
+                && drop.amount() >= 2 && drop.amount() <= 4));
+    }
+
+    @Test
     void unknownMonsterHasNoConfiguredDrops() {
         assertTrue(table.roll("unknown-monster", new Random(7)).isEmpty());
     }
