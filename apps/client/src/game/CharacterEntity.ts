@@ -86,6 +86,7 @@ export class CharacterEntity {
     }
     if (this.action === "idle" || this.action === "walk") {
       this.action = this.moving ? "walk" : "idle";
+      this.visualAdapter?.play(this.action, this.facing);
     }
   }
 
