@@ -12,13 +12,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class MonsterSimulationService {
-    private static final int SLIME_MAX_HP = 60;
     private static final int BASIC_ATTACK_DAMAGE = 20;
     private static final double BASIC_ATTACK_RANGE = 58.0;
-    private static final double AGGRO_RANGE = 150.0;
-    private static final double MONSTER_ATTACK_RANGE = 30.0;
-    private static final int MONSTER_ATTACK_DAMAGE = 8;
-    private static final long MONSTER_ATTACK_COOLDOWN_MILLIS = 1_100L;
 
     private final Map<String, List<MonsterSpawnRegion>> regionsByMap = new ConcurrentHashMap<>();
     private final Map<String, GridPathfinder> pathfindersByMap = new ConcurrentHashMap<>();
@@ -26,15 +21,19 @@ public class MonsterSimulationService {
     private final Map<String, Map<String, Long>> nextSpawnAt = new ConcurrentHashMap<>();
     private final Map<String, LootDropState> lootDrops = new ConcurrentHashMap<>();
     private final MonsterDropTable dropTable;
+    private final MonsterArchetypeRegistry archetypes;
 
-    public MonsterSimulationService(StarterWorldRegistry worlds, MonsterDropTable dropTable) {
+    public MonsterSimulationService(StarterWorldRegistry worlds, MonsterDropTable dropTable,
+                                    MonsterArchetypeRegistry archetypes) {
         this.dropTable = dropTable;
+        this.archetypes = archetypes;
         for (WorldMapGeometry map : worlds.all()) {
             regionsByMap.put(map.mapId(), map.monsterSpawns());
             pathfindersByMap.put(map.mapId(), new GridPathfinder(map));
             Map<String, Long> schedules = new ConcurrentHashMap<>();
             nextSpawnAt.put(map.mapId(), schedules);
             for (MonsterSpawnRegion region : map.monsterSpawns()) {
+                archetypes.require(region.monsterType());
                 for (int i = 0; i < region.maxAlive(); i++) spawn(map.mapId(), region, i);
                 schedules.put(region.id(), 0L);
             }
@@ -140,7 +139,8 @@ public class MonsterSimulationService {
         double offsetY = (ordinal % 2 == 0 ? -1 : 1) * 12.0;
         double homeX = clamp(region.centerX() + offsetX, region.x(), region.x() + region.width());
         double homeY = clamp(region.centerY() + offsetY, region.y(), region.y() + region.height());
-        monsters.put(id, new MonsterRuntime(id, mapId, region, homeX, homeY, pathfindersByMap.get(mapId)));
+        monsters.put(id, new MonsterRuntime(id, mapId, region, archetypes.require(region.monsterType()),
+                homeX, homeY, pathfindersByMap.get(mapId)));
     }
 
     private static double clamp(double value, double min, double max) {
@@ -151,6 +151,7 @@ public class MonsterSimulationService {
         private final String id;
         private final String mapId;
         private final MonsterSpawnRegion region;
+        private final MonsterArchetype archetype;
         private final double homeX;
         private final double homeY;
         private final GridPathfinder pathfinder;
@@ -162,38 +163,40 @@ public class MonsterSimulationService {
         private final long phase = System.nanoTime() / 1_000_000L;
         private volatile double x;
         private volatile double y;
-        private volatile int hp = SLIME_MAX_HP;
+        private volatile int hp;
         private volatile long respawnAt = Long.MAX_VALUE;
         private volatile long nextAttackAt;
         private volatile String targetPlayerId;
         private volatile String state = "idle";
 
-        private MonsterRuntime(String id, String mapId, MonsterSpawnRegion region, double homeX, double homeY,
-                               GridPathfinder pathfinder) {
-            this.id = id; this.mapId = mapId; this.region = region; this.pathfinder = pathfinder;
+        private MonsterRuntime(String id, String mapId, MonsterSpawnRegion region, MonsterArchetype archetype,
+                               double homeX, double homeY, GridPathfinder pathfinder) {
+            this.id = id; this.mapId = mapId; this.region = region; this.archetype = archetype;
+            this.pathfinder = pathfinder; this.hp = archetype.maxHp();
             this.homeX = homeX; this.homeY = homeY; this.x = homeX; this.y = homeY;
         }
 
         private MonsterPlayerAttack advance(long nowMillis, Collection<MonsterTarget> players) {
             MonsterTarget target = players.stream()
                     .filter(player -> mapId.equals(player.mapId()))
-                    .filter(player -> distance(player.x(), player.y(), x, y) <= AGGRO_RANGE)
+                    .filter(player -> distance(player.x(), player.y(), x, y) <= archetype.aggroRange())
                     .min(Comparator.comparingDouble(player -> distance(player.x(), player.y(), x, y)))
                     .orElse(null);
 
             if (target != null && insideLeash(target.x(), target.y())) {
                 targetPlayerId = target.playerId();
                 double distance = distance(target.x(), target.y(), x, y);
-                if (distance <= MONSTER_ATTACK_RANGE) {
+                if (distance <= archetype.attackRange()) {
                     state = "attack";
                     if (nowMillis >= nextAttackAt) {
-                        nextAttackAt = nowMillis + MONSTER_ATTACK_COOLDOWN_MILLIS;
-                        return new MonsterPlayerAttack(target.playerId(), id, MONSTER_ATTACK_DAMAGE);
+                        nextAttackAt = nowMillis + archetype.attackCooldownMillis();
+                        return new MonsterPlayerAttack(target.playerId(), id, archetype.attackDamage());
                     }
                     return null;
                 }
                 state = "aggro";
-                moveAlongPath(target.x(), target.y(), nowMillis, region.moveSpeed() * 0.1);
+                moveAlongPath(target.x(), target.y(), nowMillis,
+                        region.moveSpeed() * archetype.moveSpeedMultiplier() * 0.1);
                 return null;
             }
 
@@ -204,7 +207,8 @@ public class MonsterSimulationService {
             double angle = (nowMillis - phase) / 2400.0 + (id.hashCode() & 0xff) / 255.0 * Math.PI * 2;
             double targetX = homeX + Math.cos(angle) * radiusX;
             double targetY = homeY + Math.sin(angle) * radiusY;
-            moveAlongPath(targetX, targetY, nowMillis, region.moveSpeed() * 0.1);
+            moveAlongPath(targetX, targetY, nowMillis,
+                    region.moveSpeed() * archetype.moveSpeedMultiplier() * 0.1);
             return null;
         }
 
@@ -261,7 +265,7 @@ public class MonsterSimulationService {
 
         private MonsterState snapshot() {
             return new MonsterState(id, region.monsterType(), mapId, region.id(),
-                    x, y, homeX, homeY, hp, SLIME_MAX_HP, state);
+                    x, y, homeX, homeY, hp, archetype.maxHp(), state);
         }
     }
 
