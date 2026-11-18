@@ -22,12 +22,16 @@ class QuestCatalogTest {
     @Test
     void forestWardenOffersWolfHuntAfterForestSlimeQuest() {
         var quests = catalog.findByNpcId("105");
-        assertEquals(2, quests.size());
+        assertEquals(3, quests.size());
         assertEquals("forest-slime-hunt", quests.get(0).questId());
         assertEquals("forest-wolf-hunt", quests.get(1).questId());
         assertEquals("forest-wolf", quests.get(1).targetMonsterType());
         assertEquals(3, quests.get(1).requiredKills());
         assertEquals(350, quests.get(1).experienceReward());
+        assertEquals("alpha-wolf-hunt", quests.get(2).questId());
+        assertEquals("alpha-wolf", quests.get(2).targetMonsterType());
+        assertEquals(1, quests.get(2).requiredKills());
+        assertEquals(700, quests.get(2).experienceReward());
     }
 
     @Test
