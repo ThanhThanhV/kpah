@@ -443,13 +443,27 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     }
 
     private void broadcastCombat(String mapId, Object payload) {
+        Map<?, ?> event = payload instanceof Map<?, ?> values ? values : Map.of();
+        String sourcePlayerId = event.get("sourcePlayerId") instanceof String value ? value : null;
+        String targetPlayerId = event.get("targetPlayerId") instanceof String value ? value : null;
+        String anchorPlayerId = sourcePlayerId != null ? sourcePlayerId : targetPlayerId;
+        ConnectedPlayer anchor = anchorPlayerId == null ? null : players.values().stream()
+                .filter(candidate -> anchorPlayerId.equals(candidate.playerId()))
+                .filter(candidate -> mapId.equals(candidate.state().mapId()))
+                .findFirst().orElse(null);
+
         for (ConnectedPlayer player : players.values()) {
-            if (mapId.equals(player.state().mapId()) && player.session().isOpen()) {
-                try {
-                    send(player.session(), payload);
-                } catch (IOException ignored) {
-                    // The websocket close lifecycle removes failed sessions.
-                }
+            if (!mapId.equals(player.state().mapId()) || !player.session().isOpen()) continue;
+            boolean participant = player.playerId().equals(sourcePlayerId)
+                    || player.playerId().equals(targetPlayerId);
+            boolean nearby = anchor == null || isWithinInterest(
+                    player.state().x(), player.state().y(),
+                    anchor.state().x(), anchor.state().y());
+            if (!participant && !nearby) continue;
+            try {
+                send(player.session(), payload);
+            } catch (IOException ignored) {
+                // The websocket close lifecycle removes failed sessions.
             }
         }
     }
