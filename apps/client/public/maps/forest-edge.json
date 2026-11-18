@@ -1009,6 +1009,22 @@
           "y": 192,
           "width": 96,
           "height": 128
+        },
+        {
+          "id": 105,
+          "name": "Forest Warden",
+          "class": "npc",
+          "x": 160,
+          "y": 336,
+          "width": 32,
+          "height": 48,
+          "properties": [
+            {
+              "name": "dialogue",
+              "type": "string",
+              "value": "The forest edge is overrun. Can you help protect it?"
+            }
+          ]
         }
       ]
     }
