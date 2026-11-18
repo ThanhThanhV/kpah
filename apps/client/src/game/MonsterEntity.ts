@@ -8,6 +8,7 @@ export class MonsterEntity {
   private readonly name: Phaser.GameObjects.Text;
   private readonly hpBack: Phaser.GameObjects.Rectangle;
   private readonly hpFill: Phaser.GameObjects.Rectangle;
+  private readonly heavyStrikeTelegraph: Phaser.GameObjects.Ellipse;
   private x: number;
   private y: number;
   private readonly bodyWidth: number;
@@ -39,7 +40,11 @@ export class MonsterEntity {
     this.hpBack = scene.add.rectangle(this.x, hpY, this.bodyWidth + 2, 3, 0x172126).setOrigin(0.5, 0.5).setDepth(this.y + 2);
     this.hpFill = scene.add.rectangle(this.x - (this.bodyWidth + 2) / 2, hpY,
       this.bodyWidth + 2, 3, 0xe45c58).setOrigin(0, 0.5).setDepth(this.y + 3);
+    this.heavyStrikeTelegraph = scene.add.ellipse(snapshot.attackX ?? 0, snapshot.attackY ?? 0,
+      (snapshot.attackRadius ?? 0) * 2, (snapshot.attackRadius ?? 0) * 2, 0xff3f36, 0.12)
+      .setStrokeStyle(3, 0xff554d, 0.95).setDepth(9000).setVisible(false);
     this.setHp(snapshot.hp, snapshot.maxHp);
+    this.updateTelegraph(snapshot);
   }
 
   setTarget(snapshot: WorldMonsterSnapshot): void {
@@ -53,11 +58,12 @@ export class MonsterEntity {
     this.hpBack.setPosition(this.x, hpY).setDepth(this.y + 2);
     this.hpFill.setPosition(this.x - (this.bodyWidth + 2) / 2, hpY).setDepth(this.y + 3);
     this.setHp(snapshot.hp, snapshot.maxHp);
+    this.updateTelegraph(snapshot);
   }
 
   destroy(): void {
     this.body.destroy(); this.highlight.destroy(); this.name.destroy();
-    this.hpBack.destroy(); this.hpFill.destroy();
+    this.hpBack.destroy(); this.hpFill.destroy(); this.heavyStrikeTelegraph.destroy();
   }
 
   showCombatHit(amount: number, isSkill: boolean): void {
@@ -90,6 +96,16 @@ export class MonsterEntity {
     this.scene.tweens.add({
       targets: this.body, alpha: 0.45, duration: 65, yoyo: true, repeat: 1
     });
+  }
+
+  private updateTelegraph(snapshot: WorldMonsterSnapshot): void {
+    const radius = snapshot.attackRadius ?? 0;
+    const active = snapshot.state === "windup" && radius > 0;
+    this.heavyStrikeTelegraph.setVisible(active);
+    if (active) {
+      this.heavyStrikeTelegraph.setPosition(snapshot.attackX ?? snapshot.x, snapshot.attackY ?? snapshot.y)
+        .setDisplaySize(radius * 2, radius * 2);
+    }
   }
 
   private setHp(hp: number, maxHp: number): void {
