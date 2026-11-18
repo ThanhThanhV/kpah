@@ -58,27 +58,29 @@ Snapshots include all connected players in the same map. The client identifies i
 
 - The gateway is a development transport, not a production-ready zone simulation.
 - Live positions are held in memory and are persisted to PostgreSQL as movement updates; multi-zone coordination is not implemented.
-- Per-IP throttles currently protect login and registration. World-message rate limiting, interest management and delta compression remain outstanding.
+- Per-IP throttles currently protect login and registration. World-message rate limiting is implemented per connection; interest management and delta compression remain outstanding.
+- Browser inbound world messages are capped at 8,192 Java characters before JSON parsing and oversized frames are closed with code 1009. This early handler guard bounds parsing/dispatch work; the WebSocket container may already have buffered the incoming frame.
 - The browser stores the opaque session token in localStorage and sends it as a custom WebSocket subprotocol. Production handshake/header logging must redact credentials, public deployments must use HTTPS/WSS, and browser XSS exposure still needs production hardening.
 - The client renders local and remote player entities from authoritative snapshots; original spritesheet/Spine assets are not integrated yet.
 - Server map geometry is still a manually maintained registry and must be generated from the same versioned map source as the Tiled client map.
 
-
 ## Remote character facing
+
 Facing is derived from consecutive authoritative position snapshots. When the displacement is non-zero, clients select the dominant cardinal axis (horizontal or vertical); exact diagonal ties resolve vertically. This keeps remote sprite orientation consistent without trusting a client-supplied facing value. The interpolated render position remains client-side and does not affect server movement authority.
 
-
 ## Remote combat animation events
+
 The server broadcasts accepted combat actions to every connected player on the same map. Events identify the authoritative source player for basic attacks and skill casts, or the target player for monster-hit reactions. Clients use these events only for presentation: remote characters play attack/cast/hit animations while damage, target validation and world state remain server-authoritative.
 
 ## Heartbeat and reconnect lifecycle
+
 - The client sends an application-level `ping` every 20 seconds while connected; the server replies with `pong`.
 - If a pong is not received within 10 seconds, the client closes the stale socket and enters the retryable reconnect path.
 - Unexpected network disconnects reconnect with bounded exponential backoff from 1 to 30 seconds. Destroying the scene cancels heartbeat and reconnect timers.
 - A policy-violation close (1008) is terminal for the current credentials/character selection: the client does not retry the same WebSocket credentials. It revalidates `/api/auth/me` and returns a valid account to character selection, or returns an expired account to sign-in.
 
-
 ## World message rate limits
+
 The world gateway applies per-connection fixed-window limits before gameplay dispatch:
 
 | Message type | Maximum |
@@ -88,6 +90,6 @@ The world gateway applies per-connection fixed-window limits before gameplay dis
 | `interact` | 3 / second |
 | `equip`, `unequip` | 5 / second each |
 | `ping` | 2 / second |
-| Unsupported message types | 10 / second |
+| Unsupported message types (shared bucket) | 10 / second |
 
-Excess frames are silently dropped before persistence, combat processing or map broadcast. Counters are scoped to a WebSocket connection and released when it closes. These in-memory limits protect a single server process; they are not a substitute for distributed quotas when horizontally scaling.
+All unsupported or missing message types share one rate-limit bucket per connection, preventing arbitrary type strings from creating unbounded counters. Excess frames are silently dropped before persistence, combat processing or map broadcast. Counters are scoped to a WebSocket connection and released when it closes. These in-memory limits protect a single server process; they are not a substitute for distributed quotas when horizontally scaling.

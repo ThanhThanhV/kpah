@@ -16,15 +16,16 @@ public class WorldMessageRateLimiter {
             "unequip", 5,
             "ping", 2);
     private static final int UNKNOWN_MESSAGE_LIMIT = 10;
+    private static final String UNKNOWN_MESSAGE_TYPE = "<unknown>";
 
     private final Map<String, ConnectionBudget> connections = new ConcurrentHashMap<>();
 
     public boolean tryAcquire(String connectionId, String messageType) {
         if (connectionId == null || connectionId.isBlank()) return false;
-        String type = messageType == null || messageType.isBlank() ? "<missing>" : messageType;
-        int limit = LIMITS_PER_SECOND.getOrDefault(type, UNKNOWN_MESSAGE_LIMIT);
+        int limit = LIMITS_PER_SECOND.getOrDefault(messageType, UNKNOWN_MESSAGE_LIMIT);
+        String budgetKey = LIMITS_PER_SECOND.containsKey(messageType) ? messageType : UNKNOWN_MESSAGE_TYPE;
         ConnectionBudget budget = connections.computeIfAbsent(connectionId, ignored -> new ConnectionBudget());
-        return budget.tryAcquire(type, limit, System.nanoTime());
+        return budget.tryAcquire(budgetKey, limit, System.nanoTime());
     }
 
     public void remove(String connectionId) {

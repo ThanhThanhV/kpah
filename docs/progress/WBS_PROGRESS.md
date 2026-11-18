@@ -280,3 +280,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - NPC interaction and inventory/equipment commands accept up to 3 and 5 requests/second respectively; heartbeat is capped at 2/second and unsupported message types at 10/second.
 - Rate-limit state is synchronized per connection and removed on WebSocket close. Rejected frames are dropped without sending an error for every excess frame, preventing response amplification.
 - This is an in-process per-connection safeguard; cross-instance/global quotas and distributed abuse controls remain production work.
+
+
+## Latest implementation batch — bound inbound world WebSocket work
+- Added an 8,192-character inbound message ceiling before JSON parsing; oversized client frames are closed with WebSocket status 1009.
+- Normalized all unsupported and missing message types into one shared per-connection rate-limit bucket. Arbitrary client-supplied type strings can no longer grow the per-connection window map without bound.
+- Kept the existing per-command budgets and server-authoritative gameplay flow unchanged.
+- Documented an important boundary: the handler guard limits JSON parsing and dispatch, but the WebSocket container may already have buffered the frame; configure container-level frame limits at deployment for protection against oversized transport allocation.
