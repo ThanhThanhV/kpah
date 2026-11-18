@@ -21,6 +21,7 @@ export interface WorldPlayerSnapshot {
 export interface WorldMonsterSnapshot {
   monsterId: string; monsterType: string; mapId: string; spawnRegionId: string;
   x: number; y: number; homeX: number; homeY: number; hp: number; maxHp: number; state: string;
+  attackX?: number; attackY?: number; attackRadius?: number;
 }
 export interface WorldLootSnapshot {
   dropId: string; itemCode: string; amount: number; mapId: string; x: number; y: number;
