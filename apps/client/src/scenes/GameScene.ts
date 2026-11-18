@@ -596,7 +596,6 @@ export class GameScene extends Phaser.Scene {
     if (map.id !== mapId) return;
 
     this.currentMapId = map.id;
-    this.currentMapDefinition = map;
     this.areaNameLabel?.setText(`Area: ${map.name}`);
     this.drawMiniMap(map);
     this.renderWorldMapPanel();
