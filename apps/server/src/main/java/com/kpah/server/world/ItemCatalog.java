@@ -10,6 +10,7 @@ public class ItemCatalog {
             "forest-resin", new ItemDefinition("forest-resin", "Forest Resin", "material", "", 0, 0, 99),
             "wolf-fang", new ItemDefinition("wolf-fang", "Wolf Fang", "material", "", 0, 0, 99),
             "alpha-wolf-pelt", new ItemDefinition("alpha-wolf-pelt", "Alpha Wolf Pelt", "material", "", 0, 0, 20),
+            "ancient-guardian-core", new ItemDefinition("ancient-guardian-core", "Ancient Guardian Core", "material", "", 0, 0, 10),
             "novice-sword", new ItemDefinition("novice-sword", "Novice Sword", "equipment", "weapon", 5, 0, 1),
             "cloth-tunic", new ItemDefinition("cloth-tunic", "Cloth Tunic", "equipment", "body", 0, 3, 1)
     );
