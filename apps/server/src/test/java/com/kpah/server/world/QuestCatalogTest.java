@@ -13,6 +13,7 @@ class QuestCatalogTest {
         QuestCatalog.QuestDefinition definition = catalog.findByNpcId("6");
 
         assertEquals("meadow-slime-hunt", definition.questId());
+        assertEquals("starter-meadow", definition.targetMapId());
         assertEquals("green-slime", definition.targetMonsterType());
         assertEquals(3, definition.requiredKills());
         assertEquals(100, definition.experienceReward());
