@@ -387,3 +387,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 ## WebSocket Origin pattern correction
 - Corrected the Spring `allowedOriginPatterns` port wildcard to its documented bracket form (`:[*]`). The previous `:*` form does not express Spring's wildcard-port syntax and can still reject the browser Origin with HTTP 403.
 - Local validation remains pending restart and browser handshake confirmation.
+
+
+## Latest implementation batch — negotiate the authenticated WebSocket subprotocol
+- Configured the world WebSocket handshake handler to select and echo the offered `auth.<session-token>` subprotocol after the handshake interceptor validates its format.
+- This addresses the browser error where the client sent `Sec-WebSocket-Protocol` but the server returned no selected protocol; the token remains excluded from URL query parameters and application logs.
+- Runtime verification still requires pulling the commit, restarting the backend and confirming HTTP `101 Switching Protocols` in the browser Network panel.
