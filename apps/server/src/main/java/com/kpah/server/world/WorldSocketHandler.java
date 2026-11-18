@@ -462,7 +462,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     "inventory", player.inventory(),
                     "equipment", player.equipment(),
                     "itemCatalog", items.all(),
-                    "quest", quests.snapshot(player.playerId()));
+                    "quest", quests.snapshot(player.playerId()),
+                    "quests", quests.snapshotAll(player.playerId()));
             Map<String, Object> payload = Map.of(
                     "type", "snapshot",
                     "players", visiblePlayers,
