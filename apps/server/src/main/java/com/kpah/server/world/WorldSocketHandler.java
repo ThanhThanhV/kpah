@@ -130,6 +130,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         ConnectedPlayer removed = players.remove(session.getId());
         if (removed != null) {
             combat.removePlayer(removed.playerId());
+            skills.removePlayer(removed.playerId());
             broadcast(removed.state().mapId());
         }
     }
