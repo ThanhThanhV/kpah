@@ -489,3 +489,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Registered Forest Sentinel patrol and Alpha Wolf elite archetype profiles for the next spawn-configuration pass.
 - Basic attacks and skill hits both notify the simulation so defensive retaliation is consistent across combat paths.
 - Added registry tests for all four behavior profiles. Runtime playtesting remains pending.
+
+
+## Latest implementation batch — Forest Wolf hunting quest
+- Added a second Forest Warden quest: defeat 3 Forest Wolves on Forest Edge for 350 EXP.
+- One NPC can now offer multiple quests sequentially: the next quest becomes available after the previous quest is claimed; active and ready quests retain their existing progress/claim behavior.
+- Quest kill progression remains scoped to the configured map and monster type, so Forest Wolves elsewhere cannot advance this objective.
+- Added catalog coverage for the new quest and the Forest Warden's two-quest sequence. Local playtesting remains pending.
