@@ -9,6 +9,7 @@ public class ItemCatalog {
             "green-slime-material", new ItemDefinition("green-slime-material", "Green Slime Gel", "material", "", 0, 0, 99),
             "forest-resin", new ItemDefinition("forest-resin", "Forest Resin", "material", "", 0, 0, 99),
             "wolf-fang", new ItemDefinition("wolf-fang", "Wolf Fang", "material", "", 0, 0, 99),
+            "alpha-wolf-pelt", new ItemDefinition("alpha-wolf-pelt", "Alpha Wolf Pelt", "material", "", 0, 0, 20),
             "novice-sword", new ItemDefinition("novice-sword", "Novice Sword", "equipment", "weapon", 5, 0, 1),
             "cloth-tunic", new ItemDefinition("cloth-tunic", "Cloth Tunic", "equipment", "body", 0, 3, 1)
     );
