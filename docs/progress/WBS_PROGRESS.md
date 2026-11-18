@@ -319,3 +319,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Unequip now checks that the item can be returned to inventory before changing the player's equipment state.
 - A full 20-slot inventory can still accept a returned item when its existing stack has room; otherwise the equipment operation is rejected without mutating player state.
 - Added coverage for returning an item into an existing stack while all 20 inventory slots are occupied.
+
+
+## Latest implementation batch — scale recipient-private world snapshots
+- Changed map broadcasts to construct public player, monster and loot snapshots once, then reuse those immutable views for every recipient on that map.
+- Inventory, equipment, item catalog and quest progress now travel in a separate recipient-only `selfState` field; remote player entries never contain those fields.
+- The client merges `selfState` into its own player record before dispatching the snapshot, keeping the existing game scene and HUD contract intact.
+- Snapshot construction is now O(N) per map broadcast for public state instead of rebuilding the N-player list N times; recipient-specific payload envelopes remain O(N).
+- CI is the verification gate for this batch.
