@@ -101,3 +101,11 @@ All unsupported or missing message types share one rate-limit bucket per connect
 - Inventory, equipment, item catalog and quest progress are sent in a separate `selfState` object only to the matching authenticated WebSocket recipient.
 - The client merges `selfState` into its own player snapshot before notifying the scene, so existing HUD and rendering code remains unchanged.
 - This removes the prior O(N²) public-player serialization work per map broadcast while preserving the public/private state boundary.
+
+
+## Movement persistence policy
+- Client movement remains server-authoritative and is broadcast immediately after validation.
+- Position persistence is throttled to at most once per player connection every 5 seconds instead of writing the character row on every accepted movement packet.
+- The latest position is always persisted when the WebSocket connection closes; character creation/login still persists the initial state.
+- Combat, inventory, equipment, progression and quest-related persistence paths remain immediate.
+- A process crash can therefore lose at most the most recent 5 seconds of movement, while avoiding high-frequency database writes during normal movement.
