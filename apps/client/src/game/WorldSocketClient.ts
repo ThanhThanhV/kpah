@@ -5,7 +5,7 @@ export interface WorldQuestEvent { type: "quest"; npcName: string; message: stri
 export interface WorldCombatEvent { type: "combat"; action: string; skillId?: string; skillName?: string; targetMonsterId?: string; damage?: number; monsterHp?: number; experienceReward?: number; }
 export interface WorldItemDefinition { itemCode: string; name: string; type: string; slot: string; attackBonus: number; defenseBonus: number; maxStack: number; }
 export interface WorldPlayerSnapshot {
-  playerId: string; mapId: string; x: number; y: number; sequence: number;
+  playerId: string; name?: string; classCode?: string; mapId: string; x: number; y: number; sequence: number;
   hp: number; maxHp: number; dead: boolean;
   experience: number; level: number; inventory: Record<string, number>;
   equipment?: Record<string, string>; itemCatalog?: Record<string, WorldItemDefinition>;

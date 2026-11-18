@@ -160,7 +160,7 @@ export function renderCharacterSelection(
   root.hidden = false;
   root.innerHTML = `
     <section class="auth-card character-select-card">
-      <div class="auth-kicker">ACCOUNT · ${session.email}</div>
+      <div id="character-account" class="auth-kicker">ACCOUNT</div>
       <h1>Choose your character</h1>
       <p>Each account can keep up to three characters. Your progress is saved separately.</p>
       <div id="character-list" class="character-list">Loading characters…</div>
@@ -179,6 +179,7 @@ export function renderCharacterSelection(
         <button type="submit">Create character</button>
       </form>
     </section>`;
+  root.querySelector<HTMLElement>("#character-account")!.textContent = "ACCOUNT · " + session.email;
   const list = root.querySelector<HTMLElement>("#character-list")!;
   const form = root.querySelector<HTMLFormElement>("#character-create-form")!;
   const error = root.querySelector<HTMLElement>("#character-error")!;

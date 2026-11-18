@@ -310,7 +310,7 @@ export class GameScene extends Phaser.Scene {
       let view = this.remotePlayers.get(remote.playerId);
       if (!view) {
         const entity = new CharacterEntity(this, remote.x, remote.y, {
-          key: "remote-player", displayName: "Adventurer", maxHp: 100,
+          key: "remote-player", displayName: remote.name ?? "Adventurer", maxHp: 100,
           feetPivot: { x: 0.5, y: 1 }, logicalSize: { width: 44, height: 64 }
         });
         view = { entity, x: remote.x, y: remote.y, targetX: remote.x, targetY: remote.y, lastSeenAt: now };

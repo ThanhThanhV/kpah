@@ -294,6 +294,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 .filter(player -> mapId.equals(player.state().mapId()))
                 .map(player -> Map.ofEntries(
                         Map.entry("playerId", player.playerId()),
+                        Map.entry("name", player.characterName()),
+                        Map.entry("classCode", player.classCode()),
                         Map.entry("mapId", player.state().mapId()),
                         Map.entry("x", player.state().x()),
                         Map.entry("y", player.state().y()),
