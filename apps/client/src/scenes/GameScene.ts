@@ -21,6 +21,7 @@ export class GameScene extends Phaser.Scene {
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
   private playerX = 0;
   private playerY = 0;
+  private playerDead = false;
   private attackKey!: Phaser.Input.Keyboard.Key;
   private castKey!: Phaser.Input.Keyboard.Key;
   private networkAccumulator = 0;
@@ -76,7 +77,9 @@ export class GameScene extends Phaser.Scene {
     const right = this.cursors.right.isDown || this.keys["D"].isDown;
     const up = this.cursors.up.isDown || this.keys["W"].isDown;
     const down = this.cursors.down.isDown || this.keys["S"].isDown;
-    const input = { x: Number(right) - Number(left), y: Number(down) - Number(up) };
+    const input = this.playerDead ? { x: 0, y: 0 } : {
+      x: Number(right) - Number(left), y: Number(down) - Number(up)
+    };
     const movement = this.movement.step({ x: this.playerX, y: this.playerY }, input, delta / 1000);
     this.playerX = movement.position.x; this.playerY = movement.position.y;
     this.player.setMotion(this.playerX, this.playerY, movement.delta.x, movement.delta.y);
@@ -84,12 +87,12 @@ export class GameScene extends Phaser.Scene {
     if (this.networkAccumulator >= 50) {
       this.networkAccumulator %= 50; this.worldSocket.sendMovement(input.x, input.y);
     }
-    if (Phaser.Input.Keyboard.JustDown(this.attackKey)) {
+    if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.attackKey)) {
       this.player.attack();
       const target = this.findNearestMonster();
       if (target) this.worldSocket.sendAttack(target.monsterId);
     }
-    if (Phaser.Input.Keyboard.JustDown(this.castKey)) this.player.cast();
+    if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.castKey)) this.player.cast();
     this.player.update(delta);
     this.updateRemotePlayers(delta);
   }
@@ -108,6 +111,7 @@ export class GameScene extends Phaser.Scene {
     if (ownPlayer) {
       this.playerX = Phaser.Math.Linear(this.playerX, ownPlayer.x, 0.35);
       this.playerY = Phaser.Math.Linear(this.playerY, ownPlayer.y, 0.35);
+      this.playerDead = ownPlayer.hp <= 0;
       this.vitalsLabel?.setText(ownPlayer.hp > 0
         ? `HP: ${ownPlayer.hp} / ${ownPlayer.maxHp}`
         : "DEFEATED · Respawning…");
