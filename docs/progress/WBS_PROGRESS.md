@@ -436,3 +436,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - The loader validates manifest entries, rejects unsafe resource paths and duplicate map IDs, then loads each registered map.
 - Fixed Forest Edge return portal data so exactly one portal definition carries valid destination metadata.
 - Portal target validation remains centralized in the registry; adding a map now requires registering its resource and defining valid portal links.
+
+
+## Latest implementation batch — client consumes map manifest
+- Phaser now loads `maps/index.json` first, validates the registered map filenames and queues each Tiled map asset from the manifest.
+- The initial map remains required to be `starter-meadow`; subsequent map transitions can resolve any registered map asset without adding another hardcoded preload line.
+- Client and server now use matching map manifests, reducing the chance that a server portal points to a map the client has not loaded.
