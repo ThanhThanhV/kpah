@@ -18,7 +18,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 public class WorldSocketHandler extends TextWebSocketHandler {
-    private static final int PLAYER_MAX_HP = 100;
     private static final long PLAYER_RESPAWN_MILLIS = 3_000L;
 
     private final ObjectMapper mapper;
@@ -29,13 +28,14 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private final PlayerCharacterRepository characters;
     private final QuestService quests;
     private final ItemCatalog items;
+    private final ClassCatalog classes;
     private final AuthService auth;
     private final Map<String, ConnectedPlayer> players = new ConcurrentHashMap<>();
 
     public WorldSocketHandler(ObjectMapper mapper, MovementService movementService,
                               MonsterSimulationService monsters, WorldCombatService combat,
                               SkillCombatService skills, PlayerCharacterRepository characters, QuestService quests,
-                              ItemCatalog items, AuthService auth) {
+                              ItemCatalog items, ClassCatalog classes, AuthService auth) {
         this.mapper = mapper;
         this.movementService = movementService;
         this.monsters = monsters;
@@ -44,6 +44,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         this.characters = characters;
         this.quests = quests;
         this.items = items;
+        this.classes = classes;
         this.auth = auth;
     }
 
@@ -114,7 +115,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 }
                 String targetId = input.path("targetMonsterId").asText("");
                 MonsterAttackResult result = combat.basicAttack(
-                        player.playerId(), player.state(), targetId, items.attackBonus(player.equipment()),
+                        player.playerId(), player.state(), targetId, items.attackBonus(player.equipment()) + classes.attackBonus(player.classCode()),
                         System.currentTimeMillis());
                 if (!result.accepted()) {
                     send(session, Map.of("type", "error", "message", result.message()));
@@ -183,7 +184,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 String skillId = input.path("skillId").asText("");
                 String targetId = input.path("targetMonsterId").asText("");
                 SkillCastResult result = skills.cast(player.playerId(), player.state(), skillId,
-                        targetId, items.attackBonus(player.equipment()), System.currentTimeMillis());
+                        targetId, items.attackBonus(player.equipment()) + classes.attackBonus(player.classCode()), System.currentTimeMillis());
                 if (!result.accepted()) {
                     send(session, Map.of("type", "error", "message", result.message()));
                 } else {
@@ -236,7 +237,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             players.replaceAll((sessionId, player) -> {
                 if (!player.playerId().equals(attack.playerId()) || player.hp() <= 0) return player;
                 int mitigatedDamage = ItemCatalog.mitigateDamage(
-                        attack.damage(), items.defenseBonus(player.equipment()));
+                        attack.damage(), items.defenseBonus(player.equipment()) + classes.defenseBonus(player.classCode()));
                 int hp = Math.max(0, player.hp() - mitigatedDamage);
                 long respawnAt = hp == 0 ? now + PLAYER_RESPAWN_MILLIS : 0L;
                 ConnectedPlayer damaged = player.withVitals(hp, respawnAt);
@@ -274,7 +275,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             PlayerMotionState spawn = movementService.initialState(player.state().mapId());
             PlayerMotionState respawned = new PlayerMotionState(
                     spawn.mapId(), spawn.x(), spawn.y(), player.state().lastSequence());
-            ConnectedPlayer revived = player.withRespawn(respawned, PLAYER_MAX_HP, 0L, System.nanoTime());
+            ConnectedPlayer revived = player.withRespawn(respawned, classes.maxHp(player.classCode()), 0L, System.nanoTime());
             persist(revived);
             return revived;
         });
@@ -301,7 +302,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                         Map.entry("y", player.state().y()),
                         Map.entry("sequence", player.state().lastSequence()),
                         Map.entry("hp", player.hp()),
-                        Map.entry("maxHp", PLAYER_MAX_HP),
+                        Map.entry("maxHp", classes.maxHp(player.classCode())),
                         Map.entry("dead", player.hp() <= 0),
                         Map.entry("experience", player.experience()),
                         Map.entry("level", ExperienceProgression.levelFor(player.experience())),

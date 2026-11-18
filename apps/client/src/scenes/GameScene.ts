@@ -198,6 +198,12 @@ export class GameScene extends Phaser.Scene {
       const item = code ? catalog[code] : undefined;
       return `${slot.toUpperCase()}: ${item?.name ?? "Empty"}`;
     });
+    const classCode = player.classCode ?? "warrior";
+    const classStats = {
+      warrior: { hp: 120, attack: 3, defense: 2 },
+      mage: { hp: 90, attack: 8, defense: 0 },
+      archer: { hp: 100, attack: 5, defense: 1 }
+    }[classCode as "warrior" | "mage" | "archer"] ?? { hp: player.maxHp, attack: 0, defense: 0 };
     const bonuses = Object.values(equipment).reduce((total, code) => {
       const item = catalog[code];
       return { attack: total.attack + (item?.attackBonus ?? 0), defense: total.defense + (item?.defenseBonus ?? 0) };
@@ -205,7 +211,8 @@ export class GameScene extends Phaser.Scene {
     this.inventoryBody.setText([
       "BAG", ...(lines.length ? lines : ["(empty)"]), "",
       "EQUIPPED", ...equipped,
-      `Bonuses: ATK +${bonuses.attack} · DEF +${bonuses.defense}`,
+      `Class: ${classCode.toUpperCase()} · Base HP ${classStats.hp} · ATK +${classStats.attack} · DEF +${classStats.defense}`,
+      `Gear: ATK +${bonuses.attack} · DEF +${bonuses.defense}`,
       "1 Equip sword · 2 Equip tunic",
       "3 Unequip weapon · 4 Unequip body"
     ]);
@@ -310,7 +317,7 @@ export class GameScene extends Phaser.Scene {
       let view = this.remotePlayers.get(remote.playerId);
       if (!view) {
         const entity = new CharacterEntity(this, remote.x, remote.y, {
-          key: "remote-player", displayName: remote.name ?? "Adventurer", maxHp: 100,
+          key: "remote-player", displayName: remote.name ?? "Adventurer", maxHp: remote.maxHp ?? 100,
           feetPivot: { x: 0.5, y: 1 }, logicalSize: { width: 44, height: 64 }
         });
         view = { entity, x: remote.x, y: remote.y, targetX: remote.x, targetY: remote.y, lastSeenAt: now };

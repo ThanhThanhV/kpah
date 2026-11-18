@@ -1,5 +1,6 @@
 package com.kpah.server.auth;
 
+import com.kpah.server.world.ClassCatalog;
 import com.kpah.server.world.MovementService;
 import com.kpah.server.world.PlayerCharacter;
 import com.kpah.server.world.PlayerCharacterRepository;
@@ -26,16 +27,18 @@ public class AuthService {
     private final PlayerCharacterRepository characters;
     private final PasswordHasher passwords;
     private final MovementService movement;
+    private final ClassCatalog classes;
     private final SecureRandom random = new SecureRandom();
 
     public AuthService(AccountRepository accounts, AuthSessionRepository sessions,
                        PlayerCharacterRepository characters, PasswordHasher passwords,
-                       MovementService movement) {
+                       MovementService movement, ClassCatalog classes) {
         this.accounts = accounts;
         this.sessions = sessions;
         this.characters = characters;
         this.passwords = passwords;
         this.movement = movement;
+        this.classes = classes;
     }
 
     @Transactional
@@ -90,7 +93,8 @@ public class AuthService {
         var spawn = movement.initialState("starter-meadow");
         PlayerCharacter created = characters.save(PlayerCharacter.from(
                 session.getAccountId(), UUID.randomUUID().toString(), normalizedName, normalizedClass,
-                spawn, 100, 0, Map.of("novice-sword", 1, "cloth-tunic", 1), Map.of()));
+                spawn, classes.maxHp(normalizedClass), 0,
+                Map.of("novice-sword", 1, "cloth-tunic", 1), Map.of()));
         return summary(created);
     }
 
@@ -170,7 +174,7 @@ public class AuthService {
         if (owned.isEmpty()) {
             var spawn = movement.initialState("starter-meadow");
             character = characters.save(PlayerCharacter.from(account.getId(), UUID.randomUUID().toString(),
-                    "Adventurer", "warrior", spawn, 100, 0,
+                    "Adventurer", "warrior", spawn, classes.maxHp("warrior"), 0,
                     Map.of("novice-sword", 1, "cloth-tunic", 1), Map.of()));
         } else {
             character = owned.getFirst();

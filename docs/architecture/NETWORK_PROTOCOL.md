@@ -6,7 +6,7 @@
 - Development default client URL: `ws://localhost:8080/ws/world`
 - The client supplies `characterId` as a query parameter and sends the opaque 256-bit session credential in a custom `Sec-WebSocket-Protocol` value (`auth.<token>`). The server stores only the token's SHA-256 hash.
 - The server validates the session and confirms the requested character is the account's owned character before adding the socket to the world. Invalid or expired sessions are closed with policy violation.
-- Each account receives one starter character and may create up to two more (maximum three). The selected character ID is stored on the authenticated session. Character classes are currently metadata only.
+- Each account receives one starter character and may create up to two more (maximum three). The selected character ID is stored on the authenticated session. Class base HP, attack and defense are applied server-side; class-specific skill trees remain.
 - Account endpoints: `GET /api/auth/characters`, `POST /api/auth/characters`, and `POST /api/auth/select-character`.
 - Optional query parameter `mapId` is retained for compatibility but the persisted character's map is authoritative.
 

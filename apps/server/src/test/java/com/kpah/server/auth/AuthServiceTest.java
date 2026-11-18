@@ -31,7 +31,8 @@ class AuthServiceTest {
         when(characters.save(any(PlayerCharacter.class))).thenAnswer(call -> call.getArgument(0));
         when(sessions.save(any(AuthSession.class))).thenAnswer(call -> call.getArgument(0));
 
-        AuthService service = new AuthService(accounts, sessions, characters, passwords, movement);
+        AuthService service = new AuthService(accounts, sessions, characters, passwords, movement,
+                new com.kpah.server.world.ClassCatalog());
         AuthService.AuthResponse response = service.register(" Player@Example.com ", "a-long-test-password");
 
         assertNotNull(response.token());

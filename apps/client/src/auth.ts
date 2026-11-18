@@ -171,9 +171,9 @@ export function renderCharacterSelection(
           placeholder="3–20 characters" required />
         <label for="character-class">Class</label>
         <select id="character-class" name="classCode">
-          <option value="warrior">Warrior</option>
-          <option value="mage">Mage</option>
-          <option value="archer">Archer</option>
+          <option value="warrior">Warrior · 120 HP · +3 ATK · +2 DEF</option>
+          <option value="mage">Mage · 90 HP · +8 ATK</option>
+          <option value="archer">Archer · 100 HP · +5 ATK · +1 DEF</option>
         </select>
         <p id="character-error" role="alert" aria-live="polite"></p>
         <button type="submit">Create character</button>
@@ -205,7 +205,13 @@ export function renderCharacterSelection(
       const name = document.createElement("strong");
       name.textContent = character.name;
       const meta = document.createElement("span");
-      meta.textContent = character.classCode.toUpperCase() + " · Lv " + (Math.floor(character.experience / 100) + 1);
+      const classStats = {
+        warrior: "120 HP · +3 ATK · +2 DEF",
+        mage: "90 HP · +8 ATK",
+        archer: "100 HP · +5 ATK · +1 DEF"
+      }[character.classCode] ?? "";
+      meta.textContent = character.classCode.toUpperCase() + " · " + classStats
+        + " · Lv " + (Math.floor(character.experience / 100) + 1);
       details.append(name, meta);
       const button = document.createElement("button");
       button.type = "button";

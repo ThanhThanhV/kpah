@@ -26,10 +26,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | 5 | Map Engine | IN PROGRESS | Tiled map loading, rectangular collision and server-side grid pathfinding; map art and transitions remain. |
 | 6.1–6.3 | Input, movement and facing | IN PROGRESS | Client prediction and server-authoritative movement; touch controls and replicated facing remain. |
 | 7.1–7.3 | Monster definitions, AI and presentation | IN PROGRESS | Tiled spawn definitions, bounded roam, aggro, leash, attack cooldown, A* pursuit and snapshot-driven placeholder visuals. |
-| 8.1–8.3 | Combat, damage, death and respawn | IN PROGRESS | Server validates basic/skill attacks; equipment ATK is added to basic/skill damage and equipment DEF mitigates monster hits (minimum 1); drops, EXP and respawn implemented. |
+| 8.1–8.3 | Combat, damage, death and respawn | IN PROGRESS | Server validates basic/skill attacks; class and equipment ATK bonuses affect damage, class/equipment DEF mitigates monster hits (minimum 1), class-specific HP controls health and respawn. |
 | 9 | Skills and visual effects | IN PROGRESS | Two server-defined monster-target skills with authoritative range, damage and cooldown; skill resources, area targeting and authored VFX remain. |
 | 10 | Multiplayer replication | IN PROGRESS | Player, monster, HP, EXP, inventory, loot and quest snapshots; account session is required at WebSocket connect; heartbeat, reconnect and interest management remain. |
-| 11 | Character progression | IN PROGRESS | Level every 100 EXP; map position, HP, EXP, inventory and equipment persist; character has an account_id ownership binding. Multi-character support remains. |
+| 11 | Character progression | IN PROGRESS | Level every 100 EXP; character/account ownership and up to 3 characters per account; Warrior/Mage/Archer base HP, ATK and DEF are server-authoritative. Class growth and skill unlocks remain. |
 | 12 | Loot, item catalog and equipment | IN PROGRESS | Catalog-driven green-slime drop table, 99-stack material limit, 1-stack equipment limit, 20-slot inventory, partial pickup with overflow left on ground, persistent inventory/equipment and HUD. |
 | 13.1 | NPC interaction | IN PROGRESS | NPC name and opening dialogue are loaded from Tiled object metadata; server validates NPC identity and 100px interaction range. |
 | 14.1 | Quest lifecycle | IN PROGRESS | QuestCatalog defines NPC binding, target monster, required kills, dialogue and reward; progress persists and both basic/skill kills advance matching objectives. |
@@ -61,7 +61,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Added per-IP login and registration throttles (8 login attempts / 15 minutes; 4 registrations / hour) with bounded in-memory tracking.
 - Moved the WebSocket credential out of the URL into a custom `Sec-WebSocket-Protocol` handshake value.
 - Added logout-all to revoke every active session belonging to the authenticated account.
-- Added account-owned character metadata, a maximum of three characters per account, character list/create/select endpoints and a selection screen. Current class choices (Warrior/Mage/Archer) are metadata only; class-specific skill trees and stat growth remain.
+- Added account-owned character metadata, a maximum of three characters per account, character list/create/select endpoints and a selection screen.
+- Added server-side class definitions: Warrior (120 HP, +3 ATK, +2 DEF), Mage (90 HP, +8 ATK), Archer (100 HP, +5 ATK, +1 DEF). Class stats apply to basic/skill damage, monster damage mitigation and respawn health.
+- Player snapshots now include character name/class; remote player nameplates use the selected character name.
 
 ## CI results
 - Workflow: `.github/workflows/ci.yml`.
@@ -81,6 +83,6 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 
 ## Next implementation sequence
 1. Add refresh-token rotation and secure cookie strategy for browser sessions.
-2. Implement class-specific stats, skills and progression.
+2. Implement class-specific skill kits, resource costs and progression growth.
 3. Replace debug visuals with original art and concrete animation adapters.
 4. Expand quest/NPC catalogs, gameplay integration coverage, observability and load testing.
