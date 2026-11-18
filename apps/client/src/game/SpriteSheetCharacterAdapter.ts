@@ -32,9 +32,12 @@ export class SpriteSheetCharacterAdapter implements CharacterVisualAdapter {
 
   play(action: CharacterAction, facing: Facing): void {
     const clip = this.clips[`${action}:${facing}`] ?? this.clips[`${action}:down`];
-    if (!clip || this.activeAnimation === clip.animationKey) return;
+    if (!clip) return;
     if (!this.cameraTarget.scene.anims.exists(clip.animationKey)) return;
+    const looping = clip.loop ?? action === "idle" || action === "walk";
+    if (this.activeAnimation === clip.animationKey && looping) return;
     this.activeAnimation = clip.animationKey;
+    // Replaying a non-looping action restarts the clip, even when its key is unchanged.
     this.cameraTarget.play(clip.animationKey);
   }
 

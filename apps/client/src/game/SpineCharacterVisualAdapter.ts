@@ -28,9 +28,12 @@ export class SpineCharacterVisualAdapter implements CharacterVisualAdapter {
 
   play(action: CharacterAction, facing: Facing): void {
     const animation = this.animations[`${action}:${facing}`] ?? this.animations[`${action}:down`];
-    if (!animation || animation === this.activeAnimation) return;
+    if (!animation) return;
+    const looping = action === "idle" || action === "walk";
+    if (this.activeAnimation === animation && looping) return;
     this.activeAnimation = animation;
-    this.display.setAnimation(this.trackIndex, animation, action === "idle" || action === "walk");
+    // Re-issue one-shot actions so consecutive attacks can restart the same Spine clip.
+    this.display.setAnimation(this.trackIndex, animation, looping);
   }
 
   setPosition(x: number, y: number): void { this.display.setPosition(x, y); }

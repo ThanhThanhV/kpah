@@ -163,3 +163,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Fixed the server compilation failure found by CI: the skill-cast event has 11 fields and now uses `Map.ofEntries`, avoiding the Java `Map.of` 10-pair overload limit.
 - Remote player snapshots now update the remote character HP bar and death state. A later positive-HP snapshot restores the idle/walk state after respawn.
 - Previous CI result: client typecheck/build passed; server compilation failed only at the oversized skill-cast `Map.of` call. New CI run is pending.
+
+
+## Character animation replay refinement
+- SpriteSheet and Spine adapters now suppress redundant replay only for looping idle/walk clips.
+- Repeated attack, cast and hit events restart the same non-looping animation even when the animation key has not changed.
+- This keeps rapid consecutive combat actions visible instead of silently dropping repeated action transitions.
