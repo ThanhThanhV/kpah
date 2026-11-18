@@ -24,6 +24,7 @@ export interface WorldLootSnapshot {
 export interface WorldSnapshot {
   type: "snapshot"; players: WorldPlayerSnapshot[]; monsters: WorldMonsterSnapshot[];
   lootDrops: WorldLootSnapshot[];
+  selfState?: Pick<WorldPlayerSnapshot, "inventory" | "equipment" | "itemCatalog" | "quest">;
 }
 
 export class WorldSocketClient {
@@ -92,8 +93,14 @@ export class WorldSocketClient {
         else if (message.type === "snapshot" && "players" in message && Array.isArray(message.players)) {
           const ownPlayer = message.players.find((player) => player.playerId === this.localPlayerId);
           if (ownPlayer?.classCode) this.cachedClassCode = ownPlayer.classCode;
+          const players = ownPlayer && message.selfState
+            ? message.players.map((player) => player.playerId === this.localPlayerId
+              ? { ...player, ...message.selfState }
+              : player)
+            : message.players;
           this.listeners.forEach((listener) => listener({
             ...message,
+            players,
             monsters: Array.isArray(message.monsters) ? message.monsters : [],
             lootDrops: Array.isArray(message.lootDrops) ? message.lootDrops : []
           }));
