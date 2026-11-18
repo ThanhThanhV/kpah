@@ -41,7 +41,7 @@ export class MonsterEntity {
     this.hpFill = scene.add.rectangle(this.x - (this.bodyWidth + 2) / 2, hpY,
       this.bodyWidth + 2, 3, 0xe45c58).setOrigin(0, 0.5).setDepth(this.y + 3);
     this.heavyStrikeTelegraph = scene.add.ellipse(snapshot.attackX ?? 0, snapshot.attackY ?? 0,
-      (snapshot.attackRadius ?? 0) * 2, (snapshot.attackRadius ?? 0) * 2, 0xff3f36, 0.12)
+      184, 184, 0xff3f36, 0.12)
       .setStrokeStyle(3, 0xff554d, 0.95).setDepth(snapshot.attackY ?? snapshot.y).setVisible(false);
     this.setHp(snapshot.hp, snapshot.maxHp);
     this.updateTelegraph(snapshot);
