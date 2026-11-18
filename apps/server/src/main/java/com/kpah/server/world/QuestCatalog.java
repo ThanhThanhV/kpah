@@ -38,7 +38,13 @@ public class QuestCatalog {
                         "alpha-wolf", "Alpha Wolf", 1, 700,
                         "The Alpha Wolf has emerged from its lair. Defeat it and bring proof to the Warden.",
                         "The Alpha Wolf's threat has ended.",
-                        "Alpha Wolf defeated! You received 700 EXP.")
+                        "Alpha Wolf defeated! You received 700 EXP."),
+                new QuestDefinition(
+                        "ancient-guardian-hunt", "105", "forest-edge", "Forest Warden",
+                        "ancient-guardian", "Ancient Guardian", 1, 1100,
+                        "The Ancient Guardian has awakened beneath the old grove. Defeat it and bring back its core.",
+                        "The grove is quiet again. You have my thanks.",
+                        "Ancient Guardian defeated! You received 1100 EXP.")
         );
         this.definitions = List.copyOf(definitions);
         this.questsById = definitions.stream().collect(Collectors.toUnmodifiableMap(
