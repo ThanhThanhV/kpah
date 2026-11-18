@@ -25,14 +25,17 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private final MovementService movementService;
     private final MonsterSimulationService monsters;
     private final WorldCombatService combat;
+    private final SkillCombatService skills;
     private final Map<String, ConnectedPlayer> players = new ConcurrentHashMap<>();
 
     public WorldSocketHandler(ObjectMapper mapper, MovementService movementService,
-                              MonsterSimulationService monsters, WorldCombatService combat) {
+                              MonsterSimulationService monsters, WorldCombatService combat,
+                              SkillCombatService skills) {
         this.mapper = mapper;
         this.movementService = movementService;
         this.monsters = monsters;
         this.combat = combat;
+        this.skills = skills;
     }
 
     @Override
@@ -89,7 +92,32 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                             "experienceReward", result.monster().hp() == 0 ? 25 : 0));
                     broadcast(player.state().mapId());
                 }
-            } else {
+            } else if ("cast".equals(type)) {
+                if (player.hp() <= 0) {
+                    send(session, Map.of("type", "error", "message", "You cannot cast while defeated."));
+                    return;
+                }
+                String skillId = input.path("skillId").asText("");
+                String targetId = input.path("targetMonsterId").asText("");
+                SkillCastResult result = skills.cast(player.playerId(), player.state(), skillId,
+                        targetId, System.currentTimeMillis());
+                if (!result.accepted()) {
+                    send(session, Map.of("type", "error", "message", result.message()));
+                } else {
+                    MonsterAttackResult attack = result.attack();
+                    if (attack.monster().hp() == 0) {
+                        players.computeIfPresent(session.getId(), (id, current) ->
+                                current.withExperience(current.experience() + 25));
+                    }
+                    send(session, Map.of("type", "combat", "action", "skill-cast",
+                            "skillId", result.skill().skillId(),
+                            "skillName", result.skill().displayName(),
+                            "targetMonsterId", targetId, "damage", attack.damage(),
+                            "monsterHp", attack.monster().hp(),
+                            "experienceReward", attack.monster().hp() == 0 ? 25 : 0));
+                    broadcast(player.state().mapId());
+                }
+ else {
                 send(session, Map.of("type", "error", "message", "Unsupported message type."));
             }
         } catch (IllegalArgumentException exception) {

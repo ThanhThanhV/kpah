@@ -1,5 +1,7 @@
 export interface WorldMoveIntent { type: "move"; sequence: number; axisX: number; axisY: number; }
 export interface WorldAttackIntent { type: "attack"; targetMonsterId: string; }
+export interface WorldSkillIntent { type: "cast"; skillId: string; targetMonsterId: string; }
+export interface WorldCombatEvent { type: "combat"; action: string; skillId?: string; skillName?: string; targetMonsterId?: string; damage?: number; monsterHp?: number; experienceReward?: number; }
 export interface WorldPlayerSnapshot {
   playerId: string; mapId: string; x: number; y: number; sequence: number;
   hp: number; maxHp: number; dead: boolean;
@@ -23,6 +25,7 @@ export class WorldSocketClient {
   private localPlayerId?: string;
   private readonly listeners = new Set<(snapshot: WorldSnapshot) => void>();
   private readonly statusListeners = new Set<(connected: boolean) => void>();
+  private readonly combatListeners = new Set<(event: WorldCombatEvent) => void>();
 
   constructor(private readonly url: string) {}
 
@@ -37,6 +40,7 @@ export class WorldSocketClient {
       try {
         const message = JSON.parse(String(event.data)) as { type?: string; playerId?: string } | WorldSnapshot;
         if (message.type === "welcome" && "playerId" in message) this.localPlayerId = message.playerId;
+        else if (message.type === "combat") this.combatListeners.forEach((listener) => listener(message as WorldCombatEvent));
         else if (message.type === "snapshot" && "players" in message && Array.isArray(message.players)) {
           this.listeners.forEach((listener) => listener({
             ...message,
@@ -64,6 +68,15 @@ export class WorldSocketClient {
     this.socket.send(JSON.stringify(message));
   }
 
+  sendSkill(skillId: string, targetMonsterId: string): void {
+    if (this.socket?.readyState !== WebSocket.OPEN || !skillId || !targetMonsterId) return;
+    const message: WorldSkillIntent = { type: "cast", skillId, targetMonsterId };
+    this.socket.send(JSON.stringify(message));
+  }
+
+  onCombat(listener: (event: WorldCombatEvent) => void): () => void {
+    this.combatListeners.add(listener); return () => this.combatListeners.delete(listener);
+  }
   onSnapshot(listener: (snapshot: WorldSnapshot) => void): () => void {
     this.listeners.add(listener); return () => this.listeners.delete(listener);
   }
@@ -75,6 +88,6 @@ export class WorldSocketClient {
   }
   destroy(): void {
     this.socket?.close(1000, "scene shutdown");
-    this.socket = undefined; this.listeners.clear(); this.statusListeners.clear();
+    this.socket = undefined; this.listeners.clear(); this.statusListeners.clear(); this.combatListeners.clear();
   }
 }

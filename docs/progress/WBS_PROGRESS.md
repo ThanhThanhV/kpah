@@ -15,7 +15,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | Multiplayer transport and client replication | IN PROGRESS |
 | Monster system and aggro AI | IN PROGRESS |
 | Basic combat, loot and progression | IN PROGRESS |
-| Skills / Quests / persistent economy | NOT STARTED |
+| Skills / Quests / persistent economy | IN PROGRESS |
 | QA / Operations | IN PROGRESS |
 
 ## WBS activity tracking
@@ -31,7 +31,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | 8.1 | Target selection and basic attack | IN PROGRESS | Nearest monster selection; server validates target, map, 58px range and 600ms cooldown. |
 | 8.2 | Damage and monster defeat | IN PROGRESS | Server applies damage and configured respawn delay; kill creates a material drop and grants 25 EXP. |
 | 8.3 | Player damage, death and respawn | IN PROGRESS | Monster attacks reduce player HP; server respawns at map spawn after 3 seconds. |
-| 9 | Skills and visual effects | NOT STARTED | Skill definitions, cooldowns and authoritative execution remain. |
+| 9 | Skills and visual effects | IN PROGRESS | Two server-defined monster-target skills with authoritative range, damage and per-player cooldown; client hotkeys and cast feedback. Skill trees, mana, area targeting and authored VFX remain. |
 | 10 | Multiplayer replication | IN PROGRESS | Players, monsters, HP, EXP, level, inventory and ground loot snapshots; auth/reconnect/interest management remain. |
 | 11 | Character progression | IN PROGRESS | Level advances every 100 EXP; persistent character records and stat growth remain. |
 | 12 | Loot and inventory | IN PROGRESS | One material drop per defeated monster, proximity auto-pickup and per-session inventory counts; item catalog, equipment and persistence remain. |
@@ -51,7 +51,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 5. No persistent character database, item catalog or equipment implementation yet.
 
 ## Next implementation sequence
-1. Extend combat with authoritative skill definitions, cooldowns and execution.
+1. Expand skill system with resource costs, area targeting and original skill effects.
 2. Add persistent character progression and inventory.
 3. Add NPC interactions and quest progression.
 4. Replace debug character/monster/drop visuals with original art and concrete animation adapters.

@@ -68,27 +68,41 @@ public class MonsterSimulationService {
 
     public MonsterAttackResult applyBasicAttack(String mapId, double attackerX, double attackerY,
                                                 String monsterId, long nowMillis) {
+        return applyDamage(mapId, attackerX, attackerY, monsterId,
+                BASIC_ATTACK_DAMAGE, BASIC_ATTACK_RANGE, nowMillis);
+    }
+
+    public MonsterAttackResult applySkillAttack(String mapId, double attackerX, double attackerY,
+                                                String monsterId, int damage, double range, long nowMillis) {
+        if (damage <= 0 || !Double.isFinite(range) || range <= 0) {
+            return MonsterAttackResult.rejected("Invalid skill combat parameters.");
+        }
+        return applyDamage(mapId, attackerX, attackerY, monsterId, damage, range, nowMillis);
+    }
+
+    private MonsterAttackResult applyDamage(String mapId, double attackerX, double attackerY,
+                                            String monsterId, int damage, double range, long nowMillis) {
         MonsterRuntime monster = monsters.get(monsterId);
         if (monster == null || !monster.mapId.equals(mapId) || monster.hp <= 0) {
             return MonsterAttackResult.rejected("Target is no longer available.");
         }
         double distance = Math.hypot(monster.x - attackerX, monster.y - attackerY);
-        if (distance > BASIC_ATTACK_RANGE) {
-            return MonsterAttackResult.rejected("Target is out of attack range.");
-        }
+        if (distance > range) return MonsterAttackResult.rejected("Target is out of attack range.");
         synchronized (monster) {
             if (monster.hp <= 0) return MonsterAttackResult.rejected("Target is already defeated.");
-            monster.hp = Math.max(0, monster.hp - BASIC_ATTACK_DAMAGE);
+            int appliedDamage = Math.min(damage, monster.hp);
+            monster.hp -= appliedDamage;
             if (monster.hp == 0) {
                 long respawnAt = nowMillis + monster.region.respawnMillis();
                 monster.respawnAt = respawnAt;
                 nextSpawnAt.get(mapId).put(monster.region.id(), respawnAt);
-                String itemCode = monster.region.monsterType().toLowerCase().replaceAll("[^a-z0-9-]", "") + "-material";
+                String itemCode = monster.region.monsterType().toLowerCase()
+                        .replaceAll("[^a-z0-9-]", "") + "-material";
                 LootDropState drop = new LootDropState(UUID.randomUUID().toString(), itemCode, 1,
                         mapId, monster.x, monster.y, nowMillis);
                 lootDrops.put(drop.dropId(), drop);
             }
-            return new MonsterAttackResult(true, "Hit", monster.snapshot(), BASIC_ATTACK_DAMAGE);
+            return new MonsterAttackResult(true, "Hit", monster.snapshot(), appliedDamage);
         }
     }
 

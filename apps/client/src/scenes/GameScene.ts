@@ -26,12 +26,15 @@ export class GameScene extends Phaser.Scene {
   private playerDead = false;
   private attackKey!: Phaser.Input.Keyboard.Key;
   private castKey!: Phaser.Input.Keyboard.Key;
+  private secondSkillKey!: Phaser.Input.Keyboard.Key;
   private networkAccumulator = 0;
   private connectionLabel?: Phaser.GameObjects.Text;
   private vitalsLabel?: Phaser.GameObjects.Text;
   private progressionLabel?: Phaser.GameObjects.Text;
+  private combatLabel?: Phaser.GameObjects.Text;
   private unsubscribeSnapshot?: () => void;
   private unsubscribeStatus?: () => void;
+  private unsubscribeCombat?: () => void;
 
   constructor() { super("GameScene"); }
   preload(): void { this.load.json("starter-meadow", "maps/starter-meadow.json"); }
@@ -48,6 +51,7 @@ export class GameScene extends Phaser.Scene {
     this.keys = this.input.keyboard!.addKeys("W,A,S,D") as Record<string, Phaser.Input.Keyboard.Key>;
     this.attackKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.castKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+    this.secondSkillKey = this.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
 
     this.add.text(18, 18, "P1 · TILED MAP + MULTIPLAYER", {
       fontFamily: "Arial, sans-serif", fontSize: "13px", color: "#e6f1dc",
@@ -64,7 +68,11 @@ export class GameScene extends Phaser.Scene {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#f5dfa0",
       backgroundColor: "#14262acc", padding: { x: 7, y: 4 }
     }).setScrollFactor(0).setDepth(2000);
-    this.add.text(18, 108, "WASD / arrows · Space: attack · Shift: cast", {
+    this.combatLabel = this.add.text(18, 108, "Combat: ready", {
+      fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#b9dcff",
+      backgroundColor: "#14262acc", padding: { x: 7, y: 4 }
+    }).setScrollFactor(0).setDepth(2000);
+    this.add.text(18, 132, "WASD / arrows · Space: attack · Shift: Power Strike · Q: Arcane Bolt", {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#c0d0c4"
     }).setScrollFactor(0).setDepth(2000);
 
@@ -75,6 +83,10 @@ export class GameScene extends Phaser.Scene {
       this.connectionLabel?.setColor(connected ? "#9ee0a4" : "#f0d18b");
     });
     this.unsubscribeSnapshot = this.worldSocket.onSnapshot((snapshot) => this.applyWorldSnapshot(snapshot));
+    this.unsubscribeCombat = this.worldSocket.onCombat((event) => {
+      this.combatLabel?.setText(`${event.skillName ?? "Combat"} · ${event.damage ?? 0} damage`);
+      this.combatLabel?.setColor("#a9e7ff");
+    });
     this.worldSocket.connect();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.handleShutdown, this);
   }
@@ -99,9 +111,20 @@ export class GameScene extends Phaser.Scene {
       const target = this.findNearestMonster();
       if (target) this.worldSocket.sendAttack(target.monsterId);
     }
-    if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.castKey)) this.player.cast();
+    if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.castKey)) this.castSkill("power-strike");
+    if (!this.playerDead && Phaser.Input.Keyboard.JustDown(this.secondSkillKey)) this.castSkill("arcane-bolt");
     this.player.update(delta);
     this.updateRemotePlayers(delta);
+  }
+
+  private castSkill(skillId: string): void {
+    const target = this.findNearestMonster();
+    if (!target) {
+      this.combatLabel?.setText("No monster in skill range");
+      return;
+    }
+    this.player.cast();
+    this.worldSocket.sendSkill(skillId, target.monsterId);
   }
 
   private findNearestMonster(): { monsterId: string; distance: number } | undefined {
@@ -184,7 +207,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private handleShutdown(): void {
-    this.unsubscribeSnapshot?.(); this.unsubscribeStatus?.(); this.worldSocket?.destroy();
+    this.unsubscribeSnapshot?.(); this.unsubscribeStatus?.(); this.unsubscribeCombat?.(); this.worldSocket?.destroy();
     for (const view of this.remotePlayers.values()) view.entity.destroy();
     this.remotePlayers.clear();
     for (const monster of this.monsters.values()) monster.destroy();
