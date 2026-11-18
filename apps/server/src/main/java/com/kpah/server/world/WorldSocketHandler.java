@@ -293,107 +293,159 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                                 updatedInventory, drop.itemCode(), drop.amount());
                         updatedInventory.clear();
                         updatedInventory.putAll(update.inventory());
-                        int remainder = drop.amount() - update.addedAmount();
-                        if (remainder > 0) monsters.returnLoot(drop, remainder);
+                        int remainder = drop.amount() - update.acceptedAmount();
+                        if (remainder > 0) monsters.restoreLoot(drop.withAmount(remainder));
                     }
-                    ConnectedPlayer looted = latest.withInventoryAndEquipment(updatedInventory, latest.equipment());
+                    ConnectedPlayer looted = latest.withInventory(updatedInventory);
                     persist(looted);
-                    send(latest.session(), Map.of("type", "loot", "inventory", looted.inventory()));
                     return looted;
                 });
             }
         }
 
-        long nowMillis = System.currentTimeMillis();
         players.replaceAll((sessionId, player) -> {
-            if (player.hp() > 0 || player.respawnAtMillis() <= 0 || nowMillis < player.respawnAtMillis()) return player;
-            int maxHp = classes.maxHp(player.classCode(), ExperienceProgression.levelFor(player.experience()));
-            ConnectedPlayer respawned = player.withVitals(maxHp, 0L);
-            persist(respawned);
-            return respawned;
+            if (player.hp() > 0 || player.respawnAt() == 0L || now < player.respawnAt()) return player;
+            PlayerMotionState spawn = movementService.initialState(player.state().mapId());
+            PlayerMotionState respawned = new PlayerMotionState(
+                    spawn.mapId(), spawn.x(), spawn.y(), player.state().lastSequence());
+            ConnectedPlayer revived = player.withRespawn(respawned, classes.maxHp(player.classCode(), ExperienceProgression.levelFor(player.experience())), 0L, System.nanoTime());
+            persist(revived);
+            return revived;
         });
 
-        for (ConnectedPlayer player : players.values()) {
-            monsters.advancePlayerCombat(player.playerId(), player.state(), nowMillis);
-            skills.advance(player.playerId(), nowMillis);
-        }
-        broadcastAllMaps();
+        players.values().stream().map(player -> player.state().mapId())
+                .distinct().forEach(this::broadcast);
     }
 
     private ConnectedPlayer awardExperience(ConnectedPlayer player, int amount) {
-        long previousLevel = ExperienceProgression.levelFor(player.experience());
-        long experience = player.experience() + amount;
-        long nextLevel = ExperienceProgression.levelFor(experience);
-        int hp = player.hp();
-        if (nextLevel > previousLevel) {
-            int growth = classes.hpGrowth(player.classCode()) * (int) (nextLevel - previousLevel);
-            hp = Math.min(classes.maxHp(player.classCode(), nextLevel), hp + growth);
-        }
-        return player.withProgress(experience, hp);
+        int nextExperience = player.experience() + Math.max(0, amount);
+        int oldLevel = ExperienceProgression.levelFor(player.experience());
+        int nextLevel = ExperienceProgression.levelFor(nextExperience);
+        int hpIncrease = classes.maxHp(player.classCode(), nextLevel)
+                - classes.maxHp(player.classCode(), oldLevel);
+        return player.withExperience(nextExperience, hpIncrease);
     }
 
     private void persist(ConnectedPlayer player) {
-        PlayerCharacter character = characters.findById(player.playerId()).orElse(null);
-        if (character == null) return;
-        character.setMapId(player.state().mapId());
-        character.setX(player.state().x());
-        character.setY(player.state().y());
-        character.setHp(player.hp());
-        character.setMana(skills.currentMana(player.playerId()));
-        character.setExperience(player.experience());
-        character.setInventory(player.inventory());
-        character.setEquipment(player.equipment());
-        characters.save(character);
+        int level = ExperienceProgression.levelFor(player.experience());
+        int mana = skills.manaFor(player.playerId(), player.classCode(), level, System.currentTimeMillis());
+        characters.save(PlayerCharacter.from(player.accountId(), player.playerId(), player.characterName(), player.classCode(),
+                player.state(), player.hp(), player.experience(), mana, player.inventory(), player.equipment()));
     }
 
     private void broadcast(String mapId) {
-        List<Map<String, Object>> snapshot = players.values().stream()
-                .filter(player -> player.state().mapId().equals(mapId))
-                .map(player -> {
-                    long level = ExperienceProgression.levelFor(player.experience());
-                    return Map.<String, Object>ofEntries(
-                            Map.entry("playerId", player.playerId()),
-                            Map.entry("name", player.name()),
-                            Map.entry("classCode", player.classCode()),
-                            Map.entry("mapId", player.state().mapId()),
-                            Map.entry("x", player.state().x()),
-                            Map.entry("y", player.state().y()),
-                            Map.entry("sequence", player.state().sequence()),
-                            Map.entry("hp", player.hp()),
-                            Map.entry("maxHp", classes.maxHp(player.classCode(), level)),
-                            Map.entry("mana", skills.currentMana(player.playerId())),
-                            Map.entry("maxMana", skills.maxMana(player.classCode(), level)),
-                            Map.entry("level", level),
-                            Map.entry("experience", player.experience()),
-                            Map.entry("inventory", player.inventory()),
-                            Map.entry("equipment", player.equipment()),
-                            Map.entry("skills", skills.availableSkills(player.playerId())));
-                })
+        var snapshots = players.values().stream()
+                .filter(player -> mapId.equals(player.state().mapId()))
+                .map(player -> Map.ofEntries(
+                        Map.entry("playerId", player.playerId()),
+                        Map.entry("name", player.characterName()),
+                        Map.entry("classCode", player.classCode()),
+                        Map.entry("mapId", player.state().mapId()),
+                        Map.entry("x", player.state().x()),
+                        Map.entry("y", player.state().y()),
+                        Map.entry("sequence", player.state().lastSequence()),
+                        Map.entry("hp", player.hp()),
+                        Map.entry("maxHp", classes.maxHp(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
+                        Map.entry("dead", player.hp() <= 0),
+                        Map.entry("experience", player.experience()),
+                        Map.entry("level", ExperienceProgression.levelFor(player.experience())),
+                        Map.entry("mana", skills.manaFor(player.playerId(), player.classCode(), ExperienceProgression.levelFor(player.experience()), System.currentTimeMillis())),
+                        Map.entry("maxMana", skills.maxMana(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
+                        Map.entry("skills", skills.skillsFor(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
+                        Map.entry("inventory", player.inventory()),
+                        Map.entry("equipment", player.equipment()),
+                        Map.entry("itemCatalog", items.all()),
+                        Map.entry("quest", quests.snapshot(player.playerId()))))
                 .toList();
-        Map<String, Object> payload = Map.of("type", "snapshot", "players", snapshot,
-                "monsters", monsters.snapshot(mapId), "npcs", quests.npcsForMap(mapId),
-                "quests", quests.snapshotForMap(mapId), "items", items.catalog());
-        players.values().stream().filter(player -> player.state().mapId().equals(mapId))
-                .forEach(player -> send(player.session(), payload));
-    }
-
-    private void broadcastAllMaps() {
-        players.values().stream().map(player -> player.state().mapId()).distinct().forEach(this::broadcast);
-    }
-
-    private void broadcastCombat(String mapId, Map<String, Object> payload) {
-        players.values().stream().filter(player -> player.state().mapId().equals(mapId))
-                .forEach(player -> send(player.session(), payload));
-    }
-
-    private void send(WebSocketSession session, Map<String, Object> payload) {
-        if (!session.isOpen()) return;
-        try {
-            synchronized (session) {
-                session.sendMessage(new TextMessage(mapper.writeValueAsString(payload)));
+        Map<String, Object> payload = Map.of(
+                "type", "snapshot", "players", snapshots, "monsters", monsters.snapshot(mapId),
+                "lootDrops", monsters.snapshotLoot(mapId));
+        for (ConnectedPlayer player : players.values()) {
+            if (mapId.equals(player.state().mapId()) && player.session().isOpen()) {
+                try {
+                    send(player.session(), payload);
+                } catch (IOException ignored) {
+                    // The websocket close lifecycle removes failed sessions.
+                }
             }
-        } catch (IOException ignored) {
-            // The close callback removes the player and persists the last accepted state.
         }
     }
-}
+
+    private void broadcastCombat(String mapId, Object payload) {
+        for (ConnectedPlayer player : players.values()) {
+            if (mapId.equals(player.state().mapId()) && player.session().isOpen()) {
+                try {
+                    send(player.session(), payload);
+                } catch (IOException ignored) {
+                    // The websocket close lifecycle removes failed sessions.
+                }
+            }
+        }
+    }
+
+    private void send(WebSocketSession session, Object payload) throws IOException {
+        if (!session.isOpen()) return;
+        synchronized (session) {
+            session.sendMessage(new TextMessage(mapper.writeValueAsString(payload)));
+        }
+    }
+
+    private record ConnectedPlayer(
+            String playerId,
+            String accountId,
+            String characterName,
+            String classCode,
+            WebSocketSession session,
+            PlayerMotionState state,
+            long lastAcceptedNanos,
+            int hp,
+            long respawnAt,
+            int experience,
+            Map<String, Integer> inventory,
+            Map<String, String> equipment
+    ) {
+        private ConnectedPlayer {
+            inventory = Map.copyOf(inventory);
+            equipment = Map.copyOf(equipment);
+        }
+
+        private ConnectedPlayer withState(PlayerMotionState next, long acceptedAt) {
+            return new ConnectedPlayer(playerId, accountId, characterName, classCode, session, next, acceptedAt,
+                    hp, respawnAt, experience, inventory, equipment);
+        }
+
+        private ConnectedPlayer withVitals(int nextHp, long nextRespawnAt) {
+            return new ConnectedPlayer(playerId, accountId, characterName, classCode, session, state, lastAcceptedNanos,
+                    nextHp, nextRespawnAt, experience, inventory, equipment);
+        }
+
+        private ConnectedPlayer withRespawn(PlayerMotionState nextState, int nextHp,
+                                             long nextRespawnAt, long acceptedAt) {
+            return new ConnectedPlayer(playerId, accountId, characterName, classCode, session, nextState, acceptedAt,
+                    nextHp, nextRespawnAt, experience, inventory, equipment);
+        }
+
+        private ConnectedPlayer withExperience(int nextExperience, int levelHpIncrease) {
+            int nextHp = hp > 0 ? hp + Math.max(0, levelHpIncrease) : hp;
+            return new ConnectedPlayer(playerId, accountId, characterName, classCode, session, state, lastAcceptedNanos,
+                    nextHp, respawnAt, nextExperience, inventory, equipment);
+        }
+
+        private ConnectedPlayer withLoot(List<LootDropState> drops) {
+            Map<String, Integer> updated = new ConcurrentHashMap<>(inventory);
+            drops.forEach(drop -> updated.merge(drop.itemCode(), drop.amount(), Integer::sum));
+            return new ConnectedPlayer(playerId, accountId, characterName, classCode, session, state, lastAcceptedNanos,
+                    hp, respawnAt, experience, updated, equipment);
+        }
+
+        private ConnectedPlayer withInventory(Map<String, Integer> nextInventory) {
+            return new ConnectedPlayer(playerId, accountId, characterName, classCode, session, state, lastAcceptedNanos,
+                    hp, respawnAt, experience, nextInventory, equipment);
+        }
+
+        private ConnectedPlayer withInventoryAndEquipment(Map<String, Integer> nextInventory,
+                                                           Map<String, String> nextEquipment) {
+            return new ConnectedPlayer(playerId, accountId, characterName, classCode, session, state, lastAcceptedNanos,
+                    hp, respawnAt, experience, nextInventory, nextEquipment);
+        }
+    }}
