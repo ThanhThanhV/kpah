@@ -26,6 +26,13 @@ class ItemCatalogTest {
         assertEquals(0, ItemCatalog.mitigateDamage(0, 20));
     }
     @Test
+    void ancientGuardianCoreIsRegisteredAsAStackableMaterial() {
+        var core = catalog.find("ancient-guardian-core");
+        assertEquals("material", core.type());
+        assertEquals(10, core.maxStack());
+    }
+
+    @Test
     void inventoryRespectsItemStackLimitsAndReturnsAcceptedAmount() {
         ItemCatalog.InventoryUpdate update = catalog.addToInventory(
                 Map.of(), "green-slime-material", 120);
