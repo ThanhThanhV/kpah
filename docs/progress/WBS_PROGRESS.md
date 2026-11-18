@@ -479,4 +479,4 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Added Forest Wolf's distinct brown body/nameplate/health-bar size on the Phaser client.
 - Added Wolf Fang as a 60% monster drop and registered it as a stackable inventory material.
 - Added tests for archetype stat differences, invalid configuration, unknown types and Wolf Fang drops.
-- GitHub Actions verification is pending for this batch.
+- GitHub Actions passed: server Maven tests/package and client typecheck/build succeeded on commits db75adb8df264e328149d7d22bf11b1fa567563c and d012fc19e56c4357d7f3482cb863f65e63b6e978.
