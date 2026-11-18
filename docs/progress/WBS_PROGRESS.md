@@ -451,3 +451,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Expanded the in-game quest journal to display up to three quest entries and their current objectives/progress.
 - Existing quest persistence remains keyed by character ID and quest ID; existing character quest records are preserved.
 - GitHub Actions and local runtime verification are pending for this batch.
+
+## Latest implementation batch — regional monster drop tables
+- Monster drop resolution now receives the authoritative map ID and selects a map-specific table before falling back to the shared monster table.
+- Starter Meadow Green Slimes retain the existing Green Slime Gel drop.
+- Forest Edge Green Slimes can additionally drop Forest Resin at a configured 35% chance; the new material is registered in the server item catalog and can enter player inventory through the existing loot pickup flow.
+- Added coverage for the Forest Edge-specific drop path using a deterministic random source.
+- GitHub Actions verification is pending for this batch.
