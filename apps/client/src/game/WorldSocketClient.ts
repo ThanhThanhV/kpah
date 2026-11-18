@@ -6,7 +6,7 @@ export interface WorldSkillIntent { type: "cast"; skillId: string; targetMonster
 export interface WorldMapTransition { type: "map-transition"; mapId: string; x: number; y: number; }
 export interface WorldQuestEvent { type: "quest"; npcName: string; message: string; questId: string; status: string; progress: number; required: number; experienceReward: number; }
 export interface WorldQuestSnapshot { questId: string; npcId?: string; npcName: string; status: string; progress: number; required: number; targetMonsterType?: string; targetDisplayName: string; experienceReward: number; }
-export interface WorldCombatEvent { type: "combat"; action: string; sourcePlayerId?: string; targetPlayerId?: string; skillId?: string; skillName?: string; targetMonsterId?: string; damage?: number; monsterHp?: number; experienceReward?: number; }
+export interface WorldCombatEvent { type: "combat"; action: string; sourcePlayerId?: string; sourceMonsterId?: string; monsterName?: string; targetPlayerId?: string; skillId?: string; skillName?: string; targetMonsterId?: string; damage?: number; monsterHp?: number; experienceReward?: number; }
 export interface WorldItemDefinition { itemCode: string; name: string; type: string; slot: string; attackBonus: number; defenseBonus: number; maxStack: number; }
 export interface WorldPlayerSnapshot {
   playerId: string; name?: string; classCode?: string; mapId: string; x: number; y: number; sequence: number;
