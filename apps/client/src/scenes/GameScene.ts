@@ -64,8 +64,26 @@ export class GameScene extends Phaser.Scene {
 
   constructor() { super("GameScene"); }
   preload(): void {
-    this.load.json("starter-meadow", "maps/starter-meadow.json");
-    this.load.json("forest-edge", "maps/forest-edge.json");
+    this.load.once("filecomplete-json-world-map-index", (_key: string, _type: string, data: unknown) => {
+      const manifest = data as { maps?: unknown };
+      if (!Array.isArray(manifest?.maps) || manifest.maps.length === 0) {
+        throw new Error("World map manifest must contain at least one map.");
+      }
+      const loadedIds = new Set<string>();
+      for (const entry of manifest.maps) {
+        if (typeof entry !== "string" || !/^[a-z0-9-]+\\.json$/i.test(entry)) {
+          throw new Error("World map manifest contains an invalid asset filename.");
+        }
+        const mapId = entry.slice(0, -5);
+        if (loadedIds.has(mapId)) throw new Error(`Duplicate map asset in manifest: ${mapId}`);
+        loadedIds.add(mapId);
+        this.load.json(mapId, `maps/${entry}`);
+      }
+      if (!loadedIds.has("starter-meadow")) {
+        throw new Error("World map manifest must register starter-meadow.");
+      }
+    });
+    this.load.json("world-map-index", "maps/index.json");
     for (const sprite of CHARACTER_SPRITE_CATALOG) {
       this.load.spritesheet(sprite.textureKey, sprite.path, {
         frameWidth: sprite.frameWidth, frameHeight: sprite.frameHeight
