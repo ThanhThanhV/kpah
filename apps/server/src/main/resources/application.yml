@@ -26,4 +26,4 @@ game:
   websocket:
     # Local Vite may increment its port when 5173 is occupied. Keep wildcard ports
     # restricted to loopback; deployments should provide explicit trusted patterns.
-    allowed-origin-patterns: ${WEBSOCKET_ALLOWED_ORIGIN_PATTERNS:http://localhost:*,http://127.0.0.1:*}
+    allowed-origin-patterns: ${WEBSOCKET_ALLOWED_ORIGIN_PATTERNS:http://localhost:[*],http://127.0.0.1:[*]}
