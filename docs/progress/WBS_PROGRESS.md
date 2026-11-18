@@ -429,3 +429,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Added a typed WebSocket map-transition event and listener lifecycle.
 - On the server-authoritative transition event, the client swaps map renderer and collision controller, updates camera bounds/position and NPC definitions, and clears entities from the previous area.
 - The client does not decide when a portal activates; only the server movement/portal check can initiate a map transition.
+
+
+## Latest implementation batch — data-driven map registry
+- Replaced hardcoded server map registration with a Tiled map manifest at `maps/index.json`.
+- The loader validates manifest entries, rejects unsafe resource paths and duplicate map IDs, then loads each registered map.
+- Fixed Forest Edge return portal data so exactly one portal definition carries valid destination metadata.
+- Portal target validation remains centralized in the registry; adding a map now requires registering its resource and defining valid portal links.
