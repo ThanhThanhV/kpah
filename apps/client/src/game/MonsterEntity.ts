@@ -52,6 +52,10 @@ export class MonsterEntity {
     }).setOrigin(0.5).setDepth(this.y + 10);
     const impactRing = this.scene.add.ellipse(this.x, this.y - 9, 30, 24, 0xffffff, 0)
       .setStrokeStyle(2, isSkill ? 0x8bd8ff : 0xffffff, 0.95).setDepth(this.y + 4);
+    const skillRing = isSkill
+      ? this.scene.add.ellipse(this.x, this.y - 9, 18, 14, 0xffffff, 0)
+          .setStrokeStyle(2, 0xd7f6ff, 0.9).setDepth(this.y + 5)
+      : undefined;
     this.scene.tweens.add({
       targets: label, y: label.y - 28, alpha: 0, duration: 620,
       ease: "Cubic.Out", onComplete: () => label.destroy()
@@ -60,6 +64,12 @@ export class MonsterEntity {
       targets: impactRing, scaleX: 1.8, scaleY: 1.8, alpha: 0, duration: 260,
       ease: "Cubic.Out", onComplete: () => impactRing.destroy()
     });
+    if (skillRing) {
+      this.scene.tweens.add({
+        targets: skillRing, scaleX: 2.4, scaleY: 2.4, alpha: 0, duration: 340,
+        ease: "Cubic.Out", onComplete: () => skillRing.destroy()
+      });
+    }
     this.scene.tweens.add({
       targets: this.body, alpha: 0.45, duration: 65, yoyo: true, repeat: 1
     });

@@ -218,3 +218,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Local-player hits are matched by the authenticated player ID, while remote-player hits continue to target the corresponding replicated character.
 - Monster hit damage remains event-driven; snapshot HP updates do not create duplicate damage numbers.
 - Monster attack events now report the post-defense damage actually applied to player HP, rather than the raw pre-mitigation attack value.
+
+
+## Latest implementation batch — combat event ordering and skill impact
+- Added a short-lived per-monster combat-event queue so accepted hits are retained when a combat frame arrives before the snapshot that creates the target monster entity.
+- Queued hits are replayed against the newly created monster on the next matching snapshot, with a 1.5-second expiry and an eight-event per-monster cap to bound stale presentation state.
+- Pending events are pruned during the scene update loop and cleared on scene shutdown; authoritative damage and HP remain snapshot/server-owned.
+- Skill hits now render a second, wider cyan impact ring in addition to the base impact ring and damage number; basic attacks retain the simpler white impact.
+- No guessed critical-hit state or client-side damage calculation was introduced.

@@ -6,7 +6,7 @@ import { LootEntity } from "../game/LootEntity";
 import { loadTiledWorldMap } from "../game/TiledMapLoader";
 import { MapRenderer } from "../game/MapRenderer";
 import { MovementController } from "../game/MovementController";
-import { WorldSocketClient, type WorldSnapshot } from "../game/WorldSocketClient";
+import { WorldSocketClient, type WorldCombatEvent, type WorldSnapshot } from "../game/WorldSocketClient";
 
 interface RemotePlayerView {
   entity: CharacterEntity; x: number; y: number; targetX: number; targetY: number; lastSeenAt: number;
@@ -20,6 +20,7 @@ export class GameScene extends Phaser.Scene {
   private worldSocket!: WorldSocketClient;
   private readonly remotePlayers = new Map<string, RemotePlayerView>();
   private readonly monsters = new Map<string, MonsterEntity>();
+  private readonly pendingMonsterHits = new Map<string, { event: WorldCombatEvent; expiresAt: number }[]>();
   private readonly loot = new Map<string, LootEntity>();
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   private keys!: Record<string, Phaser.Input.Keyboard.Key>;
@@ -138,7 +139,7 @@ export class GameScene extends Phaser.Scene {
     });
     this.unsubscribeCombat = this.worldSocket.onCombat((event) => {
       if (event.targetMonsterId && event.damage !== undefined) {
-        this.monsters.get(event.targetMonsterId)?.showCombatHit(event.damage, event.action === "skill-cast");
+        this.presentOrQueueMonsterHit(event);
       }
       if (event.targetPlayerId) {
         const ownPlayerId = this.worldSocket.getOwnPlayerId();
@@ -202,6 +203,7 @@ export class GameScene extends Phaser.Scene {
     }
     this.player.update(delta);
     this.updateRemotePlayers(delta);
+    this.prunePendingMonsterHits();
   }
 
 
@@ -496,6 +498,44 @@ export class GameScene extends Phaser.Scene {
     for (const [monsterId, entity] of this.monsters) {
       if (!visibleMonsterIds.has(monsterId)) { entity.destroy(); this.monsters.delete(monsterId); }
     }
+    for (const monsterId of visibleMonsterIds) this.flushPendingMonsterHits(monsterId);
+  }
+
+  private presentOrQueueMonsterHit(event: WorldCombatEvent): void {
+    const monsterId = event.targetMonsterId;
+    if (!monsterId || event.damage === undefined || event.damage <= 0) return;
+    const monster = this.monsters.get(monsterId);
+    if (monster) {
+      monster.showCombatHit(event.damage, event.action === "skill-cast");
+      return;
+    }
+    const pending = this.pendingMonsterHits.get(monsterId) ?? [];
+    pending.push({ event, expiresAt: this.time.now + 1_500 });
+    if (pending.length > 8) pending.shift();
+    this.pendingMonsterHits.set(monsterId, pending);
+  }
+
+  private flushPendingMonsterHits(monsterId: string): void {
+    const pending = this.pendingMonsterHits.get(monsterId);
+    if (!pending) return;
+    this.pendingMonsterHits.delete(monsterId);
+    const now = this.time.now;
+    const monster = this.monsters.get(monsterId);
+    if (!monster) return;
+    for (const queued of pending) {
+      if (queued.expiresAt >= now && queued.event.damage !== undefined) {
+        monster.showCombatHit(queued.event.damage, queued.event.action === "skill-cast");
+      }
+    }
+  }
+
+  private prunePendingMonsterHits(): void {
+    const now = this.time.now;
+    for (const [monsterId, pending] of this.pendingMonsterHits) {
+      const active = pending.filter((queued) => queued.expiresAt >= now);
+      if (active.length === 0) this.pendingMonsterHits.delete(monsterId);
+      else if (active.length !== pending.length) this.pendingMonsterHits.set(monsterId, active);
+    }
   }
 
   private ensureLocalCharacterVisual(classCode: string, displayName: string, maxHp: number, hp: number): void {
@@ -537,6 +577,7 @@ export class GameScene extends Phaser.Scene {
     this.remotePlayers.clear();
     for (const monster of this.monsters.values()) monster.destroy();
     this.monsters.clear();
+    this.pendingMonsterHits.clear();
     for (const drop of this.loot.values()) drop.destroy();
     this.loot.clear();
     this.player?.destroy(); this.mapRenderer?.destroy();
