@@ -31,13 +31,19 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | 10 | Multiplayer replication | IN PROGRESS | Player, monster, HP, EXP, inventory, loot and quest snapshots; authentication, heartbeat, reconnect and interest management remain. |
 | 11 | Character progression | IN PROGRESS | Level every 100 EXP; character ID, map position, HP and EXP persist in PostgreSQL; stat growth and authenticated ownership remain. |
 | 12 | Loot, item catalog and equipment | IN PROGRESS | Catalog-driven green-slime drop table, 99-stack material limit, 1-stack equipment limit, 20-slot inventory, partial pickup with overflow left on ground, persistent inventory/equipment and HUD. |
-| 13.1 | NPC interaction | IN PROGRESS | Server validates Tiled NPC identity and interaction distance; Meadow Guide dialogue uses E key. |
-| 14.1 | Quest lifecycle | IN PROGRESS | Persistent Meadow Slime Hunt: start, 3 Green Slime kills, turn-in and 100 EXP reward. |
+| 13.1 | NPC interaction | IN PROGRESS | NPC name and opening dialogue are loaded from Tiled object metadata; server validates NPC identity and 100px interaction range. |
+| 14.1 | Quest lifecycle | IN PROGRESS | QuestCatalog defines NPC binding, target monster, required kills, dialogue and reward; progress persists and both basic/skill kills advance matching objectives. |
 | 14.2 | Quest Journal UI | IN PROGRESS | Client journal displays objective, kill progress, ready-to-claim and claimed states; toggle with J. |
 | 15–17 | Economy, QA and operations | NOT STARTED | Item catalog, equipment, trading, production observability and load testing remain. |
 
 ## Latest implementation batch
-- Added the Inventory & Equipment panel (I) with item counts, equipped weapon/body slots and displayed ATK/DEF bonuses.\n- Keyboard controls: 1 equip novice sword, 2 equip cloth tunic, 3 unequip weapon, 4 unequip body. Server validates ownership and slot, then returns displaced gear to inventory.\n- Added a server-side item catalog for slime gel, novice sword and cloth tunic.\n- New characters receive one novice sword and cloth tunic in their inventory.\n- Equip/unequip requests validate item ownership and equipment slot on the server; replaced gear returns to inventory.\n- Equipment slots are persisted in PostgreSQL and replicated in world snapshots.\n- Added an in-game Quest Journal panel anchored to the HUD.
+- Added the Inventory & Equipment panel (I) with item counts, equipped weapon/body slots and displayed ATK/DEF bonuses.
+- Keyboard controls: 1 equip novice sword, 2 equip cloth tunic, 3 unequip weapon, 4 unequip body. Server validates ownership and slot, then returns displaced gear to inventory.
+- Added a server-side item catalog for slime gel, novice sword and cloth tunic.
+- New characters receive one novice sword and cloth tunic in their inventory.
+- Equip/unequip requests validate item ownership and equipment slot on the server; replaced gear returns to inventory.
+- Equipment slots are persisted in PostgreSQL and replicated in world snapshots.
+- Added an in-game Quest Journal panel anchored to the HUD.
 - The panel is driven by the server's persisted quest snapshot, not client-side quest state.
 - Displays the correct guidance for available, active, ready-to-claim and claimed states.
 - Shows kill progress and a progress bar; press J to show/hide the panel.
@@ -47,11 +53,14 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Fixed invalid literal newline markers in the inventory HUD TypeScript and connected I / 1–4 keyboard controls.
 - Green Slime loot is now driven by a drop table; gel quantity rolls from 1 to 2.
 - Inventory accepts at most 20 distinct item stacks; gel stacks to 99 and equipment stacks to 1. Overflow remains on the ground.
+- NPC dialogue is loaded from Tiled object properties; quest objectives and rewards are defined in QuestCatalog.
+- Basic attacks and skills now both advance only quests matching the defeated monster type.
 
 ## CI results
 - Workflow: `.github/workflows/ci.yml`.
 - Equipment + HUD + combat stats: [run 44238329614 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44238329614).
-- Loot/drop-table batch: pending CI verification.
+- Loot/drop-table and inventory limits: [run 44238861303 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44238861303).
+- Quest/NPC catalog batch: pending CI verification.
 
 ## Current risks
 1. Character, monster and drop visuals remain original procedural placeholders.

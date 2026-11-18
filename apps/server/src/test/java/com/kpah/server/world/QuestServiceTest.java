@@ -25,7 +25,7 @@ class QuestServiceTest {
 
     @BeforeEach
     void setUp() {
-        quests = new QuestService(progress, worlds);
+        quests = new QuestService(progress, worlds, new QuestCatalog());
         WorldMapGeometry map = new WorldMapGeometry("starter-meadow", 1280, 704,
                 640, 384, List.of(), List.of(),
                 List.of(new NpcDefinition("6", "Meadow Guide", 704, 352, 32, 48)));
@@ -61,6 +61,26 @@ class QuestServiceTest {
         assertEquals("claimed", result.status());
         assertEquals(100, result.experienceReward());
         verify(progress).save(saved);
+    }
+
+    @Test
+    void matchingMonsterKillAdvancesActiveQuest() {
+        QuestProgress saved = new QuestProgress(CHARACTER_ID, "meadow-slime-hunt");
+        when(progress.findById(QUEST_KEY)).thenReturn(Optional.of(saved));
+
+        quests.onMonsterDefeated(CHARACTER_ID, "green-slime");
+
+        assertEquals(1, saved.getProgress());
+        verify(progress).save(saved);
+    }
+
+    @Test
+    void unrelatedMonsterDoesNotAdvanceQuest() {
+        when(progress.findById(QUEST_KEY)).thenReturn(Optional.empty());
+
+        quests.onMonsterDefeated(CHARACTER_ID, "wolf");
+
+        verify(progress, org.mockito.Mockito.never()).save(any(QuestProgress.class));
     }
 
     @Test

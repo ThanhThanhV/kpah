@@ -9,7 +9,7 @@ export interface WorldPlayerSnapshot {
   hp: number; maxHp: number; dead: boolean;
   experience: number; level: number; inventory: Record<string, number>;
   equipment?: Record<string, string>; itemCatalog?: Record<string, WorldItemDefinition>;
-  quest?: { questId: string; status: string; progress: number; required: number };
+  quest?: { questId: string; status: string; progress: number; required: number; npcName?: string; targetDisplayName?: string; experienceReward?: number };
 }
 export interface WorldMonsterSnapshot {
   monsterId: string; monsterType: string; mapId: string; spawnRegionId: string;

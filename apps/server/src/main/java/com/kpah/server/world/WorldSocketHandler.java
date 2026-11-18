@@ -112,7 +112,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 } else {
                     if (result.monster().hp() == 0) {
                         players.computeIfPresent(session.getId(), (id, current) -> {
-                            quests.onGreenSlimeDefeated(current.playerId());
+                            quests.onMonsterDefeated(current.playerId(), result.monster().monsterType());
                             ConnectedPlayer rewarded = current.withExperience(current.experience() + 25);
                             persist(rewarded);
                             return rewarded;
@@ -181,6 +181,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     MonsterAttackResult attack = result.attack();
                     if (attack.monster().hp() == 0) {
                         players.computeIfPresent(session.getId(), (id, current) -> {
+                            quests.onMonsterDefeated(current.playerId(), attack.monster().monsterType());
                             ConnectedPlayer rewarded = current.withExperience(current.experience() + 25);
                             persist(rewarded);
                             return rewarded;

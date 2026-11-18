@@ -1011,6 +1011,13 @@
           "id": 6,
           "name": "Meadow Guide",
           "class": "npc",
+          "properties": [
+            {
+              "name": "dialogue",
+              "type": "string",
+              "value": "The meadow is in danger. Can you help me?"
+            }
+          ],
           "x": 704,
           "y": 352,
           "width": 32,

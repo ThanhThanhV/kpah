@@ -55,7 +55,10 @@ public class TiledWorldMapLoader {
                     } else if ("npc".equals(objectClass)) {
                         String npcId = object.path("id").asText();
                         String npcName = object.path("name").asText("Villager");
-                        npcs.add(new NpcDefinition(npcId, npcName, x, y, objectWidth, objectHeight));
+                        String dialogue = property(object.path("properties"), "dialogue");
+                        if (dialogue == null || dialogue.isBlank()) dialogue = "Greetings, traveler.";
+                        npcs.add(new NpcDefinition(npcId, npcName, x, y,
+                                objectWidth, objectHeight, dialogue));
                     } else if ("monster-spawn".equals(objectClass)) {
                         String regionId = object.path("id").asText();
                         String monsterType = property(object.path("properties"), "monsterType");
