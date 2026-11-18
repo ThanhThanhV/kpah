@@ -23,10 +23,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 |---|---|---|---|
 | 3.1–3.4 | Client/server foundation, world transport and CI | IN PROGRESS | Phaser, Spring Boot, PostgreSQL Compose and GitHub Actions. CI passed both client and server jobs on commit `1844235`; latest HUD-only commit is awaiting its own CI result. |
 | 4.1–4.5 | Character renderer and animation | IN PROGRESS | Procedural player placeholder and SpriteSheet/Spine adapter contracts; concrete art adapters remain. |
-| 5 | Map Engine | IN PROGRESS | Tiled map loading and rectangular collision; collision-aware monster navigation and map art remain. |
+| 5 | Map Engine | IN PROGRESS | Tiled map loading, rectangular collision and server-side grid pathfinding for monster navigation; map art remains. |
 | 6.1–6.3 | Input, movement and facing | IN PROGRESS | Client prediction and server-authoritative movement; touch controls and replicated facing remain. |
 | 7.1 | Monster definitions and spawn regions | IN PROGRESS | Tiled spawn properties define type, alive cap, respawn, roam radius and speed. |
-| 7.2 | Monster simulation and AI | IN PROGRESS | Initial spawn, bounded roam, aggro, direct pursuit, attack range/cooldown and leash; obstacle-aware pathfinding remains. |
+| 7.2 | Monster simulation and AI | IN PROGRESS | Initial spawn, bounded roam, aggro, leash, attack range/cooldown and bounded A* pursuit using Tiled collision; pathfinding tests added. |
 | 7.3 | Monster presentation | IN PROGRESS | Snapshot-driven slime and ground-drop placeholders; final sprite/Spine animations remain. |
 | 8.1 | Target selection and basic attack | IN PROGRESS | Nearest monster selection; server validates target, map, 58px range and 600ms cooldown. |
 | 8.2 | Damage and monster defeat | IN PROGRESS | Server applies damage and configured respawn delay; kill creates a material drop and grants 25 EXP. |
@@ -45,14 +45,14 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 
 ## Current risks
 1. Character and monster visuals remain original procedural placeholders.
-2. Monster pursuit uses direct movement and is not collision-aware.
+2. Monster navigation uses a 24px grid and collision-cell centers; finer hitbox-aware movement and path smoothing remain.
 3. Loot, EXP and inventory are in-memory and reset on server restart.
 4. WebSocket authentication, heartbeat, reconnect, rate limiting and interest management remain.
 5. No persistent character database, item catalog or equipment implementation yet.
 
 ## Next implementation sequence
-1. Add collision-aware monster pursuit with simple grid pathfinding and state-specific feedback.
-2. Add skill definitions, cooldowns and server-authoritative skill execution.
-3. Add persistent character progression and inventory.
+1. Extend combat with authoritative skill definitions, cooldowns and execution.
+2. Add persistent character progression and inventory.
+3. Add NPC interactions and quest progression.
 4. Replace debug character/monster/drop visuals with original art and concrete animation adapters.
 5. Keep GitHub Actions green for every implementation batch.

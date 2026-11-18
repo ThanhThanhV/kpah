@@ -20,6 +20,7 @@ public class MonsterSimulationService {
     private static final long MONSTER_ATTACK_COOLDOWN_MILLIS = 1_100L;
 
     private final Map<String, List<MonsterSpawnRegion>> regionsByMap = new ConcurrentHashMap<>();
+    private final Map<String, GridPathfinder> pathfindersByMap = new ConcurrentHashMap<>();
     private final Map<String, MonsterRuntime> monsters = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Long>> nextSpawnAt = new ConcurrentHashMap<>();
     private final Map<String, LootDropState> lootDrops = new ConcurrentHashMap<>();
@@ -27,6 +28,7 @@ public class MonsterSimulationService {
     public MonsterSimulationService(StarterWorldRegistry worlds) {
         for (WorldMapGeometry map : worlds.all()) {
             regionsByMap.put(map.mapId(), map.monsterSpawns());
+            pathfindersByMap.put(map.mapId(), new GridPathfinder(map));
             Map<String, Long> schedules = new ConcurrentHashMap<>();
             nextSpawnAt.put(map.mapId(), schedules);
             for (MonsterSpawnRegion region : map.monsterSpawns()) {
@@ -116,7 +118,7 @@ public class MonsterSimulationService {
         double offsetY = (ordinal % 2 == 0 ? -1 : 1) * 12.0;
         double homeX = clamp(region.centerX() + offsetX, region.x(), region.x() + region.width());
         double homeY = clamp(region.centerY() + offsetY, region.y(), region.y() + region.height());
-        monsters.put(id, new MonsterRuntime(id, mapId, region, homeX, homeY));
+        monsters.put(id, new MonsterRuntime(id, mapId, region, homeX, homeY, pathfindersByMap.get(mapId)));
     }
 
     private static double clamp(double value, double min, double max) {
@@ -129,6 +131,12 @@ public class MonsterSimulationService {
         private final MonsterSpawnRegion region;
         private final double homeX;
         private final double homeY;
+        private final GridPathfinder pathfinder;
+        private List<GridPathfinder.Waypoint> path = List.of();
+        private int pathIndex;
+        private long nextPathAt;
+        private int pathTargetCellX = Integer.MIN_VALUE;
+        private int pathTargetCellY = Integer.MIN_VALUE;
         private final long phase = System.nanoTime() / 1_000_000L;
         private volatile double x;
         private volatile double y;
@@ -138,8 +146,9 @@ public class MonsterSimulationService {
         private volatile String targetPlayerId;
         private volatile String state = "idle";
 
-        private MonsterRuntime(String id, String mapId, MonsterSpawnRegion region, double homeX, double homeY) {
-            this.id = id; this.mapId = mapId; this.region = region;
+        private MonsterRuntime(String id, String mapId, MonsterSpawnRegion region, double homeX, double homeY,
+                               GridPathfinder pathfinder) {
+            this.id = id; this.mapId = mapId; this.region = region; this.pathfinder = pathfinder;
             this.homeX = homeX; this.homeY = homeY; this.x = homeX; this.y = homeY;
         }
 
@@ -162,7 +171,7 @@ public class MonsterSimulationService {
                     return null;
                 }
                 state = "aggro";
-                moveToward(target.x(), target.y(), region.moveSpeed() * 0.1);
+                moveAlongPath(target.x(), target.y(), nowMillis, region.moveSpeed() * 0.1);
                 return null;
             }
 
@@ -173,8 +182,34 @@ public class MonsterSimulationService {
             double angle = (nowMillis - phase) / 2400.0 + (id.hashCode() & 0xff) / 255.0 * Math.PI * 2;
             double targetX = homeX + Math.cos(angle) * radiusX;
             double targetY = homeY + Math.sin(angle) * radiusY;
-            moveToward(targetX, targetY, region.moveSpeed() * 0.1);
+            moveAlongPath(targetX, targetY, nowMillis, region.moveSpeed() * 0.1);
             return null;
+        }
+
+        private void moveAlongPath(double targetX, double targetY, long nowMillis, double maxStep) {
+            int targetCellX = pathfinder.cellX(targetX);
+            int targetCellY = pathfinder.cellY(targetY);
+            if (nowMillis >= nextPathAt || path.isEmpty()
+                    || targetCellX != pathTargetCellX || targetCellY != pathTargetCellY) {
+                path = pathfinder.findPath(x, y, targetX, targetY,
+                        region.x(), region.y(),
+                        region.x() + region.width(), region.y() + region.height());
+                pathIndex = 0;
+                pathTargetCellX = targetCellX;
+                pathTargetCellY = targetCellY;
+                nextPathAt = nowMillis + 500L;
+            }
+
+            while (pathIndex < path.size()) {
+                GridPathfinder.Waypoint waypoint = path.get(pathIndex);
+                if (Math.hypot(waypoint.x() - x, waypoint.y() - y) <= 5.0) {
+                    pathIndex++;
+                    continue;
+                }
+                moveToward(waypoint.x(), waypoint.y(), maxStep);
+                return;
+            }
+            if (path.isEmpty()) state = "blocked";
         }
 
         private boolean insideLeash(double targetX, double targetY) {
