@@ -54,7 +54,13 @@ export function loadTiledWorldMap(source: unknown): WorldMapDefinition {
         continue;
       }
       if (kind === "npc" || kind === "monster-spawn" || kind === "portal") {
-        worldObjects.push({ id: String(object.id), kind, name: object.name || String(props.get("displayName") ?? kind), x, y, width, height });
+        worldObjects.push({
+          id: String(object.id), kind, name: object.name || String(props.get("displayName") ?? kind),
+          x, y, width, height,
+          ...(typeof props.get("targetMapId") === "string" ? { targetMapId: props.get("targetMapId") as string } : {}),
+          ...(typeof props.get("targetX") === "number" ? { targetX: props.get("targetX") as number } : {}),
+          ...(typeof props.get("targetY") === "number" ? { targetY: props.get("targetY") as number } : {})
+        });
       }
     }
   }
