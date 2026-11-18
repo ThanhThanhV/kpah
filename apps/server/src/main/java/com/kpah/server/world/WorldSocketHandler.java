@@ -34,6 +34,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private final AuthService auth;
     private final WorldMessageRateLimiter messageRateLimiter;
     private final Map<String, ConnectedPlayer> players = new ConcurrentHashMap<>();
+    private final Map<String, Long> lastMovementPersistAt = new ConcurrentHashMap<>();
+    private static final long MOVEMENT_PERSIST_INTERVAL_MILLIS = 5_000L;
 
     public WorldSocketHandler(ObjectMapper mapper, MovementService movementService,
                               MonsterSimulationService monsters, WorldCombatService combat,
@@ -89,6 +91,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 ExperienceProgression.levelFor(player.experience()), character.getMana(), System.currentTimeMillis());
         players.put(session.getId(), player);
         persist(player);
+        lastMovementPersistAt.put(session.getId(), System.currentTimeMillis());
         send(session, Map.of("type", "welcome", "playerId", player.playerId(),
                 "accountId", principal.accountId(), "mapId", mapId));
         broadcast(mapId);
@@ -125,7 +128,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                         player.state(), new MovementInput(axisX, axisY, sequence), elapsed);
                 ConnectedPlayer moved = player.withState(next, now);
                 players.put(session.getId(), moved);
-                persist(moved);
+                persistMovementIfDue(session.getId(), moved);
                 broadcast(next.mapId());
             } else if ("attack".equals(type)) {
                 if (player.hp() <= 0) {
@@ -255,6 +258,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         messageRateLimiter.remove(session.getId());
         ConnectedPlayer removed = players.remove(session.getId());
+        lastMovementPersistAt.remove(session.getId());
         if (removed != null) {
             persist(removed);
             combat.removePlayer(removed.playerId());
@@ -348,6 +352,13 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         int mana = skills.manaFor(player.playerId(), player.classCode(), level, System.currentTimeMillis());
         characters.save(PlayerCharacter.from(player.accountId(), player.playerId(), player.characterName(), player.classCode(),
                 player.state(), player.hp(), player.experience(), mana, player.inventory(), player.equipment()));
+    }
+
+    private void persistMovementIfDue(String sessionId, ConnectedPlayer player) {
+        long now = System.currentTimeMillis();
+        boolean due = lastMovementPersistAt.compute(sessionId, (id, lastPersistAt) ->
+                lastPersistAt == null || now - lastPersistAt >= MOVEMENT_PERSIST_INTERVAL_MILLIS) == now;
+        if (due) persist(player);
     }
 
     private void broadcast(String mapId) {
