@@ -27,6 +27,16 @@ class MonsterDropTableTest {
     }
 
     @Test
+    void forestWolfDropsWolfFang() {
+        var drops = table.roll("forest-edge", "forest-wolf",
+                new Random(0) { @Override public double nextDouble() { return 0.0; } });
+
+        assertEquals(1, drops.size());
+        assertEquals("wolf-fang", drops.getFirst().itemCode());
+        assertEquals(1, drops.getFirst().amount());
+    }
+
+    @Test
     void unknownMonsterHasNoConfiguredDrops() {
         assertTrue(table.roll("unknown-monster", new Random(7)).isEmpty());
     }
