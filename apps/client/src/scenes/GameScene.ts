@@ -418,12 +418,12 @@ export class GameScene extends Phaser.Scene {
       else if (quest.status === "claimed") lines.push(`Reward claimed · ${quest.experienceReward} EXP`);
       else lines.push(`Defeat ${quest.targetDisplayName}: ${progress}/${required}`);
 
-      const barY = 69 + index * 42;
+      const barY = 69 + index * 54;
       this.questJournalProgress!.fillStyle(0x30443e, 1).fillRoundedRect(12, barY, 246, 6, 3);
       this.questJournalProgress!.fillStyle(quest.status === "claimed" ? 0x8bd69a : 0xd8b86c, 1)
         .fillRoundedRect(12, barY, 246 * (quest.status === "claimed" ? 1 : ratio), 6, 3);
     });
-    this.questJournalBody.setText(lines.join("\\n"));
+    this.questJournalBody.setText(lines.join("\n"));
   }
 
   private interactWithNearestNpc(): void {
