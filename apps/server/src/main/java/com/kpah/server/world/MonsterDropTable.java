@@ -25,6 +25,10 @@ public class MonsterDropTable {
                     "alpha-wolf", List.of(
                             new DropEntry("alpha-wolf-pelt", 1.0, 1, 1),
                             new DropEntry("wolf-fang", 1.0, 2, 3)
+                    ),
+                    "ancient-guardian", List.of(
+                            new DropEntry("ancient-guardian-core", 1.0, 1, 1),
+                            new DropEntry("forest-resin", 1.0, 2, 4)
                     )
             )
     );
