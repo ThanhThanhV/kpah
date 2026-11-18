@@ -2,6 +2,7 @@ package com.kpah.server.world;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,10 +14,15 @@ public class QuestService {
     private final NpcRegistry npcs;
     private final QuestCatalog catalog;
 
-    public QuestService(QuestProgressRepository progress, StarterWorldRegistry worlds, QuestCatalog catalog) {
+    @Autowired
+    public QuestService(QuestProgressRepository progress, NpcRegistry npcs, QuestCatalog catalog) {
         this.progress = progress;
-        this.npcs = new NpcRegistry(worlds);
+        this.npcs = npcs;
         this.catalog = catalog;
+    }
+
+    public QuestService(QuestProgressRepository progress, StarterWorldRegistry worlds, QuestCatalog catalog) {
+        this(progress, new NpcRegistry(worlds), catalog);
     }
 
     @Transactional
