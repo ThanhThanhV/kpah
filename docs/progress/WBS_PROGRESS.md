@@ -496,3 +496,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - One NPC can now offer multiple quests sequentially: the next quest becomes available after the previous quest is claimed; active and ready quests retain their existing progress/claim behavior.
 - Quest kill progression remains scoped to the configured map and monster type, so Forest Wolves elsewhere cannot advance this objective.
 - Added catalog coverage for the new quest and the Forest Warden's two-quest sequence. Local playtesting remains pending.
+
+
+## Latest implementation batch — Forest patrol and Alpha Wolf elite encounter
+- Added Forest Sentinel Patrol spawn (2 alive, 15-second respawn) and Alpha Wolf Elite spawn (1 alive, 30-second respawn) to matching server/client Forest Edge map data.
+- Patrol Sentinel uses its bounded home-region roaming loop and does not proactively aggro players.
+- Alpha Wolf remains an aggressive elite and now performs a heavy strike on every third melee attack, dealing 1.8x its base attack damage.
+- Monster attack events now identify their source monster and attack type; the client presents a distinct warning message/color for the Alpha Wolf heavy strike.
+- Added distinct placeholder colors, body sizes and labels for Forest Sentinel and Alpha Wolf. Runtime playtesting remains pending.
