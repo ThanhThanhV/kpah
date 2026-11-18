@@ -64,7 +64,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Equipment + HUD + combat stats: [run 44238329614 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44238329614).
 - Loot/drop-table and inventory limits: [run 44238861303 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44238861303).
 - Quest/NPC catalog batch: [run 44239442720 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44239442720).
-- Account authentication batch: CI pending.
+- Account authentication batch: [run 44240885387 PASS](https://github.com/ThanhThanhV/kpah/actions/runs/44240885387).
 
 ## Current risks
 1. Character, monster and drop visuals remain original procedural placeholders.
