@@ -21,13 +21,13 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 ## WBS activity tracking
 | WBS ID | Activity / deliverable | Status | Evidence / remaining work |
 |---|---|---|---|
-| 3.1–3.4 | Client/server foundation, world transport and CI | IN PROGRESS | Phaser, Spring Boot, PostgreSQL Compose, JPA persistence and GitHub Actions. |
+| 3.1–3.4 | Client/server foundation, world transport and CI | IN PROGRESS | Phaser, Spring Boot, MySQL Compose, JPA persistence and GitHub Actions. |
 | 4.1–4.5 | Character renderer and animation | IN PROGRESS | CharacterEntity now supports interchangeable concrete Phaser SpriteSheet and Spine display adapters with procedural fallback; original sprite/Spine assets and runtime-specific animation registration remain. |
-| 5 | Map Engine | IN PROGRESS | Tiled map loading, rectangular collision and server-side grid pathfinding; map art and transitions remain. |
+| 5 | Map Engine | IN PROGRESS | Two Tiled maps (Starter Meadow, Forest Edge), per-map collision and monster spawns, validated bidirectional portal metadata, server-authoritative portal movement, client map/camera/collision swap; additional maps, map art and playtest validation remain. |
 | 6.1–6.3 | Input, movement and facing | IN PROGRESS | Keyboard + mobile virtual joystick, touch attack and two class-skill buttons; client prediction and server-authoritative movement remain. Replicated facing and responsive HUD layout remain. |
 | 7.1–7.3 | Monster definitions, AI and presentation | IN PROGRESS | Tiled spawn definitions, bounded roam, aggro, leash, attack cooldown, A* pursuit and snapshot-driven placeholder visuals. |
 | 8.1–8.3 | Combat, damage, death and respawn | IN PROGRESS | Server validates basic/skill attacks; class and equipment ATK bonuses affect damage, class/equipment DEF mitigates monster hits (minimum 1), class-specific HP controls health and respawn. |
-| 9 | Skills and visual effects | IN PROGRESS | Six class-bound skills with second skill unlocked at level 3, server-authoritative range/damage/cooldown/mana cost, class mana regeneration and PostgreSQL-persisted mana; area targeting and authored VFX remain. |
+| 9 | Skills and visual effects | IN PROGRESS | Six class-bound skills with second skill unlocked at level 3, server-authoritative range/damage/cooldown/mana cost, class mana regeneration and MySQL-persisted mana; area targeting and authored VFX remain. |
 | 10 | Multiplayer replication | IN PROGRESS | Player, monster, HP, EXP, inventory, loot and quest snapshots; account session is required at WebSocket connect; heartbeat, reconnect and interest management remain. |
 | 11 | Character progression | IN PROGRESS | Level every 100 EXP; Warrior gains +12 HP/+2 ATK/+1 DEF per level, Mage +7 HP/+3 ATK, Archer +9 HP/+2 ATK/+1 DEF; mana capacity also grows by class. Second class skill unlocks at level 3; further skill progression and unlock milestones remain. |
 | 12 | Loot, item catalog and equipment | IN PROGRESS | Catalog-driven green-slime drop table, 99-stack material limit, 1-stack equipment limit, 20-slot inventory, partial pickup with overflow left on ground, persistent inventory/equipment and HUD. |
@@ -42,7 +42,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Added a server-side item catalog for slime gel, novice sword and cloth tunic.
 - New characters receive one novice sword and cloth tunic in their inventory.
 - Equip/unequip requests validate item ownership and equipment slot on the server; replaced gear returns to inventory.
-- Equipment slots are persisted in PostgreSQL and replicated in world snapshots.
+- Equipment slots are persisted in MySQL and replicated in world snapshots.
 - Added an in-game Quest Journal panel anchored to the HUD.
 - The panel is driven by the server's persisted quest snapshot, not client-side quest state.
 - Displays the correct guidance for available, active, ready-to-claim and claimed states.
@@ -367,11 +367,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 
 ## Database configuration correction — use existing local MySQL
 
-- Replaced the PostgreSQL JDBC runtime driver with MySQL Connector/J.
+- Replaced the MySQL JDBC runtime driver with MySQL Connector/J.
 - Spring datasource now defaults to local MySQL at `localhost:3306/mmorpg`, driver `com.mysql.cj.jdbc.Driver`, username from `DB_USERNAME` (default `root`) and password from `DB_PASSWORD` (default `123456`).
 - The complete JDBC URL remains overridable through `DATABASE_URL`.
-- Updated local setup instructions to use an existing MySQL 8.x service; no PostgreSQL container is required.
-- Removed the obsolete PostgreSQL-only Docker Compose file to avoid accidentally starting a second database.
+- Updated local setup instructions to use an existing MySQL 8.x service; no MySQL container is required.
+- Removed the obsolete MySQL-only Docker Compose file to avoid accidentally starting a second database.
 - CI is the verification gate for this batch; local database connectivity has not been tested from this environment.
 
 
