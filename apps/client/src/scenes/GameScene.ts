@@ -16,6 +16,7 @@ export class GameScene extends Phaser.Scene {
   private player!: CharacterEntity;
   private spriteRegistry!: SpriteSheetAnimationRegistry;
   private mapRenderer!: MapRenderer;
+  private currentMapId = "starter-meadow";
   private movement!: MovementController;
   private worldSocket!: WorldSocketClient;
   private readonly remotePlayers = new Map<string, RemotePlayerView>();
@@ -42,6 +43,7 @@ export class GameScene extends Phaser.Scene {
   private unsubscribeStatus?: () => void;
   private unsubscribeCombat?: () => void;
   private unsubscribeQuest?: () => void;
+  private unsubscribeMapTransition?: () => void;
   private interactionKey!: Phaser.Input.Keyboard.Key;
   private questJournalKey!: Phaser.Input.Keyboard.Key;
   private inventoryKey!: Phaser.Input.Keyboard.Key;
@@ -63,6 +65,7 @@ export class GameScene extends Phaser.Scene {
   constructor() { super("GameScene"); }
   preload(): void {
     this.load.json("starter-meadow", "maps/starter-meadow.json");
+    this.load.json("forest-edge", "maps/forest-edge.json");
     for (const sprite of CHARACTER_SPRITE_CATALOG) {
       this.load.spritesheet(sprite.textureKey, sprite.path, {
         frameWidth: sprite.frameWidth, frameHeight: sprite.frameHeight
@@ -74,6 +77,7 @@ export class GameScene extends Phaser.Scene {
     this.spriteRegistry = new SpriteSheetAnimationRegistry();
     for (const sprite of CHARACTER_SPRITE_CATALOG) this.spriteRegistry.register(this, sprite);
     const map = loadTiledWorldMap(this.cache.json.get("starter-meadow"));
+    this.currentMapId = map.id;
     this.mapRenderer = new MapRenderer(this, map);
     this.npcObjects = map.worldObjects.filter((object) => object.kind === "npc");
     this.playerX = map.spawn.x; this.playerY = map.spawn.y;
@@ -150,6 +154,7 @@ export class GameScene extends Phaser.Scene {
       }
     });
     this.unsubscribeSnapshot = this.worldSocket.onSnapshot((snapshot) => this.applyWorldSnapshot(snapshot));
+    this.unsubscribeMapTransition = this.worldSocket.onMapTransition((event) => this.handleMapTransition(event.mapId, event.x, event.y));
     this.unsubscribeQuest = this.worldSocket.onQuest((event) => {
       this.combatLabel?.setText(`${event.npcName}: ${event.message}`);
       this.combatLabel?.setColor("#f5dfa0");
@@ -439,6 +444,43 @@ export class GameScene extends Phaser.Scene {
     return nearest && nearest.distance <= maxRange ? nearest : undefined;
   }
 
+
+  private handleMapTransition(mapId: string, x: number, y: number): void {
+    const cachedMap = this.cache.json.get(mapId);
+    if (!cachedMap) {
+      this.combatLabel?.setText(`Map asset not loaded: ${mapId}`);
+      this.combatLabel?.setColor("#ff9b91");
+      return;
+    }
+    const map = loadTiledWorldMap(cachedMap);
+    if (map.id !== mapId) return;
+
+    this.currentMapId = map.id;
+    this.playerX = x;
+    this.playerY = y;
+    this.player.setMotion(x, y, 0, 0);
+    this.mapRenderer.destroy();
+    this.mapRenderer = new MapRenderer(this, map);
+    this.movement = new MovementController(
+      this.mapRenderer.worldWidth, this.mapRenderer.worldHeight, this.mapRenderer.collisionRects
+    );
+    this.npcObjects = map.worldObjects.filter((object) => object.kind === "npc");
+    this.cameras.main.setBounds(0, 0, this.mapRenderer.worldWidth, this.mapRenderer.worldHeight);
+    this.cameras.main.centerOn(x, y);
+
+    for (const view of this.remotePlayers.values()) view.entity.destroy();
+    this.remotePlayers.clear();
+    for (const monster of this.monsters.values()) monster.destroy();
+    this.monsters.clear();
+    for (const drop of this.loot.values()) drop.destroy();
+    this.loot.clear();
+    this.pendingMonsterHits.clear();
+    this.pendingPlayerHits.clear();
+    this.worldStateLabel?.setText(`Map: ${map.name} · changing area…`);
+    this.combatLabel?.setText(`Entered ${map.name}`);
+    this.combatLabel?.setColor("#9ee0a4");
+  }
+
   private applyWorldSnapshot(snapshot: WorldSnapshot): void {
     const ownPlayer = this.worldSocket.getOwnPlayer(snapshot);
     const mapId = ownPlayer?.mapId ?? snapshot.players[0]?.mapId ?? "unknown";
@@ -623,7 +665,7 @@ export class GameScene extends Phaser.Scene {
     this.input.off("pointermove", this.handleTouchPointerMove, this);
     this.input.off("pointerup", this.handleTouchPointerUp, this);
     this.input.off("pointerupoutside", this.handleTouchPointerUp, this);
-    this.unsubscribeSnapshot?.(); this.unsubscribeStatus?.(); this.unsubscribeCombat?.(); this.unsubscribeQuest?.(); this.worldSocket?.destroy();
+    this.unsubscribeSnapshot?.(); this.unsubscribeStatus?.(); this.unsubscribeCombat?.(); this.unsubscribeQuest?.(); this.unsubscribeMapTransition?.(); this.worldSocket?.destroy();
     for (const view of this.remotePlayers.values()) view.entity.destroy();
     this.remotePlayers.clear();
     for (const monster of this.monsters.values()) monster.destroy();
