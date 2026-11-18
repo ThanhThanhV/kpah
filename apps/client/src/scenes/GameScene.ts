@@ -29,6 +29,7 @@ export class GameScene extends Phaser.Scene {
   private networkAccumulator = 0;
   private connectionLabel?: Phaser.GameObjects.Text;
   private vitalsLabel?: Phaser.GameObjects.Text;
+  private progressionLabel?: Phaser.GameObjects.Text;
   private unsubscribeSnapshot?: () => void;
   private unsubscribeStatus?: () => void;
 
@@ -59,7 +60,11 @@ export class GameScene extends Phaser.Scene {
       fontFamily: "Arial, sans-serif", fontSize: "12px", color: "#ffaaa0",
       backgroundColor: "#14262acc", padding: { x: 7, y: 4 }
     }).setScrollFactor(0).setDepth(2000);
-    this.add.text(18, 84, "WASD / arrows · Space: attack · Shift: cast", {
+    this.progressionLabel = this.add.text(18, 84, "Lv 1 · EXP 0/100 · Bag 0", {
+      fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#f5dfa0",
+      backgroundColor: "#14262acc", padding: { x: 7, y: 4 }
+    }).setScrollFactor(0).setDepth(2000);
+    this.add.text(18, 108, "WASD / arrows · Space: attack · Shift: cast", {
       fontFamily: "Arial, sans-serif", fontSize: "11px", color: "#c0d0c4"
     }).setScrollFactor(0).setDepth(2000);
 
@@ -118,6 +123,10 @@ export class GameScene extends Phaser.Scene {
         ? `HP: ${ownPlayer.hp} / ${ownPlayer.maxHp}`
         : "DEFEATED · Respawning…");
       this.vitalsLabel?.setColor(ownPlayer.hp > 0 ? "#ffaaa0" : "#ff6b62");
+      const itemCount = Object.values(ownPlayer.inventory ?? {}).reduce((sum, count) => sum + count, 0);
+      this.progressionLabel?.setText(
+        `Lv ${ownPlayer.level} · EXP ${ownPlayer.experience % 100}/100 · Bag ${itemCount}`
+      );
     }
     const visibleRemoteIds = new Set<string>();
     const now = this.time.now;
