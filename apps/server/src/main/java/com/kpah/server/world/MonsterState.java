@@ -11,6 +11,8 @@ public record MonsterState(
         double homeY,
         int hp,
         int maxHp,
-        String state
-) {
+        String state,
+        double attackX,
+        double attackY,
+        double attackRadius) {
 }
