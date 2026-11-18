@@ -32,26 +32,26 @@ class SkillCombatServiceTest {
     @Test
     void acceptsClassSkillAndStartsItsCooldownAndManaCost() {
         SkillCastResult result = combat.cast("player-1", "warrior", caster,
-                "warrior-power-strike", "slime-1", 5, 1_000L);
+                "warrior-power-strike", "slime-1", 5, 1, 1_000L);
         assertTrue(result.accepted());
         assertEquals(70, result.manaRemaining());
         assertFalse(combat.cast("player-1", "warrior", caster,
-                "warrior-power-strike", "slime-1", 5, 1_500L).accepted());
+                "warrior-power-strike", "slime-1", 5, 1, 1_500L).accepted());
     }
 
     @Test
     void supportsIndependentClassSkillKits() {
         assertTrue(combat.cast("warrior-1", "warrior", caster,
-                "warrior-power-strike", "slime-1", 5, 1_000L).accepted());
+                "warrior-power-strike", "slime-1", 5, 1, 1_000L).accepted());
         assertTrue(combat.cast("mage-1", "mage", caster,
-                "mage-arcane-bolt", "slime-1", 5, 1_000L).accepted());
+                "mage-arcane-bolt", "slime-1", 5, 1, 1_000L).accepted());
         assertEquals(2, combat.skillsFor("archer").size());
     }
 
     @Test
     void rejectsSkillsFromAnotherClass() {
         SkillCastResult result = combat.cast("player-1", "warrior", caster,
-                "mage-arcane-bolt", "slime-1", 5, 1_000L);
+                "mage-arcane-bolt", "slime-1", 5, 1, 1_000L);
         assertFalse(result.accepted());
         assertEquals(100, result.manaRemaining());
     }
@@ -59,7 +59,7 @@ class SkillCombatServiceTest {
     @Test
     void regeneratesManaOverTime() {
         combat.cast("player-1", "warrior", caster,
-                "warrior-power-strike", "slime-1", 5, 1_000L);
+                "warrior-power-strike", "slime-1", 5, 1, 1_000L);
         assertEquals(78, combat.manaFor("player-1", "warrior", 2_000L));
     }
 }

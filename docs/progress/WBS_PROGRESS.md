@@ -29,7 +29,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 | 8.1–8.3 | Combat, damage, death and respawn | IN PROGRESS | Server validates basic/skill attacks; class and equipment ATK bonuses affect damage, class/equipment DEF mitigates monster hits (minimum 1), class-specific HP controls health and respawn. |
 | 9 | Skills and visual effects | IN PROGRESS | Six class-bound skills (two per class), server-authoritative class validation, target range, damage, cooldown and mana cost; area targeting and authored VFX remain. |
 | 10 | Multiplayer replication | IN PROGRESS | Player, monster, HP, EXP, inventory, loot and quest snapshots; account session is required at WebSocket connect; heartbeat, reconnect and interest management remain. |
-| 11 | Character progression | IN PROGRESS | Level every 100 EXP; character/account ownership and up to 3 characters per account; Warrior/Mage/Archer base HP, ATK, DEF and class-bound skill kits are server-authoritative. Level-based stat growth and unlock milestones remain. |
+| 11 | Character progression | IN PROGRESS | Level every 100 EXP; Warrior gains +12 HP/+2 ATK/+1 DEF per level, Mage +7 HP/+3 ATK, Archer +9 HP/+2 ATK/+1 DEF; mana capacity also grows by class. Level-based skill unlock milestones remain. |
 | 12 | Loot, item catalog and equipment | IN PROGRESS | Catalog-driven green-slime drop table, 99-stack material limit, 1-stack equipment limit, 20-slot inventory, partial pickup with overflow left on ground, persistent inventory/equipment and HUD. |
 | 13.1 | NPC interaction | IN PROGRESS | NPC name and opening dialogue are loaded from Tiled object metadata; server validates NPC identity and 100px interaction range. |
 | 14.1 | Quest lifecycle | IN PROGRESS | QuestCatalog defines NPC binding, target monster, required kills, dialogue and reward; progress persists and both basic/skill kills advance matching objectives. |
@@ -96,3 +96,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Server snapshots publish current/max mana and the active character's skill catalog; the HUD shows HP and MP.
 - Shift and Q map to the selected character's first and second class skills. Damage, range, cooldown and resource spending remain server-authoritative.
 - Mana currently lives in the active world session and starts full after reconnect; persistent mana and level-based skill unlocks remain follow-up work.
+
+
+## Latest implementation batch — class growth by level
+- Added server-side per-level growth curves: Warrior +12 HP/+2 ATK/+1 DEF; Mage +7 HP/+3 ATK; Archer +9 HP/+2 ATK/+1 DEF.
+- Maximum mana grows per level: Warrior +5, Mage +8, Archer +6; mana regeneration remains 8/second.
+- Basic attacks, skills, monster damage mitigation, max HP and max mana now use the character's current level.
+- On level-up, the character gains the corresponding increase to current HP as well as maximum HP.
+- Added unit coverage for all three class growth curves; skill combat tests now pass the authoritative character level.

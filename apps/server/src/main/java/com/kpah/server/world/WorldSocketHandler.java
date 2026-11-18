@@ -200,7 +200,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     send(session, Map.of("type", "combat", "action", "skill-cast",
                             "skillId", result.skill().skillId(),
                             "skillName", result.skill().displayName(),
-                            "mana", result.manaRemaining(), "maxMana", skills.maxMana(player.classCode()),
+                            "mana", result.manaRemaining(), "maxMana", skills.maxMana(player.classCode(), ExperienceProgression.levelFor(player.experience())),
                             "targetMonsterId", targetId, "damage", attack.damage(),
                             "monsterHp", attack.monster().hp(),
                             "experienceReward", attack.monster().hp() == 0 ? 25 : 0));
