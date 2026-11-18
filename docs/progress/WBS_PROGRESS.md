@@ -239,3 +239,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Avoid replaying the same directional animation when a snapshot repeats the current facing; this prevents unnecessary restarts of one-shot clips.
 - Prevent repeated zero-HP snapshots from restarting the death animation every replication tick.
 - Preserve the existing authoritative respawn transition: a character whose HP rises from zero exits death into walk/idle based on movement state.
+
+
+## Latest implementation batch — align directional one-shot animation timing
+- When a character changes facing during attack, cast or hit, the visual adapter restarts the matching directional clip; the logical action timer now resets at the same moment.
+- Applied the same rule to explicit facing changes, preventing a restarted clip from being cut off by elapsed time accumulated on the previous direction.
+- Looping idle/walk behavior and the death hold state are unchanged; server-authoritative combat and movement are unaffected.

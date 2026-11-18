@@ -88,6 +88,8 @@ export class CharacterEntity {
       // Exact diagonal ties keep the previous cardinal facing.
     }
     if (previousFacing !== this.facing && this.action !== "idle" && this.action !== "walk") {
+      // Directional one-shot clips restart at frame zero, so reset their logical timer too.
+      if (ACTION_DURATION[this.action] !== undefined) this.elapsed = 0;
       this.visualAdapter?.play(this.action, this.facing);
     }
     if (this.action === "idle" || this.action === "walk") {
@@ -99,6 +101,8 @@ export class CharacterEntity {
   setFacing(facing: Facing): void {
     if (this.facing === facing) return;
     this.facing = facing;
+    // Keep the logical one-shot lifetime aligned with the restarted directional clip.
+    if (ACTION_DURATION[this.action] !== undefined) this.elapsed = 0;
     this.visualAdapter?.play(this.action, this.facing);
     this.draw();
   }
