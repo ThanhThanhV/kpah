@@ -382,3 +382,8 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Added safe server-side rejection logs for missing or malformed auth subprotocols. Logs include the Origin but never the token.
 - Missing/malformed handshake credentials now return HTTP 401; origin-policy rejections remain HTTP 403.
 - Local verification is still required: restart the backend and confirm the browser's WS request reaches `101 Switching Protocols`. A valid handshake followed by close code 1008 indicates session/character validation, not an origin handshake rejection.
+
+
+## WebSocket Origin pattern correction
+- Corrected the Spring `allowedOriginPatterns` port wildcard to its documented bracket form (`:[*]`). The previous `:*` form does not express Spring's wildcard-port syntax and can still reject the browser Origin with HTTP 403.
+- Local validation remains pending restart and browser handshake confirmation.
