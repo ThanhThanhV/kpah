@@ -130,9 +130,9 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                             return rewarded;
                         });
                     }
-                    send(session, Map.of("type", "combat", "action", "basic-attack",
-                            "targetMonsterId", targetId, "damage", result.damage(),
-                            "monsterHp", result.monster().hp(),
+                    broadcastCombat(player.state().mapId(), Map.of("type", "combat", "action", "basic-attack",
+                            "sourcePlayerId", player.playerId(), "targetMonsterId", targetId,
+                            "damage", result.damage(), "monsterHp", result.monster().hp(),
                             "experienceReward", result.monster().hp() == 0 ? 25 : 0));
                     broadcast(player.state().mapId());
                 }
@@ -200,8 +200,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                         });
                     }
                     persist(player);
-                    send(session, Map.of("type", "combat", "action", "skill-cast",
-                            "skillId", result.skill().skillId(),
+                    broadcastCombat(player.state().mapId(), Map.of("type", "combat", "action", "skill-cast",
+                            "sourcePlayerId", player.playerId(), "skillId", result.skill().skillId(),
                             "skillName", result.skill().displayName(),
                             "mana", result.manaRemaining(), "maxMana", skills.maxMana(player.classCode(), ExperienceProgression.levelFor(player.experience())),
                             "targetMonsterId", targetId, "damage", attack.damage(),
@@ -238,6 +238,13 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 .toList();
 
         for (MonsterPlayerAttack attack : monsters.advance(now, targets)) {
+            ConnectedPlayer hitTarget = players.values().stream()
+                    .filter(player -> player.playerId().equals(attack.playerId())).findFirst().orElse(null);
+            if (hitTarget != null) {
+                broadcastCombat(hitTarget.state().mapId(), Map.of("type", "combat",
+                        "action", "player-hit", "targetPlayerId", attack.playerId(),
+                        "damage", attack.damage()));
+            }
             players.replaceAll((sessionId, player) -> {
                 if (!player.playerId().equals(attack.playerId()) || player.hp() <= 0) return player;
                 int mitigatedDamage = ItemCatalog.mitigateDamage(
@@ -331,6 +338,18 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         Map<String, Object> payload = Map.of(
                 "type", "snapshot", "players", snapshots, "monsters", monsters.snapshot(mapId),
                 "lootDrops", monsters.snapshotLoot(mapId));
+        for (ConnectedPlayer player : players.values()) {
+            if (mapId.equals(player.state().mapId()) && player.session().isOpen()) {
+                try {
+                    send(player.session(), payload);
+                } catch (IOException ignored) {
+                    // The websocket close lifecycle removes failed sessions.
+                }
+            }
+        }
+    }
+
+    private void broadcastCombat(String mapId, Object payload) {
         for (ConnectedPlayer player : players.values()) {
             if (mapId.equals(player.state().mapId()) && player.session().isOpen()) {
                 try {

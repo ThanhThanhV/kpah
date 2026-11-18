@@ -136,6 +136,16 @@ export class GameScene extends Phaser.Scene {
       this.combatLabel?.setColor("#f5dfa0");
     });
     this.unsubscribeCombat = this.worldSocket.onCombat((event) => {
+      if (event.targetPlayerId) {
+        const target = this.remotePlayers.get(event.targetPlayerId);
+        if (target) target.entity.receiveHit();
+      } else if (event.sourcePlayerId && event.sourcePlayerId !== this.worldSocket.getOwnPlayerId()) {
+        const source = this.remotePlayers.get(event.sourcePlayerId);
+        if (source) {
+          if (event.action === "basic-attack") source.entity.attack();
+          else if (event.action === "skill-cast") source.entity.cast();
+        }
+      }
       this.combatLabel?.setText(`${event.skillName ?? "Combat"} · ${event.damage ?? 0} damage`);
       this.combatLabel?.setColor("#a9e7ff");
     });

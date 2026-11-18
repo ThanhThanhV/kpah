@@ -149,3 +149,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Facing is presentation-only and is not accepted as client-authoritative movement state.
 - Removed an unused joystick background field that caused TypeScript noUnusedLocals to fail in the preceding mobile-controls commit.
 - The prior batch's server Maven tests passed; its client typecheck failed solely on that unused field. This batch removes the compile error; the new CI run is the verification gate.
+
+
+## Latest implementation batch — remote character action replication
+- Accepted basic attacks and skill casts are now broadcast to all connected players on the same map with the server-authenticated source character ID.
+- Monster attacks publish a hit-reaction event for the affected player; clients animate the matching remote character.
+- Remote characters continue to derive idle/walk and cardinal facing from interpolated authoritative snapshot movement; combat events temporarily switch them to attack, cast or hit and CharacterEntity returns to movement/idle after the configured action duration.
+- Combat events are presentation-only and do not change client authority over damage, movement, targets or cooldowns.
+- CI verification for this batch is pending.
