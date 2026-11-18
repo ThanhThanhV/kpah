@@ -37,6 +37,7 @@ public class TiledWorldMapLoader {
             List<CollisionBox> collisions = new ArrayList<>();
             List<MonsterSpawnRegion> monsterSpawns = new ArrayList<>();
             List<NpcDefinition> npcs = new ArrayList<>();
+            List<PortalDefinition> portals = new ArrayList<>();
             for (JsonNode layer : root.path("layers")) {
                 if (!"objectgroup".equals(layer.path("type").asText())
                         || !layer.path("visible").asBoolean(true)) continue;
@@ -59,6 +60,19 @@ public class TiledWorldMapLoader {
                         if (dialogue == null || dialogue.isBlank()) dialogue = "Greetings, traveler.";
                         npcs.add(new NpcDefinition(npcId, npcName, x, y,
                                 objectWidth, objectHeight, dialogue));
+                    } else if ("portal".equals(objectClass)) {
+                        String targetMapId = property(object.path("properties"), "targetMapId");
+                        double targetX = doubleProperty(object.path("properties"), "targetX", Double.NaN);
+                        double targetY = doubleProperty(object.path("properties"), "targetY", Double.NaN);
+                        if (targetMapId == null || targetMapId.isBlank()
+                                || !Double.isFinite(x) || !Double.isFinite(y)
+                                || objectWidth <= 0 || objectHeight <= 0
+                                || !Double.isFinite(targetX) || !Double.isFinite(targetY)) {
+                            throw new IllegalStateException("Portal metadata is invalid in " + resourcePath
+                                    + " (object " + object.path("id").asText() + ").");
+                        }
+                        portals.add(new PortalDefinition(object.path("id").asText(), targetMapId,
+                                x, y, objectWidth, objectHeight, targetX, targetY));
                     } else if ("monster-spawn".equals(objectClass)) {
                         String regionId = object.path("id").asText();
                         String monsterType = property(object.path("properties"), "monsterType");
@@ -72,7 +86,7 @@ public class TiledWorldMapLoader {
                     }
                 }
             }
-            return new WorldMapGeometry(mapId, width, height, spawnX, spawnY, collisions, monsterSpawns, npcs);
+            return new WorldMapGeometry(mapId, width, height, spawnX, spawnY, collisions, monsterSpawns, npcs, portals);
         } catch (IOException exception) {
             throw new IllegalStateException("Unable to load Tiled world map: " + resourcePath, exception);
         }
