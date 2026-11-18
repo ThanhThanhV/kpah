@@ -134,7 +134,8 @@ export class GameScene extends Phaser.Scene {
         connecting: ["World: connecting…", "#f0d18b"],
         connected: ["World: connected", "#9ee0a4"],
         reconnecting: ["World: reconnecting…", "#f0d18b"],
-        "authentication-required": ["World: session rejected · returning to account", "#ff9b91"]
+        "authentication-required": ["World: session rejected · returning to account", "#ff9b91"],
+        "protocol-error": ["World: protocol error · reload to reconnect", "#ff9b91"]
       } as const;
       const [label, color] = labels[status];
       this.connectionLabel?.setText(label);
