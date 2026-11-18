@@ -129,9 +129,19 @@ export class GameScene extends Phaser.Scene {
 
     const socketUrl = import.meta.env.VITE_WORLD_WS_URL || "ws://localhost:8080/ws/world";
     this.worldSocket = new WorldSocketClient(socketUrl);
-    this.unsubscribeStatus = this.worldSocket.onStatus((connected) => {
-      this.connectionLabel?.setText(connected ? "World: connected" : "World: offline (local prediction)");
-      this.connectionLabel?.setColor(connected ? "#9ee0a4" : "#f0d18b");
+    this.unsubscribeStatus = this.worldSocket.onStatus((status) => {
+      const labels = {
+        connecting: ["World: connecting…", "#f0d18b"],
+        connected: ["World: connected", "#9ee0a4"],
+        reconnecting: ["World: reconnecting…", "#f0d18b"],
+        "authentication-required": ["World: session rejected · returning to account", "#ff9b91"]
+      } as const;
+      const [label, color] = labels[status];
+      this.connectionLabel?.setText(label);
+      this.connectionLabel?.setColor(color);
+      if (status === "authentication-required") {
+        window.dispatchEvent(new CustomEvent("kpah:world-auth-required"));
+      }
     });
     this.unsubscribeSnapshot = this.worldSocket.onSnapshot((snapshot) => this.applyWorldSnapshot(snapshot));
     this.unsubscribeQuest = this.worldSocket.onQuest((event) => {

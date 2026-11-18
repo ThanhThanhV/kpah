@@ -1,3 +1,5 @@
+export type WorldConnectionStatus = "connecting" | "connected" | "reconnecting" | "authentication-required";
+
 export interface WorldMoveIntent { type: "move"; sequence: number; axisX: number; axisY: number; }
 export interface WorldAttackIntent { type: "attack"; targetMonsterId: string; }
 export interface WorldSkillIntent { type: "cast"; skillId: string; targetMonsterId: string; }
@@ -30,7 +32,7 @@ export class WorldSocketClient {
   private localPlayerId?: string;
   private cachedClassCode = "warrior";
   private readonly listeners = new Set<(snapshot: WorldSnapshot) => void>();
-  private readonly statusListeners = new Set<(connected: boolean) => void>();
+  private readonly statusListeners = new Set<(status: WorldConnectionStatus) => void>();
   private readonly combatListeners = new Set<(event: WorldCombatEvent) => void>();
   private readonly questListeners = new Set<(event: WorldQuestEvent) => void>();
   private reconnectTimer?: number;
@@ -47,27 +49,31 @@ export class WorldSocketClient {
     const url = new URL(this.url);
     const characterId = localStorage.getItem("kpah.characterId");
     const token = localStorage.getItem("kpah.sessionToken");
-    if (!characterId || !token) return;
+    if (!characterId || !token) {
+      this.statusListeners.forEach((listener) => listener("authentication-required"));
+      return;
+    }
+    this.statusListeners.forEach((listener) => listener("connecting"));
     url.searchParams.set("characterId", characterId);
     const socket = new WebSocket(url.toString(), "auth." + token);
     this.socket = socket;
     socket.addEventListener("open", () => {
       this.reconnectAttempt = 0;
-      this.statusListeners.forEach((listener) => listener(true));
+      this.statusListeners.forEach((listener) => listener("connected"));
       this.startHeartbeat(socket);
     });
     socket.addEventListener("close", (event) => {
       this.stopHeartbeat();
       if (this.socket === socket) this.socket = undefined;
-      this.statusListeners.forEach((listener) => listener(false));
-      // Policy violations include expired/invalid sessions and character ownership failures.
-      // Reconnecting with the same credentials cannot recover; let the login flow refresh them.
-      if (event.code !== 1008) this.scheduleReconnect();
+      // A policy close indicates rejected credentials or a character that cannot be used by this session.
+      if (event.code === 1008) {
+        this.statusListeners.forEach((listener) => listener("authentication-required"));
+        return;
+      }
+      this.statusListeners.forEach((listener) => listener("reconnecting"));
+      this.scheduleReconnect();
     });
-    socket.addEventListener("error", () => {
-      this.statusListeners.forEach((listener) => listener(false));
-      socket.close();
-    });
+    socket.addEventListener("error", () => socket.close());
     socket.addEventListener("message", (event) => {
       try {
         const message = JSON.parse(String(event.data)) as { type?: string; playerId?: string } | WorldSnapshot;
@@ -136,7 +142,7 @@ export class WorldSocketClient {
   onSnapshot(listener: (snapshot: WorldSnapshot) => void): () => void {
     this.listeners.add(listener); return () => this.listeners.delete(listener);
   }
-  onStatus(listener: (connected: boolean) => void): () => void {
+  onStatus(listener: (status: WorldConnectionStatus) => void): () => void {
     this.statusListeners.add(listener); return () => this.statusListeners.delete(listener);
   }
   getCachedClassCode(): string { return this.cachedClassCode; }

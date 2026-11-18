@@ -63,6 +63,21 @@ function showLogin(): void {
   renderAuthScreen(authRoot, showCharacterSelection);
 }
 
+let recoveringWorldSession = false;
+window.addEventListener("kpah:world-auth-required", () => {
+  if (recoveringWorldSession) return;
+  recoveringWorldSession = true;
+  game?.destroy(true);
+  game = undefined;
+  gameRoot.innerHTML = "";
+  void restoreAuthSession().then((session) => {
+    if (session) showCharacterSelection(session);
+    else showLogin();
+  }).catch(() => showLogin()).finally(() => {
+    recoveringWorldSession = false;
+  });
+});
+
 window.addEventListener("beforeunload", () => game?.destroy(true));
 restoreAuthSession().then((session) => {
   if (session) showCharacterSelection(session);

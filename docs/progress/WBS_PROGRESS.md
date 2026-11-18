@@ -258,3 +258,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - The WebSocket client now distinguishes retryable disconnects from server policy-violation closes (1008).
 - Invalid/expired session credentials and character ownership rejections no longer trigger an endless reconnect loop with the same credentials.
 - Transient network failures and heartbeat timeouts continue to use bounded exponential reconnect; scene shutdown behavior is unchanged.
+
+
+## Latest implementation batch — recover from rejected world sessions
+- Replaced the WebSocket connected boolean with explicit connection states: connecting, connected, reconnecting and authentication-required.
+- Policy-violation close code 1008 now surfaces a terminal authentication/character-selection state instead of leaving the player in an offline-prediction world with no reconnect path.
+- The application tears down the rejected game session, revalidates the stored account session, then returns a valid account to character selection; expired/invalid account sessions return to sign-in.
+- Transient disconnects continue bounded exponential reconnect, and the existing heartbeat and scene shutdown lifecycle remain intact.
