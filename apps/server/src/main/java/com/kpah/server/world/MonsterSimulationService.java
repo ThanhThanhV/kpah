@@ -68,6 +68,17 @@ public class MonsterSimulationService {
         return attacks;
     }
 
+    public void provoke(String monsterId, String playerId, long nowMillis) {
+        MonsterRuntime monster = monsters.get(monsterId);
+        if (monster == null || monster.hp <= 0 || playerId == null || playerId.isBlank()) return;
+        synchronized (monster) {
+            if (monster.archetype.behavior() == MonsterBehavior.DEFENSIVE) {
+                monster.provokedPlayerId = playerId;
+                monster.provokedUntil = nowMillis + 8_000L;
+            }
+        }
+    }
+
     public MonsterAttackResult applyBasicAttack(String mapId, double attackerX, double attackerY,
                                                 String monsterId, int attackBonus, long nowMillis) {
         return applyDamage(mapId, attackerX, attackerY, monsterId,
@@ -167,6 +178,8 @@ public class MonsterSimulationService {
         private volatile long respawnAt = Long.MAX_VALUE;
         private volatile long nextAttackAt;
         private volatile String targetPlayerId;
+        private volatile String provokedPlayerId;
+        private volatile long provokedUntil;
         private volatile String state = "idle";
 
         private MonsterRuntime(String id, String mapId, MonsterSpawnRegion region, MonsterArchetype archetype,
@@ -177,11 +190,25 @@ public class MonsterSimulationService {
         }
 
         private MonsterPlayerAttack advance(long nowMillis, Collection<MonsterTarget> players) {
-            MonsterTarget target = players.stream()
-                    .filter(player -> mapId.equals(player.mapId()))
-                    .filter(player -> distance(player.x(), player.y(), x, y) <= archetype.aggroRange())
-                    .min(Comparator.comparingDouble(player -> distance(player.x(), player.y(), x, y)))
-                    .orElse(null);
+            MonsterTarget target = switch (archetype.behavior()) {
+                case PATROL -> null;
+                case DEFENSIVE -> {
+                    if (nowMillis > provokedUntil) {
+                        provokedPlayerId = null;
+                        yield null;
+                    }
+                    yield players.stream()
+                            .filter(player -> mapId.equals(player.mapId()))
+                            .filter(player -> player.playerId().equals(provokedPlayerId))
+                            .filter(player -> distance(player.x(), player.y(), x, y) <= archetype.aggroRange())
+                            .findFirst().orElse(null);
+                }
+                case AGGRESSIVE, ELITE -> players.stream()
+                        .filter(player -> mapId.equals(player.mapId()))
+                        .filter(player -> distance(player.x(), player.y(), x, y) <= archetype.aggroRange())
+                        .min(Comparator.comparingDouble(player -> distance(player.x(), player.y(), x, y)))
+                        .orElse(null);
+            };
 
             if (target != null && insideLeash(target.x(), target.y())) {
                 targetPlayerId = target.playerId();
@@ -201,7 +228,7 @@ public class MonsterSimulationService {
             }
 
             targetPlayerId = null;
-            state = "idle";
+            state = archetype.behavior() == MonsterBehavior.PATROL ? "patrol" : "idle";
             double radiusX = Math.min(region.roamRadius(), region.width() / 2.0);
             double radiusY = Math.min(region.roamRadius(), region.height() / 2.0);
             double angle = (nowMillis - phase) / 2400.0 + (id.hashCode() & 0xff) / 255.0 * Math.PI * 2;
