@@ -61,7 +61,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 : new PlayerMotionState(character.getMapId(), character.getX(), character.getY(), 0L);
         ConnectedPlayer player = new ConnectedPlayer(
                 characterId, session, initial, System.nanoTime(),
-                character == null ? PLAYER_MAX_HP : character.getHp(), 0L,
+                character == null ? PLAYER_MAX_HP : character.getHp(),
+                character == null || character.getHp() > 0 ? 0L : System.currentTimeMillis() + PLAYER_RESPAWN_MILLIS,
                 character == null ? 0 : character.getExperience(),
                 character == null ? Map.of() : character.getInventory());
         players.put(session.getId(), player);
