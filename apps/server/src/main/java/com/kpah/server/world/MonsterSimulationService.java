@@ -18,8 +18,10 @@ public class MonsterSimulationService {
     private final Map<String, List<MonsterSpawnRegion>> regionsByMap = new ConcurrentHashMap<>();
     private final Map<String, GridPathfinder> pathfindersByMap = new ConcurrentHashMap<>();
     private final Map<String, MonsterRuntime> monsters = new ConcurrentHashMap<>();
+    private final Map<String, WorldSpatialIndex<String>> monsterSpatialIndexes = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Long>> nextSpawnAt = new ConcurrentHashMap<>();
     private final Map<String, LootDropState> lootDrops = new ConcurrentHashMap<>();
+    private final Map<String, WorldSpatialIndex<LootDropState>> lootSpatialIndexes = new ConcurrentHashMap<>();
     private final MonsterDropTable dropTable;
     private final MonsterArchetypeRegistry archetypes;
 
@@ -56,13 +58,29 @@ public class MonsterSimulationService {
             }
         }
 
-        lootDrops.values().removeIf(drop -> nowMillis - drop.createdAt() > 300_000L);
+        for (LootDropState drop : lootDrops.values()) {
+            if (nowMillis - drop.createdAt() > 300_000L
+                    && lootDrops.remove(drop.dropId(), drop)) {
+                lootSpatialIndexes.computeIfAbsent(drop.mapId(), ignored -> new WorldSpatialIndex<>())
+                        .remove(drop.dropId());
+            }
+        }
         for (MonsterRuntime monster : monsters.values()) {
             if (monster.hp <= 0) {
-                if (nowMillis >= monster.respawnAt) monsters.remove(monster.id);
+                if (nowMillis >= monster.respawnAt && monsters.remove(monster.id, monster)) {
+                    monsterSpatialIndexes.computeIfAbsent(monster.mapId, ignored -> new WorldSpatialIndex<>())
+                            .remove(monster.id);
+                }
                 continue;
             }
             attacks.addAll(monster.advance(nowMillis, players));
+            if (monster.hp > 0) {
+                monsterSpatialIndexes.computeIfAbsent(monster.mapId, ignored -> new WorldSpatialIndex<>())
+                        .upsert(monster.id, monster.x, monster.y, monster.id);
+            } else {
+                monsterSpatialIndexes.computeIfAbsent(monster.mapId, ignored -> new WorldSpatialIndex<>())
+                        .remove(monster.id);
+            }
         }
         return attacks;
     }
@@ -112,7 +130,7 @@ public class MonsterSimulationService {
                         mapId, monster.region.monsterType(), ThreadLocalRandom.current())) {
                     LootDropState drop = new LootDropState(UUID.randomUUID().toString(),
                             rolled.itemCode(), rolled.amount(), mapId, monster.x, monster.y, nowMillis);
-                    lootDrops.put(drop.dropId(), drop);
+                    addLoot(drop);
                 }
             }
             return new MonsterAttackResult(true, "Hit", monster.snapshot(), appliedDamage);
@@ -130,16 +148,45 @@ public class MonsterSimulationService {
                 .filter(drop -> drop.mapId().equals(mapId)).toList();
     }
 
+    public List<MonsterState> nearbyMonsters(String mapId, double x, double y, double radius) {
+        WorldSpatialIndex<String> index = monsterSpatialIndexes.get(mapId);
+        if (index == null) return List.of();
+        return index.query(x, y, radius).stream()
+                .map(monsters::get)
+                .filter(monster -> monster != null && monster.hp > 0 && mapId.equals(monster.mapId))
+                .filter(monster -> Math.hypot(monster.x - x, monster.y - y) <= radius)
+                .map(MonsterRuntime::snapshot)
+                .toList();
+    }
+
+    public List<LootDropState> nearbyLoot(String mapId, double x, double y, double radius) {
+        WorldSpatialIndex<LootDropState> index = lootSpatialIndexes.get(mapId);
+        return index == null ? List.of() : index.query(x, y, radius);
+    }
+
     public void restoreLoot(LootDropState drop) {
-        if (drop != null && drop.amount() > 0) lootDrops.putIfAbsent(drop.dropId(), drop);
+        if (drop != null && drop.amount() > 0) addLoot(drop);
     }
 
     public List<LootDropState> collectNearbyLoot(String mapId, double x, double y) {
-        return lootDrops.values().stream()
-                .filter(drop -> drop.mapId().equals(mapId))
-                .filter(drop -> Math.hypot(drop.x() - x, drop.y() - y) <= 38.0)
-                .filter(drop -> lootDrops.remove(drop.dropId(), drop))
-                .toList();
+        WorldSpatialIndex<LootDropState> index = lootSpatialIndexes.get(mapId);
+        if (index == null) return List.of();
+        List<LootDropState> collected = new ArrayList<>();
+        for (LootDropState drop : index.query(x, y, 38.0)) {
+            if (lootDrops.remove(drop.dropId(), drop)) {
+                index.remove(drop.dropId());
+                collected.add(drop);
+            }
+        }
+        return List.copyOf(collected);
+    }
+
+    private void addLoot(LootDropState drop) {
+        LootDropState previous = lootDrops.putIfAbsent(drop.dropId(), drop);
+        if (previous == null) {
+            lootSpatialIndexes.computeIfAbsent(drop.mapId(), ignored -> new WorldSpatialIndex<>())
+                    .upsert(drop.dropId(), drop.x(), drop.y(), drop);
+        }
     }
 
     private void spawn(String mapId, MonsterSpawnRegion region, int ordinal) {
@@ -149,8 +196,11 @@ public class MonsterSimulationService {
         double offsetY = (ordinal % 2 == 0 ? -1 : 1) * 12.0;
         double homeX = clamp(region.centerX() + offsetX, region.x(), region.x() + region.width());
         double homeY = clamp(region.centerY() + offsetY, region.y(), region.y() + region.height());
-        monsters.put(id, new MonsterRuntime(id, mapId, region, archetypes.require(region.monsterType()),
-                homeX, homeY, pathfindersByMap.get(mapId)));
+        MonsterRuntime monster = new MonsterRuntime(id, mapId, region, archetypes.require(region.monsterType()),
+                homeX, homeY, pathfindersByMap.get(mapId));
+        monsters.put(id, monster);
+        monsterSpatialIndexes.computeIfAbsent(mapId, ignored -> new WorldSpatialIndex<>())
+                .upsert(id, homeX, homeY, id);
     }
 
     private static double clamp(double value, double min, double max) {
