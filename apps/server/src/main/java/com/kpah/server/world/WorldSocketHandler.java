@@ -582,22 +582,40 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                               Map<String, Object> selfState,
                               Map<Object, String> serializedPlayerSnapshots) throws IOException {
         String sessionId = recipient.session().getId();
+        Map<String, String> previousState = lastSentEntityState.get(sessionId);
+        boolean fullSnapshot = previousState == null || !mapId.equals(lastSentMapBySession.get(sessionId));
         Map<String, String> currentState = new HashMap<>();
+        List<Map<String, Object>> changedPlayers = fullSnapshot ? List.of() : new ArrayList<>();
+        List<MonsterState> changedMonsters = fullSnapshot ? List.of() : new ArrayList<>();
+        List<LootDropState> changedLoot = fullSnapshot ? List.of() : new ArrayList<>();
+
         for (Map<String, Object> value : visiblePlayers) {
             String key = "p:" + value.get("playerId");
-            currentState.put(key, serializedEntity(value, serializedPlayerSnapshots));
+            String serialized = serializedEntity(value, serializedPlayerSnapshots);
+            currentState.put(key, serialized);
+            if (!fullSnapshot && !java.util.Objects.equals(previousState.get(key), serialized)) {
+                changedPlayers.add(value);
+            }
         }
         for (MonsterState value : visibleMonsters) {
-            currentState.put("m:" + value.monsterId(), mapper.writeValueAsString(value));
+            String key = "m:" + value.monsterId();
+            String serialized = mapper.writeValueAsString(value);
+            currentState.put(key, serialized);
+            if (!fullSnapshot && !java.util.Objects.equals(previousState.get(key), serialized)) {
+                changedMonsters.add(value);
+            }
         }
         for (LootDropState value : visibleLoot) {
-            currentState.put("l:" + value.dropId(), mapper.writeValueAsString(value));
+            String key = "l:" + value.dropId();
+            String serialized = mapper.writeValueAsString(value);
+            currentState.put(key, serialized);
+            if (!fullSnapshot && !java.util.Objects.equals(previousState.get(key), serialized)) {
+                changedLoot.add(value);
+            }
         }
 
         String currentSelfState = mapper.writeValueAsString(selfState);
         String previousSelfState = lastSentSelfState.get(sessionId);
-        Map<String, String> previousState = lastSentEntityState.get(sessionId);
-        boolean fullSnapshot = previousState == null || !mapId.equals(lastSentMapBySession.get(sessionId));
         if (fullSnapshot) {
             send(recipient.session(), Map.of(
                     "type", "snapshot",
@@ -606,27 +624,19 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     "monsters", visibleMonsters,
                     "lootDrops", visibleLoot));
         } else {
-            List<Map<String, Object>> changedPlayers = visiblePlayers.stream()
-                    .filter(value -> !java.util.Objects.equals(previousState.get("p:" + value.get("playerId")),
-                            currentState.get("p:" + value.get("playerId"))))
-                    .toList();
-            List<MonsterState> changedMonsters = visibleMonsters.stream()
-                    .filter(value -> !java.util.Objects.equals(previousState.get("m:" + value.monsterId()),
-                            currentState.get("m:" + value.monsterId())))
-                    .toList();
-            List<LootDropState> changedLoot = visibleLoot.stream()
-                    .filter(value -> !java.util.Objects.equals(previousState.get("l:" + value.dropId()),
-                            currentState.get("l:" + value.dropId())))
-                    .toList();
-            List<String> removedPlayers = previousState.keySet().stream()
-                    .filter(key -> key.startsWith("p:") && !currentState.containsKey(key))
-                    .map(key -> key.substring(2)).toList();
-            List<String> removedMonsters = previousState.keySet().stream()
-                    .filter(key -> key.startsWith("m:") && !currentState.containsKey(key))
-                    .map(key -> key.substring(2)).toList();
-            List<String> removedLoot = previousState.keySet().stream()
-                    .filter(key -> key.startsWith("l:") && !currentState.containsKey(key))
-                    .map(key -> key.substring(2)).toList();
+            List<String> removedPlayers = new ArrayList<>();
+            List<String> removedMonsters = new ArrayList<>();
+            List<String> removedLoot = new ArrayList<>();
+            for (String key : previousState.keySet()) {
+                if (currentState.containsKey(key)) continue;
+                if (key.startsWith("p:")) {
+                    removedPlayers.add(key.substring(2));
+                } else if (key.startsWith("m:")) {
+                    removedMonsters.add(key.substring(2));
+                } else if (key.startsWith("l:")) {
+                    removedLoot.add(key.substring(2));
+                }
+            }
 
             Map<String, Object> delta = new HashMap<>();
             delta.put("type", "snapshot-delta");
