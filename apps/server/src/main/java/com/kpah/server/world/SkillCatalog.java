@@ -1,7 +1,10 @@
 package com.kpah.server.world;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
@@ -15,19 +18,36 @@ public class SkillCatalog {
             new SkillDefinition("archer-quick-shot", "Quick Shot", "archer", 30, 165.0, 2_200L, 16),
             new SkillDefinition("archer-piercing-arrow", "Piercing Arrow", "archer", 52, 210.0, 5_000L, 34, 3)
     ).stream().collect(Collectors.toUnmodifiableMap(SkillDefinition::skillId, skill -> skill));
+    private final Map<String, List<SkillDefinition>> skillsByClass = skills.values().stream()
+            .collect(Collectors.groupingBy(skill -> skill.classCode().toLowerCase(Locale.ROOT)));
+    private final Map<String, Integer> maxRequiredLevelByClass = skillsByClass.entrySet().stream()
+            .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey,
+                    entry -> entry.getValue().stream().mapToInt(SkillDefinition::requiredLevel).max().orElse(1)));
+    private final Map<ClassLevel, Map<String, SkillDefinition>> classLevelCache = new ConcurrentHashMap<>();
 
     public SkillDefinition find(String skillId) { return skills.get(skillId); }
     public Map<String, SkillDefinition> all() { return skills; }
 
     public Map<String, SkillDefinition> forClass(String classCode) {
-        return skills.values().stream().filter(skill -> skill.classCode().equalsIgnoreCase(classCode))
-                .collect(Collectors.toUnmodifiableMap(SkillDefinition::skillId, skill -> skill));
+        return forClass(classCode, Integer.MAX_VALUE);
     }
 
     public Map<String, SkillDefinition> forClass(String classCode, int level) {
-        return skills.values().stream().filter(skill -> skill.classCode().equalsIgnoreCase(classCode)
-                        && skill.requiredLevel() <= level)
-                .collect(Collectors.toUnmodifiableMap(SkillDefinition::skillId, skill -> skill));
+        if (classCode == null) return Map.of();
+        String normalizedClass = classCode.toLowerCase(Locale.ROOT);
+        List<SkillDefinition> classSkills = skillsByClass.get(normalizedClass);
+        if (classSkills == null) return Map.of();
+        int cacheLevel = Math.min(Math.max(1, level),
+                maxRequiredLevelByClass.getOrDefault(normalizedClass, 1));
+        return classLevelCache.computeIfAbsent(new ClassLevel(normalizedClass, cacheLevel), key -> {
+            Map<String, SkillDefinition> available = new HashMap<>();
+            for (SkillDefinition skill : classSkills) {
+                if (skill.requiredLevel() <= key.level()) {
+                    available.put(skill.skillId(), skill);
+                }
+            }
+            return Map.copyOf(available);
+        });
     }
 
     public int maxMana(String classCode) { return maxMana(classCode, 1); }
@@ -49,4 +69,6 @@ public class SkillCatalog {
     }
 
     public int manaRegenerationPerSecond() { return 8; }
+
+    private record ClassLevel(String classCode, int level) { }
 }
