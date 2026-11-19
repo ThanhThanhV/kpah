@@ -275,6 +275,7 @@ public class MonsterSimulationService {
         private long lastMovementUpdateAt = -1L;
         private int pathTargetCellX = Integer.MIN_VALUE;
         private int pathTargetCellY = Integer.MIN_VALUE;
+        private boolean pathCalculated;
         private final long phase = System.nanoTime() / 1_000_000L;
         private volatile double x;
         private volatile double y;
@@ -431,14 +432,17 @@ public class MonsterSimulationService {
         private void moveAlongPath(double targetX, double targetY, long nowMillis, double maxStep) {
             int targetCellX = pathfinder.cellX(targetX);
             int targetCellY = pathfinder.cellY(targetY);
-            if (nowMillis >= nextPathAt || path.isEmpty()
-                    || targetCellX != pathTargetCellX || targetCellY != pathTargetCellY) {
+            boolean targetCellChanged = targetCellX != pathTargetCellX
+                    || targetCellY != pathTargetCellY;
+            boolean retryBlockedPath = pathCalculated && path.isEmpty() && nowMillis >= nextPathAt;
+            if (!pathCalculated || targetCellChanged || retryBlockedPath) {
                 path = pathfinder.findPath(x, y, targetX, targetY,
                         region.x(), region.y(),
                         region.x() + region.width(), region.y() + region.height());
                 pathIndex = 0;
                 pathTargetCellX = targetCellX;
                 pathTargetCellY = targetCellY;
+                pathCalculated = true;
                 nextPathAt = nowMillis + 500L;
             }
 
