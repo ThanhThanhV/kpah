@@ -125,13 +125,13 @@ All unsupported or missing message types share one rate-limit bucket per connect
 - State-changing paths mark the affected map as pending instead of serializing and sending a snapshot immediately.
 - A 50 ms scheduler drains pending map IDs and sends one latest-state snapshot per map, coalescing movement and simulation updates that arrive within the same interval.
 - This caps snapshot flush frequency at 20 Hz per map while retaining the latest authoritative state; combat events remain immediate and are not delayed by snapshot coalescing.
-- The 100 ms world simulation tick still marks active maps pending, so idle maps with connected players continue to receive periodic snapshots. Delta snapshots and bandwidth compression remain future work.
+- The 100 ms world simulation tick still marks active maps pending, so idle maps with connected players continue to receive periodic snapshots. Delta snapshots are now implemented; unchanged private `selfState` is omitted from deltas. Runtime bandwidth measurement remains outstanding.
 
 
 ## Delta world snapshots
 - The first snapshot for a WebSocket session, and the first snapshot after a map transition, is a full `snapshot`.
 - Subsequent world updates use `snapshot-delta`: changed player/monster/loot records plus explicit `removedPlayerIds`, `removedMonsterIds` and `removedLootDropIds`.
-- Each delta carries the recipient's current `selfState`; private inventory, equipment, item catalog and quest data are never shared with other players.
+- A delta includes the recipient's `selfState` only when it differs from the last successfully sent private state; private inventory, equipment, item catalog and quest data are never shared with other players.
 - The server keeps the last serialized entity state per WebSocket session and map. It replaces that cache only after the frame is sent, and clears it when the session closes.
 - The client applies deltas to its latest full state by stable entity ID. A welcome/reconnect or map-transition event clears the client baseline; deltas received without a baseline are ignored until the next full snapshot.
 - Combat events remain immediate and are not folded into snapshot deltas.
@@ -154,3 +154,8 @@ The server registers low-cardinality Micrometer metrics for the world gateway:
 - `world.websocket.send.failures`: failed serialization/send attempts, tagged by protocol message type.
 
 The Actuator `metrics` endpoint is enabled alongside health/info so operators can inspect aggregate measurements at `/actuator/metrics`. Metrics deliberately exclude account IDs, character IDs, session IDs and client-supplied labels. These are instrumentation counters and distributions, not a benchmark: production capacity limits must be set only after representative concurrent-client load tests.
+
+
+## Gateway load-test procedure
+
+An opt-in k6 scenario is maintained at `infra/load/k6-world.js`, with setup and interpretation instructions in `infra/load/README.md`. It uses one unique test account/session/character per VU, sends movement at 10 messages/second, heartbeats at 20-second intervals and attacks a visible monster every 3 seconds. It records upgrade failures, full/delta frames, combat events, approximate received payload lengths and client-observed snapshot inter-arrival times. Server-side Micrometer metrics provide outbound frame counts, payload-size distributions, send duration and active connections. The script is deliberately excluded from normal CI and must run against disposable test data. A capacity limit is not established until repeatable load runs and host CPU/heap/MySQL measurements are reviewed.
