@@ -652,3 +652,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Quest status, progress, claim state and client payload shape remain unchanged; missing progress rows still map to the existing available state.
 - Mana reads no longer replace the immutable resource-state record on broadcasts where no whole mana point has regenerated.
 - These changes reduce repeated database round trips and avoid unnecessary resource-state writes/allocations. Runtime profiling and local k6 load testing remain pending; no throughput claim is made.
+
+
+## Latest implementation batch — reuse AOI snapshot query buffers
+- World broadcasts now reuse player-session, public-player, monster and loot result lists across recipients within a map flush instead of allocating fresh query-result lists for every player.
+- Player, monster and loot spatial indexes are queried through queryInto; monster resolution writes snapshots directly into the caller-owned result list without an intermediate stream/list pipeline.
+- The existing public list-returning service methods remain available for other callers. Snapshot serialization remains synchronous before the shared buffers are cleared for the next recipient.
+- AOI radius filtering, live-monster checks, own-player fallback and delta/full snapshot payloads are preserved. This is an allocation reduction by code-path inspection; profiling and local k6 measurements remain pending.
