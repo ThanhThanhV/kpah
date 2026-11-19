@@ -120,8 +120,12 @@ public class MonsterSimulationService {
             }
             attacks.addAll(monster.advance(nowMillis, players, nearbyPlayers));
             if (monster.hp > 0) {
-                monsterSpatialIndexes.computeIfAbsent(monster.mapId, ignored -> new WorldSpatialIndex<>())
-                        .upsert(monster.id, monster.x, monster.y, monster.id);
+                if (monster.x != monster.indexedX || monster.y != monster.indexedY) {
+                    monsterSpatialIndexes.computeIfAbsent(monster.mapId, ignored -> new WorldSpatialIndex<>())
+                            .upsert(monster.id, monster.x, monster.y, monster.id);
+                    monster.indexedX = monster.x;
+                    monster.indexedY = monster.y;
+                }
             } else {
                 monsterSpatialIndexes.computeIfAbsent(monster.mapId, ignored -> new WorldSpatialIndex<>())
                         .remove(monster.id);
@@ -274,6 +278,8 @@ public class MonsterSimulationService {
         private final long phase = System.nanoTime() / 1_000_000L;
         private volatile double x;
         private volatile double y;
+        private double indexedX;
+        private double indexedY;
         private volatile int hp;
         private volatile long respawnAt = Long.MAX_VALUE;
         private volatile long nextAttackAt;
@@ -299,6 +305,7 @@ public class MonsterSimulationService {
             this.id = id; this.mapId = mapId; this.region = region; this.archetype = archetype;
             this.pathfinder = pathfinder; this.hp = archetype.maxHp();
             this.homeX = homeX; this.homeY = homeY; this.x = homeX; this.y = homeY;
+            this.indexedX = homeX; this.indexedY = homeY;
         }
 
         private List<MonsterPlayerAttack> advance(long nowMillis, Collection<MonsterTarget> players,
