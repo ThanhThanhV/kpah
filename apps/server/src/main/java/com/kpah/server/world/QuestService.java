@@ -3,9 +3,12 @@ package com.kpah.server.world;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 public class QuestService {
@@ -14,6 +17,7 @@ public class QuestService {
     private final QuestProgressRepository progress;
     private final NpcRegistry npcs;
     private final QuestCatalog catalog;
+    private final Map<String, Map<String, Object>> snapshotCache = new ConcurrentHashMap<>();
 
     @Autowired
     public QuestService(QuestProgressRepository progress, NpcRegistry npcs, QuestCatalog catalog) {
@@ -44,6 +48,7 @@ public class QuestService {
             QuestProgress quest = progress.findById(key(characterId, definition.questId())).orElse(null);
             if (quest == null) {
                 quest = progress.save(new QuestProgress(characterId, definition.questId()));
+                invalidateSnapshotAfterCommit(characterId);
                 return result(definition, definition.startMessage(), quest, 0);
             }
             if (quest.isClaimed()) {
@@ -53,6 +58,7 @@ public class QuestService {
             if (quest.getProgress() >= definition.requiredKills()) {
                 quest.claim();
                 progress.save(quest);
+                invalidateSnapshotAfterCommit(characterId);
                 return result(definition, definition.completionMessage(), quest, definition.experienceReward());
             }
             return result(definition, "Defeat " + definition.targetDisplayName() + ": "
@@ -73,6 +79,7 @@ public class QuestService {
                 if (!quest.isClaimed() && quest.getProgress() < definition.requiredKills()) {
                     quest.increment(definition.requiredKills());
                     progress.save(quest);
+                    invalidateSnapshotAfterCommit(characterId);
                 }
             });
         }
@@ -96,6 +103,14 @@ public class QuestService {
     /** Reads all quest state for a character with one database query for the world snapshot. */
     @Transactional(readOnly = true)
     public Map<String, Object> snapshotState(String characterId) {
+        return snapshotCache.computeIfAbsent(characterId, this::loadSnapshotState);
+    }
+
+    public void evictSnapshot(String characterId) {
+        if (characterId != null) snapshotCache.remove(characterId);
+    }
+
+    private Map<String, Object> loadSnapshotState(String characterId) {
         Map<String, QuestProgress> progressByQuest = progressByQuest(characterId);
         List<Map<String, Object>> allQuests = catalog.all().stream()
                 .map(definition -> snapshotOne(definition, progressByQuest.get(definition.questId())))
@@ -103,6 +118,19 @@ public class QuestService {
         QuestCatalog.QuestDefinition defaultQuest = catalog.defaultQuest();
         return Map.of("quest", snapshotOne(defaultQuest, progressByQuest.get(defaultQuest.questId())),
                 "quests", allQuests);
+    }
+
+    private void invalidateSnapshotAfterCommit(String characterId) {
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    snapshotCache.remove(characterId);
+                }
+            });
+        } else {
+            snapshotCache.remove(characterId);
+        }
     }
 
     private Map<String, QuestProgress> progressByQuest(String characterId) {
