@@ -569,3 +569,12 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Added Windows PowerShell setup instructions, staged test guidance and safety notes in `infra/load/README.md`. Load testing is opt-in and not part of regular CI.
 - Corrected stale README persistence references from PostgreSQL to MySQL and documented the load-test entry point.
 - CI for the load harness/docs and a local run against the user's MySQL-backed server are pending. No measured throughput or supported player cap is claimed.
+
+
+## Latest implementation batch — per-map and inbound gateway telemetry
+- Extended the WebSocket metrics to expose active authenticated connections by current map ID.
+- Added inbound protocol message counters and explicit counts for messages rejected by the per-connection rate limiter.
+- Message-type tags are allowlisted to the known protocol types; unknown client-supplied strings collapse into one `other` bucket to prevent metric-cardinality growth.
+- Map counts move with authoritative portal transitions and decrement on disconnect; account, character and session identifiers are not metric tags.
+- Updated the operational protocol and k6 runbook with the additional metrics.
+- Backend CI verification is pending. These measurements are available after deploying the commit; capacity still requires a local load run against the dedicated MySQL test server.
