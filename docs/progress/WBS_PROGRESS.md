@@ -590,3 +590,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Snapshot construction resolves nearby session IDs against the current public player snapshots, while retaining the recipient's own player entry as a safety fallback during concurrent movement/index updates.
 - Monster and loot spatial indexes remain one-time-per-broadcast builds because their state is owned by the simulation service; their incremental lifecycle is not yet wired into the gateway.
 - CI verification is pending for this batch. No runtime CPU or throughput improvement is claimed until measured under load.
+
+## Latest implementation batch — incremental monster and loot AOI indexes
+- Moved monster and loot spatial-index ownership into `MonsterSimulationService`, with one mutable uniform-grid index per map and no per-broadcast rebuild in `WorldSocketHandler`.
+- Monster index lifecycle: initial/spawn insertion, position refresh after each simulation advance, immediate removal on defeat, and removal when defeated runtimes are retired for respawn. Nearby queries resolve indexed IDs to current live runtime snapshots and re-check exact circular distance.
+- Loot index lifecycle: insertion on drop creation and restoration, removal on collection and five-minute expiry, and radius queries for recipient AOI. Conditional map removals keep concurrent collect/expiry paths from removing a replacement drop.
+- Full map snapshot methods remain available; WebSocket recipients now query only nearby monsters and loot from the simulation-owned indexes. CI and local load testing are pending; no performance improvement is claimed without measurements.
