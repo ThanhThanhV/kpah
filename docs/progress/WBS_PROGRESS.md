@@ -596,3 +596,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Monster index lifecycle: initial/spawn insertion, position refresh after each simulation advance, immediate removal on defeat, and removal when defeated runtimes are retired for respawn. Nearby queries resolve indexed IDs to current live runtime snapshots and re-check exact circular distance.
 - Loot index lifecycle: insertion on drop creation and restoration, removal on collection and five-minute expiry, and radius queries for recipient AOI. Conditional map removals keep concurrent collect/expiry paths from removing a replacement drop.
 - Full map snapshot methods remain available; WebSocket recipients now query only nearby monsters and loot from the simulation-owned indexes. CI and local load testing are pending; no performance improvement is claimed without measurements.
+
+## Latest implementation batch — spatially bounded monster aggro targeting
+- Build one temporary player-position spatial index per map at the start of each monster simulation advance.
+- Each live monster queries only candidates within its configured aggro radius before selecting a target, while retaining the existing map and exact-distance checks.
+- Preserve the full player collection for resolving active telegraphed area attacks; the optimization therefore does not narrow the hit candidates for Alpha Wolf or Ancient Guardian specials.
+- This reduces repeated full-player-list scans during monster target acquisition. It is a structural optimization only; runtime CPU and scale impact still require representative load testing.
