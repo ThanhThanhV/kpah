@@ -27,30 +27,30 @@ public class SkillCombatService {
             return SkillCastResult.rejected("Invalid skill request.", 0);
         }
         synchronized (lockFor(playerId)) {
-        int mana = manaFor(playerId, classCode, level, nowMillis);
-        SkillDefinition skill = catalog.find(skillId);
-        if (skill == null) return SkillCastResult.rejected("Unknown skill.", mana);
-        if (!skill.classCode().equalsIgnoreCase(classCode)) {
-            return SkillCastResult.rejected("This skill is not available to your class.", mana);
-        }
-        if (level < skill.requiredLevel()) {
-            return SkillCastResult.rejected("Requires level " + skill.requiredLevel() + " to unlock this skill.", mana);
-        }
-        if (mana < skill.manaCost()) return SkillCastResult.rejected("Not enough mana.", mana);
-        String cooldownKey = playerId + ":" + skillId;
-        long readyAt = nextCastAt.getOrDefault(cooldownKey, 0L);
-        if (nowMillis < readyAt) return SkillCastResult.rejected("Skill is on cooldown.", mana);
+            int mana = manaFor(playerId, classCode, level, nowMillis);
+            SkillDefinition skill = catalog.find(skillId);
+            if (skill == null) return SkillCastResult.rejected("Unknown skill.", mana);
+            if (!skill.classCode().equalsIgnoreCase(classCode)) {
+                return SkillCastResult.rejected("This skill is not available to your class.", mana);
+            }
+            if (level < skill.requiredLevel()) {
+                return SkillCastResult.rejected("Requires level " + skill.requiredLevel() + " to unlock this skill.", mana);
+            }
+            if (mana < skill.manaCost()) return SkillCastResult.rejected("Not enough mana.", mana);
+            String cooldownKey = playerId + ":" + skillId;
+            long readyAt = nextCastAt.getOrDefault(cooldownKey, 0L);
+            if (nowMillis < readyAt) return SkillCastResult.rejected("Skill is on cooldown.", mana);
 
-        MonsterAttackResult attack = monsters.applySkillAttack(
-                caster.mapId(), caster.x(), caster.y(), targetMonsterId,
-                skill.damage() + Math.max(0, attackBonus), skill.range(), nowMillis);
-        if (!attack.accepted()) return SkillCastResult.rejected(attack.message(), mana);
+            MonsterAttackResult attack = monsters.applySkillAttack(
+                    caster.mapId(), caster.x(), caster.y(), targetMonsterId,
+                    skill.damage() + Math.max(0, attackBonus), skill.range(), nowMillis);
+            if (!attack.accepted()) return SkillCastResult.rejected(attack.message(), mana);
 
-        monsters.provoke(targetMonsterId, playerId, nowMillis);
-        int remaining = mana - skill.manaCost();
-        resources.put(playerId, new ResourceState(remaining, nowMillis));
-        nextCastAt.put(cooldownKey, nowMillis + skill.cooldownMillis());
-        return new SkillCastResult(true, "Skill cast", skill, attack, remaining);
+            monsters.provoke(targetMonsterId, playerId, nowMillis);
+            int remaining = mana - skill.manaCost();
+            resources.put(playerId, new ResourceState(remaining, nowMillis));
+            nextCastAt.put(cooldownKey, nowMillis + skill.cooldownMillis());
+            return new SkillCastResult(true, "Skill cast", skill, attack, remaining);
         }
     }
 
@@ -71,7 +71,9 @@ public class SkillCombatService {
             long elapsed = Math.max(0L, nowMillis - state.lastUpdatedAt());
             int regenerated = (int) (elapsed * catalog.manaRegenerationPerSecond() / REGEN_INTERVAL_MILLIS);
             int mana = Math.min(maxMana, state.mana() + regenerated);
-            resources.put(playerId, new ResourceState(mana, regenerated > 0 ? nowMillis : state.lastUpdatedAt()));
+            if (regenerated > 0) {
+                resources.put(playerId, new ResourceState(mana, nowMillis));
+            }
             return mana;
         }
     }
