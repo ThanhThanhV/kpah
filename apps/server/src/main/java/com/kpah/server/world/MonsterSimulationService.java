@@ -44,6 +44,11 @@ public class MonsterSimulationService {
 
     public List<MonsterPlayerAttack> advance(long nowMillis, Collection<MonsterTarget> players) {
         List<MonsterPlayerAttack> attacks = new ArrayList<>();
+        Map<String, WorldSpatialIndex<MonsterTarget>> playerTargetsByMap = new ConcurrentHashMap<>();
+        for (MonsterTarget player : players) {
+            playerTargetsByMap.computeIfAbsent(player.mapId(), ignored -> new WorldSpatialIndex<>())
+                    .upsert(player.playerId(), player.x(), player.y(), player);
+        }
         for (Map.Entry<String, List<MonsterSpawnRegion>> entry : regionsByMap.entrySet()) {
             String mapId = entry.getKey();
             for (MonsterSpawnRegion region : entry.getValue()) {
@@ -73,7 +78,10 @@ public class MonsterSimulationService {
                 }
                 continue;
             }
-            attacks.addAll(monster.advance(nowMillis, players));
+            WorldSpatialIndex<MonsterTarget> playerIndex = playerTargetsByMap.get(monster.mapId);
+            Collection<MonsterTarget> nearbyPlayers = playerIndex == null ? List.of()
+                    : playerIndex.query(monster.x, monster.y, monster.archetype.aggroRange());
+            attacks.addAll(monster.advance(nowMillis, players, nearbyPlayers));
             if (monster.hp > 0) {
                 monsterSpatialIndexes.computeIfAbsent(monster.mapId, ignored -> new WorldSpatialIndex<>())
                         .upsert(monster.id, monster.x, monster.y, monster.id);
@@ -250,7 +258,8 @@ public class MonsterSimulationService {
             this.homeX = homeX; this.homeY = homeY; this.x = homeX; this.y = homeY;
         }
 
-        private List<MonsterPlayerAttack> advance(long nowMillis, Collection<MonsterTarget> players) {
+        private List<MonsterPlayerAttack> advance(long nowMillis, Collection<MonsterTarget> players,
+                                                   Collection<MonsterTarget> nearbyPlayers) {
             if (heavyStrikeUntil > 0) {
                 if (nowMillis < heavyStrikeUntil) {
                     state = "windup";
@@ -274,13 +283,13 @@ public class MonsterSimulationService {
                         provokedPlayerId = null;
                         yield null;
                     }
-                    yield players.stream()
+                    yield nearbyPlayers.stream()
                             .filter(player -> mapId.equals(player.mapId()))
                             .filter(player -> player.playerId().equals(provokedPlayerId))
                             .filter(player -> distance(player.x(), player.y(), x, y) <= archetype.aggroRange())
                             .findFirst().orElse(null);
                 }
-                case AGGRESSIVE, ELITE -> players.stream()
+                case AGGRESSIVE, ELITE -> nearbyPlayers.stream()
                         .filter(player -> mapId.equals(player.mapId()))
                         .filter(player -> distance(player.x(), player.y(), x, y) <= archetype.aggroRange())
                         .min(Comparator.comparingDouble(player -> distance(player.x(), player.y(), x, y)))
