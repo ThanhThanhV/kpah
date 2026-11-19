@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ public class MonsterSimulationService {
     private final Map<String, MonsterRuntime> monsters = new ConcurrentHashMap<>();
     private final Map<String, WorldSpatialIndex<String>> monsterSpatialIndexes = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Long>> nextSpawnAt = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, AtomicInteger>> aliveCountsByMap = new ConcurrentHashMap<>();
     private final Map<String, LootDropState> lootDrops = new ConcurrentHashMap<>();
     private final Map<String, WorldSpatialIndex<LootDropState>> lootSpatialIndexes = new ConcurrentHashMap<>();
     private final MonsterDropTable dropTable;
@@ -34,7 +36,10 @@ public class MonsterSimulationService {
             pathfindersByMap.put(map.mapId(), new GridPathfinder(map));
             Map<String, Long> schedules = new ConcurrentHashMap<>();
             nextSpawnAt.put(map.mapId(), schedules);
+            Map<String, AtomicInteger> aliveCounts = new ConcurrentHashMap<>();
+            aliveCountsByMap.put(map.mapId(), aliveCounts);
             for (MonsterSpawnRegion region : map.monsterSpawns()) {
+                aliveCounts.put(region.id(), new AtomicInteger());
                 archetypes.require(region.monsterType());
                 for (int i = 0; i < region.maxAlive(); i++) spawn(map.mapId(), region, i);
                 schedules.put(region.id(), 0L);
@@ -53,11 +58,9 @@ public class MonsterSimulationService {
             String mapId = entry.getKey();
             for (MonsterSpawnRegion region : entry.getValue()) {
                 long next = nextSpawnAt.get(mapId).getOrDefault(region.id(), 0L);
-                long alive = monsters.values().stream()
-                        .filter(monster -> monster.mapId.equals(mapId)
-                                && monster.region.id().equals(region.id()) && monster.hp > 0).count();
+                int alive = aliveCountsByMap.get(mapId).get(region.id()).get();
                 if (alive < region.maxAlive() && nowMillis >= next) {
-                    spawn(mapId, region, (int) alive);
+                    spawn(mapId, region, alive);
                     nextSpawnAt.get(mapId).put(region.id(), nowMillis + region.respawnMillis());
                 }
             }
@@ -131,6 +134,7 @@ public class MonsterSimulationService {
             int appliedDamage = Math.min(damage, monster.hp);
             monster.hp -= appliedDamage;
             if (monster.hp == 0) {
+                aliveCountsByMap.get(mapId).get(monster.region.id()).decrementAndGet();
                 long respawnAt = nowMillis + monster.region.respawnMillis();
                 monster.respawnAt = respawnAt;
                 nextSpawnAt.get(mapId).put(monster.region.id(), respawnAt);
@@ -207,6 +211,7 @@ public class MonsterSimulationService {
         MonsterRuntime monster = new MonsterRuntime(id, mapId, region, archetypes.require(region.monsterType()),
                 homeX, homeY, pathfindersByMap.get(mapId));
         monsters.put(id, monster);
+        aliveCountsByMap.get(mapId).get(region.id()).incrementAndGet();
         monsterSpatialIndexes.computeIfAbsent(mapId, ignored -> new WorldSpatialIndex<>())
                 .upsert(id, homeX, homeY, id);
     }
