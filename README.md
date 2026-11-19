@@ -6,7 +6,7 @@ A greenfield, top-down 2D MMORPG prototype. The project uses original code and o
 
 - `apps/client`: TypeScript + Phaser browser client with a procedural debug character, typed starter-map definition, row-major ground renderer, collision geometry, four-direction facing, free movement and normalized diagonals.
 - `apps/server`: Java 21 + Spring Boot game server backed by MySQL.
-- `infra`: local PostgreSQL service for the persistence phase.
+- `infra/load`: opt-in k6 scenarios for WebSocket gateway load testing.
 - `docs`: architecture decisions and WBS progress evidence.
 
 ## Run locally
@@ -45,8 +45,8 @@ Account API: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/m
 - WASD or arrow keys: move freely in 8-way vector space.
 - Facing: four directions; dominant axis wins, exact diagonal ties preserve the last facing.
 - Space: temporary attack pose; Shift: cast pose.
-- Map bounds and collision rectangles are tested on the client for responsiveness. The Java MovementService is authoritative. EXP, HP, map position, inventory and equipment are persisted in PostgreSQL.
-- Register or sign in with an email and a password of at least 10 characters. Passwords are stored as PBKDF2-HMAC-SHA256 hashes with per-password random salts. Sessions use random opaque tokens; only SHA-256 token hashes are stored in PostgreSQL and sessions expire after 30 days.
+- Map bounds and collision rectangles are tested on the client for responsiveness. The Java MovementService is authoritative. EXP, HP, map position, inventory and equipment are persisted in MySQL.
+- Register or sign in with an email and a password of at least 10 characters. Passwords are stored as PBKDF2-HMAC-SHA256 hashes with per-password random salts. Sessions use random opaque tokens; only SHA-256 token hashes are stored in MySQL and sessions expire after 30 days.
 - Each account receives one starter character and can create up to two additional characters (maximum three). Character selection is saved in the authenticated session; classes are Warrior, Mage and Archer with server-authoritative base HP, attack and defense bonuses. WebSocket connections require a valid session token and the server verifies the character belongs to the authenticated account. The browser stores the opaque session token and character ID in local storage; protect the client against XSS and deploy only behind HTTPS/WSS. The WebSocket sends the token in a custom `Sec-WebSocket-Protocol` value rather than the URL. Public deployments must use WSS and avoid logging handshake credentials.
 
 ## Character art pipeline
@@ -56,3 +56,8 @@ See [character asset integration contract](docs/art/CHARACTER_ASSET_PIPELINE.md)
 ## Project status
 
 See [WBS progress](docs/progress/WBS_PROGRESS.md). The progress report distinguishes code committed from builds/tests actually executed. No local build is claimed by a GitHub-only commit.
+
+
+## WebSocket load testing
+
+See [the k6 world gateway load-test guide](infra/load/README.md). Use disposable test accounts and a dedicated MySQL test database; never commit session tokens or point the scenario at production without an approved test window.
