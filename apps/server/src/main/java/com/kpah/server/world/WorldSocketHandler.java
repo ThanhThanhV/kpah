@@ -336,16 +336,11 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     @Scheduled(fixedRate = 100)
     public void tickWorld() {
         long now = System.currentTimeMillis();
-        List<MonsterSimulationService.MonsterTarget> targets = new ArrayList<>();
-        sessionsByMapId.forEach((mapId, sessionIds) -> {
-            for (String sessionId : sessionIds) {
-                ConnectedPlayer player = players.get(sessionId);
-                if (player != null && player.hp() > 0 && mapId.equals(player.state().mapId())) {
-                    targets.add(new MonsterSimulationService.MonsterTarget(
-                            player.playerId(), mapId, player.state().x(), player.state().y()));
-                }
-            }
-        });
+        List<MonsterSimulationService.MonsterTarget> targets = players.values().stream()
+                .filter(player -> player.hp() > 0)
+                .map(player -> new MonsterSimulationService.MonsterTarget(
+                        player.playerId(), player.state().mapId(), player.state().x(), player.state().y()))
+                .toList();
 
         for (MonsterPlayerAttack attack : monsters.advance(now, targets)) {
             int[] appliedDamage = {0};
@@ -381,54 +376,43 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             }
         }
 
-        sessionsByMapId.forEach((mapId, sessionIds) -> {
-            for (String sessionId : sessionIds) {
-                ConnectedPlayer current = players.get(sessionId);
-                if (current == null || !mapId.equals(current.state().mapId()) || current.hp() <= 0) continue;
-                List<LootDropState> collected = monsters.collectNearbyLoot(
-                        mapId, current.state().x(), current.state().y());
-                if (!collected.isEmpty()) {
-                    players.computeIfPresent(sessionId, (id, latest) -> {
-                        if (!mapId.equals(latest.state().mapId())) {
-                            collected.forEach(monsters::restoreLoot);
-                            return latest;
-                        }
-                        Map<String, Integer> updatedInventory = new ConcurrentHashMap<>(latest.inventory());
-                        for (LootDropState drop : collected) {
-                            ItemCatalog.InventoryUpdate update = items.addToInventory(
-                                    updatedInventory, drop.itemCode(), drop.amount());
-                            updatedInventory.clear();
-                            updatedInventory.putAll(update.inventory());
-                            int remainder = drop.amount() - update.acceptedAmount();
-                            if (remainder > 0) monsters.restoreLoot(drop.withAmount(remainder));
-                        }
-                        ConnectedPlayer looted = latest.withInventory(updatedInventory);
-                        persist(looted);
-                        return looted;
-                    });
-                }
-            }
-        });
-
-        sessionsByMapId.forEach((mapId, sessionIds) -> {
-            for (String sessionId : sessionIds) {
-                players.computeIfPresent(sessionId, (id, player) -> {
-                    if (!mapId.equals(player.state().mapId()) || player.hp() > 0
-                            || player.respawnAt() == 0L || now < player.respawnAt()) return player;
-                    PlayerMotionState spawn = movementService.initialState(mapId);
-                    PlayerMotionState respawned = new PlayerMotionState(
-                            spawn.mapId(), spawn.x(), spawn.y(), player.state().lastSequence());
-                    ConnectedPlayer revived = player.withRespawn(respawned,
-                            classes.maxHp(player.classCode(), ExperienceProgression.levelFor(player.experience())),
-                            0L, System.nanoTime());
-                    updatePlayerSpatialIndex(sessionId, mapId, revived);
-                    persist(revived);
-                    return revived;
+        for (Map.Entry<String, ConnectedPlayer> entry : players.entrySet()) {
+            String sessionId = entry.getKey();
+            ConnectedPlayer current = entry.getValue();
+            if (current.hp() <= 0) continue;
+            List<LootDropState> collected = monsters.collectNearbyLoot(
+                    current.state().mapId(), current.state().x(), current.state().y());
+            if (!collected.isEmpty()) {
+                players.computeIfPresent(sessionId, (id, latest) -> {
+                    Map<String, Integer> updatedInventory = new ConcurrentHashMap<>(latest.inventory());
+                    for (LootDropState drop : collected) {
+                        ItemCatalog.InventoryUpdate update = items.addToInventory(
+                                updatedInventory, drop.itemCode(), drop.amount());
+                        updatedInventory.clear();
+                        updatedInventory.putAll(update.inventory());
+                        int remainder = drop.amount() - update.acceptedAmount();
+                        if (remainder > 0) monsters.restoreLoot(drop.withAmount(remainder));
+                    }
+                    ConnectedPlayer looted = latest.withInventory(updatedInventory);
+                    persist(looted);
+                    return looted;
                 });
             }
+        }
+
+        players.replaceAll((sessionId, player) -> {
+            if (player.hp() > 0 || player.respawnAt() == 0L || now < player.respawnAt()) return player;
+            PlayerMotionState spawn = movementService.initialState(player.state().mapId());
+            PlayerMotionState respawned = new PlayerMotionState(
+                    spawn.mapId(), spawn.x(), spawn.y(), player.state().lastSequence());
+            ConnectedPlayer revived = player.withRespawn(respawned, classes.maxHp(player.classCode(), ExperienceProgression.levelFor(player.experience())), 0L, System.nanoTime());
+            updatePlayerSpatialIndex(sessionId, player.state().mapId(), revived);
+            persist(revived);
+            return revived;
         });
 
-        sessionsByMapId.keySet().forEach(this::broadcast);
+        players.values().stream().map(player -> player.state().mapId())
+                .distinct().forEach(this::broadcast);
     }
 
     private ConnectedPlayer awardExperience(ConnectedPlayer player, int amount) {
