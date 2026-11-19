@@ -628,3 +628,8 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - A* expansion, diagonal corner checks, map bounds, spawn-region bounds, nearest-walkable fallback and the 8,000-expansion cap are unchanged. Runtime walkability checks now perform an array lookup instead of scanning every map collision box for every candidate cell.
 - Monster path reuse was reviewed: the existing runtime already caches a path by target grid cell and refreshes it on a 500 ms cadence; this batch deliberately preserves that refresh policy and movement timing.
 - This is a structural reduction in repeated collision checks, not a measured CPU/throughput claim. Existing pathfinder tests and CI provide regression coverage; representative local profiling/load tests remain outstanding.
+
+## Latest implementation batch — skip unchanged monster AOI writes
+- Monster runtimes now retain the last coordinates written to the monster AOI index. The simulation updates the index only when the monster's authoritative position actually changes; spawn still inserts immediately and defeat/retirement still removes immediately.
+- This avoids replacing an index point and allocating its cell/point records on every 100 ms tick for stationary or throttled-idle monsters. Moving monsters continue to update with every changed position, preserving AOI query correctness.
+- No gameplay movement, aggro, path refresh, combat or respawn timing was changed. This is an allocation/work reduction inferred from the code path, not a measured performance claim; runtime profiling and load testing remain pending.
