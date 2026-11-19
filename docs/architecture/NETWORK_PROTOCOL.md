@@ -204,3 +204,11 @@ An opt-in k6 scenario is maintained at `infra/load/k6-world.js`, with setup and 
 - A monster retains its current A* waypoint route while its target remains in the same 24-pixel navigation cell. The route is recalculated immediately when the target enters a different cell.
 - Failed path searches retain a 500 ms retry cooldown. This allows a previously blocked route to be retried without repeatedly running A* on every simulation tick.
 - The pathfinder precomputes blocked navigation cells from map collision geometry at map initialization; A* checks the occupancy array during expansion rather than scanning every collision box for every candidate cell.
+
+
+## Snapshot telemetry
+
+- Each successfully sent full snapshot and delta records a low-cardinality snapshot mode (full or delta).
+- world.websocket.snapshot.duration measures per-recipient snapshot serialization, delta comparison/construction and synchronous send time. It complements the protocol-message send timer with snapshot mode context.
+- world.websocket.snapshot.messages counts successfully completed snapshots by mode; world.websocket.snapshot.visible_entities records the visible player/monster/loot entity count per snapshot.
+- Metrics use only the fixed snapshot mode tag; no player, account or session identifiers are emitted. These measurements are intended to support local k6 profiling and do not themselves establish a performance result.
