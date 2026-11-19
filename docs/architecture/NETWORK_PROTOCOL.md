@@ -110,7 +110,7 @@ All unsupported or missing message types share one rate-limit bucket per connect
 - Inventory, equipment, item catalog and quest state remain isolated in the recipient-only `selfState` field.
 - The client removes monster and loot renderers that leave the current AOI and retains unseen remote players for the existing 1.5-second grace period to avoid flicker during brief snapshot gaps.
 - Player AOI membership uses a mutable per-map uniform-grid index (300 world pixels per cell). Connect, movement, portal transition, respawn and disconnect update only the affected player's cell; each recipient queries nearby session IDs and resolves them against the current public snapshot. The index applies an exact circular-distance check and is synchronized during updates/queries.
-- Monster and loot indexes are still built once per map broadcast from the simulation snapshots, then queried by each recipient. Incremental indexing for those simulation-owned entity types remains a separate optimization.
+- Monster and loot AOI queries use mutable per-map indexes owned by `MonsterSimulationService`; the gateway no longer rebuilds these indexes per broadcast.
 - Combat events are routed around the acting player (or hit player for monster attacks): source/target participants always receive their event, and other players receive it only within the same 900-pixel interest radius. Events without a resolvable participant retain map-wide delivery as a safe fallback.
 
 ## Movement persistence policy
@@ -183,3 +183,11 @@ An opt-in k6 scenario is maintained at `infra/load/k6-world.js`, with setup and 
 - Live monster counts are maintained per map and spawn region. Spawning increments the count and the lethal damage transition decrements it exactly once while holding the monster lock; respawn scheduling reads this counter instead of scanning every runtime for each region on every simulation tick.
 - Loot expiration is scheduled in a priority queue ordered by expiry time. Each simulation tick polls only entries whose expiry time has arrived rather than scanning every active loot drop.
 - Expiry queue entries include both drop ID and creation timestamp. The timestamp check prevents an old queued expiry from deleting a later restored drop that reuses the same ID. Collection and expiration both use conditional map removal before removing the spatial-index entry.
+
+
+## Distance-aware monster idle AI scheduling
+
+- The authoritative world simulation still ticks every 100 ms. Monsters with no valid in-leash target throttle idle/patrol AI and roaming/path updates to at most once every 300 ms instead of recalculating their roaming target and path on every tick.
+- Aggressive/elite monsters with a valid nearby target continue to update every world tick. Defensive monsters resume immediately when their provoked target is present; monsters with an active heavy-strike telegraph continue to resolve the windup on every tick.
+- Movement distance is derived from elapsed time between actual movement updates (bounded to 500 ms after a delayed server tick), so the lower idle update frequency does not intentionally reduce configured movement speed. The movement clock is reset while a monster is stationary in melee range to avoid accumulating idle time into a later movement burst.
+- Respawn, lethal damage, drop creation/expiry and area-attack resolution remain on their existing authoritative lifecycle paths. This is a scheduling optimization, not a measured CPU or throughput claim; local gameplay and load measurements remain required.
