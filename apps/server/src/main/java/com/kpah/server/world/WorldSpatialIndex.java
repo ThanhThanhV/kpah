@@ -56,16 +56,21 @@ final class WorldSpatialIndex<T> {
     }
 
     synchronized List<T> query(double centerX, double centerY, double radius) {
+        List<T> result = new ArrayList<>();
+        queryInto(centerX, centerY, radius, result);
+        return result;
+    }
+
+    synchronized void queryInto(double centerX, double centerY, double radius, List<T> result) {
         if (!Double.isFinite(centerX) || !Double.isFinite(centerY)
                 || !Double.isFinite(radius) || radius < 0) {
-            return List.of();
+            return;
         }
         int minCellX = cellCoordinate(centerX - radius);
         int maxCellX = cellCoordinate(centerX + radius);
         int minCellY = cellCoordinate(centerY - radius);
         int maxCellY = cellCoordinate(centerY + radius);
         double radiusSquared = radius * radius;
-        List<T> result = new ArrayList<>();
         for (int cellX = minCellX; cellX <= maxCellX; cellX++) {
             for (int cellY = minCellY; cellY <= maxCellY; cellY++) {
                 Map<String, Point<T>> points = cells.get(new Cell(cellX, cellY));
@@ -79,7 +84,6 @@ final class WorldSpatialIndex<T> {
                 }
             }
         }
-        return result;
     }
 
     synchronized void retainOnly(java.util.Set<String> retainedIds) {
