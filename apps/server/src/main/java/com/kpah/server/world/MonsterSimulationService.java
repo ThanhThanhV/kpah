@@ -3,6 +3,7 @@ package com.kpah.server.world;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -26,7 +27,7 @@ public class MonsterSimulationService {
     private final Map<String, MonsterRuntime> monsters = new ConcurrentHashMap<>();
     private final Map<String, WorldSpatialIndex<String>> monsterSpatialIndexes = new ConcurrentHashMap<>();
     private final Map<String, WorldSpatialIndex<MonsterTarget>> playerTargetSpatialIndexes = new ConcurrentHashMap<>();
-    private final Map<String, String> playerTargetMapById = new ConcurrentHashMap<>();
+    private final Map<String, String> playerTargetMapById = new HashMap<>();
     private final Set<String> activePlayerTargetIds = new HashSet<>();
     private final Map<String, Map<String, Long>> nextSpawnAt = new ConcurrentHashMap<>();
     private final Map<String, Map<String, AtomicInteger>> aliveCountsByMap = new ConcurrentHashMap<>();
