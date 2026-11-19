@@ -737,3 +737,8 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Snapshot duration covers entity serialization, delta comparison/construction and synchronous WebSocket send; it is recorded only after send and baseline advancement complete successfully.
 - Metrics use only the fixed full/delta mode tag and do not expose account, character or session identifiers.
 - These measurements provide a baseline for the local k6 run. No runtime performance result is claimed until the user runs the workload against the local MySQL-backed server.
+
+
+## Snapshot self-state comparison optimization
+- Removed the immutable item catalog from the per-recipient self-state change fingerprint. It remains included in full/delta payloads when selfState is transmitted, but is no longer serialized again every broadcast interval solely to decide whether selfState changed.
+- Quest, inventory and equipment remain part of the comparison, preserving updates to mutable player state. Runtime performance impact remains to be measured with the local k6 workload.
