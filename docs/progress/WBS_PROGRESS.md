@@ -633,3 +633,8 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Monster runtimes now retain the last coordinates written to the monster AOI index. The simulation updates the index only when the monster's authoritative position actually changes; spawn still inserts immediately and defeat/retirement still removes immediately.
 - This avoids replacing an index point and allocating its cell/point records on every 100 ms tick for stationary or throttled-idle monsters. Moving monsters continue to update with every changed position, preserving AOI query correctness.
 - No gameplay movement, aggro, path refresh, combat or respawn timing was changed. This is an allocation/work reduction inferred from the code path, not a measured performance claim; runtime profiling and load testing remain pending.
+
+## Latest implementation batch — retain valid monster paths
+- Monster A* paths are now retained while the target remains in the same navigation cell. The previous unconditional 500 ms refresh no longer recalculates an already-valid route.
+- A new path is calculated on first use or immediately when the target cell changes. If a path search returns no route, the existing 500 ms retry interval is preserved so temporarily blocked/unreachable paths can recover.
+- Waypoint following, target acquisition, leash checks, movement step calculation, collision geometry and attack cadence are unchanged. This removes periodic A* work for stable targets; actual CPU/GC savings still require profiling and the local k6 scenario.
