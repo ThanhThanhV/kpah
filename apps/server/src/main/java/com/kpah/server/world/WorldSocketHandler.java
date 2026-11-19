@@ -443,14 +443,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             }
         });
 
-        var monsterSnapshot = monsters.snapshot(mapId);
-        var lootSnapshot = monsters.snapshotLoot(mapId);
         WorldSpatialIndex<String> playerIndex = playerSpatialIndexes.computeIfAbsent(
                 mapId, ignored -> new WorldSpatialIndex<>());
-        WorldSpatialIndex<MonsterState> monsterIndex = WorldSpatialIndex.build(
-                monsterSnapshot, MonsterState::x, MonsterState::y);
-        WorldSpatialIndex<LootDropState> lootIndex = WorldSpatialIndex.build(
-                lootSnapshot, LootDropState::x, LootDropState::y);
         for (Map.Entry<String, ConnectedPlayer> entry : players.entrySet()) {
             String sessionId = entry.getKey();
             ConnectedPlayer player = entry.getValue();
@@ -467,8 +461,10 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     .noneMatch(snapshot -> player.playerId().equals(snapshot.get("playerId")))) {
                 visiblePlayers.add(ownSnapshot);
             }
-            List<MonsterState> visibleMonsters = monsterIndex.query(centerX, centerY, INTEREST_RADIUS);
-            List<LootDropState> visibleLoot = lootIndex.query(centerX, centerY, INTEREST_RADIUS);
+            List<MonsterState> visibleMonsters = monsters.nearbyMonsters(
+                    mapId, centerX, centerY, INTEREST_RADIUS);
+            List<LootDropState> visibleLoot = monsters.nearbyLoot(
+                    mapId, centerX, centerY, INTEREST_RADIUS);
             Map<String, Object> selfState = Map.of(
                     "inventory", player.inventory(),
                     "equipment", player.equipment(),
