@@ -465,12 +465,10 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     mapId, centerX, centerY, INTEREST_RADIUS);
             List<LootDropState> visibleLoot = monsters.nearbyLoot(
                     mapId, centerX, centerY, INTEREST_RADIUS);
-            Map<String, Object> selfState = Map.of(
-                    "inventory", player.inventory(),
-                    "equipment", player.equipment(),
-                    "itemCatalog", items.all(),
-                    "quest", quests.snapshot(player.playerId()),
-                    "quests", quests.snapshotAll(player.playerId()));
+            Map<String, Object> selfState = new HashMap<>(quests.snapshotState(player.playerId()));
+            selfState.put("inventory", player.inventory());
+            selfState.put("equipment", player.equipment());
+            selfState.put("itemCatalog", items.all());
             try {
                 sendSnapshot(player, mapId, visiblePlayers, visibleMonsters, visibleLoot, selfState);
             } catch (IOException ignored) {
