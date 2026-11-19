@@ -702,4 +702,6 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 ## Latest implementation batch — streamline world tick player collection
 - Replaced the world tick's stream/filter/map/toList pipeline with a pre-sized target list populated by one direct pass over connected players. The full player set is intentionally retained for monster AoE resolution.
 - Reused the maintained per-map session index keys to schedule map broadcasts, avoiding a second pass over all players plus a distinct-map stream/set.
+
+- Per-map index insertion verifies the live session's map both before and after insertion; if a concurrent disconnect or map transition wins the race, the stale membership is removed.
 - This removes stream and distinct-set overhead by code inspection; runtime CPU/GC profiling and k6 load measurements remain pending.
