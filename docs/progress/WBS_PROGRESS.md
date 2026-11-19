@@ -723,3 +723,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Public player snapshot construction calculates character level and snapshot time once, then reuses them for HP, class stats, mana and skill fields instead of recalculating level repeatedly.
 - The skill maps are immutable and depend only on class and level thresholds; mana remains dynamically calculated per player.
 - Expected allocation/CPU reduction is based on code inspection only. CI and runtime profiling are pending.
+
+## Latest implementation batch — pre-size world snapshot buffers
+- Pre-sized per-map public-player snapshot maps, identity serialization cache, and reusable player visibility lists from the current map session count.
+- Pre-sized each recipient's current entity-state map from visible player/monster/loot counts, and changed-entity lists from their corresponding visible counts.
+- Removed-ID lists start with a small bounded capacity so sparse AOI departures do not reserve memory proportional to the entire previous AOI; they still grow normally when many entities leave at once.
+- Added a bounded HashMap capacity helper to account for the default load factor and avoid routine resize/rehash during snapshot construction.
+- These are allocation/rehash reductions inferred from code structure; no runtime benchmark or memory profile has been run yet.
