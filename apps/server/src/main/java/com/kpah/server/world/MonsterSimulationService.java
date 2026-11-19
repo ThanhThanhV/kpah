@@ -27,7 +27,7 @@ public class MonsterSimulationService {
     private final Map<String, MonsterRuntime> monsters = new ConcurrentHashMap<>();
     private final Map<String, WorldSpatialIndex<String>> monsterSpatialIndexes = new ConcurrentHashMap<>();
     private final Map<String, WorldSpatialIndex<MonsterTarget>> playerTargetSpatialIndexes = new ConcurrentHashMap<>();
-    private final Map<String, String> playerTargetMapById = new HashMap<>();
+    private final Map<String, MonsterTarget> playerTargetsById = new HashMap<>();
     private final Set<String> activePlayerTargetIds = new HashSet<>();
     private final Map<String, Map<String, Long>> nextSpawnAt = new ConcurrentHashMap<>();
     private final Map<String, Map<String, AtomicInteger>> aliveCountsByMap = new ConcurrentHashMap<>();
@@ -62,19 +62,22 @@ public class MonsterSimulationService {
         activePlayerTargetIds.clear();
         for (MonsterTarget player : players) {
             activePlayerTargetIds.add(player.playerId());
-            String previousMapId = playerTargetMapById.put(player.playerId(), player.mapId());
-            if (previousMapId != null && !previousMapId.equals(player.mapId())) {
-                WorldSpatialIndex<MonsterTarget> previousIndex = playerTargetSpatialIndexes.get(previousMapId);
+            MonsterTarget previous = playerTargetsById.put(player.playerId(), player);
+            if (previous != null && !previous.mapId().equals(player.mapId())) {
+                WorldSpatialIndex<MonsterTarget> previousIndex = playerTargetSpatialIndexes.get(previous.mapId());
                 if (previousIndex != null) previousIndex.remove(player.playerId());
             }
-            playerTargetSpatialIndexes.computeIfAbsent(player.mapId(), ignored -> new WorldSpatialIndex<>())
-                    .upsert(player.playerId(), player.x(), player.y(), player);
+            if (!player.equals(previous)) {
+                playerTargetSpatialIndexes.computeIfAbsent(player.mapId(), ignored -> new WorldSpatialIndex<>())
+                        .upsert(player.playerId(), player.x(), player.y(), player);
+            }
         }
-        Iterator<Map.Entry<String, String>> playerIterator = playerTargetMapById.entrySet().iterator();
+        Iterator<Map.Entry<String, MonsterTarget>> playerIterator = playerTargetsById.entrySet().iterator();
         while (playerIterator.hasNext()) {
-            Map.Entry<String, String> playerEntry = playerIterator.next();
+            Map.Entry<String, MonsterTarget> playerEntry = playerIterator.next();
             if (!activePlayerTargetIds.contains(playerEntry.getKey())) {
-                WorldSpatialIndex<MonsterTarget> index = playerTargetSpatialIndexes.get(playerEntry.getValue());
+                WorldSpatialIndex<MonsterTarget> index =
+                        playerTargetSpatialIndexes.get(playerEntry.getValue().mapId());
                 if (index != null) index.remove(playerEntry.getKey());
                 playerIterator.remove();
             }
