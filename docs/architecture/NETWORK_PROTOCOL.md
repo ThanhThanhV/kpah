@@ -212,3 +212,6 @@ An opt-in k6 scenario is maintained at `infra/load/k6-world.js`, with setup and 
 - world.websocket.snapshot.duration measures per-recipient snapshot serialization, delta comparison/construction and synchronous send time. It complements the protocol-message send timer with snapshot mode context.
 - world.websocket.snapshot.messages counts successfully completed snapshots by mode; world.websocket.snapshot.visible_entities records the visible player/monster/loot entity count per snapshot.
 - Metrics use only the fixed snapshot mode tag; no player, account or session identifiers are emitted. These measurements are intended to support local k6 profiling and do not themselves establish a performance result.
+
+
+- Self-state delta comparison excludes the immutable process-wide item catalog from its per-broadcast JSON fingerprint. The catalog remains part of the transmitted selfState payload whenever that state is sent; only redundant serialization for change detection is skipped.
