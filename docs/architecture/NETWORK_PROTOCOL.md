@@ -173,10 +173,10 @@ An opt-in k6 scenario is maintained at `infra/load/k6-world.js`, with setup and 
 
 ## Spatially bounded monster target selection
 
-- Each monster simulation advance builds one temporary per-map player-position index from the current authoritative player targets.
+- The monster simulation service maintains reusable per-map player-position indexes from the current authoritative player targets. Existing player entries are updated only when their snapshot changes; map transitions and disconnects remove old entries.
 - Each live monster queries only the players inside its archetype aggro radius before choosing an aggro target; the monster retains the exact distance and map checks as the final guard.
 - The complete player collection is still used when resolving an already-telegraphed area attack, so targets outside the monster's normal aggro radius are not accidentally omitted from area damage.
-- This removes the repeated full player-list scan for every monster during target acquisition. It is a per-simulation-tick index, separate from the persistent per-map player AOI index used by WebSocket broadcasts.
+- This removes the repeated full player-list scan for every monster during target acquisition. These indexes are simulation-owned and separate from the persistent per-map player AOI index used by WebSocket broadcasts.
 
 ## Monster simulation lifecycle indexes
 
@@ -191,3 +191,11 @@ An opt-in k6 scenario is maintained at `infra/load/k6-world.js`, with setup and 
 - Aggressive/elite monsters with a valid nearby target continue to update every world tick. Defensive monsters resume immediately when their provoked target is present; monsters with an active heavy-strike telegraph continue to resolve the windup on every tick.
 - Movement distance is derived from elapsed time between actual movement updates (bounded to 500 ms after a delayed server tick), so the lower idle update frequency does not intentionally reduce configured movement speed. The movement clock is reset while a monster is stationary in melee range to avoid accumulating idle time into a later movement burst.
 - Respawn, lethal damage, drop creation/expiry and area-attack resolution remain on their existing authoritative lifecycle paths. This is a scheduling optimization, not a measured CPU or throughput claim; local gameplay and load measurements remain required.
+
+
+## Reusable monster target spatial indexes
+
+- Player target indexes are retained by map across simulation ticks instead of allocating and rebuilding a complete set of grids every 100 ms.
+- The simulation tracks the last target snapshot by player ID and only upserts a player when their map or position changes. A map transition removes the old-map entry; disconnect cleanup prunes IDs no longer present in the current authoritative player collection.
+- `WorldSpatialIndex.retainOnly` removes stale IDs while keeping the existing grid and cell maps. The simulation reuses one nearby-player result list across monster iterations through `queryInto`.
+- Full player snapshots remain available to resolve already-telegraphed area attacks. This changes index lifecycle and allocation behavior, not target-selection or damage rules. Runtime GC/CPU impact still requires load measurement.
