@@ -312,19 +312,19 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         messageRateLimiter.remove(session.getId());
         ConnectedPlayer removed = players.remove(session.getId());
-        boolean lastSessionForPlayer = false;
+        boolean[] lastSessionForPlayer = {false};
         if (removed != null) {
             sessionsByPlayerId.computeIfPresent(removed.playerId(), (playerId, playerSessions) -> {
                 playerSessions.remove(session.getId());
                 if (playerSessions.isEmpty()) {
-                    lastSessionForPlayer = true;
+                    lastSessionForPlayer[0] = true;
                     return null;
                 }
                 return playerSessions;
             });
             // A defensive fallback for a session whose player index was already cleared.
             if (!sessionsByPlayerId.containsKey(removed.playerId())) {
-                lastSessionForPlayer = true;
+                lastSessionForPlayer[0] = true;
             }
             removePlayerSpatialIndex(session.getId(), removed.state().mapId());
             removeSessionFromMap(removed.state().mapId(), session.getId());
@@ -337,7 +337,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         if (removed != null) {
             // A stale secondary session must not overwrite the active session's latest
             // character state or clear combat/skill resources still used by that session.
-            if (lastSessionForPlayer) {
+            if (lastSessionForPlayer[0]) {
                 persist(removed);
                 combat.removePlayer(removed.playerId());
                 skills.removePlayer(removed.playerId());
