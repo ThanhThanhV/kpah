@@ -621,7 +621,12 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             }
         }
 
-        String currentSelfState = mapper.writeValueAsString(selfState);
+        // The item catalog is immutable for the lifetime of this server process and is
+        // included in the actual payload when selfState is sent. Exclude it from the
+        // per-broadcast change fingerprint to avoid re-serializing the catalog every tick.
+        Map<String, Object> comparableSelfState = new HashMap<>(selfState);
+        comparableSelfState.remove("itemCatalog");
+        String currentSelfState = mapper.writeValueAsString(comparableSelfState);
         String previousSelfState = lastSentSelfState.get(sessionId);
         if (fullSnapshot) {
             send(recipient.session(), Map.of(
