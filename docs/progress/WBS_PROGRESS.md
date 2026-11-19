@@ -608,3 +608,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Replaced the per-tick full loot-drop expiration scan with a priority queue of scheduled expiry entries. Simulation only polls entries whose five-minute expiry has arrived.
 - Expiry entries carry drop ID plus creation timestamp, preventing stale queue entries from removing a later restored drop that reuses an ID. Actual removal remains conditional and synchronizes the loot map and spatial index.
 - These are structural reductions in repeated collection scans; no measured CPU or throughput claim is made. Backend Maven test/package passed for the code commits; the WBS documentation workflow is being retried after a transient Maven Central resolution failure unrelated to source compilation.
+
+
+## Latest implementation batch — distance-aware monster idle AI scheduling
+- Kept the authoritative world simulation tick at 100 ms, but throttled monsters without a valid in-leash target to idle/patrol AI and roaming/path updates every 300 ms. This avoids recalculating idle roaming targets and A* paths on every world tick.
+- Aggressive/elite monsters with a valid target continue updating every tick; defensive monsters resume when their provoked target is present; active boss telegraphs continue resolving on the normal tick.
+- Movement uses elapsed time since the previous movement update, capped at 500 ms to avoid large catch-up steps after a delayed tick. The movement clock resets while stationary in melee range to prevent a later burst.
+- Respawn, damage, loot creation/expiry and telegraphed area-hit resolution remain on their existing lifecycle paths. This is a structural optimization only; runtime CPU/throughput improvement is not claimed without local load measurements.
