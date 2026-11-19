@@ -480,6 +480,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         List<Map<String, Object>> visiblePlayers = new ArrayList<>();
         List<MonsterState> visibleMonsters = new ArrayList<>();
         List<LootDropState> visibleLoot = new ArrayList<>();
+        Map<String, String> serializedEntitiesById = new HashMap<>();
         for (String sessionId : mapSessions) {
             ConnectedPlayer player = players.get(sessionId);
             if (player == null || !mapId.equals(player.state().mapId()) || !player.session().isOpen()) continue;
@@ -506,7 +507,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             selfState.put("equipment", player.equipment());
             selfState.put("itemCatalog", items.all());
             try {
-                sendSnapshot(player, mapId, visiblePlayers, visibleMonsters, visibleLoot, selfState);
+                sendSnapshot(player, mapId, visiblePlayers, visibleMonsters, visibleLoot,
+                        selfState, serializedEntitiesById);
             } catch (IOException ignored) {
                 // The websocket close lifecycle removes failed sessions.
             }
@@ -576,17 +578,21 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                               List<Map<String, Object>> visiblePlayers,
                               List<MonsterState> visibleMonsters,
                               List<LootDropState> visibleLoot,
-                              Map<String, Object> selfState) throws IOException {
+                              Map<String, Object> selfState,
+                              Map<String, String> serializedEntitiesById) throws IOException {
         String sessionId = recipient.session().getId();
         Map<String, String> currentState = new HashMap<>();
         for (Map<String, Object> value : visiblePlayers) {
-            currentState.put("p:" + value.get("playerId"), mapper.writeValueAsString(value));
+            String key = "p:" + value.get("playerId");
+            currentState.put(key, serializedEntity(key, value, serializedEntitiesById));
         }
         for (MonsterState value : visibleMonsters) {
-            currentState.put("m:" + value.monsterId(), mapper.writeValueAsString(value));
+            String key = "m:" + value.monsterId();
+            currentState.put(key, serializedEntity(key, value, serializedEntitiesById));
         }
         for (LootDropState value : visibleLoot) {
-            currentState.put("l:" + value.dropId(), mapper.writeValueAsString(value));
+            String key = "l:" + value.dropId();
+            currentState.put(key, serializedEntity(key, value, serializedEntitiesById));
         }
 
         String currentSelfState = mapper.writeValueAsString(selfState);
@@ -640,6 +646,16 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         lastSentEntityState.put(sessionId, currentState);
         lastSentMapBySession.put(sessionId, mapId);
         lastSentSelfState.put(sessionId, currentSelfState);
+    }
+
+    private String serializedEntity(String key, Object value,
+                                    Map<String, String> serializedEntitiesById) throws JsonProcessingException {
+        String serialized = serializedEntitiesById.get(key);
+        if (serialized == null) {
+            serialized = mapper.writeValueAsString(value);
+            serializedEntitiesById.put(key, serialized);
+        }
+        return serialized;
     }
 
     private boolean isWithinInterest(double centerX, double centerY, double x, double y) {
