@@ -691,3 +691,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Recipients are resolved against the current session map and open state, then exact current-position radius filtering is applied again to preserve AOI behavior under concurrent movement/index updates.
 - Events without a valid connected player anchor retain the safe map-wide fallback. A missing map index also falls back to map-wide candidates rather than silently dropping nearby recipients.
 - This removes the normal-path full-session recipient scan by code inspection. CI and runtime profiling are pending; no measured latency, CPU or capacity improvement is claimed.
+
+## Latest implementation batch — index active sessions by map
+- Added a concurrent map-ID-to-session-ID index, maintained on WebSocket connect, map transition and disconnect; each session belongs to its current map while multiple sessions for one character remain supported.
+- World snapshot broadcasts now enumerate only sessions indexed to the requested map when materializing public player state and sending recipient snapshots, rather than scanning the global session map twice.
+- The 100ms world tick now builds monster targets, collects nearby loot and checks respawns by iterating indexed sessions per map. Map membership is revalidated against the current connected-player state before processing.
+- Loot collected just before a concurrent map transition is restored rather than lost when the inventory update detects the player has moved.
+- This removes several repeated all-session scans by code-path inspection. CI and runtime profiling are pending; no measured CPU, latency or capacity improvement is claimed.
