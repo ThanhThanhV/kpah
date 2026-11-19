@@ -695,6 +695,6 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 ## Latest implementation batch — index active sessions by map
 - Added a concurrent map-ID-to-session-ID index, maintained on WebSocket connect, map transition and disconnect; each session belongs to its current map while multiple sessions for one character remain supported.
 - World snapshot broadcasts now enumerate only sessions indexed to the requested map when materializing public player state and sending recipient snapshots, rather than scanning the global session map twice.
-- The 100ms world tick now builds monster targets, collects nearby loot and checks respawns by iterating indexed sessions per map. Map membership is revalidated against the current connected-player state before processing.
-- Loot collected just before a concurrent map transition is restored rather than lost when the inventory update detects the player has moved.
-- This removes several repeated all-session scans by code-path inspection. CI and runtime profiling are pending; no measured CPU, latency or capacity improvement is claimed.
+- The 100ms world tick intentionally retains its complete connected-player traversal: monster simulation uses the full player collection to resolve already-telegraphed AoE attacks and prune inactive targets, so replacing that traversal with a partial per-map candidate set would risk changing combat behavior.
+- The per-map index is used for the snapshot broadcast path, where it removes two global-session traversals per map flush. Map membership is revalidated against each live session before snapshot generation.
+- Runtime profiling is still pending; no measured CPU, latency or capacity improvement is claimed.
