@@ -163,3 +163,10 @@ The Actuator `metrics` endpoint is enabled alongside health/info so operators ca
 ## Gateway load-test procedure
 
 An opt-in k6 scenario is maintained at `infra/load/k6-world.js`, with setup and interpretation instructions in `infra/load/README.md`. It uses one unique test account/session/character per VU, sends movement at 10 messages/second, heartbeats at 20-second intervals and attacks a visible monster every 3 seconds. It records upgrade failures, full/delta frames, combat events, approximate received payload lengths and client-observed snapshot inter-arrival times. Server-side Micrometer metrics provide outbound frame counts, payload-size distributions, send duration and active connections. The script is deliberately excluded from normal CI and must run against disposable test data. A capacity limit is not established until repeatable load runs and host CPU/heap/MySQL measurements are reviewed.
+
+## Incremental monster and loot AOI indexes
+
+- The monster simulation service owns per-map mutable spatial indexes for monsters and loot drops; the WebSocket gateway queries these indexes directly for each recipient instead of rebuilding monster and loot grids on every broadcast.
+- Monster entries are inserted at spawn, refreshed after each simulation advance (including movement), and removed immediately on defeat or when a defeated runtime is retired for respawn. Nearby queries resolve IDs to current runtime snapshots and apply an exact distance check.
+- Loot entries are inserted when drops are created or restored, removed when collected or expired, and queried by radius from the same service-owned index. Partial-stack restoration re-adds the updated immutable drop record.
+- Full map snapshot APIs remain available; this change only replaces per-recipient AOI index construction. Runtime CPU, allocation and throughput impact still requires a representative load test.
