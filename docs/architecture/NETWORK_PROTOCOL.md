@@ -177,3 +177,9 @@ An opt-in k6 scenario is maintained at `infra/load/k6-world.js`, with setup and 
 - Each live monster queries only the players inside its archetype aggro radius before choosing an aggro target; the monster retains the exact distance and map checks as the final guard.
 - The complete player collection is still used when resolving an already-telegraphed area attack, so targets outside the monster's normal aggro radius are not accidentally omitted from area damage.
 - This removes the repeated full player-list scan for every monster during target acquisition. It is a per-simulation-tick index, separate from the persistent per-map player AOI index used by WebSocket broadcasts.
+
+## Monster simulation lifecycle indexes
+
+- Live monster counts are maintained per map and spawn region. Spawning increments the count and the lethal damage transition decrements it exactly once while holding the monster lock; respawn scheduling reads this counter instead of scanning every runtime for each region on every simulation tick.
+- Loot expiration is scheduled in a priority queue ordered by expiry time. Each simulation tick polls only entries whose expiry time has arrived rather than scanning every active loot drop.
+- Expiry queue entries include both drop ID and creation timestamp. The timestamp check prevents an old queued expiry from deleting a later restored drop that reuses the same ID. Collection and expiration both use conditional map removal before removing the spatial-index entry.
