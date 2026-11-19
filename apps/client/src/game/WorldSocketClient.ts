@@ -32,6 +32,13 @@ export interface WorldSnapshot {
   lootDrops: WorldLootSnapshot[];
   selfState?: Pick<WorldPlayerSnapshot, "inventory" | "equipment" | "itemCatalog" | "quest" | "quests">;
 }
+export interface WorldSnapshotDelta {
+  type: "snapshot-delta";
+  players: WorldPlayerSnapshot[]; removedPlayerIds: string[];
+  monsters: WorldMonsterSnapshot[]; removedMonsterIds: string[];
+  lootDrops: WorldLootSnapshot[]; removedLootDropIds: string[];
+  selfState?: WorldSnapshot["selfState"];
+}
 
 export class WorldSocketClient {
   private socket?: WebSocket;
@@ -39,6 +46,7 @@ export class WorldSocketClient {
   private localPlayerId?: string;
   private cachedClassCode = "warrior";
   private readonly listeners = new Set<(snapshot: WorldSnapshot) => void>();
+  private latestSnapshot?: WorldSnapshot;
   private readonly statusListeners = new Set<(status: WorldConnectionStatus) => void>();
   private readonly combatListeners = new Set<(event: WorldCombatEvent) => void>();
   private readonly questListeners = new Set<(event: WorldQuestEvent) => void>();
@@ -94,27 +102,57 @@ export class WorldSocketClient {
         if (message.type === "pong") {
           if (this.pongTimeoutTimer !== undefined) window.clearTimeout(this.pongTimeoutTimer);
           this.pongTimeoutTimer = undefined;
-        } else if (message.type === "welcome" && "playerId" in message) this.localPlayerId = message.playerId;
+        } else if (message.type === "welcome" && "playerId" in message) {
+          this.localPlayerId = message.playerId;
+          this.latestSnapshot = undefined;
+        }
         else if (message.type === "combat") this.combatListeners.forEach((listener) => listener(message as WorldCombatEvent));
         else if (message.type === "quest") this.questListeners.forEach((listener) => listener(message as WorldQuestEvent));
-        else if (message.type === "map-transition") this.mapTransitionListeners.forEach((listener) => listener(message as WorldMapTransition));
+        else if (message.type === "map-transition") {
+          this.latestSnapshot = undefined;
+          this.mapTransitionListeners.forEach((listener) => listener(message as WorldMapTransition));
+        }
         else if (message.type === "snapshot" && "players" in message && Array.isArray(message.players)) {
-          const ownPlayer = message.players.find((player) => player.playerId === this.localPlayerId);
-          if (ownPlayer?.classCode) this.cachedClassCode = ownPlayer.classCode;
-          const players = ownPlayer && message.selfState
-            ? message.players.map((player) => player.playerId === this.localPlayerId
-              ? { ...player, ...message.selfState }
-              : player)
-            : message.players;
-          this.listeners.forEach((listener) => listener({
-            ...message,
-            players,
+          this.publishSnapshot({
+            type: "snapshot",
+            players: message.players,
             monsters: Array.isArray(message.monsters) ? message.monsters : [],
-            lootDrops: Array.isArray(message.lootDrops) ? message.lootDrops : []
-          }));
+            lootDrops: Array.isArray(message.lootDrops) ? message.lootDrops : [],
+            selfState: message.selfState
+          });
+        } else if (message.type === "snapshot-delta") {
+          const delta = message as WorldSnapshotDelta;
+          const previous = this.latestSnapshot;
+          if (!previous) return;
+          const mergeById = <T,>(current: T[], updates: T[], removed: string[], idOf: (value: T) => string): T[] => {
+            const merged = new Map(current.map((value) => [idOf(value), value]));
+            removed.forEach((id) => merged.delete(id));
+            updates.forEach((value) => merged.set(idOf(value), value));
+            return Array.from(merged.values());
+          };
+          this.publishSnapshot({
+            type: "snapshot",
+            players: mergeById(previous.players, delta.players ?? [], delta.removedPlayerIds ?? [], (value) => value.playerId),
+            monsters: mergeById(previous.monsters, delta.monsters ?? [], delta.removedMonsterIds ?? [], (value) => value.monsterId),
+            lootDrops: mergeById(previous.lootDrops, delta.lootDrops ?? [], delta.removedLootDropIds ?? [], (value) => value.dropId),
+            selfState: delta.selfState ?? previous.selfState
+          });
         }
       } catch { /* Ignore malformed frames; the next valid snapshot restores the view. */ }
     });
+  }
+
+  private publishSnapshot(snapshot: WorldSnapshot): void {
+    this.latestSnapshot = snapshot;
+    const ownPlayer = snapshot.players.find((player) => player.playerId === this.localPlayerId);
+    if (ownPlayer?.classCode) this.cachedClassCode = ownPlayer.classCode;
+    const players = ownPlayer && snapshot.selfState
+      ? snapshot.players.map((player) => player.playerId === this.localPlayerId
+        ? { ...player, ...snapshot.selfState }
+        : player)
+      : snapshot.players;
+    const published = { ...snapshot, players };
+    this.listeners.forEach((listener) => listener(published));
   }
 
   sendMovement(axisX: number, axisY: number): void {
