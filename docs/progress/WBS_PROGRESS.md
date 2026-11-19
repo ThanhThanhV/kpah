@@ -748,3 +748,8 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Removed the immutable item catalog from the per-tick selfState construction entirely.
 - Fingerprint serialization now operates directly on quest, inventory and equipment state. A payload copy with the shared immutable catalog is created only for full snapshots or when mutable selfState changes.
 - This preserves client payload shape while avoiding an otherwise unnecessary map copy on unchanged delta ticks.
+
+
+## Multi-session disconnect correctness
+- WebSocket close handling now checks whether another session for the same character remains connected.
+- Closing a secondary session no longer writes stale HP, inventory, equipment, position or experience over the active session's persisted state, and does not clear shared combat/skill state. Character-level cleanup runs on final-session disconnect.
