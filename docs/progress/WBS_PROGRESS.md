@@ -659,3 +659,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Player, monster and loot spatial indexes are queried through queryInto; monster resolution writes snapshots directly into the caller-owned result list without an intermediate stream/list pipeline.
 - The existing public list-returning service methods remain available for other callers. Snapshot serialization remains synchronous before the shared buffers are cleared for the next recipient.
 - AOI radius filtering, live-monster checks, own-player fallback and delta/full snapshot payloads are preserved. This is an allocation reduction by code-path inspection; profiling and local k6 measurements remain pending.
+
+
+## Latest implementation batch — cache quest state between world broadcasts
+- Added a per-character in-memory cache for the combined default-quest and quest-journal snapshot used by WebSocket broadcasts.
+- Quest start, completion/claim and monster-defeat progress changes invalidate the cache only after the surrounding transaction commits, preventing a concurrent broadcast from caching uncommitted state.
+- Disconnect cleanup evicts the character's cached quest snapshot.
+- The first snapshot after a cache miss still uses the single character-scoped repository query; unchanged broadcasts no longer query quest progress from MySQL.
+- Quest changes become visible on the next world broadcast after commit. Runtime DB-query and load measurements remain pending.
