@@ -215,3 +215,6 @@ An opt-in k6 scenario is maintained at `infra/load/k6-world.js`, with setup and 
 
 
 - Self-state delta comparison excludes the immutable process-wide item catalog from its per-broadcast JSON fingerprint. The catalog remains part of the transmitted selfState payload whenever that state is sent; only redundant serialization for change detection is skipped.
+
+
+- The self-state fingerprint now serializes only mutable per-character state. The immutable item catalog is attached to a payload map only when a full snapshot or changed selfState is actually sent, avoiding both repeated catalog serialization and a per-recipient map copy on unchanged ticks.
