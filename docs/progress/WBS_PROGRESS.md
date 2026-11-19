@@ -676,3 +676,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Added coverage in the existing QuestServiceTest for cache hits and invalidation after monster progress changes.
 - Monster aggro selection now uses a direct loop rather than stream/filter/min pipelines. Aggressive/elite selection compares squared distances and retains nearest-target behavior; defensive selection retains provocation and range checks.
 - These changes reduce repeated quest DB reads and per-monster stream work by inspection. Runtime profiling and local k6 measurements remain pending.
+
+
+## Latest implementation batch — index connected sessions by player ID
+- Added a concurrent player-ID-to-session-ID index maintained on WebSocket connect and disconnect.
+- Monster attack resolution now visits only sessions belonging to the attacked player instead of scanning/replacing every connected session for each monster hit. Target lookup for the resulting combat event uses the same index.
+- Preserves support for multiple active WebSocket sessions for one character and applies the existing damage/persistence behavior to each matching live session.
+- This removes a repeated global player-map scan from the monster-hit path by code inspection. Runtime profiling and local k6 measurements remain pending; no measured capacity or latency improvement is claimed.
