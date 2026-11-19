@@ -22,16 +22,29 @@ public final class GridPathfinder {
 
     private final double width;
     private final double height;
-    private final List<CollisionBox> collisions;
+    private final boolean[][] collisionBlocked;
     private final int columns;
     private final int rows;
 
     public GridPathfinder(WorldMapGeometry map) {
         this.width = map.width();
         this.height = map.height();
-        this.collisions = map.collisions();
         this.columns = (int) Math.ceil(width / CELL_SIZE);
         this.rows = (int) Math.ceil(height / CELL_SIZE);
+        this.collisionBlocked = new boolean[columns][rows];
+        for (int cellX = 0; cellX < columns; cellX++) {
+            for (int cellY = 0; cellY < rows; cellY++) {
+                double centerX = Math.min((cellX + 0.5) * CELL_SIZE, width - 0.01);
+                double centerY = Math.min((cellY + 0.5) * CELL_SIZE, height - 0.01);
+                for (CollisionBox collision : map.collisions()) {
+                    if (centerX >= collision.x() && centerX <= collision.x() + collision.width()
+                            && centerY >= collision.y() && centerY <= collision.y() + collision.height()) {
+                        collisionBlocked[cellX][cellY] = true;
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     public int cellX(double x) { return (int) Math.floor(x / CELL_SIZE); }
@@ -109,11 +122,7 @@ public final class GridPathfinder {
         double x = Math.min((cell.x() + 0.5) * CELL_SIZE, width - 0.01);
         double y = Math.min((cell.y() + 0.5) * CELL_SIZE, height - 0.01);
         if (x < minX || x > maxX || y < minY || y > maxY) return false;
-        for (CollisionBox collision : collisions) {
-            if (x >= collision.x() && x <= collision.x() + collision.width()
-                    && y >= collision.y() && y <= collision.y() + collision.height()) return false;
-        }
-        return true;
+        return !collisionBlocked[cell.x()][cell.y()];
     }
 
     private Waypoint center(Cell cell) {
