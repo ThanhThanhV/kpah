@@ -583,3 +583,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Added a dedicated GitHub Actions job that runs Node.js 22 in ECMAScript-module syntax-check mode against `infra/load/k6-world.js`.
 - This catches JavaScript parse errors on pushes and pull requests without requiring k6, test credentials, a running backend or a MySQL database.
 - The job validates syntax only; actual k6 runtime behavior and capacity measurements still require the documented opt-in run against a dedicated MySQL-backed test server.
+
+## Latest implementation batch — incremental player AOI index
+- Replaced per-broadcast rebuilding of the player spatial index with a mutable per-map uniform grid (300 world pixels per cell).
+- Player entries are updated on connection, accepted movement, map transition and respawn, and removed on disconnect. Updates move only that session's entry between cells; queries still apply exact circular-distance filtering.
+- Snapshot construction resolves nearby session IDs against the current public player snapshots, while retaining the recipient's own player entry as a safety fallback during concurrent movement/index updates.
+- Monster and loot spatial indexes remain one-time-per-broadcast builds because their state is owned by the simulation service; their incremental lifecycle is not yet wired into the gateway.
+- CI verification is pending for this batch. No runtime CPU or throughput improvement is claimed until measured under load.
