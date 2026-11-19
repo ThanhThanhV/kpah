@@ -199,19 +199,37 @@ public class MonsterSimulationService {
     }
 
     public List<MonsterState> nearbyMonsters(String mapId, double x, double y, double radius) {
+        List<MonsterState> result = new ArrayList<>();
+        nearbyMonsters(mapId, x, y, radius, result, new ArrayList<>());
+        return result;
+    }
+
+    public void nearbyMonsters(String mapId, double x, double y, double radius,
+                               List<MonsterState> result, List<String> candidateIds) {
+        result.clear();
+        candidateIds.clear();
         WorldSpatialIndex<String> index = monsterSpatialIndexes.get(mapId);
-        if (index == null) return List.of();
-        return index.query(x, y, radius).stream()
-                .map(monsters::get)
-                .filter(monster -> monster != null && monster.hp > 0 && mapId.equals(monster.mapId))
-                .filter(monster -> Math.hypot(monster.x - x, monster.y - y) <= radius)
-                .map(MonsterRuntime::snapshot)
-                .toList();
+        if (index == null) return;
+        index.queryInto(x, y, radius, candidateIds);
+        for (String monsterId : candidateIds) {
+            MonsterRuntime monster = monsters.get(monsterId);
+            if (monster == null || monster.hp <= 0 || !mapId.equals(monster.mapId)) continue;
+            if (Math.hypot(monster.x - x, monster.y - y) <= radius) {
+                result.add(monster.snapshot());
+            }
+        }
     }
 
     public List<LootDropState> nearbyLoot(String mapId, double x, double y, double radius) {
+        List<LootDropState> result = new ArrayList<>();
+        nearbyLoot(mapId, x, y, radius, result);
+        return result;
+    }
+
+    public void nearbyLoot(String mapId, double x, double y, double radius, List<LootDropState> result) {
+        result.clear();
         WorldSpatialIndex<LootDropState> index = lootSpatialIndexes.get(mapId);
-        return index == null ? List.of() : index.query(x, y, radius);
+        if (index != null) index.queryInto(x, y, radius, result);
     }
 
     public void restoreLoot(LootDropState drop) {
