@@ -535,3 +535,12 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Ancient Guardian guarantees one Ancient Guardian Core and 2–4 Forest Resin on defeat.
 - Registered Ancient Guardian Core as a stackable material (maximum stack 10).
 - Added quest-chain, deterministic boss-drop and item-catalog tests. Local gameplay playtest remains pending.
+
+
+## Latest implementation batch — delta world snapshots
+- Added per-WebSocket-session snapshot baselines keyed by player, monster and loot IDs.
+- The first frame per session/map remains a full snapshot; subsequent frames send only changed entities and explicit removed-ID lists.
+- Recipient-specific `selfState` is refreshed on each delta and is never included in another player's entity data.
+- Baselines are replaced only after a successful send and cleared on disconnect; map changes force a new full snapshot.
+- Client merges deltas by stable IDs and clears its baseline on welcome/reconnect and map transition. Combat events retain their immediate delivery path.
+- GitHub Actions verification is pending; local multiplayer runtime validation remains pending.
