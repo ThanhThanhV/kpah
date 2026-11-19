@@ -218,3 +218,6 @@ An opt-in k6 scenario is maintained at `infra/load/k6-world.js`, with setup and 
 
 
 - The self-state fingerprint now serializes only mutable per-character state. The immutable item catalog is attached to a payload map only when a full snapshot or changed selfState is actually sent, avoiding both repeated catalog serialization and a per-recipient map copy on unchanged ticks.
+
+
+- When a character has multiple concurrent WebSocket sessions, closing one session no longer persists that session's potentially stale character snapshot or clears shared combat/skill/quest state. Final-session cleanup is performed only after the last indexed session disconnects.
