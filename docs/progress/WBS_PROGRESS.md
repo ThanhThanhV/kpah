@@ -588,14 +588,14 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Replaced per-broadcast rebuilding of the player spatial index with a mutable per-map uniform grid (300 world pixels per cell).
 - Player entries are updated on connection, accepted movement, map transition and respawn, and removed on disconnect. Updates move only that session's entry between cells; queries still apply exact circular-distance filtering.
 - Snapshot construction resolves nearby session IDs against the current public player snapshots, while retaining the recipient's own player entry as a safety fallback during concurrent movement/index updates.
-- Monster and loot spatial indexes remain one-time-per-broadcast builds because their state is owned by the simulation service; their incremental lifecycle is not yet wired into the gateway.
-- CI verification is pending for this batch. No runtime CPU or throughput improvement is claimed until measured under load.
+- At the time of this player-index batch, monster and loot indexes were still built per broadcast; the immediately following implementation batch moved both into service-owned incremental indexes.
+- GitHub Actions passed for the player-index integration. Local runtime and load measurements remain pending; no runtime CPU or throughput improvement is claimed until measured under load.
 
 ## Latest implementation batch — incremental monster and loot AOI indexes
 - Moved monster and loot spatial-index ownership into `MonsterSimulationService`, with one mutable uniform-grid index per map and no per-broadcast rebuild in `WorldSocketHandler`.
 - Monster index lifecycle: initial/spawn insertion, position refresh after each simulation advance, immediate removal on defeat, and removal when defeated runtimes are retired for respawn. Nearby queries resolve indexed IDs to current live runtime snapshots and re-check exact circular distance.
 - Loot index lifecycle: insertion on drop creation and restoration, removal on collection and five-minute expiry, and radius queries for recipient AOI. Conditional map removals keep concurrent collect/expiry paths from removing a replacement drop.
-- Full map snapshot methods remain available; WebSocket recipients now query only nearby monsters and loot from the simulation-owned indexes. CI and local load testing are pending; no performance improvement is claimed without measurements.
+- Full map snapshot methods remain available; WebSocket recipients now query only nearby monsters and loot from the simulation-owned indexes. GitHub Actions passed for the integration; local load testing remains pending and no performance improvement is claimed without measurements.
 
 ## Latest implementation batch — spatially bounded monster aggro targeting
 - Build one temporary player-position spatial index per map at the start of each monster simulation advance.
@@ -607,4 +607,4 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Replaced the per-spawn-region full monster-map stream/count on every simulation tick with atomic live counts keyed by map and spawn-region ID. Initial spawns increment the counter; a lethal damage transition decrements it once under the monster lock; respawn insertion increments it.
 - Replaced the per-tick full loot-drop expiration scan with a priority queue of scheduled expiry entries. Simulation only polls entries whose five-minute expiry has arrived.
 - Expiry entries carry drop ID plus creation timestamp, preventing stale queue entries from removing a later restored drop that reuses an ID. Actual removal remains conditional and synchronizes the loot map and spatial index.
-- These are structural reductions in repeated collection scans; no measured CPU or throughput claim is made. CI verification is pending.
+- These are structural reductions in repeated collection scans; no measured CPU or throughput claim is made. Backend Maven test/package passed for the code commits; the WBS documentation workflow is being retried after a transient Maven Central resolution failure unrelated to source compilation.
