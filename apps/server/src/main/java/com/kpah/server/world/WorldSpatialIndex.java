@@ -82,6 +82,22 @@ final class WorldSpatialIndex<T> {
         return result;
     }
 
+    synchronized void retainOnly(java.util.Set<String> retainedIds) {
+        var iterator = locations.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, Cell> entry = iterator.next();
+            if (!retainedIds.contains(entry.getKey())) {
+                Cell cell = entry.getValue();
+                Map<String, Point<T>> points = cells.get(cell);
+                if (points != null) {
+                    points.remove(entry.getKey());
+                    if (points.isEmpty()) cells.remove(cell);
+                }
+                iterator.remove();
+            }
+        }
+    }
+
     synchronized int size() {
         return locations.size();
     }
