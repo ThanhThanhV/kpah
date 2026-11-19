@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -622,25 +623,53 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         String sourcePlayerId = event.get("sourcePlayerId") instanceof String value ? value : null;
         String targetPlayerId = event.get("targetPlayerId") instanceof String value ? value : null;
         String anchorPlayerId = sourcePlayerId != null ? sourcePlayerId : targetPlayerId;
-        ConnectedPlayer anchor = anchorPlayerId == null ? null : players.values().stream()
-                .filter(candidate -> anchorPlayerId.equals(candidate.playerId()))
-                .filter(candidate -> mapId.equals(candidate.state().mapId()))
-                .findFirst().orElse(null);
+        ConnectedPlayer anchor = null;
+        Set<String> anchorSessions = anchorPlayerId == null ? null : sessionsByPlayerId.get(anchorPlayerId);
+        if (anchorSessions != null) {
+            for (String sessionId : anchorSessions) {
+                ConnectedPlayer candidate = players.get(sessionId);
+                if (candidate != null && mapId.equals(candidate.state().mapId())
+                        && candidate.session().isOpen()) {
+                    anchor = candidate;
+                    break;
+                }
+            }
+        }
 
-        for (ConnectedPlayer player : players.values()) {
-            if (!mapId.equals(player.state().mapId()) || !player.session().isOpen()) continue;
-            boolean participant = player.playerId().equals(sourcePlayerId)
-                    || player.playerId().equals(targetPlayerId);
-            boolean nearby = anchor == null || isWithinInterest(
-                    player.state().x(), player.state().y(),
-                    anchor.state().x(), anchor.state().y());
-            if (!participant && !nearby) continue;
+        Set<String> recipientSessionIds = new HashSet<>();
+        if (anchor == null) {
+            // Keep the previous safe fallback for events without a connected player anchor.
+            players.forEach((sessionId, player) -> {
+                if (mapId.equals(player.state().mapId())) recipientSessionIds.add(sessionId);
+            });
+        } else {
+            List<String> nearbySessions = new ArrayList<>();
+            WorldSpatialIndex<String> index = playerSpatialIndexes.get(mapId);
+            if (index != null) {
+                index.queryInto(anchor.state().x(), anchor.state().y(),
+                        INTEREST_RADIUS, nearbySessions);
+                recipientSessionIds.addAll(nearbySessions);
+            }
+        }
+        addParticipantSessions(recipientSessionIds, sourcePlayerId);
+        addParticipantSessions(recipientSessionIds, targetPlayerId);
+
+        for (String sessionId : recipientSessionIds) {
+            ConnectedPlayer player = players.get(sessionId);
+            if (player == null || !mapId.equals(player.state().mapId())
+                    || !player.session().isOpen()) continue;
             try {
                 send(player.session(), payload);
             } catch (IOException ignored) {
                 // The websocket close lifecycle removes failed sessions.
             }
         }
+    }
+
+    private void addParticipantSessions(Set<String> recipients, String playerId) {
+        if (playerId == null) return;
+        Set<String> sessions = sessionsByPlayerId.get(playerId);
+        if (sessions != null) recipients.addAll(sessions);
     }
 
     private String requireText(JsonNode input, String field) {
