@@ -4,10 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -90,6 +92,27 @@ class QuestServiceTest {
 
         assertEquals(0, saved.getProgress());
         verify(progress, org.mockito.Mockito.never()).save(any(QuestProgress.class));
+    }
+
+    @Test
+    void questSnapshotIsCachedAndInvalidatedAfterProgressChanges() {
+        QuestProgress saved = new QuestProgress(CHARACTER_ID, "meadow-slime-hunt");
+        when(progress.findAllByCharacterId(CHARACTER_ID)).thenReturn(List.of(saved));
+        when(progress.findById(QUEST_KEY)).thenReturn(Optional.of(saved));
+        when(progress.save(any(QuestProgress.class))).thenAnswer(call -> call.getArgument(0));
+
+        Map<String, Object> first = quests.snapshotState(CHARACTER_ID);
+        Map<String, Object> cached = quests.snapshotState(CHARACTER_ID);
+        assertEquals(first, cached);
+        verify(progress, times(1)).findAllByCharacterId(CHARACTER_ID);
+
+        quests.onMonsterDefeated(CHARACTER_ID, "starter-meadow", "green-slime");
+        Map<String, Object> refreshed = quests.snapshotState(CHARACTER_ID);
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> questList = (List<Map<String, Object>>) refreshed.get("quests");
+        assertEquals(1, questList.get(0).get("progress"));
+        verify(progress, times(2)).findAllByCharacterId(CHARACTER_ID);
     }
 
     @Test
