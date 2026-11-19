@@ -148,6 +148,9 @@ All unsupported or missing message types share one rate-limit bucket per connect
 
 The server registers low-cardinality Micrometer metrics for the world gateway:
 - `world.websocket.connections.active`: currently authenticated world WebSocket sessions.
+- `world.websocket.connections.active.by_map`: authenticated sessions grouped by the current map ID.
+- `world.websocket.inbound.messages`: received protocol messages grouped by bounded message type.
+- `world.websocket.inbound.rate_limited`: inbound messages dropped by the per-connection rate limiter, grouped by bounded message type.
 - `world.websocket.outbound.messages`: successfully sent frames, tagged by protocol message type.
 - `world.websocket.outbound.payload`: UTF-8 payload-size distribution in bytes, tagged by protocol message type.
 - `world.websocket.send.duration`: serialization plus synchronous socket-send duration, tagged by protocol message type.
