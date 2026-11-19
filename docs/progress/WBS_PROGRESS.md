@@ -730,3 +730,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Removed-ID lists start with a small bounded capacity so sparse AOI departures do not reserve memory proportional to the entire previous AOI; they still grow normally when many entities leave at once.
 - Added a bounded HashMap capacity helper to account for the default load factor and avoid routine resize/rehash during snapshot construction.
 - These are allocation/rehash reductions inferred from code structure; no runtime benchmark or memory profile has been run yet.
+
+
+## Latest implementation batch — measure snapshot construction and delivery
+- Added low-cardinality full/delta snapshot metrics: per-recipient duration, successful snapshot count, and visible entity-count distribution.
+- Snapshot duration covers entity serialization, delta comparison/construction and synchronous WebSocket send; it is recorded only after send and baseline advancement complete successfully.
+- Metrics use only the fixed full/delta mode tag and do not expose account, character or session identifiers.
+- These measurements provide a baseline for the local k6 run. No runtime performance result is claimed until the user runs the workload against the local MySQL-backed server.
