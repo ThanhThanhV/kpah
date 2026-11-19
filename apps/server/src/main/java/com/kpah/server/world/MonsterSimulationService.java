@@ -3,6 +3,9 @@ package com.kpah.server.world;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -22,6 +25,9 @@ public class MonsterSimulationService {
     private final Map<String, GridPathfinder> pathfindersByMap = new ConcurrentHashMap<>();
     private final Map<String, MonsterRuntime> monsters = new ConcurrentHashMap<>();
     private final Map<String, WorldSpatialIndex<String>> monsterSpatialIndexes = new ConcurrentHashMap<>();
+    private final Map<String, WorldSpatialIndex<MonsterTarget>> playerTargetSpatialIndexes = new ConcurrentHashMap<>();
+    private final Map<String, String> playerTargetMapById = new ConcurrentHashMap<>();
+    private final Set<String> activePlayerTargetIds = new HashSet<>();
     private final Map<String, Map<String, Long>> nextSpawnAt = new ConcurrentHashMap<>();
     private final Map<String, Map<String, AtomicInteger>> aliveCountsByMap = new ConcurrentHashMap<>();
     private final Map<String, LootDropState> lootDrops = new ConcurrentHashMap<>();
@@ -50,13 +56,29 @@ public class MonsterSimulationService {
         }
     }
 
-    public List<MonsterPlayerAttack> advance(long nowMillis, Collection<MonsterTarget> players) {
+    public synchronized List<MonsterPlayerAttack> advance(long nowMillis, Collection<MonsterTarget> players) {
         List<MonsterPlayerAttack> attacks = new ArrayList<>();
-        Map<String, WorldSpatialIndex<MonsterTarget>> playerTargetsByMap = new ConcurrentHashMap<>();
+        activePlayerTargetIds.clear();
         for (MonsterTarget player : players) {
-            playerTargetsByMap.computeIfAbsent(player.mapId(), ignored -> new WorldSpatialIndex<>())
+            activePlayerTargetIds.add(player.playerId());
+            String previousMapId = playerTargetMapById.put(player.playerId(), player.mapId());
+            if (previousMapId != null && !previousMapId.equals(player.mapId())) {
+                WorldSpatialIndex<MonsterTarget> previousIndex = playerTargetSpatialIndexes.get(previousMapId);
+                if (previousIndex != null) previousIndex.remove(player.playerId());
+            }
+            playerTargetSpatialIndexes.computeIfAbsent(player.mapId(), ignored -> new WorldSpatialIndex<>())
                     .upsert(player.playerId(), player.x(), player.y(), player);
         }
+        Iterator<Map.Entry<String, String>> playerIterator = playerTargetMapById.entrySet().iterator();
+        while (playerIterator.hasNext()) {
+            Map.Entry<String, String> playerEntry = playerIterator.next();
+            if (!activePlayerTargetIds.contains(playerEntry.getKey())) {
+                WorldSpatialIndex<MonsterTarget> index = playerTargetSpatialIndexes.get(playerEntry.getValue());
+                if (index != null) index.remove(playerEntry.getKey());
+                playerIterator.remove();
+            }
+        }
+        playerTargetSpatialIndexes.values().forEach(index -> index.retainOnly(activePlayerTargetIds));
         for (Map.Entry<String, List<MonsterSpawnRegion>> entry : regionsByMap.entrySet()) {
             String mapId = entry.getKey();
             for (MonsterSpawnRegion region : entry.getValue()) {
@@ -87,7 +109,7 @@ public class MonsterSimulationService {
                 }
                 continue;
             }
-            WorldSpatialIndex<MonsterTarget> playerIndex = playerTargetsByMap.get(monster.mapId);
+            WorldSpatialIndex<MonsterTarget> playerIndex = playerTargetSpatialIndexes.get(monster.mapId);
             Collection<MonsterTarget> nearbyPlayers = playerIndex == null ? List.of()
                     : playerIndex.query(monster.x, monster.y, monster.archetype.aggroRange());
             attacks.addAll(monster.advance(nowMillis, players, nearbyPlayers));
