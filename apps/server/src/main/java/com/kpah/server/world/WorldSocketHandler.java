@@ -36,6 +36,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private final ClassCatalog classes;
     private final AuthService auth;
     private final WorldMessageRateLimiter messageRateLimiter;
+    private final WorldNetworkMetrics networkMetrics;
     private final Map<String, ConnectedPlayer> players = new ConcurrentHashMap<>();
     private final Set<String> pendingBroadcastMaps = ConcurrentHashMap.newKeySet();
     private final Map<String, Map<String, String>> lastSentEntityState = new ConcurrentHashMap<>();
@@ -50,7 +51,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                               StarterWorldRegistry worlds, MonsterSimulationService monsters, WorldCombatService combat,
                               SkillCombatService skills, PlayerCharacterRepository characters, QuestService quests,
                               ItemCatalog items, ClassCatalog classes, AuthService auth,
-                              WorldMessageRateLimiter messageRateLimiter) {
+                              WorldMessageRateLimiter messageRateLimiter, WorldNetworkMetrics networkMetrics) {
         this.mapper = mapper;
         this.movementService = movementService;
         this.worlds = worlds;
@@ -63,6 +64,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         this.classes = classes;
         this.auth = auth;
         this.messageRateLimiter = messageRateLimiter;
+        this.networkMetrics = networkMetrics;
     }
 
     @Override
@@ -100,6 +102,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         skills.restore(player.playerId(), player.classCode(),
                 ExperienceProgression.levelFor(player.experience()), character.getMana(), System.currentTimeMillis());
         players.put(session.getId(), player);
+        networkMetrics.connectionOpened();
         persist(player);
         lastMovementPersistAt.put(session.getId(), System.currentTimeMillis());
         send(session, Map.of("type", "welcome", "playerId", player.playerId(),
@@ -290,6 +293,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         messageRateLimiter.remove(session.getId());
         ConnectedPlayer removed = players.remove(session.getId());
+        if (removed != null) networkMetrics.connectionClosed();
         lastMovementPersistAt.remove(session.getId());
         lastSentEntityState.remove(session.getId());
         lastSentMapBySession.remove(session.getId());
@@ -608,8 +612,21 @@ public class WorldSocketHandler extends TextWebSocketHandler {
 
     private void send(WebSocketSession session, Object payload) throws IOException {
         if (!session.isOpen()) return;
-        synchronized (session) {
-            session.sendMessage(new TextMessage(mapper.writeValueAsString(payload)));
+        String messageType = payload instanceof Map<?, ?> values && values.get("type") instanceof String type
+                ? type : "unknown";
+        long startedAt = System.nanoTime();
+        int payloadBytes = 0;
+        try {
+            String serialized = mapper.writeValueAsString(payload);
+            payloadBytes = serialized.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
+            synchronized (session) {
+                if (!session.isOpen()) return;
+                session.sendMessage(new TextMessage(serialized));
+            }
+            networkMetrics.recordSend(messageType, payloadBytes, System.nanoTime() - startedAt, true);
+        } catch (IOException | RuntimeException exception) {
+            networkMetrics.recordSend(messageType, payloadBytes, System.nanoTime() - startedAt, false);
+            throw exception;
         }
     }
 
