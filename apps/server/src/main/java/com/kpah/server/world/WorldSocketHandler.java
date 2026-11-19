@@ -40,6 +40,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private final Set<String> pendingBroadcastMaps = ConcurrentHashMap.newKeySet();
     private final Map<String, Map<String, String>> lastSentEntityState = new ConcurrentHashMap<>();
     private final Map<String, String> lastSentMapBySession = new ConcurrentHashMap<>();
+    private final Map<String, String> lastSentSelfState = new ConcurrentHashMap<>();
     private final Map<String, Long> lastMovementPersistAt = new ConcurrentHashMap<>();
     private static final long MOVEMENT_PERSIST_INTERVAL_MILLIS = 5_000L;
     private static final double INTEREST_RADIUS = 900.0;
@@ -292,6 +293,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         lastMovementPersistAt.remove(session.getId());
         lastSentEntityState.remove(session.getId());
         lastSentMapBySession.remove(session.getId());
+        lastSentSelfState.remove(session.getId());
         if (removed != null) {
             persist(removed);
             combat.removePlayer(removed.playerId());
@@ -495,6 +497,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             currentState.put("l:" + value.dropId(), mapper.writeValueAsString(value));
         }
 
+        String currentSelfState = mapper.writeValueAsString(selfState);
+        String previousSelfState = lastSentSelfState.get(sessionId);
         Map<String, String> previousState = lastSentEntityState.get(sessionId);
         boolean fullSnapshot = previousState == null || !mapId.equals(lastSentMapBySession.get(sessionId));
         if (fullSnapshot) {
@@ -526,18 +530,24 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             List<String> removedLoot = previousState.keySet().stream()
                     .filter(key -> key.startsWith("l:") && !currentState.containsKey(key))
                     .map(key -> key.substring(2)).toList();
-            send(recipient.session(), Map.of(
-                    "type", "snapshot-delta",
-                    "players", changedPlayers,
-                    "removedPlayerIds", removedPlayers,
-                    "monsters", changedMonsters,
-                    "removedMonsterIds", removedMonsters,
-                    "lootDrops", changedLoot,
-                    "removedLootDropIds", removedLoot,
-                    "selfState", selfState));
+
+            Map<String, Object> delta = new HashMap<>();
+            delta.put("type", "snapshot-delta");
+            delta.put("players", changedPlayers);
+            delta.put("removedPlayerIds", removedPlayers);
+            delta.put("monsters", changedMonsters);
+            delta.put("removedMonsterIds", removedMonsters);
+            delta.put("lootDrops", changedLoot);
+            delta.put("removedLootDropIds", removedLoot);
+            if (!java.util.Objects.equals(previousSelfState, currentSelfState)) {
+                delta.put("selfState", selfState);
+            }
+            send(recipient.session(), delta);
         }
+        // Advance baselines only after send() completes successfully.
         lastSentEntityState.put(sessionId, currentState);
         lastSentMapBySession.put(sessionId, mapId);
+        lastSentSelfState.put(sessionId, currentSelfState);
     }
 
     private boolean isWithinInterest(double centerX, double centerY, double x, double y) {
