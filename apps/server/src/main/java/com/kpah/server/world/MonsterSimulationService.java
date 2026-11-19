@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class MonsterSimulationService {
     private final Map<String, Map<String, Long>> nextSpawnAt = new ConcurrentHashMap<>();
     private final Map<String, Map<String, AtomicInteger>> aliveCountsByMap = new ConcurrentHashMap<>();
     private final Map<String, LootDropState> lootDrops = new ConcurrentHashMap<>();
+    private final PriorityBlockingQueue<ExpiringLootDrop> lootExpiryQueue = new PriorityBlockingQueue<>();
     private final Map<String, WorldSpatialIndex<LootDropState>> lootSpatialIndexes = new ConcurrentHashMap<>();
     private final MonsterDropTable dropTable;
     private final MonsterArchetypeRegistry archetypes;
@@ -66,9 +68,11 @@ public class MonsterSimulationService {
             }
         }
 
-        for (LootDropState drop : lootDrops.values()) {
-            if (nowMillis - drop.createdAt() > 300_000L
-                    && lootDrops.remove(drop.dropId(), drop)) {
+        ExpiringLootDrop expired;
+        while ((expired = lootExpiryQueue.peek()) != null && expired.expiresAt() <= nowMillis) {
+            lootExpiryQueue.poll();
+            LootDropState drop = lootDrops.get(expired.dropId());
+            if (drop != null && lootDrops.remove(drop.dropId(), drop)) {
                 lootSpatialIndexes.computeIfAbsent(drop.mapId(), ignored -> new WorldSpatialIndex<>())
                         .remove(drop.dropId());
             }
@@ -198,6 +202,7 @@ public class MonsterSimulationService {
         if (previous == null) {
             lootSpatialIndexes.computeIfAbsent(drop.mapId(), ignored -> new WorldSpatialIndex<>())
                     .upsert(drop.dropId(), drop.x(), drop.y(), drop);
+            lootExpiryQueue.add(new ExpiringLootDrop(drop.dropId(), drop.createdAt() + 300_001L));
         }
     }
 
@@ -428,5 +433,14 @@ public class MonsterSimulationService {
     }
 
     public record MonsterTarget(String playerId, String mapId, double x, double y) {
+    }
+
+    private record ExpiringLootDrop(String dropId, long expiresAt)
+            implements Comparable<ExpiringLootDrop> {
+        @Override
+        public int compareTo(ExpiringLootDrop other) {
+            int byExpiry = Long.compare(expiresAt, other.expiresAt);
+            return byExpiry != 0 ? byExpiry : dropId.compareTo(other.dropId);
+        }
     }
 }
