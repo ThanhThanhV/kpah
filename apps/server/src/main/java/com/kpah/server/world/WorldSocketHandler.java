@@ -537,11 +537,17 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     }
 
     private void addSessionToMap(String mapId, String sessionId) {
+        ConnectedPlayer current = players.get(sessionId);
+        if (current == null || !mapId.equals(current.state().mapId())) return;
         sessionsByMapId.compute(mapId, (key, sessions) -> {
             Set<String> updated = sessions == null ? ConcurrentHashMap.newKeySet() : sessions;
             updated.add(sessionId);
             return updated;
         });
+        current = players.get(sessionId);
+        if (current == null || !mapId.equals(current.state().mapId())) {
+            removeSessionFromMap(mapId, sessionId);
+        }
     }
 
     private void removeSessionFromMap(String mapId, String sessionId) {
