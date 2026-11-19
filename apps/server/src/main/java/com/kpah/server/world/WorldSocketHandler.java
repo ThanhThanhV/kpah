@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -480,7 +481,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         List<Map<String, Object>> visiblePlayers = new ArrayList<>();
         List<MonsterState> visibleMonsters = new ArrayList<>();
         List<LootDropState> visibleLoot = new ArrayList<>();
-        Map<String, String> serializedPlayersById = new HashMap<>();
+        Map<Object, String> serializedPlayerSnapshots = new IdentityHashMap<>();
         for (String sessionId : mapSessions) {
             ConnectedPlayer player = players.get(sessionId);
             if (player == null || !mapId.equals(player.state().mapId()) || !player.session().isOpen()) continue;
@@ -508,7 +509,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             selfState.put("itemCatalog", items.all());
             try {
                 sendSnapshot(player, mapId, visiblePlayers, visibleMonsters, visibleLoot,
-                        selfState, serializedPlayersById);
+                        selfState, serializedPlayerSnapshots);
             } catch (IOException ignored) {
                 // The websocket close lifecycle removes failed sessions.
             }
@@ -579,12 +580,12 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                               List<MonsterState> visibleMonsters,
                               List<LootDropState> visibleLoot,
                               Map<String, Object> selfState,
-                              Map<String, String> serializedPlayersById) throws IOException {
+                              Map<Object, String> serializedPlayerSnapshots) throws IOException {
         String sessionId = recipient.session().getId();
         Map<String, String> currentState = new HashMap<>();
         for (Map<String, Object> value : visiblePlayers) {
             String key = "p:" + value.get("playerId");
-            currentState.put(key, serializedEntity(key, value, serializedPlayersById));
+            currentState.put(key, serializedEntity(value, serializedPlayerSnapshots));
         }
         for (MonsterState value : visibleMonsters) {
             currentState.put("m:" + value.monsterId(), mapper.writeValueAsString(value));
@@ -646,12 +647,12 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         lastSentSelfState.put(sessionId, currentSelfState);
     }
 
-    private String serializedEntity(String key, Object value,
-                                    Map<String, String> serializedPlayersById) throws JsonProcessingException {
-        String serialized = serializedPlayersById.get(key);
+    private String serializedEntity(Object value,
+                                    Map<Object, String> serializedPlayerSnapshots) throws JsonProcessingException {
+        String serialized = serializedPlayerSnapshots.get(value);
         if (serialized == null) {
             serialized = mapper.writeValueAsString(value);
-            serializedPlayersById.put(key, serialized);
+            serializedPlayerSnapshots.put(value, serialized);
         }
         return serialized;
     }
