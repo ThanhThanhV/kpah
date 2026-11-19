@@ -42,7 +42,9 @@ For a smaller smoke test, set `KPAH_VUS=1` and provide one test session.
 ## Metrics and interpretation
 
 - `ws_connecting`: k6 WebSocket connection/upgrade time; threshold p95 under 2 seconds.
+- `world_ws_first_snapshot_ms`: time from VU start until the first full world snapshot; every VU must receive one before closing.
 - `world_ws_upgrade_failures`: failed HTTP 101 upgrades; threshold zero.
+- `world_ws_initial_snapshot_failures`: VUs that connected but did not receive the initial full snapshot; threshold zero.
 - `world_ws_full_snapshots` / `world_ws_snapshot_deltas`: server frame counts observed by clients.
 - `world_ws_snapshot_interarrival_ms`: client-observed time between snapshot/delta frames; not server simulation tick time.
 - `world_ws_received_bytes`: received JavaScript string length (approximate payload size; not a wire-byte counter).
