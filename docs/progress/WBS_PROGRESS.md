@@ -559,3 +559,13 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Metrics use protocol message type as the only tag; account, character and session identifiers are never recorded.
 - Exposed the aggregate Actuator metrics endpoint alongside existing health/info endpoints.
 - CI verification and runtime/load measurements are pending; no throughput or player-capacity claims are made until load testing.
+
+
+## Latest implementation batch — repeatable WebSocket load-test harness
+- Added an opt-in k6 scenario at `infra/load/k6-world.js` for authenticated world gateway sessions.
+- Each virtual user requires its own unique test session and character; credentials are supplied through an environment variable and are not stored in the repository.
+- Scenario ramps to a configurable VU count, holds concurrent sessions, sends normalized movement at 10/s, pings every 20 seconds and attacks a visible monster every 3 seconds.
+- Captures WebSocket upgrade timing/failures, full snapshots, deltas, combat events, approximate received payload sizes, snapshot inter-arrival times, session duration and socket errors; writes a JSON summary.
+- Added Windows PowerShell setup instructions, staged test guidance and safety notes in `infra/load/README.md`. Load testing is opt-in and not part of regular CI.
+- Corrected stale README persistence references from PostgreSQL to MySQL and documented the load-test entry point.
+- CI for the load harness/docs and a local run against the user's MySQL-backed server are pending. No measured throughput or supported player cap is claimed.
