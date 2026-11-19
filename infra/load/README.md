@@ -51,7 +51,7 @@ For a smaller smoke test, set `KPAH_VUS=1` and provide one test session.
 - `world_ws_session_duration_ms`: connection lifetime.
 - `world_ws_errors`: socket or malformed-frame errors.
 
-The server-side Micrometer measurements are available from `GET /actuator/metrics/world.websocket.connections.active`, `world.websocket.outbound.messages`, `world.websocket.outbound.payload`, `world.websocket.send.duration` and `world.websocket.send.failures`. For tagged metrics, append the appropriate `?tag=message_type:snapshot-delta` filter.
+The server-side Micrometer measurements are available from `GET /actuator/metrics/world.websocket.connections.active`, `/actuator/metrics/world.websocket.connections.active.by_map`, `/actuator/metrics/world.websocket.inbound.messages` and `/actuator/metrics/world.websocket.inbound.rate_limited`, `world.websocket.outbound.messages`, `world.websocket.outbound.payload`, `world.websocket.send.duration` and `world.websocket.send.failures`. For tagged metrics, append the appropriate `?tag=message_type:snapshot-delta` filter.
 
 Run increasing profiles (for example 1, 10, 25, 50 VUs) as separate runs and compare p95 connection time, snapshot gaps, payload distributions, server send duration, CPU, heap, MySQL load and error rate. Stop increasing load when latency/errors rise materially or resource headroom becomes unsafe. Do not infer a production player cap from one short run.
 
