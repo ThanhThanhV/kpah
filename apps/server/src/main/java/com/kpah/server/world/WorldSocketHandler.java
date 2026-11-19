@@ -445,26 +445,33 @@ public class WorldSocketHandler extends TextWebSocketHandler {
 
         WorldSpatialIndex<String> playerIndex = playerSpatialIndexes.computeIfAbsent(
                 mapId, ignored -> new WorldSpatialIndex<>());
+        List<String> visiblePlayerSessions = new ArrayList<>();
+        List<String> nearbyMonsterIds = new ArrayList<>();
+        List<Map<String, Object>> visiblePlayers = new ArrayList<>();
+        List<MonsterState> visibleMonsters = new ArrayList<>();
+        List<LootDropState> visibleLoot = new ArrayList<>();
         for (Map.Entry<String, ConnectedPlayer> entry : players.entrySet()) {
             String sessionId = entry.getKey();
             ConnectedPlayer player = entry.getValue();
             if (!mapId.equals(player.state().mapId()) || !player.session().isOpen()) continue;
             double centerX = player.state().x();
             double centerY = player.state().y();
-            List<Map<String, Object>> visiblePlayers = new ArrayList<>();
-            for (String visibleSessionId : playerIndex.query(centerX, centerY, INTEREST_RADIUS)) {
+            visiblePlayerSessions.clear();
+            visiblePlayers.clear();
+            playerIndex.queryInto(centerX, centerY, INTEREST_RADIUS, visiblePlayerSessions);
+            boolean ownPlayerVisible = false;
+            for (String visibleSessionId : visiblePlayerSessions) {
                 Map<String, Object> snapshot = publicPlayersBySession.get(visibleSessionId);
-                if (snapshot != null) visiblePlayers.add(snapshot);
+                if (snapshot != null) {
+                    visiblePlayers.add(snapshot);
+                    if (sessionId.equals(visibleSessionId)) ownPlayerVisible = true;
+                }
             }
             Map<String, Object> ownSnapshot = publicPlayersBySession.get(sessionId);
-            if (ownSnapshot != null && visiblePlayers.stream()
-                    .noneMatch(snapshot -> player.playerId().equals(snapshot.get("playerId")))) {
-                visiblePlayers.add(ownSnapshot);
-            }
-            List<MonsterState> visibleMonsters = monsters.nearbyMonsters(
-                    mapId, centerX, centerY, INTEREST_RADIUS);
-            List<LootDropState> visibleLoot = monsters.nearbyLoot(
-                    mapId, centerX, centerY, INTEREST_RADIUS);
+            if (ownSnapshot != null && !ownPlayerVisible) visiblePlayers.add(ownSnapshot);
+            monsters.nearbyMonsters(mapId, centerX, centerY, INTEREST_RADIUS,
+                    visibleMonsters, nearbyMonsterIds);
+            monsters.nearbyLoot(mapId, centerX, centerY, INTEREST_RADIUS, visibleLoot);
             Map<String, Object> selfState = new HashMap<>(quests.snapshotState(player.playerId()));
             selfState.put("inventory", player.inventory());
             selfState.put("equipment", player.equipment());
