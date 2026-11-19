@@ -607,7 +607,7 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Replaced the per-spawn-region full monster-map stream/count on every simulation tick with atomic live counts keyed by map and spawn-region ID. Initial spawns increment the counter; a lethal damage transition decrements it once under the monster lock; respawn insertion increments it.
 - Replaced the per-tick full loot-drop expiration scan with a priority queue of scheduled expiry entries. Simulation only polls entries whose five-minute expiry has arrived.
 - Expiry entries carry drop ID plus creation timestamp, preventing stale queue entries from removing a later restored drop that reuses an ID. Actual removal remains conditional and synchronizes the loot map and spatial index.
-- These are structural reductions in repeated collection scans; no measured CPU or throughput claim is made. Backend Maven test/package passed for the code commits; the WBS documentation workflow is being retried after a transient Maven Central resolution failure unrelated to source compilation.
+- These are structural reductions in repeated collection scans; no measured CPU or throughput claim is made. Backend Maven test/package passed for the code commits, and the WBS documentation workflow passed after retrying a transient Maven Central dependency-resolution failure.
 
 
 ## Latest implementation batch — distance-aware monster idle AI scheduling
