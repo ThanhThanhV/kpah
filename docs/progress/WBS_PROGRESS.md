@@ -644,3 +644,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Calls for the same player remain serialized across cast, mana regeneration, restore and disconnect cleanup, preserving cooldown/resource consistency. Different players can process skill requests concurrently unless their IDs share a stripe.
 - Fixed stripes avoid creating an unbounded lock object per account. The monster damage application and mana/cooldown commit remain inside the player's critical section.
 - This removes the global lock bottleneck visible in the WebSocket snapshot path, where mana is read while constructing player snapshots. Actual concurrency/latency improvement still needs profiling under a representative load.
+
+
+## Latest implementation batch — reduce quest snapshot database reads
+- Added a character-scoped repository query that loads all quest progress rows in one database round trip.
+- World snapshot construction now derives both the legacy default-quest view and the full quest journal from that single result, rather than issuing a separate primary-key lookup for every quest on every broadcast.
+- Quest status, progress, claim state and client payload shape remain unchanged; missing progress rows still map to the existing available state.
+- Mana reads no longer replace the immutable resource-state record on broadcasts where no whole mana point has regenerated.
+- These changes reduce repeated database round trips and avoid unnecessary resource-state writes/allocations. Runtime profiling and local k6 load testing remain pending; no throughput claim is made.
