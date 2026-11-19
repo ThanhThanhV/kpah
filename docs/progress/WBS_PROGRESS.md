@@ -602,3 +602,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Each live monster queries only candidates within its configured aggro radius before selecting a target, while retaining the existing map and exact-distance checks.
 - Preserve the full player collection for resolving active telegraphed area attacks; the optimization therefore does not narrow the hit candidates for Alpha Wolf or Ancient Guardian specials.
 - This reduces repeated full-player-list scans during monster target acquisition. It is a structural optimization only; runtime CPU and scale impact still require representative load testing.
+
+## Latest implementation batch — monster spawn counters and scheduled loot expiry
+- Replaced the per-spawn-region full monster-map stream/count on every simulation tick with atomic live counts keyed by map and spawn-region ID. Initial spawns increment the counter; a lethal damage transition decrements it once under the monster lock; respawn insertion increments it.
+- Replaced the per-tick full loot-drop expiration scan with a priority queue of scheduled expiry entries. Simulation only polls entries whose five-minute expiry has arrived.
+- Expiry entries carry drop ID plus creation timestamp, preventing stale queue entries from removing a later restored drop that reuses an ID. Actual removal remains conditional and synchronizes the loot map and spatial index.
+- These are structural reductions in repeated collection scans; no measured CPU or throughput claim is made. CI verification is pending.
