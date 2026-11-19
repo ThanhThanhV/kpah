@@ -153,7 +153,8 @@ export default function () {
   });
   upgradeFailures.add(!upgraded);
   if (!upgraded) socketErrors.add(1);
-  sleep(1);
+  // Keep this VU from starting another WebSocket iteration after the first session closes.
+  sleep(SESSION_SECONDS + 60);
 }
 
 export function handleSummary(data) {
