@@ -717,3 +717,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Entity JSON comparisons and delta contents remain equivalent: the server still compares serialized current values against the last successfully sent baseline, emits explicit removed-ID arrays, and advances baselines only after send() succeeds.
 - Full snapshots still include every visible entity and private selfState; map changes still force a full snapshot.
 - This reduces stream pipeline and intermediate-list overhead by code inspection. Runtime profiling and k6 measurements are still pending.
+
+## Latest implementation batch — cache level-filtered class skills
+- SkillCatalog now groups immutable skill definitions by class and caches the available skill map by class plus the effective unlock level. Levels above a class's highest skill requirement reuse the same cache entry, avoiding an unbounded cache keyed by raw character level.
+- Public player snapshot construction calculates character level and snapshot time once, then reuses them for HP, class stats, mana and skill fields instead of recalculating level repeatedly.
+- The skill maps are immutable and depend only on class and level thresholds; mana remains dynamically calculated per player.
+- Expected allocation/CPU reduction is based on code inspection only. CI and runtime profiling are pending.
