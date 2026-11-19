@@ -711,3 +711,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - `broadcastNow()` now keeps a per-map-flush cache of serialized public player snapshots. Since public player views are materialized once before iterating recipients, the same player JSON is reused when that player appears in multiple recipients' AOI lists.
 - Monster and loot serialization deliberately remains recipient-local: their runtime snapshots can change while the broadcast loop is running, so reusing serialized values by ID could pair stale delta baselines with newer payload objects.
 - This removes repeated Jackson serialization for shared player AOI entries by code-path inspection. No throughput/GC improvement is claimed without runtime profiling; k6 load testing remains pending.
+
+## Latest implementation batch — build snapshot deltas with direct loops
+- Replaced per-recipient stream/filter/toList pipelines for changed players, monsters, loot and removed entity IDs with direct loops in WorldSocketHandler.sendSnapshot().
+- Entity JSON comparisons and delta contents remain equivalent: the server still compares serialized current values against the last successfully sent baseline, emits explicit removed-ID arrays, and advances baselines only after send() succeeds.
+- Full snapshots still include every visible entity and private selfState; map changes still force a full snapshot.
+- This reduces stream pipeline and intermediate-list overhead by code inspection. Runtime profiling and k6 measurements are still pending.
