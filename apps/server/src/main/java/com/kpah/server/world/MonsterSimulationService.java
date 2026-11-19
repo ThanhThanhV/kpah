@@ -2,7 +2,6 @@ package com.kpah.server.world;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -345,25 +344,35 @@ public class MonsterSimulationService {
                         .toList();
             }
 
-            MonsterTarget target = switch (archetype.behavior()) {
-                case PATROL -> null;
-                case DEFENSIVE -> {
-                    if (nowMillis > provokedUntil) {
-                        provokedPlayerId = null;
-                        yield null;
+            MonsterTarget target = null;
+            if (archetype.behavior() == MonsterBehavior.DEFENSIVE) {
+                if (nowMillis > provokedUntil) {
+                    provokedPlayerId = null;
+                } else {
+                    for (MonsterTarget player : nearbyPlayers) {
+                        if (mapId.equals(player.mapId()) && player.playerId().equals(provokedPlayerId)
+                                && distance(player.x(), player.y(), x, y) <= archetype.aggroRange()) {
+                            target = player;
+                            break;
+                        }
                     }
-                    yield nearbyPlayers.stream()
-                            .filter(player -> mapId.equals(player.mapId()))
-                            .filter(player -> player.playerId().equals(provokedPlayerId))
-                            .filter(player -> distance(player.x(), player.y(), x, y) <= archetype.aggroRange())
-                            .findFirst().orElse(null);
                 }
-                case AGGRESSIVE, ELITE -> nearbyPlayers.stream()
-                        .filter(player -> mapId.equals(player.mapId()))
-                        .filter(player -> distance(player.x(), player.y(), x, y) <= archetype.aggroRange())
-                        .min(Comparator.comparingDouble(player -> distance(player.x(), player.y(), x, y)))
-                        .orElse(null);
-            };
+            } else if (archetype.behavior() == MonsterBehavior.AGGRESSIVE
+                    || archetype.behavior() == MonsterBehavior.ELITE) {
+                double aggroRangeSquared = archetype.aggroRange() * archetype.aggroRange();
+                double nearestDistanceSquared = aggroRangeSquared;
+                for (MonsterTarget player : nearbyPlayers) {
+                    if (!mapId.equals(player.mapId())) continue;
+                    double deltaX = player.x() - x;
+                    double deltaY = player.y() - y;
+                    double distanceSquared = deltaX * deltaX + deltaY * deltaY;
+                    if (distanceSquared <= nearestDistanceSquared
+                            && (target == null || distanceSquared < nearestDistanceSquared)) {
+                        target = player;
+                        nearestDistanceSquared = distanceSquared;
+                    }
+                }
+            }
 
             boolean pursuingTarget = target != null && insideLeash(target.x(), target.y());
             if (!pursuingTarget) {
