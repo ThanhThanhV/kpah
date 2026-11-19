@@ -323,6 +323,7 @@ public class MonsterSimulationService {
                 targetPlayerId = target.playerId();
                 double distance = distance(target.x(), target.y(), x, y);
                 if (distance <= archetype.attackRange()) {
+                    lastMovementUpdateAt = nowMillis;
                     state = "attack";
                     if (nowMillis >= nextAttackAt) {
                         nextAttackAt = nowMillis + archetype.attackCooldownMillis();
