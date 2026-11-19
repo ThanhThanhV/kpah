@@ -466,7 +466,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         // comes from the incrementally maintained per-map index.
         Set<String> mapSessions = sessionsByMapId.get(mapId);
         if (mapSessions == null || mapSessions.isEmpty()) return;
-        Map<String, Map<String, Object>> publicPlayersBySession = new HashMap<>();
+        Map<String, Map<String, Object>> publicPlayersBySession = new HashMap<>(hashMapCapacity(mapSessions.size()));
         for (String sessionId : mapSessions) {
             ConnectedPlayer player = players.get(sessionId);
             if (player != null && mapId.equals(player.state().mapId())) {
@@ -476,12 +476,12 @@ public class WorldSocketHandler extends TextWebSocketHandler {
 
         WorldSpatialIndex<String> playerIndex = playerSpatialIndexes.computeIfAbsent(
                 mapId, ignored -> new WorldSpatialIndex<>());
-        List<String> visiblePlayerSessions = new ArrayList<>();
+        List<String> visiblePlayerSessions = new ArrayList<>(mapSessions.size());
         List<String> nearbyMonsterIds = new ArrayList<>();
-        List<Map<String, Object>> visiblePlayers = new ArrayList<>();
+        List<Map<String, Object>> visiblePlayers = new ArrayList<>(mapSessions.size());
         List<MonsterState> visibleMonsters = new ArrayList<>();
         List<LootDropState> visibleLoot = new ArrayList<>();
-        Map<Object, String> serializedPlayerSnapshots = new IdentityHashMap<>();
+        Map<Object, String> serializedPlayerSnapshots = new IdentityHashMap<>(mapSessions.size());
         for (String sessionId : mapSessions) {
             ConnectedPlayer player = players.get(sessionId);
             if (player == null || !mapId.equals(player.state().mapId()) || !player.session().isOpen()) continue;
@@ -586,10 +586,14 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         String sessionId = recipient.session().getId();
         Map<String, String> previousState = lastSentEntityState.get(sessionId);
         boolean fullSnapshot = previousState == null || !mapId.equals(lastSentMapBySession.get(sessionId));
-        Map<String, String> currentState = new HashMap<>();
-        List<Map<String, Object>> changedPlayers = fullSnapshot ? List.of() : new ArrayList<>();
-        List<MonsterState> changedMonsters = fullSnapshot ? List.of() : new ArrayList<>();
-        List<LootDropState> changedLoot = fullSnapshot ? List.of() : new ArrayList<>();
+        int visibleEntityCount = visiblePlayers.size() + visibleMonsters.size() + visibleLoot.size();
+        Map<String, String> currentState = new HashMap<>(hashMapCapacity(visibleEntityCount));
+        List<Map<String, Object>> changedPlayers = fullSnapshot ? List.of()
+                : new ArrayList<>(visiblePlayers.size());
+        List<MonsterState> changedMonsters = fullSnapshot ? List.of()
+                : new ArrayList<>(visibleMonsters.size());
+        List<LootDropState> changedLoot = fullSnapshot ? List.of()
+                : new ArrayList<>(visibleLoot.size());
 
         for (Map<String, Object> value : visiblePlayers) {
             String key = "p:" + value.get("playerId");
@@ -657,6 +661,12 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         lastSentEntityState.put(sessionId, currentState);
         lastSentMapBySession.put(sessionId, mapId);
         lastSentSelfState.put(sessionId, currentSelfState);
+    }
+
+    private static int hashMapCapacity(int expectedSize) {
+        if (expectedSize < 3) return expectedSize + 1;
+        if (expectedSize >= 1_000_000_000) return Integer.MAX_VALUE;
+        return (int) (expectedSize / 0.75f) + 1;
     }
 
     private String serializedEntity(Object value,
