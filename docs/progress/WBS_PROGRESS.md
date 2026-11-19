@@ -742,3 +742,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 ## Snapshot self-state comparison optimization
 - Removed the immutable item catalog from the per-recipient self-state change fingerprint. It remains included in full/delta payloads when selfState is transmitted, but is no longer serialized again every broadcast interval solely to decide whether selfState changed.
 - Quest, inventory and equipment remain part of the comparison, preserving updates to mutable player state. Runtime performance impact remains to be measured with the local k6 workload.
+
+
+## Self-state payload allocation reduction
+- Removed the immutable item catalog from the per-tick selfState construction entirely.
+- Fingerprint serialization now operates directly on quest, inventory and equipment state. A payload copy with the shared immutable catalog is created only for full snapshots or when mutable selfState changes.
+- This preserves client payload shape while avoiding an otherwise unnecessary map copy on unchanged delta ticks.
