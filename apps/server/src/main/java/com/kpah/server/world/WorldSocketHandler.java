@@ -517,26 +517,28 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     }
 
     private Map<String, Object> publicPlayerSnapshot(ConnectedPlayer player) {
+        int level = ExperienceProgression.levelFor(player.experience());
+        long nowMillis = System.currentTimeMillis();
+        String classCode = player.classCode();
         return Map.ofEntries(
                 Map.entry("playerId", player.playerId()),
                 Map.entry("name", player.characterName()),
-                Map.entry("classCode", player.classCode()),
+                Map.entry("classCode", classCode),
                 Map.entry("mapId", player.state().mapId()),
                 Map.entry("x", player.state().x()),
                 Map.entry("y", player.state().y()),
                 Map.entry("sequence", player.state().lastSequence()),
                 Map.entry("hp", player.hp()),
-                Map.entry("maxHp", classes.maxHp(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
+                Map.entry("maxHp", classes.maxHp(classCode, level)),
                 Map.entry("dead", player.hp() <= 0),
                 Map.entry("experience", player.experience()),
-                Map.entry("level", ExperienceProgression.levelFor(player.experience())),
+                Map.entry("level", level),
                 Map.entry("classStats", Map.of(
-                        "attack", classes.attackBonus(player.classCode(), ExperienceProgression.levelFor(player.experience())),
-                        "defense", classes.defenseBonus(player.classCode(), ExperienceProgression.levelFor(player.experience())))),
-                Map.entry("mana", skills.manaFor(player.playerId(), player.classCode(),
-                        ExperienceProgression.levelFor(player.experience()), System.currentTimeMillis())),
-                Map.entry("maxMana", skills.maxMana(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
-                Map.entry("skills", skills.skillsFor(player.classCode(), ExperienceProgression.levelFor(player.experience()))));
+                        "attack", classes.attackBonus(classCode, level),
+                        "defense", classes.defenseBonus(classCode, level))),
+                Map.entry("mana", skills.manaFor(player.playerId(), classCode, level, nowMillis)),
+                Map.entry("maxMana", skills.maxMana(classCode, level)),
+                Map.entry("skills", skills.skillsFor(classCode, level)));
     }
 
     private void addSessionToMap(String mapId, String sessionId) {
