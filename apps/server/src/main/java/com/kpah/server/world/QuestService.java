@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,7 +18,7 @@ public class QuestService {
     private final QuestProgressRepository progress;
     private final NpcRegistry npcs;
     private final QuestCatalog catalog;
-    private final Map<String, Map<String, Object>> snapshotCache = new ConcurrentHashMap<>();
+    private final Map<String, SnapshotCacheEntry> snapshotCache = new ConcurrentHashMap<>();
 
     @Autowired
     public QuestService(QuestProgressRepository progress, NpcRegistry npcs, QuestCatalog catalog) {
@@ -103,7 +104,9 @@ public class QuestService {
     /** Reads all quest state for a character with one database query for the world snapshot. */
     @Transactional(readOnly = true)
     public Map<String, Object> snapshotState(String characterId) {
-        return snapshotCache.computeIfAbsent(characterId, this::loadSnapshotState);
+        SnapshotCacheEntry entry = snapshotCache.computeIfAbsent(
+                characterId, ignored -> new SnapshotCacheEntry());
+        return entry.getOrLoad(() -> loadSnapshotState(characterId));
     }
 
     public void evictSnapshot(String characterId) {
@@ -125,7 +128,8 @@ public class QuestService {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCommit() {
-                    snapshotCache.remove(characterId);
+                    SnapshotCacheEntry entry = snapshotCache.get(characterId);
+                    if (entry != null) entry.invalidate();
                 }
             });
         } else {
@@ -160,6 +164,19 @@ public class QuestService {
                 : quest.getProgress() >= definition.requiredKills() ? "ready" : "active";
         return new QuestInteractionResult(definition.npcName(), message, definition.questId(), status,
                 quest.getProgress(), definition.requiredKills(), reward);
+    }
+
+    private static final class SnapshotCacheEntry {
+        private Map<String, Object> snapshot;
+
+        private synchronized Map<String, Object> getOrLoad(Supplier<Map<String, Object>> loader) {
+            if (snapshot == null) snapshot = loader.get();
+            return snapshot;
+        }
+
+        private synchronized void invalidate() {
+            snapshot = null;
+        }
     }
 
     private String key(String characterId, String questId) { return characterId + ":" + questId; }
