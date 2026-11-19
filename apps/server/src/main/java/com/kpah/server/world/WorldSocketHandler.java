@@ -312,11 +312,20 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         messageRateLimiter.remove(session.getId());
         ConnectedPlayer removed = players.remove(session.getId());
+        boolean lastSessionForPlayer = false;
         if (removed != null) {
             sessionsByPlayerId.computeIfPresent(removed.playerId(), (playerId, playerSessions) -> {
                 playerSessions.remove(session.getId());
-                return playerSessions.isEmpty() ? null : playerSessions;
+                if (playerSessions.isEmpty()) {
+                    lastSessionForPlayer = true;
+                    return null;
+                }
+                return playerSessions;
             });
+            // A defensive fallback for a session whose player index was already cleared.
+            if (!sessionsByPlayerId.containsKey(removed.playerId())) {
+                lastSessionForPlayer = true;
+            }
             removePlayerSpatialIndex(session.getId(), removed.state().mapId());
             removeSessionFromMap(removed.state().mapId(), session.getId());
             networkMetrics.connectionClosed(removed.state().mapId());
@@ -326,10 +335,14 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         lastSentMapBySession.remove(session.getId());
         lastSentSelfState.remove(session.getId());
         if (removed != null) {
-            persist(removed);
-            combat.removePlayer(removed.playerId());
-            skills.removePlayer(removed.playerId());
-            quests.evictSnapshot(removed.playerId());
+            // A stale secondary session must not overwrite the active session's latest
+            // character state or clear combat/skill resources still used by that session.
+            if (lastSessionForPlayer) {
+                persist(removed);
+                combat.removePlayer(removed.playerId());
+                skills.removePlayer(removed.playerId());
+                quests.evictSnapshot(removed.playerId());
+            }
             broadcast(removed.state().mapId());
         }
     }
