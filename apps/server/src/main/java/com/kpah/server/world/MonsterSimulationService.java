@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 public class MonsterSimulationService {
     private static final int BASIC_ATTACK_DAMAGE = 20;
     private static final double BASIC_ATTACK_RANGE = 58.0;
+    private static final long IDLE_AI_INTERVAL_MILLIS = 300L;
 
     private final Map<String, List<MonsterSpawnRegion>> regionsByMap = new ConcurrentHashMap<>();
     private final Map<String, GridPathfinder> pathfindersByMap = new ConcurrentHashMap<>();
@@ -238,6 +239,8 @@ public class MonsterSimulationService {
         private List<GridPathfinder.Waypoint> path = List.of();
         private int pathIndex;
         private long nextPathAt;
+        private long nextIdleAiAt;
+        private long lastMovementUpdateAt = -1L;
         private int pathTargetCellX = Integer.MIN_VALUE;
         private int pathTargetCellY = Integer.MIN_VALUE;
         private final long phase = System.nanoTime() / 1_000_000L;
@@ -308,7 +311,15 @@ public class MonsterSimulationService {
                         .orElse(null);
             };
 
-            if (target != null && insideLeash(target.x(), target.y())) {
+            boolean pursuingTarget = target != null && insideLeash(target.x(), target.y());
+            if (!pursuingTarget) {
+                if (nowMillis < nextIdleAiAt) return List.of();
+                nextIdleAiAt = nowMillis + IDLE_AI_INTERVAL_MILLIS;
+            } else {
+                nextIdleAiAt = nowMillis;
+            }
+
+            if (pursuingTarget) {
                 targetPlayerId = target.playerId();
                 double distance = distance(target.x(), target.y(), x, y);
                 if (distance <= archetype.attackRange()) {
@@ -345,7 +356,7 @@ public class MonsterSimulationService {
                 }
                 state = "aggro";
                 moveAlongPath(target.x(), target.y(), nowMillis,
-                        region.moveSpeed() * archetype.moveSpeedMultiplier() * 0.1);
+                        movementStep(nowMillis, region.moveSpeed() * archetype.moveSpeedMultiplier()));
                 return List.of();
             }
 
@@ -357,7 +368,7 @@ public class MonsterSimulationService {
             double targetX = homeX + Math.cos(angle) * radiusX;
             double targetY = homeY + Math.sin(angle) * radiusY;
             moveAlongPath(targetX, targetY, nowMillis,
-                    region.moveSpeed() * archetype.moveSpeedMultiplier() * 0.1);
+                    movementStep(nowMillis, region.moveSpeed() * archetype.moveSpeedMultiplier()));
             return List.of();
         }
 
@@ -368,6 +379,17 @@ public class MonsterSimulationService {
             }
             return MonsterAttackArea.containsCircle(heavyStrikeX, heavyStrikeY,
                     HEAVY_STRIKE_RADIUS, player.x(), player.y());
+        }
+
+        private double movementStep(long nowMillis, double speedPerSecond) {
+            long elapsedMillis;
+            if (lastMovementUpdateAt < 0) {
+                elapsedMillis = 100L;
+            } else {
+                elapsedMillis = Math.max(0L, Math.min(500L, nowMillis - lastMovementUpdateAt));
+            }
+            lastMovementUpdateAt = nowMillis;
+            return speedPerSecond * elapsedMillis / 1_000.0;
         }
 
         private void moveAlongPath(double targetX, double targetY, long nowMillis, double maxStep) {
