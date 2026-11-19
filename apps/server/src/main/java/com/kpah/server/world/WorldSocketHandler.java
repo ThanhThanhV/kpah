@@ -6,6 +6,7 @@ import com.kpah.server.auth.AuthService;
 import com.kpah.server.auth.SessionHandshakeInterceptor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -38,6 +39,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private final WorldMessageRateLimiter messageRateLimiter;
     private final WorldNetworkMetrics networkMetrics;
     private final Map<String, ConnectedPlayer> players = new ConcurrentHashMap<>();
+    private final Map<String, WorldSpatialIndex<String>> playerSpatialIndexes = new ConcurrentHashMap<>();
     private final Set<String> pendingBroadcastMaps = ConcurrentHashMap.newKeySet();
     private final Map<String, Map<String, String>> lastSentEntityState = new ConcurrentHashMap<>();
     private final Map<String, String> lastSentMapBySession = new ConcurrentHashMap<>();
@@ -102,6 +104,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         skills.restore(player.playerId(), player.classCode(),
                 ExperienceProgression.levelFor(player.experience()), character.getMana(), System.currentTimeMillis());
         players.put(session.getId(), player);
+        updatePlayerSpatialIndex(session.getId(), null, player);
         networkMetrics.connectionOpened(player.state().mapId());
         persist(player);
         lastMovementPersistAt.put(session.getId(), System.currentTimeMillis());
@@ -157,6 +160,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 }
                 ConnectedPlayer moved = player.withState(next, now);
                 players.put(session.getId(), moved);
+                updatePlayerSpatialIndex(session.getId(), previousMapId, moved);
                 if (!previousMapId.equals(next.mapId())) {
                     networkMetrics.mapChanged(previousMapId, next.mapId());
                     persist(moved);
@@ -296,7 +300,10 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         messageRateLimiter.remove(session.getId());
         ConnectedPlayer removed = players.remove(session.getId());
-        if (removed != null) networkMetrics.connectionClosed(removed.state().mapId());
+        if (removed != null) {
+            removePlayerSpatialIndex(session.getId(), removed.state().mapId());
+            networkMetrics.connectionClosed(removed.state().mapId());
+        }
         lastMovementPersistAt.remove(session.getId());
         lastSentEntityState.remove(session.getId());
         lastSentMapBySession.remove(session.getId());
@@ -373,6 +380,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             PlayerMotionState respawned = new PlayerMotionState(
                     spawn.mapId(), spawn.x(), spawn.y(), player.state().lastSequence());
             ConnectedPlayer revived = player.withRespawn(respawned, classes.maxHp(player.classCode(), ExperienceProgression.levelFor(player.experience())), 0L, System.nanoTime());
+            updatePlayerSpatialIndex(sessionId, player.state().mapId(), revived);
             persist(revived);
             return revived;
         });
@@ -426,50 +434,38 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     }
 
     private void broadcastNow(String mapId) {
-        // Build the public map view once. Private character data is attached only to
-        // the matching recipient, avoiding an O(playerCount^2) snapshot rebuild.
-        var publicPlayers = players.values().stream()
-                .filter(player -> mapId.equals(player.state().mapId()))
-                .map(player -> Map.ofEntries(
-                        Map.entry("playerId", player.playerId()),
-                        Map.entry("name", player.characterName()),
-                        Map.entry("classCode", player.classCode()),
-                        Map.entry("mapId", player.state().mapId()),
-                        Map.entry("x", player.state().x()),
-                        Map.entry("y", player.state().y()),
-                        Map.entry("sequence", player.state().lastSequence()),
-                        Map.entry("hp", player.hp()),
-                        Map.entry("maxHp", classes.maxHp(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
-                        Map.entry("dead", player.hp() <= 0),
-                        Map.entry("experience", player.experience()),
-                        Map.entry("level", ExperienceProgression.levelFor(player.experience())),
-                        Map.entry("classStats", Map.of(
-                                "attack", classes.attackBonus(player.classCode(), ExperienceProgression.levelFor(player.experience())),
-                                "defense", classes.defenseBonus(player.classCode(), ExperienceProgression.levelFor(player.experience())))),
-                        Map.entry("mana", skills.manaFor(player.playerId(), player.classCode(), ExperienceProgression.levelFor(player.experience()), System.currentTimeMillis())),
-                        Map.entry("maxMana", skills.maxMana(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
-                        Map.entry("skills", skills.skillsFor(player.classCode(), ExperienceProgression.levelFor(player.experience())))))
-                .toList();
+        // Public player snapshots are materialized once, while player AOI membership
+        // comes from the incrementally maintained per-map index.
+        Map<String, Map<String, Object>> publicPlayersBySession = new HashMap<>();
+        players.forEach((sessionId, player) -> {
+            if (mapId.equals(player.state().mapId())) {
+                publicPlayersBySession.put(sessionId, publicPlayerSnapshot(player));
+            }
+        });
+
         var monsterSnapshot = monsters.snapshot(mapId);
         var lootSnapshot = monsters.snapshotLoot(mapId);
-        WorldSpatialIndex<Map<String, Object>> playerIndex = WorldSpatialIndex.build(
-                publicPlayers,
-                snapshot -> ((Number) snapshot.get("x")).doubleValue(),
-                snapshot -> ((Number) snapshot.get("y")).doubleValue());
+        WorldSpatialIndex<String> playerIndex = playerSpatialIndexes.computeIfAbsent(
+                mapId, ignored -> new WorldSpatialIndex<>());
         WorldSpatialIndex<MonsterState> monsterIndex = WorldSpatialIndex.build(
                 monsterSnapshot, MonsterState::x, MonsterState::y);
         WorldSpatialIndex<LootDropState> lootIndex = WorldSpatialIndex.build(
                 lootSnapshot, LootDropState::x, LootDropState::y);
-        for (ConnectedPlayer player : players.values()) {
+        for (Map.Entry<String, ConnectedPlayer> entry : players.entrySet()) {
+            String sessionId = entry.getKey();
+            ConnectedPlayer player = entry.getValue();
             if (!mapId.equals(player.state().mapId()) || !player.session().isOpen()) continue;
             double centerX = player.state().x();
             double centerY = player.state().y();
-            List<Map<String, Object>> visiblePlayers = playerIndex.query(centerX, centerY, INTEREST_RADIUS);
-            if (visiblePlayers.stream().noneMatch(snapshot -> player.playerId().equals(snapshot.get("playerId")))) {
-                publicPlayers.stream()
-                        .filter(snapshot -> player.playerId().equals(snapshot.get("playerId")))
-                        .findFirst()
-                        .ifPresent(visiblePlayers::add);
+            List<Map<String, Object>> visiblePlayers = new ArrayList<>();
+            for (String visibleSessionId : playerIndex.query(centerX, centerY, INTEREST_RADIUS)) {
+                Map<String, Object> snapshot = publicPlayersBySession.get(visibleSessionId);
+                if (snapshot != null) visiblePlayers.add(snapshot);
+            }
+            Map<String, Object> ownSnapshot = publicPlayersBySession.get(sessionId);
+            if (ownSnapshot != null && visiblePlayers.stream()
+                    .noneMatch(snapshot -> sessionId.equals(snapshot.get("sessionId")))) {
+                visiblePlayers.add(ownSnapshot);
             }
             List<MonsterState> visibleMonsters = monsterIndex.query(centerX, centerY, INTEREST_RADIUS);
             List<LootDropState> visibleLoot = lootIndex.query(centerX, centerY, INTEREST_RADIUS);
@@ -485,6 +481,43 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 // The websocket close lifecycle removes failed sessions.
             }
         }
+    }
+
+    private Map<String, Object> publicPlayerSnapshot(ConnectedPlayer player) {
+        return Map.ofEntries(
+                Map.entry("playerId", player.playerId()),
+                Map.entry("name", player.characterName()),
+                Map.entry("classCode", player.classCode()),
+                Map.entry("mapId", player.state().mapId()),
+                Map.entry("x", player.state().x()),
+                Map.entry("y", player.state().y()),
+                Map.entry("sequence", player.state().lastSequence()),
+                Map.entry("hp", player.hp()),
+                Map.entry("maxHp", classes.maxHp(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
+                Map.entry("dead", player.hp() <= 0),
+                Map.entry("experience", player.experience()),
+                Map.entry("level", ExperienceProgression.levelFor(player.experience())),
+                Map.entry("classStats", Map.of(
+                        "attack", classes.attackBonus(player.classCode(), ExperienceProgression.levelFor(player.experience())),
+                        "defense", classes.defenseBonus(player.classCode(), ExperienceProgression.levelFor(player.experience())))),
+                Map.entry("mana", skills.manaFor(player.playerId(), player.classCode(),
+                        ExperienceProgression.levelFor(player.experience()), System.currentTimeMillis())),
+                Map.entry("maxMana", skills.maxMana(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
+                Map.entry("skills", skills.skillsFor(player.classCode(), ExperienceProgression.levelFor(player.experience()))));
+    }
+
+    private void updatePlayerSpatialIndex(String sessionId, String previousMapId, ConnectedPlayer player) {
+        String nextMapId = player.state().mapId();
+        if (previousMapId != null && !previousMapId.equals(nextMapId)) {
+            removePlayerSpatialIndex(sessionId, previousMapId);
+        }
+        playerSpatialIndexes.computeIfAbsent(nextMapId, ignored -> new WorldSpatialIndex<>())
+                .upsert(sessionId, player.state().x(), player.state().y(), sessionId);
+    }
+
+    private void removePlayerSpatialIndex(String sessionId, String mapId) {
+        WorldSpatialIndex<String> index = playerSpatialIndexes.get(mapId);
+        if (index != null) index.remove(sessionId);
     }
 
     private void sendSnapshot(ConnectedPlayer recipient, String mapId,
