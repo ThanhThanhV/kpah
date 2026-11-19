@@ -39,6 +39,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private final WorldMessageRateLimiter messageRateLimiter;
     private final WorldNetworkMetrics networkMetrics;
     private final Map<String, ConnectedPlayer> players = new ConcurrentHashMap<>();
+    private final Map<String, Set<String>> sessionsByPlayerId = new ConcurrentHashMap<>();
     private final Map<String, WorldSpatialIndex<String>> playerSpatialIndexes = new ConcurrentHashMap<>();
     private final Set<String> pendingBroadcastMaps = ConcurrentHashMap.newKeySet();
     private final Map<String, Map<String, String>> lastSentEntityState = new ConcurrentHashMap<>();
@@ -104,6 +105,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         skills.restore(player.playerId(), player.classCode(),
                 ExperienceProgression.levelFor(player.experience()), character.getMana(), System.currentTimeMillis());
         players.put(session.getId(), player);
+        sessionsByPlayerId.computeIfAbsent(player.playerId(), ignored -> ConcurrentHashMap.newKeySet())
+                .add(session.getId());
         updatePlayerSpatialIndex(session.getId(), null, player);
         networkMetrics.connectionOpened(player.state().mapId());
         persist(player);
@@ -301,6 +304,11 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         messageRateLimiter.remove(session.getId());
         ConnectedPlayer removed = players.remove(session.getId());
         if (removed != null) {
+            Set<String> playerSessions = sessionsByPlayerId.get(removed.playerId());
+            if (playerSessions != null) {
+                playerSessions.remove(session.getId());
+                if (playerSessions.isEmpty()) sessionsByPlayerId.remove(removed.playerId(), playerSessions);
+            }
             removePlayerSpatialIndex(session.getId(), removed.state().mapId());
             networkMetrics.connectionClosed(removed.state().mapId());
         }
@@ -328,20 +336,29 @@ public class WorldSocketHandler extends TextWebSocketHandler {
 
         for (MonsterPlayerAttack attack : monsters.advance(now, targets)) {
             int[] appliedDamage = {0};
-            players.replaceAll((sessionId, player) -> {
-                if (!player.playerId().equals(attack.playerId()) || player.hp() <= 0) return player;
-                int mitigatedDamage = ItemCatalog.mitigateDamage(
-                        attack.damage(), items.defenseBonus(player.equipment()) + classes.defenseBonus(player.classCode(), ExperienceProgression.levelFor(player.experience())));
-                appliedDamage[0] = mitigatedDamage;
-                int hp = Math.max(0, player.hp() - mitigatedDamage);
-                long respawnAt = hp == 0 ? now + PLAYER_RESPAWN_MILLIS : 0L;
-                ConnectedPlayer damaged = player.withVitals(hp, respawnAt);
-                persist(damaged);
-                return damaged;
-            });
+            Set<String> targetSessions = sessionsByPlayerId.get(attack.playerId());
+            if (targetSessions == null) continue;
+            for (String sessionId : targetSessions) {
+                players.computeIfPresent(sessionId, (id, player) -> {
+                    if (player.hp() <= 0) return player;
+                    int mitigatedDamage = ItemCatalog.mitigateDamage(
+                            attack.damage(), items.defenseBonus(player.equipment())
+                                    + classes.defenseBonus(player.classCode(),
+                                    ExperienceProgression.levelFor(player.experience())));
+                    appliedDamage[0] = mitigatedDamage;
+                    int hp = Math.max(0, player.hp() - mitigatedDamage);
+                    long respawnAt = hp == 0 ? now + PLAYER_RESPAWN_MILLIS : 0L;
+                    ConnectedPlayer damaged = player.withVitals(hp, respawnAt);
+                    persist(damaged);
+                    return damaged;
+                });
+            }
             if (appliedDamage[0] > 0) {
-                ConnectedPlayer hitTarget = players.values().stream()
-                        .filter(player -> player.playerId().equals(attack.playerId())).findFirst().orElse(null);
+                ConnectedPlayer hitTarget = null;
+                for (String sessionId : targetSessions) {
+                    hitTarget = players.get(sessionId);
+                    if (hitTarget != null) break;
+                }
                 if (hitTarget != null) {
                     broadcastCombat(hitTarget.state().mapId(), Map.of("type", "combat",
                             "action", attack.action(), "sourceMonsterId", attack.monsterId(),
