@@ -41,6 +41,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private final WorldNetworkMetrics networkMetrics;
     private final Map<String, ConnectedPlayer> players = new ConcurrentHashMap<>();
     private final Map<String, Set<String>> sessionsByPlayerId = new ConcurrentHashMap<>();
+    private final Map<String, Set<String>> sessionsByMapId = new ConcurrentHashMap<>();
     private final Map<String, WorldSpatialIndex<String>> playerSpatialIndexes = new ConcurrentHashMap<>();
     private final Set<String> pendingBroadcastMaps = ConcurrentHashMap.newKeySet();
     private final Map<String, Map<String, String>> lastSentEntityState = new ConcurrentHashMap<>();
@@ -111,6 +112,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             updated.add(session.getId());
             return updated;
         });
+        addSessionToMap(mapId, session.getId());
         updatePlayerSpatialIndex(session.getId(), null, player);
         networkMetrics.connectionOpened(player.state().mapId());
         persist(player);
@@ -169,6 +171,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 players.put(session.getId(), moved);
                 updatePlayerSpatialIndex(session.getId(), previousMapId, moved);
                 if (!previousMapId.equals(next.mapId())) {
+                    removeSessionFromMap(previousMapId, session.getId());
+                    addSessionToMap(next.mapId(), session.getId());
                     networkMetrics.mapChanged(previousMapId, next.mapId());
                     persist(moved);
                     lastMovementPersistAt.put(session.getId(), System.currentTimeMillis());
@@ -313,6 +317,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 return playerSessions.isEmpty() ? null : playerSessions;
             });
             removePlayerSpatialIndex(session.getId(), removed.state().mapId());
+            removeSessionFromMap(removed.state().mapId(), session.getId());
             networkMetrics.connectionClosed(removed.state().mapId());
         }
         lastMovementPersistAt.remove(session.getId());
@@ -331,11 +336,16 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     @Scheduled(fixedRate = 100)
     public void tickWorld() {
         long now = System.currentTimeMillis();
-        List<MonsterSimulationService.MonsterTarget> targets = players.values().stream()
-                .filter(player -> player.hp() > 0)
-                .map(player -> new MonsterSimulationService.MonsterTarget(
-                        player.playerId(), player.state().mapId(), player.state().x(), player.state().y()))
-                .toList();
+        List<MonsterSimulationService.MonsterTarget> targets = new ArrayList<>();
+        sessionsByMapId.forEach((mapId, sessionIds) -> {
+            for (String sessionId : sessionIds) {
+                ConnectedPlayer player = players.get(sessionId);
+                if (player != null && player.hp() > 0 && mapId.equals(player.state().mapId())) {
+                    targets.add(new MonsterSimulationService.MonsterTarget(
+                            player.playerId(), mapId, player.state().x(), player.state().y()));
+                }
+            }
+        });
 
         for (MonsterPlayerAttack attack : monsters.advance(now, targets)) {
             int[] appliedDamage = {0};
@@ -371,43 +381,54 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             }
         }
 
-        for (Map.Entry<String, ConnectedPlayer> entry : players.entrySet()) {
-            String sessionId = entry.getKey();
-            ConnectedPlayer current = entry.getValue();
-            if (current.hp() <= 0) continue;
-            List<LootDropState> collected = monsters.collectNearbyLoot(
-                    current.state().mapId(), current.state().x(), current.state().y());
-            if (!collected.isEmpty()) {
-                players.computeIfPresent(sessionId, (id, latest) -> {
-                    Map<String, Integer> updatedInventory = new ConcurrentHashMap<>(latest.inventory());
-                    for (LootDropState drop : collected) {
-                        ItemCatalog.InventoryUpdate update = items.addToInventory(
-                                updatedInventory, drop.itemCode(), drop.amount());
-                        updatedInventory.clear();
-                        updatedInventory.putAll(update.inventory());
-                        int remainder = drop.amount() - update.acceptedAmount();
-                        if (remainder > 0) monsters.restoreLoot(drop.withAmount(remainder));
-                    }
-                    ConnectedPlayer looted = latest.withInventory(updatedInventory);
-                    persist(looted);
-                    return looted;
-                });
+        sessionsByMapId.forEach((mapId, sessionIds) -> {
+            for (String sessionId : sessionIds) {
+                ConnectedPlayer current = players.get(sessionId);
+                if (current == null || !mapId.equals(current.state().mapId()) || current.hp() <= 0) continue;
+                List<LootDropState> collected = monsters.collectNearbyLoot(
+                        mapId, current.state().x(), current.state().y());
+                if (!collected.isEmpty()) {
+                    players.computeIfPresent(sessionId, (id, latest) -> {
+                        if (!mapId.equals(latest.state().mapId())) {
+                            collected.forEach(monsters::restoreLoot);
+                            return latest;
+                        }
+                        Map<String, Integer> updatedInventory = new ConcurrentHashMap<>(latest.inventory());
+                        for (LootDropState drop : collected) {
+                            ItemCatalog.InventoryUpdate update = items.addToInventory(
+                                    updatedInventory, drop.itemCode(), drop.amount());
+                            updatedInventory.clear();
+                            updatedInventory.putAll(update.inventory());
+                            int remainder = drop.amount() - update.acceptedAmount();
+                            if (remainder > 0) monsters.restoreLoot(drop.withAmount(remainder));
+                        }
+                        ConnectedPlayer looted = latest.withInventory(updatedInventory);
+                        persist(looted);
+                        return looted;
+                    });
+                }
             }
-        }
-
-        players.replaceAll((sessionId, player) -> {
-            if (player.hp() > 0 || player.respawnAt() == 0L || now < player.respawnAt()) return player;
-            PlayerMotionState spawn = movementService.initialState(player.state().mapId());
-            PlayerMotionState respawned = new PlayerMotionState(
-                    spawn.mapId(), spawn.x(), spawn.y(), player.state().lastSequence());
-            ConnectedPlayer revived = player.withRespawn(respawned, classes.maxHp(player.classCode(), ExperienceProgression.levelFor(player.experience())), 0L, System.nanoTime());
-            updatePlayerSpatialIndex(sessionId, player.state().mapId(), revived);
-            persist(revived);
-            return revived;
         });
 
-        players.values().stream().map(player -> player.state().mapId())
-                .distinct().forEach(this::broadcast);
+        sessionsByMapId.forEach((mapId, sessionIds) -> {
+            for (String sessionId : sessionIds) {
+                players.computeIfPresent(sessionId, (id, player) -> {
+                    if (!mapId.equals(player.state().mapId()) || player.hp() > 0
+                            || player.respawnAt() == 0L || now < player.respawnAt()) return player;
+                    PlayerMotionState spawn = movementService.initialState(mapId);
+                    PlayerMotionState respawned = new PlayerMotionState(
+                            spawn.mapId(), spawn.x(), spawn.y(), player.state().lastSequence());
+                    ConnectedPlayer revived = player.withRespawn(respawned,
+                            classes.maxHp(player.classCode(), ExperienceProgression.levelFor(player.experience())),
+                            0L, System.nanoTime());
+                    updatePlayerSpatialIndex(sessionId, mapId, revived);
+                    persist(revived);
+                    return revived;
+                });
+            }
+        });
+
+        sessionsByMapId.keySet().forEach(this::broadcast);
     }
 
     private ConnectedPlayer awardExperience(ConnectedPlayer player, int amount) {
@@ -457,12 +478,15 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private void broadcastNow(String mapId) {
         // Public player snapshots are materialized once, while player AOI membership
         // comes from the incrementally maintained per-map index.
+        Set<String> mapSessions = sessionsByMapId.get(mapId);
+        if (mapSessions == null || mapSessions.isEmpty()) return;
         Map<String, Map<String, Object>> publicPlayersBySession = new HashMap<>();
-        players.forEach((sessionId, player) -> {
-            if (mapId.equals(player.state().mapId())) {
+        for (String sessionId : mapSessions) {
+            ConnectedPlayer player = players.get(sessionId);
+            if (player != null && mapId.equals(player.state().mapId())) {
                 publicPlayersBySession.put(sessionId, publicPlayerSnapshot(player));
             }
-        });
+        }
 
         WorldSpatialIndex<String> playerIndex = playerSpatialIndexes.computeIfAbsent(
                 mapId, ignored -> new WorldSpatialIndex<>());
@@ -471,10 +495,9 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         List<Map<String, Object>> visiblePlayers = new ArrayList<>();
         List<MonsterState> visibleMonsters = new ArrayList<>();
         List<LootDropState> visibleLoot = new ArrayList<>();
-        for (Map.Entry<String, ConnectedPlayer> entry : players.entrySet()) {
-            String sessionId = entry.getKey();
-            ConnectedPlayer player = entry.getValue();
-            if (!mapId.equals(player.state().mapId()) || !player.session().isOpen()) continue;
+        for (String sessionId : mapSessions) {
+            ConnectedPlayer player = players.get(sessionId);
+            if (player == null || !mapId.equals(player.state().mapId()) || !player.session().isOpen()) continue;
             double centerX = player.state().x();
             double centerY = player.state().y();
             visiblePlayerSessions.clear();
@@ -526,6 +549,22 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                         ExperienceProgression.levelFor(player.experience()), System.currentTimeMillis())),
                 Map.entry("maxMana", skills.maxMana(player.classCode(), ExperienceProgression.levelFor(player.experience()))),
                 Map.entry("skills", skills.skillsFor(player.classCode(), ExperienceProgression.levelFor(player.experience()))));
+    }
+
+    private void addSessionToMap(String mapId, String sessionId) {
+        sessionsByMapId.compute(mapId, (key, sessions) -> {
+            Set<String> updated = sessions == null ? ConcurrentHashMap.newKeySet() : sessions;
+            updated.add(sessionId);
+            return updated;
+        });
+    }
+
+    private void removeSessionFromMap(String mapId, String sessionId) {
+        if (mapId == null) return;
+        sessionsByMapId.computeIfPresent(mapId, (key, sessions) -> {
+            sessions.remove(sessionId);
+            return sessions.isEmpty() ? null : sessions;
+        });
     }
 
     private void updatePlayerSpatialIndex(String sessionId, String previousMapId, ConnectedPlayer player) {
