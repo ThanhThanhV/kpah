@@ -668,17 +668,15 @@ public class WorldSocketHandler extends TextWebSocketHandler {
 
         Set<String> recipientSessionIds = new HashSet<>();
         if (anchor == null) {
-            // Keep the previous safe fallback for events without a connected player anchor.
-            players.forEach((sessionId, player) -> {
-                if (mapId.equals(player.state().mapId())) recipientSessionIds.add(sessionId);
-            });
+            // Keep the safe map-wide fallback for events without a connected player anchor.
+            Set<String> mapSessions = sessionsByMapId.get(mapId);
+            if (mapSessions != null) recipientSessionIds.addAll(mapSessions);
         } else {
             List<String> nearbySessions = new ArrayList<>();
             WorldSpatialIndex<String> index = playerSpatialIndexes.get(mapId);
             if (index == null) {
-                players.forEach((sessionId, player) -> {
-                    if (mapId.equals(player.state().mapId())) recipientSessionIds.add(sessionId);
-                });
+                Set<String> mapSessions = sessionsByMapId.get(mapId);
+                if (mapSessions != null) recipientSessionIds.addAll(mapSessions);
             } else {
                 index.queryInto(anchor.state().x(), anchor.state().y(),
                         INTEREST_RADIUS, nearbySessions);
