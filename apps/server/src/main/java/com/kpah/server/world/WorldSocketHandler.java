@@ -464,7 +464,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             }
             Map<String, Object> ownSnapshot = publicPlayersBySession.get(sessionId);
             if (ownSnapshot != null && visiblePlayers.stream()
-                    .noneMatch(snapshot -> sessionId.equals(snapshot.get("sessionId")))) {
+                    .noneMatch(snapshot -> player.playerId().equals(snapshot.get("playerId")))) {
                 visiblePlayers.add(ownSnapshot);
             }
             List<MonsterState> visibleMonsters = monsterIndex.query(centerX, centerY, INTEREST_RADIUS);
