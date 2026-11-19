@@ -645,7 +645,11 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         } else {
             List<String> nearbySessions = new ArrayList<>();
             WorldSpatialIndex<String> index = playerSpatialIndexes.get(mapId);
-            if (index != null) {
+            if (index == null) {
+                players.forEach((sessionId, player) -> {
+                    if (mapId.equals(player.state().mapId())) recipientSessionIds.add(sessionId);
+                });
+            } else {
                 index.queryInto(anchor.state().x(), anchor.state().y(),
                         INTEREST_RADIUS, nearbySessions);
                 recipientSessionIds.addAll(nearbySessions);
@@ -658,6 +662,11 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             ConnectedPlayer player = players.get(sessionId);
             if (player == null || !mapId.equals(player.state().mapId())
                     || !player.session().isOpen()) continue;
+            boolean participant = player.playerId().equals(sourcePlayerId)
+                    || player.playerId().equals(targetPlayerId);
+            if (!participant && anchor != null && !isWithinInterest(
+                    player.state().x(), player.state().y(),
+                    anchor.state().x(), anchor.state().y())) continue;
             try {
                 send(player.session(), payload);
             } catch (IOException ignored) {
