@@ -706,3 +706,8 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Per-map index insertion verifies the live session's map both before and after insertion; if a concurrent disconnect or map transition wins the race, the stale membership is removed.
 - Map-wide combat-event fallback paths also source candidate recipients from the map session index instead of scanning the global connected-player map; participant inclusion and final live-map/open-session checks remain in place.
 - This removes stream and distinct-set overhead by code inspection; runtime CPU/GC profiling and k6 load measurements remain pending.
+
+## Latest implementation batch — reuse stable player snapshot serialization
+- `broadcastNow()` now keeps a per-map-flush cache of serialized public player snapshots. Since public player views are materialized once before iterating recipients, the same player JSON is reused when that player appears in multiple recipients' AOI lists.
+- Monster and loot serialization deliberately remains recipient-local: their runtime snapshots can change while the broadcast loop is running, so reusing serialized values by ID could pair stale delta baselines with newer payload objects.
+- This removes repeated Jackson serialization for shared player AOI entries by code-path inspection. No throughput/GC improvement is claimed without runtime profiling; k6 load testing remains pending.
