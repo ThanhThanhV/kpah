@@ -142,3 +142,15 @@ All unsupported or missing message types share one rate-limit bucket per connect
 - Later `snapshot-delta` frames include `selfState` only when its serialized value differs from the last successfully sent value for that session.
 - When omitted, the client retains its previously merged private state. Inventory, equipment, item catalog and quest data remain recipient-only.
 - Entity and private-state baselines advance only after the frame send completes successfully; session close clears all baselines.
+
+
+## WebSocket operational metrics
+
+The server registers low-cardinality Micrometer metrics for the world gateway:
+- `world.websocket.connections.active`: currently authenticated world WebSocket sessions.
+- `world.websocket.outbound.messages`: successfully sent frames, tagged by protocol message type.
+- `world.websocket.outbound.payload`: UTF-8 payload-size distribution in bytes, tagged by protocol message type.
+- `world.websocket.send.duration`: serialization plus synchronous socket-send duration, tagged by protocol message type.
+- `world.websocket.send.failures`: failed serialization/send attempts, tagged by protocol message type.
+
+The Actuator `metrics` endpoint is enabled alongside health/info so operators can inspect aggregate measurements at `/actuator/metrics`. Metrics deliberately exclude account IDs, character IDs, session IDs and client-supplied labels. These are instrumentation counters and distributions, not a benchmark: production capacity limits must be set only after representative concurrent-client load tests.
