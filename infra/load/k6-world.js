@@ -15,6 +15,8 @@ const combatEvents = new Counter("world_ws_combat_events");
 const receivedBytes = new Trend("world_ws_received_bytes");
 const snapshotGap = new Trend("world_ws_snapshot_interarrival_ms");
 const sessionDuration = new Trend("world_ws_session_duration_ms");
+const firstSnapshotLatency = new Trend("world_ws_first_snapshot_ms");
+const initialSnapshotFailures = new Rate("world_ws_initial_snapshot_failures");
 const socketErrors = new Counter("world_ws_errors");
 const upgradeFailures = new Rate("world_ws_upgrade_failures");
 
@@ -35,6 +37,7 @@ export const options = {
   thresholds: {
     ws_connecting: ["p(95)<2000"],
     world_ws_upgrade_failures: ["rate==0"],
+    world_ws_initial_snapshot_failures: ["rate==0"],
     world_ws_errors: ["count<10"]
   }
 };
@@ -52,6 +55,7 @@ export default function () {
     + "characterId=" + encodeURIComponent(session.characterId);
   const startedAt = Date.now();
   let lastSnapshotAt = 0;
+  let sawFullSnapshot = false;
   let movementSequence = 0;
   let movementTick = 0;
   let attackTick = 0;
@@ -110,8 +114,11 @@ export default function () {
         if (lastSnapshotAt > 0) snapshotGap.add(now - lastSnapshotAt);
         lastSnapshotAt = now;
 
-        if (message.type === "snapshot") snapshots.add(1);
-        else deltas.add(1);
+        if (message.type === "snapshot") {
+          snapshots.add(1);
+          if (!sawFullSnapshot) firstSnapshotLatency.add(now - startedAt);
+          sawFullSnapshot = true;
+        } else deltas.add(1);
 
         (message.monsters || []).forEach(function (monster) {
           if (monster && monster.monsterId && !monsterIds.includes(monster.monsterId)) {
@@ -133,6 +140,11 @@ export default function () {
 
     socket.on("close", function () {
       sessionDuration.add(Date.now() - startedAt);
+      const initialSnapshotReceived = check(sawFullSnapshot, {
+        "received initial full world snapshot": (received) => received
+      });
+      initialSnapshotFailures.add(!initialSnapshotReceived);
+      if (!initialSnapshotReceived) socketErrors.add(1);
     });
   });
 
