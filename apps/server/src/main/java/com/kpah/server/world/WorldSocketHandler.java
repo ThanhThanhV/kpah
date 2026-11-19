@@ -583,6 +583,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                               List<LootDropState> visibleLoot,
                               Map<String, Object> selfState,
                               Map<Object, String> serializedPlayerSnapshots) throws IOException {
+        long snapshotStartedNanos = System.nanoTime();
         String sessionId = recipient.session().getId();
         Map<String, String> previousState = lastSentEntityState.get(sessionId);
         boolean fullSnapshot = previousState == null || !mapId.equals(lastSentMapBySession.get(sessionId));
@@ -661,6 +662,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         lastSentEntityState.put(sessionId, currentState);
         lastSentMapBySession.put(sessionId, mapId);
         lastSentSelfState.put(sessionId, currentSelfState);
+        networkMetrics.recordSnapshot(fullSnapshot, visibleEntityCount,
+                System.nanoTime() - snapshotStartedNanos);
     }
 
     private static int hashMapCapacity(int expectedSize) {
