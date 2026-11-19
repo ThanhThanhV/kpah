@@ -72,7 +72,8 @@ public class MonsterSimulationService {
         while ((expired = lootExpiryQueue.peek()) != null && expired.expiresAt() <= nowMillis) {
             lootExpiryQueue.poll();
             LootDropState drop = lootDrops.get(expired.dropId());
-            if (drop != null && lootDrops.remove(drop.dropId(), drop)) {
+            if (drop != null && drop.createdAt() == expired.createdAt()
+                    && lootDrops.remove(drop.dropId(), drop)) {
                 lootSpatialIndexes.computeIfAbsent(drop.mapId(), ignored -> new WorldSpatialIndex<>())
                         .remove(drop.dropId());
             }
@@ -202,7 +203,8 @@ public class MonsterSimulationService {
         if (previous == null) {
             lootSpatialIndexes.computeIfAbsent(drop.mapId(), ignored -> new WorldSpatialIndex<>())
                     .upsert(drop.dropId(), drop.x(), drop.y(), drop);
-            lootExpiryQueue.add(new ExpiringLootDrop(drop.dropId(), drop.createdAt() + 300_001L));
+            lootExpiryQueue.add(new ExpiringLootDrop(
+                    drop.dropId(), drop.createdAt(), drop.createdAt() + 300_001L));
         }
     }
 
@@ -435,7 +437,7 @@ public class MonsterSimulationService {
     public record MonsterTarget(String playerId, String mapId, double x, double y) {
     }
 
-    private record ExpiringLootDrop(String dropId, long expiresAt)
+    private record ExpiringLootDrop(String dropId, long createdAt, long expiresAt)
             implements Comparable<ExpiringLootDrop> {
         @Override
         public int compareTo(ExpiringLootDrop other) {
