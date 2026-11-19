@@ -667,3 +667,12 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Disconnect cleanup evicts the character's cached quest snapshot.
 - The first snapshot after a cache miss still uses the single character-scoped repository query; unchanged broadcasts no longer query quest progress from MySQL.
 - Quest changes become visible on the next world broadcast after commit. Runtime DB-query and load measurements remain pending.
+
+
+## Latest implementation batch — cache quest journal and streamline monster target selection
+- Quest snapshots are now cached per active character after the first character-scoped DB read.
+- Quest start, claim and monster-kill progress invalidate the cache after transaction commit. Cache entries synchronize load/invalidation so a snapshot load racing a committed update cannot leave stale state cached.
+- Disconnect removes the character cache entry. Existing quest payload and status semantics are unchanged.
+- Added coverage in the existing QuestServiceTest for cache hits and invalidation after monster progress changes.
+- Monster aggro selection now uses a direct loop rather than stream/filter/min pipelines. Aggressive/elite selection compares squared distances and retains nearest-target behavior; defensive selection retains provocation and range checks.
+- These changes reduce repeated quest DB reads and per-monster stream work by inspection. Runtime profiling and local k6 measurements remain pending.
