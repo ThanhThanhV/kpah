@@ -82,7 +82,6 @@ public class MonsterSimulationService {
                 playerIterator.remove();
             }
         }
-        playerTargetSpatialIndexes.values().forEach(index -> index.retainOnly(activePlayerTargetIds));
         for (Map.Entry<String, List<MonsterSpawnRegion>> entry : regionsByMap.entrySet()) {
             String mapId = entry.getKey();
             for (MonsterSpawnRegion region : entry.getValue()) {
