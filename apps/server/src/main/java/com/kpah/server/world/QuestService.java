@@ -1,5 +1,6 @@
 package com.kpah.server.world;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,17 +80,40 @@ public class QuestService {
 
     @Transactional(readOnly = true)
     public List<Map<String, Object>> snapshotAll(String characterId) {
-        return catalog.all().stream().map(definition -> snapshotOne(characterId, definition)).toList();
+        Map<String, QuestProgress> progressByQuest = progressByQuest(characterId);
+        return catalog.all().stream()
+                .map(definition -> snapshotOne(definition, progressByQuest.get(definition.questId())))
+                .toList();
     }
 
     /** Legacy default-quest view retained for clients that have not migrated to the journal list. */
     @Transactional(readOnly = true)
     public Map<String, Object> snapshot(String characterId) {
-        return snapshotOne(characterId, catalog.defaultQuest());
+        QuestCatalog.QuestDefinition definition = catalog.defaultQuest();
+        return snapshotOne(definition, progressByQuest(characterId).get(definition.questId()));
     }
 
-    private Map<String, Object> snapshotOne(String characterId, QuestCatalog.QuestDefinition definition) {
-        QuestProgress quest = progress.findById(key(characterId, definition.questId())).orElse(null);
+    /** Reads all quest state for a character with one database query for the world snapshot. */
+    @Transactional(readOnly = true)
+    public Map<String, Object> snapshotState(String characterId) {
+        Map<String, QuestProgress> progressByQuest = progressByQuest(characterId);
+        List<Map<String, Object>> allQuests = catalog.all().stream()
+                .map(definition -> snapshotOne(definition, progressByQuest.get(definition.questId())))
+                .toList();
+        QuestCatalog.QuestDefinition defaultQuest = catalog.defaultQuest();
+        return Map.of("quest", snapshotOne(defaultQuest, progressByQuest.get(defaultQuest.questId())),
+                "quests", allQuests);
+    }
+
+    private Map<String, QuestProgress> progressByQuest(String characterId) {
+        Map<String, QuestProgress> result = new HashMap<>();
+        for (QuestProgress quest : progress.findAllByCharacterId(characterId)) {
+            result.put(quest.getQuestId(), quest);
+        }
+        return result;
+    }
+
+    private Map<String, Object> snapshotOne(QuestCatalog.QuestDefinition definition, QuestProgress quest) {
         int current = quest == null ? 0 : quest.getProgress();
         String status = quest == null ? "available" : quest.isClaimed() ? "claimed"
                 : current >= definition.requiredKills() ? "ready" : "active";
