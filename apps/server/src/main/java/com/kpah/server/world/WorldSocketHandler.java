@@ -336,11 +336,13 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     @Scheduled(fixedRate = 100)
     public void tickWorld() {
         long now = System.currentTimeMillis();
-        List<MonsterSimulationService.MonsterTarget> targets = players.values().stream()
-                .filter(player -> player.hp() > 0)
-                .map(player -> new MonsterSimulationService.MonsterTarget(
-                        player.playerId(), player.state().mapId(), player.state().x(), player.state().y()))
-                .toList();
+        List<MonsterSimulationService.MonsterTarget> targets = new ArrayList<>(players.size());
+        for (ConnectedPlayer player : players.values()) {
+            if (player.hp() > 0) {
+                targets.add(new MonsterSimulationService.MonsterTarget(
+                        player.playerId(), player.state().mapId(), player.state().x(), player.state().y()));
+            }
+        }
 
         for (MonsterPlayerAttack attack : monsters.advance(now, targets)) {
             int[] appliedDamage = {0};
@@ -411,8 +413,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             return revived;
         });
 
-        players.values().stream().map(player -> player.state().mapId())
-                .distinct().forEach(this::broadcast);
+        sessionsByMapId.keySet().forEach(this::broadcast);
     }
 
     private ConnectedPlayer awardExperience(ConnectedPlayer player, int amount) {
