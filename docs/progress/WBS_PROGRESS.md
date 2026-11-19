@@ -622,3 +622,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - The service tracks the latest `MonsterTarget` by player ID and upserts only when a player's map or position changes. A map transition removes the old-map entry; disconnect cleanup removes the player from the old index and tracking map.
 - Disconnect cleanup removes stale IDs directly from the tracked map index without rebuilding grid maps; added `queryInto` so the monster loop reuses one nearby-player result buffer across iterations.
 - The complete player collection is still passed to monster runtime for active telegraphed area-hit resolution. Target selection, aggro range and damage behavior are unchanged. This is an allocation-focused structural optimization; no GC/CPU improvement is claimed without local profiling/load tests.
+
+## Latest implementation batch — precompute A* collision occupancy
+- `GridPathfinder` now builds a per-map blocked-cell lookup once when the map pathfinder is created. Each cell uses the same center point and inclusive collision-box checks as the previous A* walkability test.
+- A* expansion, diagonal corner checks, map bounds, spawn-region bounds, nearest-walkable fallback and the 8,000-expansion cap are unchanged. Runtime walkability checks now perform an array lookup instead of scanning every map collision box for every candidate cell.
+- Monster path reuse was reviewed: the existing runtime already caches a path by target grid cell and refreshes it on a 500 ms cadence; this batch deliberately preserves that refresh policy and movement timing.
+- This is a structural reduction in repeated collision checks, not a measured CPU/throughput claim. Existing pathfinder tests and CI provide regression coverage; representative local profiling/load tests remain outstanding.
