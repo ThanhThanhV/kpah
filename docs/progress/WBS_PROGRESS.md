@@ -578,3 +578,8 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Map counts move with authoritative portal transitions and decrement on disconnect; account, character and session identifiers are not metric tags.
 - Updated the operational protocol and k6 runbook with the additional metrics.
 - Backend Maven test/package passed on commit `38a42b518e673ceb4fcdd6ec895d62a54b73f644`; protocol, runbook and WBS documentation CI passed on commits `f32c0b00aec6f97be40ffe29358d3f58550a2671`, `aa3afeaf8b3e4c58016405b2d170fcd403672897` and `2f559b5ed1ef03734d1f8e20928eed6508264ef4`. These measurements are available after deploying the commit; capacity still requires a local load run against the dedicated MySQL test server.
+
+## Latest implementation batch — validate load-test script syntax in CI
+- Added a dedicated GitHub Actions job that runs Node.js 22 in ECMAScript-module syntax-check mode against `infra/load/k6-world.js`.
+- This catches JavaScript parse errors on pushes and pull requests without requiring k6, test credentials, a running backend or a MySQL database.
+- The job validates syntax only; actual k6 runtime behavior and capacity measurements still require the documented opt-in run against a dedicated MySQL-backed test server.
