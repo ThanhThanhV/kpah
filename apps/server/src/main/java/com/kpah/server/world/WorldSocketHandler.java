@@ -312,6 +312,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             persist(removed);
             combat.removePlayer(removed.playerId());
             skills.removePlayer(removed.playerId());
+            quests.evictSnapshot(removed.playerId());
             broadcast(removed.state().mapId());
         }
     }
