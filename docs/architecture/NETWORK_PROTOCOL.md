@@ -126,3 +126,12 @@ All unsupported or missing message types share one rate-limit bucket per connect
 - A 50 ms scheduler drains pending map IDs and sends one latest-state snapshot per map, coalescing movement and simulation updates that arrive within the same interval.
 - This caps snapshot flush frequency at 20 Hz per map while retaining the latest authoritative state; combat events remain immediate and are not delayed by snapshot coalescing.
 - The 100 ms world simulation tick still marks active maps pending, so idle maps with connected players continue to receive periodic snapshots. Delta snapshots and bandwidth compression remain future work.
+
+
+## Delta world snapshots
+- The first snapshot for a WebSocket session, and the first snapshot after a map transition, is a full `snapshot`.
+- Subsequent world updates use `snapshot-delta`: changed player/monster/loot records plus explicit `removedPlayerIds`, `removedMonsterIds` and `removedLootDropIds`.
+- Each delta carries the recipient's current `selfState`; private inventory, equipment, item catalog and quest data are never shared with other players.
+- The server keeps the last serialized entity state per WebSocket session and map. It replaces that cache only after the frame is sent, and clears it when the session closes.
+- The client applies deltas to its latest full state by stable entity ID. A welcome/reconnect or map-transition event clears the client baseline; deltas received without a baseline are ignored until the next full snapshot.
+- Combat events remain immediate and are not folded into snapshot deltas.
