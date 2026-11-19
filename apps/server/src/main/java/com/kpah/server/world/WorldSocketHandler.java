@@ -506,7 +506,6 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             Map<String, Object> selfState = new HashMap<>(quests.snapshotState(player.playerId()));
             selfState.put("inventory", player.inventory());
             selfState.put("equipment", player.equipment());
-            selfState.put("itemCatalog", items.all());
             try {
                 sendSnapshot(player, mapId, visiblePlayers, visibleMonsters, visibleLoot,
                         selfState, serializedPlayerSnapshots);
@@ -621,18 +620,15 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             }
         }
 
-        // The item catalog is immutable for the lifetime of this server process and is
-        // included in the actual payload when selfState is sent. Exclude it from the
-        // per-broadcast change fingerprint to avoid re-serializing the catalog every tick.
-        Map<String, Object> comparableSelfState = new HashMap<>(selfState);
-        comparableSelfState.remove("itemCatalog");
-        String currentSelfState = mapper.writeValueAsString(comparableSelfState);
+        // Fingerprint only mutable per-character state. The immutable item catalog is
+        // attached only when a full snapshot or changed selfState is actually sent.
+        String currentSelfState = mapper.writeValueAsString(selfState);
         String previousSelfState = lastSentSelfState.get(sessionId);
         if (fullSnapshot) {
             send(recipient.session(), Map.of(
                     "type", "snapshot",
                     "players", visiblePlayers,
-                    "selfState", selfState,
+                    "selfState", selfStatePayload(selfState),
                     "monsters", visibleMonsters,
                     "lootDrops", visibleLoot));
         } else {
@@ -659,7 +655,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
             delta.put("lootDrops", changedLoot);
             delta.put("removedLootDropIds", removedLoot);
             if (!java.util.Objects.equals(previousSelfState, currentSelfState)) {
-                delta.put("selfState", selfState);
+                delta.put("selfState", selfStatePayload(selfState));
             }
             send(recipient.session(), delta);
         }
@@ -669,6 +665,12 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         lastSentSelfState.put(sessionId, currentSelfState);
         networkMetrics.recordSnapshot(fullSnapshot, visibleEntityCount,
                 System.nanoTime() - snapshotStartedNanos);
+    }
+
+    private Map<String, Object> selfStatePayload(Map<String, Object> mutableSelfState) {
+        Map<String, Object> payload = new HashMap<>(mutableSelfState);
+        payload.put("itemCatalog", items.all());
+        return payload;
     }
 
     private static int hashMapCapacity(int expectedSize) {
