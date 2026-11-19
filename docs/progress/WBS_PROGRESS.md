@@ -552,3 +552,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Client already preserves the previous private state when a delta omits `selfState`, so no client protocol change is required.
 - Entity and private-state baselines advance only after successful frame delivery and are cleared on disconnect.
 - GitHub Actions verification pending; runtime bandwidth measurement pending.
+
+
+## Latest implementation batch — WebSocket network observability
+- Added Micrometer instrumentation for authenticated active world connections, successful outbound frame counts, UTF-8 payload sizes, send duration (serialization plus socket send), and send failures.
+- Metrics use protocol message type as the only tag; account, character and session identifiers are never recorded.
+- Exposed the aggregate Actuator metrics endpoint alongside existing health/info endpoints.
+- CI verification and runtime/load measurements are pending; no throughput or player-capacity claims are made until load testing.
