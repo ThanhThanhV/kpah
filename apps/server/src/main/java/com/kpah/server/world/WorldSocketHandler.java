@@ -105,8 +105,11 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         skills.restore(player.playerId(), player.classCode(),
                 ExperienceProgression.levelFor(player.experience()), character.getMana(), System.currentTimeMillis());
         players.put(session.getId(), player);
-        sessionsByPlayerId.computeIfAbsent(player.playerId(), ignored -> ConcurrentHashMap.newKeySet())
-                .add(session.getId());
+        sessionsByPlayerId.compute(player.playerId(), (playerId, sessions) -> {
+            Set<String> updated = sessions == null ? ConcurrentHashMap.newKeySet() : sessions;
+            updated.add(session.getId());
+            return updated;
+        });
         updatePlayerSpatialIndex(session.getId(), null, player);
         networkMetrics.connectionOpened(player.state().mapId());
         persist(player);
@@ -304,11 +307,10 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         messageRateLimiter.remove(session.getId());
         ConnectedPlayer removed = players.remove(session.getId());
         if (removed != null) {
-            Set<String> playerSessions = sessionsByPlayerId.get(removed.playerId());
-            if (playerSessions != null) {
+            sessionsByPlayerId.computeIfPresent(removed.playerId(), (playerId, playerSessions) -> {
                 playerSessions.remove(session.getId());
-                if (playerSessions.isEmpty()) sessionsByPlayerId.remove(removed.playerId(), playerSessions);
-            }
+                return playerSessions.isEmpty() ? null : playerSessions;
+            });
             removePlayerSpatialIndex(session.getId(), removed.state().mapId());
             networkMetrics.connectionClosed(removed.state().mapId());
         }
