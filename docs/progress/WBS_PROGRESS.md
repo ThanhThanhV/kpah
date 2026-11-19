@@ -698,3 +698,8 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - The 100ms world tick intentionally retains its complete connected-player traversal: monster simulation uses the full player collection to resolve already-telegraphed AoE attacks and prune inactive targets, so replacing that traversal with a partial per-map candidate set would risk changing combat behavior.
 - The per-map index is used for the snapshot broadcast path, where it removes two global-session traversals per map flush. Map membership is revalidated against each live session before snapshot generation.
 - Runtime profiling is still pending; no measured CPU, latency or capacity improvement is claimed.
+
+## Latest implementation batch — streamline world tick player collection
+- Replaced the world tick's stream/filter/map/toList pipeline with a pre-sized target list populated by one direct pass over connected players. The full player set is intentionally retained for monster AoE resolution.
+- Reused the maintained per-map session index keys to schedule map broadcasts, avoiding a second pass over all players plus a distinct-map stream/set.
+- This removes stream and distinct-set overhead by code inspection; runtime CPU/GC profiling and k6 load measurements remain pending.
