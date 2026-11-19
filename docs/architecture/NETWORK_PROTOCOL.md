@@ -197,5 +197,5 @@ An opt-in k6 scenario is maintained at `infra/load/k6-world.js`, with setup and 
 
 - Player target indexes are retained by map across simulation ticks instead of allocating and rebuilding a complete set of grids every 100 ms.
 - The simulation tracks the last target snapshot by player ID and only upserts a player when their map or position changes. A map transition removes the old-map entry; disconnect cleanup prunes IDs no longer present in the current authoritative player collection.
-- `WorldSpatialIndex.retainOnly` removes stale IDs while keeping the existing grid and cell maps. The simulation reuses one nearby-player result list across monster iterations through `queryInto`.
+- Disconnect cleanup removes stale IDs directly from the tracked map index without rebuilding the grid. The simulation reuses one nearby-player result list across monster iterations through `queryInto`.
 - Full player snapshots remain available to resolve already-telegraphed area attacks. This changes index lifecycle and allocation behavior, not target-selection or damage rules. Runtime GC/CPU impact still requires load measurement.
