@@ -598,8 +598,8 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Full map snapshot methods remain available; WebSocket recipients now query only nearby monsters and loot from the simulation-owned indexes. GitHub Actions passed for the integration; local load testing remains pending and no performance improvement is claimed without measurements.
 
 ## Latest implementation batch — spatially bounded monster aggro targeting
-- Build one temporary player-position spatial index per map at the start of each monster simulation advance.
-- Each live monster queries only candidates within its configured aggro radius before selecting a target, while retaining the existing map and exact-distance checks.
+- Maintain reusable player-position spatial indexes per map across monster simulation advances; only changed player snapshots are upserted, map transitions remove the old entry, and disconnects prune stale IDs.
+- Each live monster queries only candidates within its configured aggro radius before selecting a target, while retaining the existing map and exact-distance checks. One result list is reused across monster iterations instead of allocating one per query.
 - Preserve the full player collection for resolving active telegraphed area attacks; the optimization therefore does not narrow the hit candidates for Alpha Wolf or Ancient Guardian specials.
 - This reduces repeated full-player-list scans during monster target acquisition. It is a structural optimization only; runtime CPU and scale impact still require representative load testing.
 
@@ -615,3 +615,10 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Aggressive/elite monsters with a valid target continue updating every tick; defensive monsters resume when their provoked target is present; active boss telegraphs continue resolving on the normal tick.
 - Movement uses elapsed time since the previous movement update, capped at 500 ms to avoid large catch-up steps after a delayed tick. The movement clock resets while stationary in melee range to prevent a later burst.
 - Respawn, damage, loot creation/expiry and telegraphed area-hit resolution remain on their existing lifecycle paths. This is a structural optimization only; runtime CPU/throughput improvement is not claimed without local load measurements.
+
+
+## Latest implementation batch — reuse monster target spatial indexes and query buffers
+- Replaced the temporary per-tick player-position grids with persistent per-map indexes owned by `MonsterSimulationService`.
+- The service tracks the latest `MonsterTarget` by player ID and upserts only when a player's map or position changes. A map transition removes the old-map entry; disconnect cleanup removes the player from the old index and tracking map.
+- Added `WorldSpatialIndex.retainOnly` for stale-ID pruning without rebuilding grid maps, and `queryInto` so the monster loop reuses one nearby-player result buffer across iterations.
+- The complete player collection is still passed to monster runtime for active telegraphed area-hit resolution. Target selection, aggro range and damage behavior are unchanged. This is an allocation-focused structural optimization; no GC/CPU improvement is claimed without local profiling/load tests.
