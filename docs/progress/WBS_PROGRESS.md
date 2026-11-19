@@ -638,3 +638,9 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Monster A* paths are now retained while the target remains in the same navigation cell. The previous unconditional 500 ms refresh no longer recalculates an already-valid route.
 - A new path is calculated on first use or immediately when the target cell changes. If a path search returns no route, the existing 500 ms retry interval is preserved so temporarily blocked/unreachable paths can recover.
 - Waypoint following, target acquisition, leash checks, movement step calculation, collision geometry and attack cadence are unchanged. This removes periodic A* work for stable targets; actual CPU/GC savings still require profiling and the local k6 scenario.
+
+## Latest implementation batch — per-player skill combat synchronization
+- Replaced the single service-wide synchronized monitor in skill casting and mana operations with 64 fixed lock stripes selected by player ID.
+- Calls for the same player remain serialized across cast, mana regeneration, restore and disconnect cleanup, preserving cooldown/resource consistency. Different players can process skill requests concurrently unless their IDs share a stripe.
+- Fixed stripes avoid creating an unbounded lock object per account. The monster damage application and mana/cooldown commit remain inside the player's critical section.
+- This removes the global lock bottleneck visible in the WebSocket snapshot path, where mana is read while constructing player snapshots. Actual concurrency/latency improvement still needs profiling under a representative load.
