@@ -29,6 +29,9 @@ public class WorldNetworkMetrics {
     private final Map<String, Counter> failureCounters = new ConcurrentHashMap<>();
     private final Map<String, DistributionSummary> payloadSizes = new ConcurrentHashMap<>();
     private final Map<String, Timer> sendTimers = new ConcurrentHashMap<>();
+    private final Map<String, Timer> snapshotTimers = new ConcurrentHashMap<>();
+    private final Map<String, Counter> snapshotCounters = new ConcurrentHashMap<>();
+    private final Map<String, DistributionSummary> snapshotEntityCounts = new ConcurrentHashMap<>();
 
     public WorldNetworkMetrics(MeterRegistry registry) {
         this.registry = registry;
@@ -79,6 +82,20 @@ public class WorldNetworkMetrics {
             failureCounters.computeIfAbsent(type, key ->
                     registry.counter("world.websocket.send.failures", "message_type", key)).increment();
         }
+    }
+
+    public void recordSnapshot(boolean fullSnapshot, int visibleEntityCount, long elapsedNanos) {
+        String mode = fullSnapshot ? "full" : "delta";
+        snapshotTimers.computeIfAbsent(mode, key ->
+                registry.timer("world.websocket.snapshot.duration", "snapshot_type", key))
+                .record(Math.max(0L, elapsedNanos), TimeUnit.NANOSECONDS);
+        snapshotCounters.computeIfAbsent(mode, key ->
+                registry.counter("world.websocket.snapshot.messages", "snapshot_type", key)).increment();
+        snapshotEntityCounts.computeIfAbsent(mode, key ->
+                DistributionSummary.builder("world.websocket.snapshot.visible_entities")
+                        .tag("snapshot_type", key)
+                        .register(registry))
+                .record(Math.max(0, visibleEntityCount));
     }
 
     private AtomicInteger mapCounter(String mapId) {
