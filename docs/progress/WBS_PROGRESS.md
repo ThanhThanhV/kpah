@@ -544,3 +544,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Baselines are replaced only after a successful send and cleared on disconnect; map changes force a new full snapshot.
 - Client merges deltas by stable IDs and clears its baseline on welcome/reconnect and map transition. Combat events retain their immediate delivery path.
 - GitHub Actions verification is pending; local multiplayer runtime validation remains pending.
+
+
+## Latest implementation batch — suppress unchanged private snapshot state
+- Added a per-session serialized baseline for private `selfState` (inventory, equipment, item catalog and quest snapshots).
+- Full snapshots always include complete private state; subsequent deltas include it only when it changes.
+- Client already preserves the previous private state when a delta omits `selfState`, so no client protocol change is required.
+- Entity and private-state baselines advance only after successful frame delivery and are cleared on disconnect.
+- GitHub Actions verification pending; runtime bandwidth measurement pending.
