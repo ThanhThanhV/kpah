@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -37,6 +38,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     private final WorldMessageRateLimiter messageRateLimiter;
     private final Map<String, ConnectedPlayer> players = new ConcurrentHashMap<>();
     private final Set<String> pendingBroadcastMaps = ConcurrentHashMap.newKeySet();
+    private final Map<String, Map<String, String>> lastSentEntityState = new ConcurrentHashMap<>();
+    private final Map<String, String> lastSentMapBySession = new ConcurrentHashMap<>();
     private final Map<String, Long> lastMovementPersistAt = new ConcurrentHashMap<>();
     private static final long MOVEMENT_PERSIST_INTERVAL_MILLIS = 5_000L;
     private static final double INTEREST_RADIUS = 900.0;
@@ -287,6 +290,8 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         messageRateLimiter.remove(session.getId());
         ConnectedPlayer removed = players.remove(session.getId());
         lastMovementPersistAt.remove(session.getId());
+        lastSentEntityState.remove(session.getId());
+        lastSentMapBySession.remove(session.getId());
         if (removed != null) {
             persist(removed);
             combat.removePlayer(removed.playerId());
@@ -465,18 +470,74 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                     "itemCatalog", items.all(),
                     "quest", quests.snapshot(player.playerId()),
                     "quests", quests.snapshotAll(player.playerId()));
-            Map<String, Object> payload = Map.of(
-                    "type", "snapshot",
-                    "players", visiblePlayers,
-                    "selfState", selfState,
-                    "monsters", visibleMonsters,
-                    "lootDrops", visibleLoot);
             try {
-                send(player.session(), payload);
+                sendSnapshot(player, mapId, visiblePlayers, visibleMonsters, visibleLoot, selfState);
             } catch (IOException ignored) {
                 // The websocket close lifecycle removes failed sessions.
             }
         }
+    }
+
+    private void sendSnapshot(ConnectedPlayer recipient, String mapId,
+                              List<Map<String, Object>> visiblePlayers,
+                              List<MonsterState> visibleMonsters,
+                              List<LootDropState> visibleLoot,
+                              Map<String, Object> selfState) throws IOException {
+        String sessionId = recipient.session().getId();
+        Map<String, String> currentState = new HashMap<>();
+        for (Map<String, Object> value : visiblePlayers) {
+            currentState.put("p:" + value.get("playerId"), mapper.writeValueAsString(value));
+        }
+        for (MonsterState value : visibleMonsters) {
+            currentState.put("m:" + value.monsterId(), mapper.writeValueAsString(value));
+        }
+        for (LootDropState value : visibleLoot) {
+            currentState.put("l:" + value.dropId(), mapper.writeValueAsString(value));
+        }
+
+        Map<String, String> previousState = lastSentEntityState.get(sessionId);
+        boolean fullSnapshot = previousState == null || !mapId.equals(lastSentMapBySession.get(sessionId));
+        if (fullSnapshot) {
+            send(recipient.session(), Map.of(
+                    "type", "snapshot",
+                    "players", visiblePlayers,
+                    "selfState", selfState,
+                    "monsters", visibleMonsters,
+                    "lootDrops", visibleLoot));
+        } else {
+            List<Map<String, Object>> changedPlayers = visiblePlayers.stream()
+                    .filter(value -> !java.util.Objects.equals(previousState.get("p:" + value.get("playerId")),
+                            currentState.get("p:" + value.get("playerId"))))
+                    .toList();
+            List<MonsterState> changedMonsters = visibleMonsters.stream()
+                    .filter(value -> !java.util.Objects.equals(previousState.get("m:" + value.monsterId()),
+                            currentState.get("m:" + value.monsterId())))
+                    .toList();
+            List<LootDropState> changedLoot = visibleLoot.stream()
+                    .filter(value -> !java.util.Objects.equals(previousState.get("l:" + value.dropId()),
+                            currentState.get("l:" + value.dropId())))
+                    .toList();
+            List<String> removedPlayers = previousState.keySet().stream()
+                    .filter(key -> key.startsWith("p:") && !currentState.containsKey(key))
+                    .map(key -> key.substring(2)).toList();
+            List<String> removedMonsters = previousState.keySet().stream()
+                    .filter(key -> key.startsWith("m:") && !currentState.containsKey(key))
+                    .map(key -> key.substring(2)).toList();
+            List<String> removedLoot = previousState.keySet().stream()
+                    .filter(key -> key.startsWith("l:") && !currentState.containsKey(key))
+                    .map(key -> key.substring(2)).toList();
+            send(recipient.session(), Map.of(
+                    "type", "snapshot-delta",
+                    "players", changedPlayers,
+                    "removedPlayerIds", removedPlayers,
+                    "monsters", changedMonsters,
+                    "removedMonsterIds", removedMonsters,
+                    "lootDrops", changedLoot,
+                    "removedLootDropIds", removedLoot,
+                    "selfState", selfState));
+        }
+        lastSentEntityState.put(sessionId, currentState);
+        lastSentMapBySession.put(sessionId, mapId);
     }
 
     private boolean isWithinInterest(double centerX, double centerY, double x, double y) {
