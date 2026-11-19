@@ -620,5 +620,5 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 ## Latest implementation batch — reuse monster target spatial indexes and query buffers
 - Replaced the temporary per-tick player-position grids with persistent per-map indexes owned by `MonsterSimulationService`.
 - The service tracks the latest `MonsterTarget` by player ID and upserts only when a player's map or position changes. A map transition removes the old-map entry; disconnect cleanup removes the player from the old index and tracking map.
-- Added `WorldSpatialIndex.retainOnly` for stale-ID pruning without rebuilding grid maps, and `queryInto` so the monster loop reuses one nearby-player result buffer across iterations.
+- Disconnect cleanup removes stale IDs directly from the tracked map index without rebuilding grid maps; added `queryInto` so the monster loop reuses one nearby-player result buffer across iterations.
 - The complete player collection is still passed to monster runtime for active telegraphed area-hit resolution. Target selection, aggro range and damage behavior are unchanged. This is an allocation-focused structural optimization; no GC/CPU improvement is claimed without local profiling/load tests.
