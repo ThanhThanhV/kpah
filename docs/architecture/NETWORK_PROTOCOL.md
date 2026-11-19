@@ -199,3 +199,8 @@ An opt-in k6 scenario is maintained at `infra/load/k6-world.js`, with setup and 
 - The simulation tracks the last target snapshot by player ID and only upserts a player when their map or position changes. A map transition removes the old-map entry; disconnect cleanup prunes IDs no longer present in the current authoritative player collection.
 - Disconnect cleanup removes stale IDs directly from the tracked map index without rebuilding the grid. The simulation reuses one nearby-player result list across monster iterations through `queryInto`.
 - Full player snapshots remain available to resolve already-telegraphed area attacks. This changes index lifecycle and allocation behavior, not target-selection or damage rules. Runtime GC/CPU impact still requires load measurement.
+
+## Monster path cache reuse
+- A monster retains its current A* waypoint route while its target remains in the same 24-pixel navigation cell. The route is recalculated immediately when the target enters a different cell.
+- Failed path searches retain a 500 ms retry cooldown. This allows a previously blocked route to be retried without repeatedly running A* on every simulation tick.
+- The pathfinder precomputes blocked navigation cells from map collision geometry at map initialization; A* checks the occupancy array during expansion rather than scanning every collision box for every candidate cell.
