@@ -683,3 +683,11 @@ Baseline: `WBS_Master_KPAH_Style_2D_MMO.xlsx`
 - Monster attack resolution now visits only sessions belonging to the attacked player instead of scanning/replacing every connected session for each monster hit. Target lookup for the resulting combat event uses the same index.
 - Preserves support for multiple active WebSocket sessions for one character and applies the existing damage/persistence behavior to each matching live session.
 - This removes a repeated global player-map scan from the monster-hit path by code inspection. Runtime profiling and local k6 measurements remain pending; no measured capacity or latency improvement is claimed.
+
+
+## Latest implementation batch — route combat broadcasts through AOI index
+- Combat broadcast anchor lookup now uses the player-ID-to-session index instead of scanning all connected sessions.
+- When a connected player anchor exists, candidate recipients come from the map's spatial index within the interest radius; source and target player sessions are added explicitly so combat participants still receive the event even outside that radius.
+- Recipients are resolved against the current session map and open state, then exact current-position radius filtering is applied again to preserve AOI behavior under concurrent movement/index updates.
+- Events without a valid connected player anchor retain the safe map-wide fallback. A missing map index also falls back to map-wide candidates rather than silently dropping nearby recipients.
+- This removes the normal-path full-session recipient scan by code inspection. CI and runtime profiling are pending; no measured latency, CPU or capacity improvement is claimed.
