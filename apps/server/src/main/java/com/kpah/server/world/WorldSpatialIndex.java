@@ -1,9 +1,11 @@
 package com.kpah.server.world;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.ToDoubleFunction;
 
 /**
  * Mutable uniform-grid index for entities whose positions change frequently.
@@ -14,6 +16,19 @@ final class WorldSpatialIndex<T> {
 
     private final Map<Cell, Map<String, Point<T>>> cells = new HashMap<>();
     private final Map<String, Cell> locations = new HashMap<>();
+
+    static <T> WorldSpatialIndex<T> build(
+            Collection<T> values,
+            ToDoubleFunction<T> xCoordinate,
+            ToDoubleFunction<T> yCoordinate) {
+        WorldSpatialIndex<T> index = new WorldSpatialIndex<>();
+        int sequence = 0;
+        for (T value : values) {
+            index.upsert("build-" + sequence++, xCoordinate.applyAsDouble(value),
+                    yCoordinate.applyAsDouble(value), value);
+        }
+        return index;
+    }
 
     synchronized void upsert(String id, double x, double y, T value) {
         if (id == null || id.isBlank()) {
