@@ -170,3 +170,10 @@ An opt-in k6 scenario is maintained at `infra/load/k6-world.js`, with setup and 
 - Monster entries are inserted at spawn, refreshed after each simulation advance (including movement), and removed immediately on defeat or when a defeated runtime is retired for respawn. Nearby queries resolve IDs to current runtime snapshots and apply an exact distance check.
 - Loot entries are inserted when drops are created or restored, removed when collected or expired, and queried by radius from the same service-owned index. Partial-stack restoration re-adds the updated immutable drop record.
 - Full map snapshot APIs remain available; this change only replaces per-recipient AOI index construction. Runtime CPU, allocation and throughput impact still requires a representative load test.
+
+## Spatially bounded monster target selection
+
+- Each monster simulation advance builds one temporary per-map player-position index from the current authoritative player targets.
+- Each live monster queries only the players inside its archetype aggro radius before choosing an aggro target; the monster retains the exact distance and map checks as the final guard.
+- The complete player collection is still used when resolving an already-telegraphed area attack, so targets outside the monster's normal aggro radius are not accidentally omitted from area damage.
+- This removes the repeated full player-list scan for every monster during target acquisition. It is a per-simulation-tick index, separate from the persistent per-map player AOI index used by WebSocket broadcasts.
