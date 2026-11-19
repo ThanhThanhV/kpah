@@ -135,3 +135,10 @@ All unsupported or missing message types share one rate-limit bucket per connect
 - The server keeps the last serialized entity state per WebSocket session and map. It replaces that cache only after the frame is sent, and clears it when the session closes.
 - The client applies deltas to its latest full state by stable entity ID. A welcome/reconnect or map-transition event clears the client baseline; deltas received without a baseline are ignored until the next full snapshot.
 - Combat events remain immediate and are not folded into snapshot deltas.
+
+
+### Private self-state delta optimization
+- The first full snapshot always contains the recipient's complete `selfState`.
+- Later `snapshot-delta` frames include `selfState` only when its serialized value differs from the last successfully sent value for that session.
+- When omitted, the client retains its previously merged private state. Inventory, equipment, item catalog and quest data remain recipient-only.
+- Entity and private-state baselines advance only after the frame send completes successfully; session close clears all baselines.
