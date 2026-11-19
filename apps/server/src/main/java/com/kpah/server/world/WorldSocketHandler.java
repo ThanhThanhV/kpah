@@ -102,7 +102,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
         skills.restore(player.playerId(), player.classCode(),
                 ExperienceProgression.levelFor(player.experience()), character.getMana(), System.currentTimeMillis());
         players.put(session.getId(), player);
-        networkMetrics.connectionOpened();
+        networkMetrics.connectionOpened(player.state().mapId());
         persist(player);
         lastMovementPersistAt.put(session.getId(), System.currentTimeMillis());
         send(session, Map.of("type", "welcome", "playerId", player.playerId(),
@@ -126,7 +126,9 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 return;
             }
             String type = input.path("type").isTextual() ? input.path("type").asText() : "";
-            if (!messageRateLimiter.tryAcquire(session.getId(), type)) return;
+            boolean rateLimited = !messageRateLimiter.tryAcquire(session.getId(), type);
+            networkMetrics.recordInbound(type, rateLimited);
+            if (rateLimited) return;
             if ("ping".equals(type)) {
                 send(session, Map.of("type", "pong"));
             } else if ("move".equals(type)) {
@@ -156,6 +158,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
                 ConnectedPlayer moved = player.withState(next, now);
                 players.put(session.getId(), moved);
                 if (!previousMapId.equals(next.mapId())) {
+                    networkMetrics.mapChanged(previousMapId, next.mapId());
                     persist(moved);
                     lastMovementPersistAt.put(session.getId(), System.currentTimeMillis());
                     send(session, Map.of("type", "map-transition", "mapId", next.mapId(),
@@ -293,7 +296,7 @@ public class WorldSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         messageRateLimiter.remove(session.getId());
         ConnectedPlayer removed = players.remove(session.getId());
-        if (removed != null) networkMetrics.connectionClosed();
+        if (removed != null) networkMetrics.connectionClosed(removed.state().mapId());
         lastMovementPersistAt.remove(session.getId());
         lastSentEntityState.remove(session.getId());
         lastSentMapBySession.remove(session.getId());
