@@ -105,6 +105,7 @@ public class MonsterSimulationService {
                         .remove(drop.dropId());
             }
         }
+        List<MonsterTarget> nearbyPlayers = new ArrayList<>();
         for (MonsterRuntime monster : monsters.values()) {
             if (monster.hp <= 0) {
                 if (nowMillis >= monster.respawnAt && monsters.remove(monster.id, monster)) {
@@ -113,9 +114,11 @@ public class MonsterSimulationService {
                 }
                 continue;
             }
+            nearbyPlayers.clear();
             WorldSpatialIndex<MonsterTarget> playerIndex = playerTargetSpatialIndexes.get(monster.mapId);
-            Collection<MonsterTarget> nearbyPlayers = playerIndex == null ? List.of()
-                    : playerIndex.query(monster.x, monster.y, monster.archetype.aggroRange());
+            if (playerIndex != null) {
+                playerIndex.queryInto(monster.x, monster.y, monster.archetype.aggroRange(), nearbyPlayers);
+            }
             attacks.addAll(monster.advance(nowMillis, players, nearbyPlayers));
             if (monster.hp > 0) {
                 monsterSpatialIndexes.computeIfAbsent(monster.mapId, ignored -> new WorldSpatialIndex<>())
