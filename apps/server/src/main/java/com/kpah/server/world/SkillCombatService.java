@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class SkillCombatService {
     private static final long REGEN_INTERVAL_MILLIS = 1_000L;
+    private static final int PLAYER_LOCK_STRIPES = 64;
+    private final Object[] playerLocks = createPlayerLocks();
     private final SkillCatalog catalog;
     private final MonsterSimulationService monsters;
     private final Map<String, Long> nextCastAt = new ConcurrentHashMap<>();
@@ -17,13 +19,14 @@ public class SkillCombatService {
         this.monsters = monsters;
     }
 
-    public synchronized SkillCastResult cast(String playerId, String classCode, PlayerMotionState caster,
-                                               String skillId, String targetMonsterId, int attackBonus,
-                                               int level, long nowMillis) {
+    public SkillCastResult cast(String playerId, String classCode, PlayerMotionState caster,
+                                String skillId, String targetMonsterId, int attackBonus,
+                                int level, long nowMillis) {
         if (playerId == null || playerId.isBlank() || classCode == null || caster == null
                 || targetMonsterId == null || targetMonsterId.isBlank()) {
             return SkillCastResult.rejected("Invalid skill request.", 0);
         }
+        synchronized (lockFor(playerId)) {
         int mana = manaFor(playerId, classCode, level, nowMillis);
         SkillDefinition skill = catalog.find(skillId);
         if (skill == null) return SkillCastResult.rejected("Unknown skill.", mana);
@@ -48,23 +51,29 @@ public class SkillCombatService {
         resources.put(playerId, new ResourceState(remaining, nowMillis));
         nextCastAt.put(cooldownKey, nowMillis + skill.cooldownMillis());
         return new SkillCastResult(true, "Skill cast", skill, attack, remaining);
+        }
     }
 
-    public synchronized void restore(String playerId, String classCode, int level, int persistedMana, long nowMillis) {
+    public void restore(String playerId, String classCode, int level, int persistedMana, long nowMillis) {
         if (playerId == null || playerId.isBlank()) return;
-        int maximum = catalog.maxMana(classCode, level);
-        resources.put(playerId, new ResourceState(Math.max(0, Math.min(maximum, persistedMana)), nowMillis));
-        nextCastAt.keySet().removeIf(key -> key.startsWith(playerId + ":"));
+        synchronized (lockFor(playerId)) {
+            int maximum = catalog.maxMana(classCode, level);
+            resources.put(playerId, new ResourceState(Math.max(0, Math.min(maximum, persistedMana)), nowMillis));
+            nextCastAt.keySet().removeIf(key -> key.startsWith(playerId + ":"));
+        }
     }
 
-    public synchronized int manaFor(String playerId, String classCode, int level, long nowMillis) {
-        int maxMana = catalog.maxMana(classCode, level);
-        ResourceState state = resources.computeIfAbsent(playerId, ignored -> new ResourceState(maxMana, nowMillis));
-        long elapsed = Math.max(0L, nowMillis - state.lastUpdatedAt());
-        int regenerated = (int) (elapsed * catalog.manaRegenerationPerSecond() / REGEN_INTERVAL_MILLIS);
-        int mana = Math.min(maxMana, state.mana() + regenerated);
-        resources.put(playerId, new ResourceState(mana, regenerated > 0 ? nowMillis : state.lastUpdatedAt()));
-        return mana;
+    public int manaFor(String playerId, String classCode, int level, long nowMillis) {
+        if (playerId == null || playerId.isBlank()) return 0;
+        synchronized (lockFor(playerId)) {
+            int maxMana = catalog.maxMana(classCode, level);
+            ResourceState state = resources.computeIfAbsent(playerId, ignored -> new ResourceState(maxMana, nowMillis));
+            long elapsed = Math.max(0L, nowMillis - state.lastUpdatedAt());
+            int regenerated = (int) (elapsed * catalog.manaRegenerationPerSecond() / REGEN_INTERVAL_MILLIS);
+            int mana = Math.min(maxMana, state.mana() + regenerated);
+            resources.put(playerId, new ResourceState(mana, regenerated > 0 ? nowMillis : state.lastUpdatedAt()));
+            return mana;
+        }
     }
 
     public int maxMana(String classCode) { return catalog.maxMana(classCode); }
@@ -76,8 +85,20 @@ public class SkillCombatService {
 
     public void removePlayer(String playerId) {
         if (playerId == null) return;
-        nextCastAt.keySet().removeIf(key -> key.startsWith(playerId + ":"));
-        resources.remove(playerId);
+        synchronized (lockFor(playerId)) {
+            nextCastAt.keySet().removeIf(key -> key.startsWith(playerId + ":"));
+            resources.remove(playerId);
+        }
+    }
+
+    private Object lockFor(String playerId) {
+        return playerLocks[(playerId.hashCode() & Integer.MAX_VALUE) % playerLocks.length];
+    }
+
+    private static Object[] createPlayerLocks() {
+        Object[] locks = new Object[PLAYER_LOCK_STRIPES];
+        for (int i = 0; i < locks.length; i++) locks[i] = new Object();
+        return locks;
     }
 
     private record ResourceState(int mana, long lastUpdatedAt) { }
